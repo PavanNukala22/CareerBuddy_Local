@@ -281,6 +281,12 @@ def logout_view(request):
 
 @login_required
 def profile_view(request):
+    # An employer session must not reach the candidate profile. activities.dashboard
+    # already guards itself this way (BR-03); this page had only @login_required, so
+    # an employer could open it directly at 200 OK even though no link leads there.
+    if request.session.get('portal') == 'employer' or hasattr(request.user, 'employer_profile'):
+        return redirect('job_home')
+
     profile = request.user.profile
     if request.method == 'POST':
         form = ProfileUpdateForm(request.POST, request.FILES, instance=profile)

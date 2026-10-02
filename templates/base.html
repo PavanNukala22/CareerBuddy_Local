@@ -15,9 +15,18 @@
          ligature source as literal text ("mic", "play_arrow"). block hides it
          until the font is ready, so an icon never shows as its text name. -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet" />
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- ?v= bumped with the navbar change: static files are not content-hashed
+         and are cached for a day in production, so without it a returning
+         visitor would keep the old stylesheet - and with it the strip of empty
+         space the previous fixed navbar needed. -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=nav-2">
     <link rel="stylesheet" href="{% static 'css/riya_assistant.css' %}?v=riya-welcome-v12">
     <link rel="stylesheet" href="{% static 'css/tailwind.build.css' %}">
+    <!-- The one navbar (templates/includes/site_nav.html). Loaded here, before
+         any page CSS, so the header is painted in its final form on first
+         paint rather than restyled afterwards. -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/site_nav.css' %}?v=1">
     <style>
       /* Navbar "Pro" button — keep the gold colour fixed in every state */
       .navbar .nav-link.pro-nav-btn,
@@ -42,144 +51,22 @@
     {% block extra_css %}{% endblock %}
 <style id="site-font-outfit">
 body{font-family:'Outfit',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif !important}
+/* The navbar carries its own typeface, the same one the landing page uses, so
+   the header looks identical on both. The !important matches the body rule
+   above, which would otherwise win on specificity ties. */
+.cb-nav, .cb-nav *{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif !important}
 </style>
 </head>
 <body>
 
-<!-- Navigation -->
-<nav class="navbar navbar-expand-xl navbar-light fixed-top" id="mainNav">
-    <div class="container">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
-            <div class="brand-icon">
-                <svg width="36" height="36" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <rect width="24" height="24" rx="5" fill="#14213D"/>
-                    <path d="M8 5.5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2V7H8V5.5Z" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
-                    <rect x="3.5" y="7" width="17" height="11.5" rx="2.2" fill="#fff"/>
-                    <rect x="3.5" y="10.7" width="17" height="1.6" fill="#14213D"/>
-                </svg>
-            </div>
-            <span class="brand-text">Career <span class="brand-accent">Buddy</span></span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">
-                        <i class="fas fa-home me-1"></i>Home
-                    </a>
-                </li>
-                {% if user.is_authenticated and request.session.portal != 'employer' and not user.employer_profile %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-layer-group me-1"></i>Skill Up
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{% url 'skill_up' %}#depth-english"><i class="fas fa-language me-2"></i>English &amp; Vocabulary</a></li>
-                        <li><a class="dropdown-item" href="{% url 'skill_up' %}#depth-aptitude"><i class="fas fa-brain me-2"></i>Aptitude</a></li>
-                        <li><a class="dropdown-item" href="{% url 'skill_up' %}#depth-tech"><i class="fas fa-code me-2"></i>Tech</a></li>
-                        <li><a class="dropdown-item" href="{% url 'skill_up' %}#section-depth"><i class="fas fa-th-large me-2"></i>Browse All</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'skill_up' %}#section-sitemap">
-                        <i class="fas fa-sitemap me-1"></i>Sitemap
-                    </a>
-                </li>
-                {% endif %}
-                {% if user.is_authenticated %}
-                    {% if request.session.portal == 'employer' or user.employer_profile %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'employer_portal:dashboard' %}">
-                                <i class="fas fa-tachometer-alt me-1"></i>Employer Dashboard
-                            </a>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'resume_builder' or request.resolver_match.url_name == 'resume_job_match' or request.resolver_match.url_name == 'resume_analytics' %}active{% endif %}" href="{% url 'resume_builder' %}">
-                                <i class="fas fa-file-invoice me-1"></i>Resume Parsing
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'subject' or 'subject' in request.path %}active{% endif %}" href="{% url 'subject' %}">
-                                <i class="fas fa-spell-check me-1"></i>Grammar
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'activity_list' %}active{% endif %}" href="{% url 'activity_list' %}">
-                                <i class="fas fa-th-large me-1"></i>Activities
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}" href="{% url 'student_dashboard' %}">
-                                <i class="fas fa-chart-line me-1"></i>Dashboard
-                            </a>
-                        </li>
-                    {% endif %}
-                {% endif %}
-            </ul>
-            <ul class="navbar-nav ms-auto align-items-center">
-                {% if user.is_authenticated %}
-                {% if request.path|slice:":9" != '/employer' %}
-                <li class="nav-item me-2 me-xl-3">
-                    <a class="nav-link pro-nav-btn fw-bold px-2 py-1 rounded-pill d-inline-flex align-items-center gap-1.5 {% if request.resolver_match.url_name == 'pro_page' %}active{% endif %}" href="{% url 'pro_page' %}" style="font-size: 0.8rem;">
-                        <i class="fas fa-crown" style="color: #fef08a !important; font-size: 0.75rem;"></i>
-                        <span>Pro</span>
-                        {% if user.profile.plan_type == 'pro' or user.profile.plan_type == 'normal' or user.is_superuser %}
-                        <span class="badge bg-white text-dark rounded-pill ms-1" style="font-size:0.6rem; padding:0.15em 0.4em;">ACTIVE</span>
-                        {% endif %}
-                    </a>
-                </li>
-                {% endif %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
-                        <div class="nav-avatar">
-                            {% if user.profile.avatar %}
-                                <img src="{{ user.profile.avatar.url }}" alt="avatar">
-                            {% elif user.employer_profile %}
-                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 0.8rem;">
-                                    <i class="fas fa-building"></i>
-                                </div>
-                            {% else %}
-                                <span>{% if user.first_name or user.last_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% else %}{{ user.username|slice:":2"|upper }}{% endif %}</span>
-                            {% endif %}
-                        </div>
-                        <span class="d-none d-md-inline">{{ user.first_name|default:user.username }}</span>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        {% if not user.employer_profile %}
-                        <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
-                        {% else %}
-                        <li><a class="dropdown-item" href="{% url 'employer_portal:employer_profile_edit' %}"><i class="fas fa-building me-2"></i>Company Profile</a></li>
-                        {% endif %}
-                        
-                        {% if user.is_staff %}
-                        <li><a class="dropdown-item" href="/admin/"><i class="fas fa-cog me-2"></i>Admin</a></li>
-                        {% endif %}
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <form action="{% url 'logout' %}" method="post" class="m-0 p-0">
-                                {% csrf_token %}
-                                <button type="submit" class="dropdown-item text-danger" style="cursor:pointer;">
-                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
-                </li>
-                {% else %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-user-tie me-1"></i>Job Seeker Login</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'employer_portal:employer_login' %}"><i class="fas fa-building me-1"></i>Employer Login</a>
-                </li>
-                {% endif %}
-            </ul>
-        </div>
-    </div>
-</nav>
+<!-- Navigation: the one navbar, shared with the public landing page.
+     The employer portal runs without it - it has its own sidebar, and the
+     candidate menus (Skill Up, Dashboard, Resume Parsing, Pro) do not belong
+     on an employer screen. The same slice test the Pro link below already uses
+     covers both /employer/... and the /employer-home/ alias. -->
+{% if request.path|slice:":9" != '/employer' %}
+{% include 'includes/site_nav.html' %}
+{% endif %}
 
 <!-- Messages -->
 <div class="messages-container">

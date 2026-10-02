@@ -32,6 +32,11 @@ body{font-family:'Outfit',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Ar
 </style>
 </head>
 
+{% comment %}
+Skill Up carries its own section bar (Home / English & Vocab / Aptitude / Tech /
+Sitemap / Certifications / Browse all), so the site navbar is deliberately not
+included here - two stacked bars is one too many on this page.
+{% endcomment %}
 <body data-skillup-hub="1">
   {% if skillup_section %}
   <script>
@@ -45,9 +50,12 @@ body{font-family:'Outfit',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Ar
       // replaceState, not assignment: no extra history entry, so Back from the
       // hub returns to the landing page rather than to the hub without a hash.
       window.history.replaceState(null, "", window.location.pathname + "#" + section);
-      // The Certifications panel loads its status on `hashchange` only, so fire
-      // one once the page is parsed; re-rendering the current hash is a no-op
-      // for every other section.
+      // The Certifications panel loads its status on `hashchange` only, so it
+      // needs one fired for it. Only for it: the hub's DOMContentLoaded router
+      // already scrolls to the hash on its own, and a second event made it
+      // re-run that scroll mid-layout, which landed the reader thousands of
+      // pixels past the section they asked for.
+      if (section !== "section-certifications") { return; }
       document.addEventListener("DOMContentLoaded", function () {
         window.dispatchEvent(new HashChangeEvent("hashchange"));
       });

@@ -4,9 +4,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CareerBuddy — Build Skills. Build Confidence. Build Your Career.</title>
+<title>CareerBuddy — Build Skills. Build Confidence. Start Your Career.</title>
 <meta name="description" content="CareerBuddy brings professional learning, AI resume tools, interview practice, skill certifications and job discovery together in one platform.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- The one navbar, shared with every base.html page. -->
+<link rel="stylesheet" href="{% static 'css/site_nav.css' %}?v=1">
 <style>
 
 :root{
@@ -653,6 +655,60 @@ header, header a, header button, header span, nav.main-nav, nav.main-nav a, nav.
 .rs p,.rs li{font-size:.9rem;color:var(--ink-2)}.rs ul{padding-left:1.1rem;list-style:disc;display:grid;gap:.3rem}
 .rs h4{border-bottom:1px solid var(--line);padding-bottom:.25rem}
 .rm-hint{font-size:.78rem;color:var(--slate);margin-top:.6rem}
+/* ── Resume parsing panel ───────────────────────────────────────────────
+   Sits in the second cell of .rm-out, which is empty whenever the resume is
+   generated without the AI analysis: one looping illustration of the parsing
+   flow, with the entry point to the real tool underneath. Pure CSS on a single
+   12s clock - six 2s phases, each element entering on its own delay. */
+.rp{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-md);padding:1.1rem;display:flex;flex-direction:column;gap:.9rem;align-self:start;overflow:hidden}
+.rp[hidden]{display:none}
+
+.rp-stage{position:relative;height:232px;border-radius:13px;background:
+    radial-gradient(120% 90% at 18% 10%,rgba(37,99,235,.09),transparent 60%),
+    radial-gradient(110% 90% at 85% 85%,rgba(124,58,237,.10),transparent 58%),
+    linear-gradient(180deg,#fbfcff,#eef3fe);
+  border:1px solid #e6eefc;display:flex;align-items:center;justify-content:center;overflow:hidden}
+
+.rp-doc{position:relative;z-index:2;width:104px;height:132px;filter:drop-shadow(0 10px 22px rgba(20,33,61,.16));animation:rpDoc 12s ease-in-out infinite}
+.rp-scan{position:absolute;z-index:3;left:50%;top:26%;width:124px;height:2px;margin-left:-62px;border-radius:2px;background:linear-gradient(90deg,transparent,#2563eb,#7c3aed,transparent);box-shadow:0 0 14px rgba(37,99,235,.7);opacity:0;animation:rpScan 12s linear 2s infinite backwards}
+.rp-pulse{position:absolute;z-index:1;width:116px;height:116px;border-radius:50%;border:2px solid rgba(124,58,237,.5);opacity:0;animation:rpPulse 12s ease-out 4s infinite backwards}
+.rp-pulse::after{content:"";position:absolute;inset:-22px;border-radius:50%;border:2px solid rgba(37,99,235,.3)}
+
+/* Three extracted values flying out of the page while it is read. */
+.rp-out{position:absolute;z-index:3;left:calc(50% + 48px);width:86px;height:9px;border-radius:99px;background:linear-gradient(90deg,#2563eb,#7c3aed);opacity:0;animation:rpOut 12s ease-out infinite backwards;animation-delay:calc(6s + var(--i) * .4s)}
+.rp-out:nth-of-type(1){top:40%}
+.rp-out:nth-of-type(2){top:52%;width:66px}
+.rp-out:nth-of-type(3){top:64%;width:76px}
+
+.rp-check{position:absolute;z-index:4;width:62px;height:62px;opacity:0;animation:rpCheck 12s ease-out 8s infinite backwards}
+
+/* The caption is the only text in the picture: the phase it is showing. */
+.rp-cap{position:absolute;z-index:4;left:0;right:0;bottom:13px;height:26px;text-align:center}
+.rp-cap span{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;justify-content:center;gap:.35rem;font-size:.75rem;font-weight:700;letter-spacing:.02em;color:var(--primary);opacity:0;animation:rpCap 12s ease-in-out infinite backwards;animation-delay:calc(var(--i) * 2s)}
+.rp-cap span::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.rp-cap span.done{color:#047857}
+
+.rp-cta{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.85rem 1.2rem;border-radius:999px;font-weight:700;font-size:.95rem;color:#fff;background:linear-gradient(90deg,#2563eb,#7c3aed);box-shadow:0 10px 24px rgba(79,70,229,.28);transition:.18s ease}
+.rp-cta:hover{color:#fff;transform:translateY(-1px);box-shadow:0 14px 30px rgba(79,70,229,.34)}
+.rp-cta .ic{width:1.05em;height:1.05em}
+
+@keyframes rpDoc{0%{opacity:0;transform:translateY(18px) scale(.94)}8%{opacity:1;transform:none}94%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-10px) scale(.97)}}
+@keyframes rpScan{0%{opacity:0;top:24%}3%{opacity:1}13%{opacity:1;top:76%}16.6%{opacity:0;top:76%}100%{opacity:0;top:76%}}
+@keyframes rpPulse{0%{opacity:0;transform:scale(.5)}4%{opacity:1}16.6%{opacity:0;transform:scale(1.5)}100%{opacity:0;transform:scale(1.5)}}
+@keyframes rpOut{0%{opacity:0;transform:translateX(-26px) scaleX(.3)}4%{opacity:1;transform:translateX(0) scaleX(1)}12%{opacity:1;transform:translateX(0) scaleX(1)}17%{opacity:0;transform:translateX(10px) scaleX(1)}100%{opacity:0}}
+@keyframes rpCheck{0%{opacity:0;transform:scale(.4)}5%{opacity:1;transform:scale(1.14)}9%{transform:scale(1)}16.6%{opacity:1}21%{opacity:0}100%{opacity:0}}
+@keyframes rpCap{0%{opacity:0;transform:translateY(5px)}3%{opacity:1;transform:none}15%{opacity:1;transform:none}18%{opacity:0;transform:translateY(-5px)}100%{opacity:0}}
+
+/* The loop rests on its finished state rather than vanishing, so the panel
+   still reads when motion is turned down. */
+@media(prefers-reduced-motion:reduce){
+  .rp-doc,.rp-scan,.rp-pulse,.rp-out,.rp-check,.rp-cap span,.rp-cta{animation:none;transition:none}
+  .rp-scan,.rp-pulse,.rp-out{display:none}
+  .rp-doc,.rp-check{opacity:1}
+  .rp-cap span{opacity:0}
+  .rp-cap span.done{opacity:1}
+}
+
 @media(max-width:900px){.rm-body,.rm-out{grid-template-columns:1fr}}
 @media(max-width:520px){.rm-form{grid-template-columns:1fr}.rm{padding:0}.rm-box{border-radius:0;min-height:100%}}
 </style>
@@ -713,124 +769,7 @@ header, header a, header button, header span, nav.main-nav, nav.main-nav a, nav.
 
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="p-short" viewBox="0 0 120 160"><path d="M10 160C10 120 32 102 60 102s50 18 50 58z" style="fill:var(--shirt)"/><path d="M48 102l12 18 12-18z" fill="#fff" opacity=".9"/><rect x="51" y="86" width="18" height="18" rx="6" style="fill:var(--skin)"/><circle cx="60" cy="68" r="25" style="fill:var(--skin)"/><path d="M34 66C32 42 48 34 62 34c18 0 28 14 24 34-4-12-12-18-26-18-12 0-22 6-26 16z" style="fill:var(--hair)"/><circle cx="51" cy="70" r="2.4" fill="#1f2937"/><circle cx="69" cy="70" r="2.4" fill="#1f2937"/><path d="M52 79q8 7 16 0" stroke="#1f2937" stroke-width="2.4" fill="none" stroke-linecap="round"/></symbol><symbol id="p-long" viewBox="0 0 120 160"><path d="M32 66C26 100 30 122 46 128H74C90 122 94 100 88 66Z" style="fill:var(--hair)"/><path d="M10 160C10 120 32 102 60 102s50 18 50 58z" style="fill:var(--shirt)"/><path d="M48 102l12 18 12-18z" fill="#fff" opacity=".9"/><rect x="51" y="86" width="18" height="18" rx="6" style="fill:var(--skin)"/><circle cx="60" cy="68" r="25" style="fill:var(--skin)"/><path d="M34 66C32 42 48 34 62 34c18 0 28 14 24 34-4-12-12-18-26-18-12 0-22 6-26 16z" style="fill:var(--hair)"/><circle cx="51" cy="70" r="2.4" fill="#1f2937"/><circle cx="69" cy="70" r="2.4" fill="#1f2937"/><path d="M52 79q8 7 16 0" stroke="#1f2937" stroke-width="2.4" fill="none" stroke-linecap="round"/></symbol><linearGradient id="gHP" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#60a5fa"/><stop offset="1" stop-color="#f472b6"/></linearGradient></defs></svg>
-<header>
-  <div class="wrap bar">
-    <a class="brand" href="/">
-      <svg class="brand-mark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <rect width="24" height="24" rx="5" fill="#14213D"/>
-        <path d="M8 5.5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2V7H8V5.5Z" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
-        <rect x="3.5" y="7" width="17" height="11.5" rx="2.2" fill="#fff"/>
-        <rect x="3.5" y="10.7" width="17" height="1.6" fill="#14213D"/>
-      </svg>
-      Career<b>Buddy</b>
-    </a>
-
-    <nav class="main-nav" id="mainNav">
-      
-
-      <div class="nav-item">
-        <button class="nav-link" aria-haspopup="true" aria-expanded="false">Skill Up <span class="caret"></span></button>
-        <div class="mega">
-          <div class="mega-cols">
-            <div>
-              <div class="mega-col-title">English &amp; Vocabulary</div>
-              <a class="mega-link" href="{% url 'nav_go' 'english-learning' %}"><svg class="ic" aria-hidden="true"><use href="#i-language"></use></svg><span><span class="ml-title">English Learning</span><span class="ml-desc">Core modules &amp; phonics</span></span></a>
-              <a class="mega-link" href="{% url 'nav_go' 'grammar' %}"><svg class="ic" aria-hidden="true"><use href="#i-spell-check"></use></svg><span><span class="ml-title">Grammar</span><span class="ml-desc">Nouns to sentence structure</span></span></a>
-              <a class="mega-link" href="{% url 'nav_go' 'vocabulary' %}"><svg class="ic" aria-hidden="true"><use href="#i-puzzle-piece"></use></svg><span><span class="ml-title">Vocabulary &amp; Idioms</span><span class="ml-desc">Industry terms, phrasal verbs</span></span></a>
-            </div>
-            <div>
-              <div class="mega-col-title">Activities</div>
-              <a class="mega-link" href="{% url 'nav_go' 'speaking' %}"><svg class="ic" aria-hidden="true"><use href="#i-microphone"></use></svg><span><span class="ml-title">Speaking &amp; Presentation</span><span class="ml-desc">Pitches, interviews, meetings</span></span></a>
-              <a class="mega-link" href="{% url 'nav_go' 'writing' %}"><svg class="ic" aria-hidden="true"><use href="#i-pen-fancy"></use></svg><span><span class="ml-title">Writing &amp; Correspondence</span><span class="ml-desc">Emails, reports, proposals</span></span></a>
-              <a class="mega-link" href="{% url 'nav_go' 'negotiation' %}"><svg class="ic" aria-hidden="true"><use href="#i-handshake"></use></svg><span><span class="ml-title">Negotiation &amp; Meetings</span><span class="ml-desc">Deal-making, chairing</span></span></a>
-              <a class="mega-link" href="{% url 'nav_go' 'workshop' %}"><svg class="ic" aria-hidden="true"><use href="#i-comments"></use></svg><span><span class="ml-title">Interactive Roleplay</span><span class="ml-desc">Live practice scenarios</span></span></a>
-            </div>
-            <div>
-              <div class="mega-col-title">Learning &amp; Assessment</div>
-              <a class="mega-link" href="{% url 'nav_go' 'aptitude' %}"><svg class="ic" aria-hidden="true"><use href="#i-brain"></use></svg><span><span class="ml-title">Aptitude</span><span class="ml-desc">Logical &amp; quantitative</span></span></a>
-              <a class="mega-link" href="{% url 'nav_go' 'tech' %}"><svg class="ic" aria-hidden="true"><use href="#i-code"></use></svg><span><span class="ml-title">Tech</span><span class="ml-desc">Technical skill modules</span></span></a>
-              <a class="mega-link" href="{% url 'nav_go' 'certifications' %}"><svg class="ic" aria-hidden="true"><use href="#i-certificate"></use></svg><span><span class="ml-title">Certifications</span><span class="ml-desc">Earn verified credentials</span></span></a>
-            </div>
-          </div>
-          <div class="mega-foot"><span style="font-size:.82rem;color:var(--slate)">20+ activities, 100+ exercises, free to start</span><a href="{% url 'nav_go' 'browse-all' %}">Browse all Skill Up →</a></div>
-        </div>
-      </div>
-
-      <div class="nav-item">
-        <button class="nav-link" aria-haspopup="true" aria-expanded="false">Resources <span class="caret"></span></button>
-        <div class="mega two-col">
-          <div class="mega-cols">
-            <div>
-              <div class="mega-col-title">Learning</div>
-              <a class="mega-link" href="{% url 'nav_go' 'skill-up-hub' %}"><svg class="ic" aria-hidden="true"><use href="#i-layer-group"></use></svg><span><span class="ml-title">Skill Up Hub</span><span class="ml-desc">All learning modules</span></span></a>
-              <a class="mega-link" href="{% url 'nav_go' 'activities' %}"><svg class="ic" aria-hidden="true"><use href="#i-th-large"></use></svg><span><span class="ml-title">Activities</span><span class="ml-desc">Practical exercises</span></span></a>
-              <a class="mega-link" href="{% url 'nav_go' 'certifications' %}"><svg class="ic" aria-hidden="true"><use href="#i-certificate"></use></svg><span><span class="ml-title">Certifications</span><span class="ml-desc">Verified skill credentials</span></span></a>
-            </div>
-            <div>
-              <div class="mega-col-title">Platform</div>
-              <a class="mega-link" href="#videos"><svg class="ic" aria-hidden="true"><use href="#i-video"></use></svg><span><span class="ml-title">Tutorials</span><span class="ml-desc">How CareerBuddy works</span></span></a>
-              <a class="mega-link" href="{% url 'nav_go' 'sitemap' %}"><svg class="ic" aria-hidden="true"><use href="#i-sitemap"></use></svg><span><span class="ml-title">Sitemap</span><span class="ml-desc">Find any page quickly</span></span></a>
-              <a class="mega-link" href="#buddy"><svg class="ic" aria-hidden="true"><use href="#i-robot"></use></svg><span><span class="ml-title">Buddy Assistant</span><span class="ml-desc">Ask Buddy anything</span></span></a>
-              <a class="mega-link" href="{% url 'nav_go' 'pro' %}"><svg class="ic" aria-hidden="true"><use href="#i-crown"></use></svg><span><span class="ml-title">CareerBuddy Pro</span><span class="ml-desc">Unlock premium features</span></span></a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="nav-item"><a class="nav-link" href="#choose-path">Industries</a></div>
-      <div class="nav-item"><a class="nav-link" href="#create-resume">Create Resume</a></div>
-      <div class="nav-item"><a class="nav-link" href="#why">About Us</a></div>
-      <div class="nav-item"><a class="nav-link" href="#contact">Contact Us</a></div>
-    </nav>
-
-    <div class="header-actions">
-      <a class="hlogin" href="/employer/accounts/employer/login/"><svg class="ic" aria-hidden="true"><use href="#i-building-solid"></use></svg>Employer Login</a>
-    </div>
-    <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false"><span></span></button>
-  </div>
-</header>
-
-<!-- mobile accordion menu -->
-<div class="mobile-menu" id="mobileMenu">
-  <div class="mm-item"><button class="mm-trigger"><a href="/" style="flex:1;text-align:left">Home</a></button></div>
-
-  <div class="mm-item">
-    <button class="mm-trigger"><span>Skill Up</span><span class="caret"></span></button>
-    <div class="mm-panel">
-      <a class="mm-link" href="{% url 'nav_go' 'english-learning' %}">English Learning</a>
-      <a class="mm-link" href="{% url 'nav_go' 'grammar' %}">Grammar</a>
-      <a class="mm-link" href="{% url 'nav_go' 'vocabulary' %}">Vocabulary &amp; Idioms</a>
-      <a class="mm-link" href="{% url 'nav_go' 'speaking' %}">Speaking &amp; Presentation</a>
-      <a class="mm-link" href="{% url 'nav_go' 'writing' %}">Writing &amp; Correspondence</a>
-      <a class="mm-link" href="{% url 'nav_go' 'negotiation' %}">Negotiation &amp; Meetings</a>
-      <a class="mm-link" href="{% url 'nav_go' 'workshop' %}">Interactive Roleplay</a>
-      <a class="mm-link" href="{% url 'nav_go' 'aptitude' %}">Aptitude</a>
-      <a class="mm-link" href="{% url 'nav_go' 'tech' %}">Tech</a>
-      <a class="mm-link" href="{% url 'nav_go' 'certifications' %}">Certifications</a>
-    </div>
-  </div>
-
-  <div class="mm-item">
-    <button class="mm-trigger"><span>Resources</span><span class="caret"></span></button>
-    <div class="mm-panel">
-      <a class="mm-link" href="{% url 'nav_go' 'skill-up-hub' %}">Skill Up Hub</a>
-      <a class="mm-link" href="{% url 'nav_go' 'activities' %}">Activities</a>
-      <a class="mm-link" href="{% url 'nav_go' 'certifications' %}">Certifications</a>
-      <a class="mm-link" href="#videos">Tutorials: How CareerBuddy Works</a>
-      <a class="mm-link" href="{% url 'nav_go' 'sitemap' %}">Sitemap</a>
-      <a class="mm-link" href="{% url 'nav_go' 'pro' %}">CareerBuddy Pro</a>
-    </div>
-  </div>
-
-  <div class="mm-item"><button class="mm-trigger"><a href="#choose-path" style="flex:1;text-align:left">Industries</a></button></div>
-  <div class="mm-item"><button class="mm-trigger"><a href="#create-resume" style="flex:1;text-align:left">Create Resume</a></button></div>
-  <div class="mm-item"><button class="mm-trigger"><a href="#why" style="flex:1;text-align:left">About Us</a></button></div>
-  <div class="mm-item"><button class="mm-trigger"><a href="#contact" style="flex:1;text-align:left">Contact Us</a></button></div>
-
-  <div class="mm-cta">
-    <a class="btn btn-primary" href="/employer/accounts/employer/login/"><svg class="ic" aria-hidden="true"><use href="#i-building-solid"></use></svg> Employer Login</a>
-  </div>
-</div>
+{% include 'includes/site_nav.html' %}
 
 <main>
 
@@ -839,7 +778,7 @@ header, header a, header button, header span, nav.main-nav, nav.main-nav a, nav.
   <div class="wrap hero-grid">
     <div>
       <div class="eyebrow"><svg class="ic" aria-hidden="true"><use href="#i-sparkles"></use></svg> AI-powered career platform</div>
-      <h1>Build skills. Build confidence. Build your career.</h1>
+      <h1>Build skills. Build confidence. Start your career.</h1>
       <p class="lead">CareerBuddy brings professional learning, AI resume tools, interview practice and skill certifications together — so you walk into every interview ready, and every hiring decision easier.</p>
       <div class="hero-ctas">
         <a class="btn btn-primary" href="/users/register/"><svg class="ic" aria-hidden="true"><use href="#i-rocket"></use></svg> Get Started Free</a>
@@ -880,7 +819,7 @@ header, header a, header button, header span, nav.main-nav, nav.main-nav a, nav.
     </div>
     <div class="feature-grid">
       <div class="feature-card"><div class="feature-icon" style="background:var(--soft);color:var(--primary)"><svg class="ic" aria-hidden="true"><use href="#i-graduation-cap"></use></svg></div><h3>Learn &amp; Improve</h3><p>Professional English, grammar, vocabulary and communication skills across seven core areas.</p><a href="{% url 'nav_go' 'skill-up-hub' %}">Explore Skill Up →</a></div>
-      <div class="feature-card"><div class="feature-icon" style="background:#fde3e3;color:#dc4848"><svg class="ic" aria-hidden="true"><use href="#i-file-invoice"></use></svg></div><h3>Build Your Resume</h3><p>AI resume parsing, ATS scoring and guided improvements that keep your resume current.</p><a href="{% url 'nav_go' 'resume-builder' %}">Check your resume →</a></div>
+      <div class="feature-card"><div class="feature-icon" style="background:#fde3e3;color:#dc4848"><svg class="ic" aria-hidden="true"><use href="#i-file-invoice"></use></svg></div><h3>Build Your Resume</h3><p>AI resume parsing, ATS scoring and guided improvements that keep your resume current.</p><a href="#choose-path">Check your resume →</a></div>
       <div class="feature-card"><div class="feature-icon" style="background:#ece3fb;color:#7c4ddb"><svg class="ic" aria-hidden="true"><use href="#i-video"></use></svg></div><h3>Practice Interviews</h3><p>AI-powered mock interviews with instant feedback, so the real one feels familiar.</p><a href="{% url 'nav_go' 'resume-builder' %}">Start a mock interview →</a></div>
       <div class="feature-card"><div class="feature-icon" style="background:#e1f7e9;color:#209a52"><svg class="ic" aria-hidden="true"><use href="#i-th-large"></use></svg></div><h3>Develop Skills</h3><p>Activities, assessments, workshops and certifications that build verifiable, job-ready skills.</p><a href="{% url 'nav_go' 'activities' %}">Browse activities →</a></div>
       <div class="feature-card"><div class="feature-icon" style="background:#fff4e0;color:#b8760a"><svg class="ic" aria-hidden="true"><use href="#i-search"></use></svg></div><h3>Find Opportunities</h3><p>Job matching based on your actual profile, resume and skills — not generic listings.</p><a href="{% url 'nav_go' 'job-match' %}">See matching jobs →</a></div>
@@ -1209,46 +1148,8 @@ Intern, TechNova Solutions</textarea></div>
 <script>
 document.getElementById('yr').textContent = new Date().getFullYear();
 
-// Desktop mega-menu: click to open, close on outside click / Escape.
-document.querySelectorAll('#mainNav > .nav-item').forEach((item) => {
-  const trigger = item.querySelector('button.nav-link');
-  if (!trigger) return;
-  trigger.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const isOpen = item.classList.contains('open');
-    document.querySelectorAll('#mainNav > .nav-item.open').forEach((o) => { o.classList.remove('open'); o.querySelector('button')?.setAttribute('aria-expanded', 'false'); });
-    if (!isOpen) { item.classList.add('open'); trigger.setAttribute('aria-expanded', 'true'); }
-  });
-});
-document.addEventListener('click', () => {
-  document.querySelectorAll('#mainNav > .nav-item.open').forEach((o) => { o.classList.remove('open'); o.querySelector('button')?.setAttribute('aria-expanded', 'false'); });
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') document.querySelectorAll('#mainNav > .nav-item.open').forEach((o) => o.classList.remove('open'));
-});
-
-// Mobile menu
-const burger = document.getElementById('burger');
-const mobileMenu = document.getElementById('mobileMenu');
-burger.addEventListener('click', () => {
-  const open = mobileMenu.classList.toggle('open');
-  burger.setAttribute('aria-expanded', String(open));
-});
-document.querySelectorAll('.mm-item > .mm-trigger').forEach((trigger) => {
-  trigger.addEventListener('click', (e) => {
-    if (e.target.closest('a')) return; // plain Home link, let it navigate
-    trigger.closest('.mm-item').classList.toggle('open');
-  });
-});
-// Close the overlay once a menu entry is chosen. Entries that leave the page
-// (every /go/ link) unload it anyway; the ones that jump to a section of this
-// page would otherwise scroll underneath a full-screen menu that is still open.
-mobileMenu.querySelectorAll('a[href]').forEach((link) => {
-  link.addEventListener('click', () => {
-    mobileMenu.classList.remove('open');
-    burger.setAttribute('aria-expanded', 'false');
-  });
-});
+// Navbar behaviour (mega menus, account menu, burger, accordion) lives in
+// static/js/site_nav.js, loaded by the shared navbar partial.
 
 // Scroll reveal: one entrance per section, respects reduced-motion via CSS above.
 const io = new IntersectionObserver((entries) => {
@@ -1265,10 +1166,7 @@ function r(){P.className='rb-prev '+t;P.innerHTML=`<h3>${e($('rName').value)}</h
 document.querySelectorAll('.rb-form input,.rb-form textarea').forEach(i=>i.addEventListener('input',r));
 document.querySelectorAll('#tpls .tpl').forEach(b=>b.addEventListener('click',()=>{t=b.dataset.t;document.querySelectorAll('#tpls .tpl').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));r()}));
 $('rPrint').addEventListener('click',()=>{const w=window.open('','_blank');if(!w)return;w.document.write('<title>Resume</title><body style="font-family:sans-serif;padding:2rem;max-width:760px;margin:auto">'+P.innerHTML+'</body>');w.document.close();w.print()});r()})();
-// Close the mobile menu after tapping an in-page link
-document.querySelectorAll('#mobileMenu a[href^="#"]').forEach((a)=>a.addEventListener('click',()=>{
-  mobileMenu.classList.remove('open'); burger.setAttribute('aria-expanded','false');
-}));
+// Closing the mobile menu after a tap is handled in static/js/site_nav.js.
 
 /* ===== Tutorials: edit this array to add / replace videos. video:null shows "coming soon". Put new files in assets/tutorials/ ===== */
 const CB_CATS=['Getting Started','Skill Up','Resume & Career Tools','For Job Seekers','For Employers','Buddy','Certifications'];
@@ -1515,6 +1413,40 @@ document.querySelectorAll('#choose-path [data-panel]').forEach(function(b){
     <div class="rm-out" id="rmOut" hidden>
       <div class="an" id="rmAn" hidden></div>
       <div class="rs" id="rmRes" hidden></div>
+      <div class="rp" id="rmParse" hidden>
+        <div class="rp-stage" aria-hidden="true">
+          <svg class="rp-doc" viewBox="0 0 104 132">
+            <rect x="4" y="4" width="96" height="124" rx="9" fill="#fff" stroke="#dbe5f7"/>
+            <rect x="16" y="20" width="40" height="7" rx="3.5" fill="#2563eb"/>
+            <rect x="16" y="33" width="28" height="5" rx="2.5" fill="#a9bfe8"/>
+            <rect x="16" y="52" width="72" height="4" rx="2" fill="#e8edf6"/>
+            <rect x="16" y="62" width="62" height="4" rx="2" fill="#e8edf6"/>
+            <rect x="16" y="72" width="68" height="4" rx="2" fill="#e8edf6"/>
+            <rect x="16" y="88" width="26" height="8" rx="4" fill="#ede9fe"/>
+            <rect x="46" y="88" width="20" height="8" rx="4" fill="#dbeafe"/>
+            <rect x="16" y="104" width="54" height="4" rx="2" fill="#e8edf6"/>
+          </svg>
+          <span class="rp-scan"></span>
+          <span class="rp-pulse"></span>
+          <span class="rp-out" style="--i:0"></span>
+          <span class="rp-out" style="--i:1"></span>
+          <span class="rp-out" style="--i:2"></span>
+          <svg class="rp-check" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" fill="#ecfdf5" stroke="#6ee7b7"/>
+            <polyline points="7.5 12.4 10.6 15.5 16.5 9.2"/>
+          </svg>
+          <div class="rp-cap">
+            <span style="--i:0">Uploading resume</span>
+            <span style="--i:1">Scanning</span>
+            <span style="--i:2">AI parsing</span>
+            <span style="--i:3">Extracting data</span>
+            <span style="--i:4">Validating</span>
+            <span class="done" style="--i:5">Parsed successfully</span>
+          </div>
+        </div>
+
+        <a class="rp-cta" href="{% url 'nav_go' 'resume-builder' %}"><svg class="ic" aria-hidden="true"><use href="#i-file-invoice"></use></svg>Resume Parsing</a>
+      </div>
     </div>
   </div>
 </div>
@@ -1618,7 +1550,7 @@ function openRole(i,btn){
   $('rmPath').innerHTML=r.path.map(function(x,j){return '<span class="chip path">'+esc(x)+'</span>'+(j<r.path.length-1?'<span style="color:var(--slate)">&rsaquo;</span>':'')}).join('');
   $('rfPick').innerHTML=r.sk.map(function(x){return '<label><input type="checkbox" value="'+esc(x)+'"><span>'+esc(x)+'</span></label>'}).join('');
   ['rfName','rfEmail','rfPhone','rfLoc','rfEdu','rfOther','rfAch'].forEach(function(id){$(id).value=''});
-  $('rfExp').selectedIndex=0;$('rmOut').hidden=true;$('rmAn').hidden=true;$('rmRes').hidden=true;
+  $('rfExp').selectedIndex=0;$('rmOut').hidden=true;$('rmAn').hidden=true;$('rmRes').hidden=true;$('rmParse').hidden=true;
   rm.classList.add('open');rm.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';rm.scrollTop=0;$('rmClose').focus();
 }
 function closeRole(){rm.classList.remove('open');rm.setAttribute('aria-hidden','true');document.body.style.overflow='';if(lastBtn)lastBtn.focus()}
@@ -1645,7 +1577,8 @@ $('rfAI').addEventListener('click',function(){
    +'<h4>Skills you have ('+ok.length+'/'+r.sk.length+')</h4><div class="chips">'+(ok.length?ok.map(function(s){return '<span class="chip ok">'+esc(s)+'</span>'}).join(''):'<span style="color:var(--slate);font-size:.88rem">None selected yet</span>')+'</div>'
    +'<h4>Skills to build</h4><div class="chips">'+(miss.length?miss.map(function(s){return '<span class="chip miss">'+esc(s)+'</span>'}).join(''):'<span style="color:#047857;font-size:.9rem;font-weight:600">Nothing missing – great!</span>')+'</div>'
    +'<h4>Suggestions</h4><ul>'+tips.map(function(t){return '<li>'+t+'</li>'}).join('')+'</ul>';
-  $('rmAn').hidden=false;showOut();scrollTo($('rmAn'));
+  // The analysis takes the second cell, so the parsing panel steps aside.
+  $('rmAn').hidden=false;$('rmParse').hidden=true;showOut();scrollTo($('rmAn'));
 });
 
 function resumeHTML(){
@@ -1668,7 +1601,8 @@ function resumeHTML(){
 }
 $('rfGen').addEventListener('click',function(){
   $('rmRes').innerHTML=resumeHTML()+'<div class="rm-actions"><button type="button" class="btn btn-outline btn-sm" id="rfDl">Download resume</button></div>';
-  $('rmRes').hidden=false;showOut();scrollTo($('rmRes'));
+  // Fills the cell beside the resume whenever the analysis is not using it.
+  $('rmRes').hidden=false;$('rmParse').hidden=!$('rmAn').hidden;showOut();scrollTo($('rmRes'));
   $('rfDl').addEventListener('click',function(){
     var css='body{font-family:Arial,sans-serif;color:#1e293b;max-width:760px;margin:30px auto}h2{margin:0}.t{color:#185adb;font-weight:bold}.c{color:#64748b;font-size:13px;margin:4px 0 12px}h4{font-size:12px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #cbd5e1;padding-bottom:3px;margin:16px 0 6px}.chip{display:inline-block;border:1px solid #cddcf8;background:#eef4ff;color:#185adb;border-radius:12px;padding:2px 9px;margin:2px;font-size:12px}p,li{font-size:13px}';
     var node=$('rmRes').cloneNode(true);var a=node.querySelector('.rm-actions');if(a)a.remove();
