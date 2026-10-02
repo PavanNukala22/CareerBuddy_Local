@@ -1,0 +1,145 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareerBuddy – Learn. Grow. Get Hired.</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#0ea5e9",
+                        "surface-bright": "#fcf8f8",
+                        "success": "#10b981",
+                        "warning": "#f59e0b",
+                        "background": "#fcf8f8",
+                    },
+                    fontFamily: {
+                        serif: ["Newsreader", "serif"],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Newsreader', serif; background-color: #fcf8f8; }
+        .glass-panel { background: rgba(255,255,255,0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 8px 32px rgba(0,0,0,0.05); }
+        .glass-button { background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; transition: all 0.3s ease; }
+        .glass-button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(14,165,233,0.3); }
+        .ambient-blob { position:fixed; border-radius:50%; filter:blur(80px); opacity:0.15; z-index:-1; animation:blob 10s infinite; }
+        .blob-1 { top:-10%; left:-10%; width:500px; height:500px; background:#bae6fd; }
+        .blob-2 { bottom:-10%; right:-10%; width:400px; height:400px; background:#7dd3fc; animation-delay:2s; }
+        .blob-3 { top:40%; left:40%; width:300px; height:300px; background:#e0f2fe; animation-delay:4s; }
+        @keyframes blob { 0%{transform:translate(0,0) scale(1)} 33%{transform:translate(30px,-50px) scale(1.1)} 66%{transform:translate(-20px,20px) scale(0.9)} 100%{transform:translate(0,0) scale(1)} }
+    </style>
+</head>
+
+<body class="text-on-surface bg-[#fcf8f8] font-serif">
+
+    <!-- Ambient Background -->
+    <div class="ambient-blob blob-1"></div>
+    <div class="ambient-blob blob-2"></div>
+    <div class="ambient-blob blob-3"></div>
+
+<nav class="bg-white/95 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200/60 shadow-[0_4px_8px_rgba(0,0,0,0.08)]">
+  <div class="flex justify-between items-center max-w-[1440px] mx-auto px-6 h-16">
+    <div class="text-2xl font-bold font-serif text-slate-900">CareerBuddy AI</div>
+    <div class="hidden md:flex gap-8 items-center">
+      <a href="{% url 'evaluation' %}" onclick="localStorage.setItem('activeSidebarTab','curriculum');" data-sidebar-tab="curriculum" class="top-nav-link text-slate-500 hover:text-slate-900 transition-colors font-serif text-[15px]">Tech Center</a>
+      <a href="{% url 'evaluation' %}" onclick="localStorage.setItem('activeSidebarTab','resources');" data-sidebar-tab="resources" class="top-nav-link text-slate-500 hover:text-slate-900 transition-colors font-serif text-[15px]">Dashboard</a>
+      <a href="{% url 'resume_analytics' %}" data-sidebar-tab="analytics" class="top-nav-link text-slate-500 hover:text-slate-900 transition-colors font-serif text-[15px]">Career Path</a>
+      <a href="{% url 'resume_builder' %}" class="bg-[#0ea5e9] text-white px-5 py-2 rounded-full font-serif font-bold shadow-[0_4px_8px_rgba(0,0,0,0.08)] hover:brightness-110 transition-all">Resume Builder</a>
+    </div>
+    <div class="w-10 h-10 rounded-full bg-sky-100 border border-slate-200 flex items-center justify-center text-sky-700 font-bold text-sm font-serif">
+      {{ request.user.username|slice:":1"|upper }}
+    </div>
+  </div>
+</nav>
+
+<!-- Layout without Sidebar -->
+<div class="flex max-w-[1440px] mx-auto h-[calc(100vh-64px)] overflow-hidden">
+  <main class="flex-1 p-6 md:p-10 overflow-y-auto pb-24">
+            <div class="text-center mb-10">
+                <h2
+                    class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-600 to-blue-600 mb-2">
+                    AI Resume Analysis & ATS Score
+                </h2>
+                <p class="text-slate-500">Upload your resume to get an AI-powered evaluation of your skills and ATS score.</p>
+            </div>
+
+            {% if error %}
+            <div class="mb-8 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 flex items-center gap-3">
+                <i data-lucide="alert-circle" class="w-5 h-5 text-red-500"></i>
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'resume_job_match' %}" enctype="multipart/form-data"
+                class="max-w-2xl mx-auto">
+                {% csrf_token %}
+
+                <!-- Resume Upload -->
+                <div class="glass-panel p-8 rounded-3xl mb-8">
+                    <h3 class="flex items-center gap-2 text-xl font-semibold mb-6 text-sky-700">
+                        <i data-lucide="upload-cloud" class="w-5 h-5"></i>
+                        Upload Resume
+                    </h3>
+                    <div
+                        class="border-2 border-dashed border-sky-200 rounded-2xl p-10 text-center hover:border-sky-500 transition-colors group cursor-pointer relative h-80 flex flex-col justify-center items-center bg-white/30">
+                        <input type="file" name="file" accept=".pdf,.docx"
+                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" required id="resume-file">
+                        <div class="flex flex-col items-center gap-3 text-slate-400 group-hover:text-sky-600 transition-colors pointer-events-none"
+                            id="drop-label">
+                            <i data-lucide="file-plus" class="w-12 h-12 opacity-50 mb-2"></i>
+                            <p class="text-lg font-medium">Click to upload or drag and drop</p>
+                            <p class="text-sm text-slate-500">PDF or DOCX (Max 5MB)</p>
+                        </div>
+                        <p id="file-chosen"
+                            class="text-sky-600 font-bold text-lg mt-2 hidden pointer-events-none"></p>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-center">
+                    <button type="submit"
+                        class="glass-button px-12 py-5 rounded-2xl font-bold text-white text-xl flex items-center gap-3 shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30 w-full justify-center">
+                        <i data-lucide="sparkles" class="w-6 h-6"></i>
+                        Start Analysis
+                    </button>
+                </div>
+            </form>
+        </div>
+  </main>
+</div>
+
+    <script>
+        lucide.createIcons();
+
+        const resumeFile = document.getElementById('resume-file');
+        const fileChosen = document.getElementById('file-chosen');
+        const dropLabel = document.getElementById('drop-label');
+
+        resumeFile?.addEventListener('change', function () {
+            if (this.files && this.files[0]) {
+                fileChosen.textContent = this.files[0].name;
+                fileChosen.classList.remove('hidden');
+                dropLabel.classList.add('hidden');
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+
+        });
+    </script>
+
+{% include 'includes/aria_assistant.html' %}
+</body>
+</html>

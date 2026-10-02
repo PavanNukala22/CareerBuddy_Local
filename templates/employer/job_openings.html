@@ -1,0 +1,237 @@
+{% extends 'employer_base.html' %}
+{% load static %}
+
+
+{% block employer_css %}
+<style>
+    .editorial-header-band {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border: 1px solid #cbd5e1;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .job-opening-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.25rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    }
+
+    .job-opening-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        border-color: #185adb;
+    }
+
+    .company-logo-placeholder {
+        width: 40px;
+        height: 40px;
+        background: #eff6ff;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: #185adb;
+        flex-shrink: 0;
+    }
+
+    .job-badge {
+        font-size: 0.68rem;
+        font-weight: 700;
+        padding: 0.25rem 0.6rem;
+        border-radius: 50px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        display: inline-block;
+    }
+    .badge-full-time { background: #eff6ff; color: #185adb; border: 1px solid #bfdbfe; }
+    .badge-remote { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .badge-contract { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .badge-internship { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+
+    .skill-tag {
+        font-size: 0.72rem;
+        padding: 0.2rem 0.55rem;
+        border-radius: 6px;
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        color: #475569;
+        font-weight: 500;
+    }
+
+    .apply-btn {
+        background: linear-gradient(135deg, #185adb, #1d4ed8);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.55rem;
+        font-weight: 700;
+        width: 100%;
+        font-size: 0.88rem;
+        box-shadow: 0 4px 12px rgba(24, 90, 219, 0.2);
+        transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    .apply-btn:hover {
+        transform: translateY(-1px);
+        opacity: 0.95;
+        color: white;
+    }
+
+    .salary-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        padding: 0.5rem;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 0.85rem;
+    }
+
+    .filter-btn-tab {
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        padding: 0.4rem 1.1rem;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #475569;
+        transition: all 0.2s ease;
+    }
+    .filter-btn-tab.active {
+        background: #185adb !important;
+        color: #ffffff !important;
+        border-color: #185adb !important;
+        box-shadow: 0 4px 12px rgba(24, 90, 219, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block employer_content %}
+<!-- Header -->
+<div class="editorial-header-band">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1.5 rounded-full text-xs font-semibold mb-2">
+                <i class="fas fa-briefcase me-1"></i>Listings Hub
+            </span>
+            <h1 class="fw-extrabold text-slate-900 mb-1" style="font-size: 2.2rem; letter-spacing: -1px;">Job Openings</h1>
+            <p class="text-slate-600 mb-0" style="font-size: 0.95rem;">Browse all active openings and system-matched listings.</p>
+        </div>
+        <div>
+            <a href="{% url 'employer_portal:job_create' %}" class="btn btn-primary px-4 py-2.5" style="border-radius: 10px; font-weight: 700; background: linear-gradient(135deg, #185adb, #1d4ed8); border: none; box-shadow: 0 4px 15px rgba(24, 90, 219, 0.3);">
+                <i class="fas fa-plus-circle me-1.5"></i> Post Job
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Tabs -->
+<div class="d-flex gap-2 mb-4">
+    <button class="filter-btn-tab active" data-filter="all">All Jobs</button>
+    <button class="filter-btn-tab" data-filter="own">My Postings</button>
+    <button class="filter-btn-tab" data-filter="seeded">Career Buddy Listed</button>
+</div>
+
+<!-- Grid -->
+<div class="row g-4" id="jobs-grid">
+    {% for job in jobs %}
+    <div class="col-sm-6 col-md-4 col-xl-3 job-card-col" data-seeded="{% if job.is_seeded %}true{% else %}false{% endif %}" data-own="{% if own_employer_id and job.employer_id == own_employer_id %}true{% else %}false{% endif %}">
+        <div class="job-opening-card">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex align-items-center gap-2 overflow-hidden" style="flex:1;min-width:0;">
+                    <div class="company-logo-placeholder">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                        <h6 class="fw-bold mb-0 text-truncate text-slate-900" title="{{ job.title }}" style="font-size: 0.95rem;">{{ job.title }}</h6>
+                        <p class="text-slate-500 small mb-0 text-truncate">{{ job.employer.company_name }}</p>
+                    </div>
+                </div>
+                {% if job.is_seeded %}
+                <span class="badge rounded-pill ms-1 flex-shrink-0" style="font-size:0.65rem; background:#fffbeb; color:#b45309; border:1px solid #fde68a;">CB</span>
+                {% elif own_employer_id and job.employer_id == own_employer_id %}
+                <span class="badge rounded-pill ms-1 flex-shrink-0" style="font-size:0.65rem; background:#eff6ff; color:#185adb; border:1px solid #bfdbfe;">Mine</span>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <div class="mb-2">
+                    <span class="job-badge badge-{{ job.job_type|slugify }}">
+                        {{ job.get_job_type_display }}
+                    </span>
+                </div>
+                {% if job.department %}
+                <div class="text-slate-500 small mb-2">
+                    <i class="fas fa-sitemap me-1 text-slate-400"></i> {{ job.get_department_display }}
+                </div>
+                {% endif %}
+                {% if job.designation %}
+                <div class="text-slate-500 small mb-2">
+                    <i class="fas fa-id-badge me-1 text-slate-400"></i> {{ job.get_designation_display }}
+                </div>
+                {% endif %}
+                <div class="text-slate-500 small mb-2">
+                    <i class="fas fa-map-marker-alt me-1 text-slate-400"></i> {{ job.location|truncatechars:22 }}
+                </div>
+                <div class="text-slate-500 small mb-2">
+                    <i class="fas fa-briefcase me-1 text-slate-400"></i> {{ job.get_experience_display }}
+                </div>
+                <div class="d-flex flex-wrap gap-1">
+                    {% for skill in job.get_skills_list|slice:":2" %}
+                    <span class="skill-tag">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+                {% with perks=job.get_perks_display %}{% if perks %}
+                <div class="text-slate-500 small mt-2">
+                    <i class="fas fa-gift me-1 text-slate-400"></i> {{ perks|join:", " }}
+                </div>
+                {% endif %}{% endwith %}
+            </div>
+            
+            <div class="mt-auto">
+                <div class="salary-box">
+                    <div class="fw-bold small text-primary">
+                        {{ job.get_salary_display }}
+                    </div>
+                </div>
+                <a href="{% url 'employer_portal:job_detail' job.id %}" class="apply-btn d-block text-center text-decoration-none">
+                    View Job Description
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5 bg-white border border-slate-200 rounded-3">
+        <i class="fas fa-briefcase fa-3x text-slate-300 mb-3"></i>
+        <h5 class="fw-bold text-slate-700">No active job openings found.</h5>
+        <p class="text-slate-500 small">Start by posting your first job listing.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<script src="{% static 'js/country-codes.js' %}"></script>
+<script src="{% static 'js/phone-input.js' %}"></script>
+<script>
+document.querySelectorAll('.filter-btn-tab').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn-tab').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        const filter = this.dataset.filter;
+        document.querySelectorAll('.job-card-col').forEach(card => {
+            const isSeeded = card.dataset.seeded === 'true';
+            const isOwn = card.dataset.own === 'true';
+            if (filter === 'all') card.style.display = '';
+            else if (filter === 'seeded') card.style.display = isSeeded ? '' : 'none';
+            else card.style.display = isOwn ? '' : 'none'; // My Postings: this account's jobs only
+        });
+    });
+});
+</script>
+{% endblock %}

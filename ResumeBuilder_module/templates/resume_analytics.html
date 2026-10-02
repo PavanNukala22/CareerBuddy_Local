@@ -1,0 +1,384 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CareerBuddy – Learn. Grow. Get Hired.</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            "primary-container": "#0ea5e9",
+            "surface-bright": "#fcf8f8",
+            "success": "#10b981",
+            "warning": "#f59e0b",
+            "background": "#fcf8f8",
+          },
+          fontFamily: {
+            serif: ["Newsreader", "serif"],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Newsreader', serif;
+      background-color: #fcf8f8;
+    }
+
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+    }
+
+    .ambient-blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+      z-index: -1;
+      animation: blob 10s infinite;
+    }
+
+    .blob-1 {
+      top: -10%;
+      left: -10%;
+      width: 500px;
+      height: 500px;
+      background: #bae6fd;
+    }
+
+    .blob-2 {
+      bottom: -10%;
+      right: -10%;
+      width: 400px;
+      height: 400px;
+      background: #7dd3fc;
+      animation-delay: 2s;
+    }
+
+    .blob-3 {
+      top: 40%;
+      left: 40%;
+      width: 300px;
+      height: 300px;
+      background: #e0f2fe;
+      animation-delay: 4s;
+    }
+
+    @keyframes blob {
+      0% {
+        transform: translate(0, 0) scale(1)
+      }
+
+      33% {
+        transform: translate(30px, -50px) scale(1.1)
+      }
+
+      66% {
+        transform: translate(-20px, 20px) scale(0.9)
+      }
+
+      100% {
+        transform: translate(0, 0) scale(1)
+      }
+    }
+  </style>
+</head>
+
+<body class="text-on-surface bg-[#fcf8f8] font-serif">
+
+  <div class="ambient-blob blob-1"></div>
+  <div class="ambient-blob blob-2"></div>
+  <div class="ambient-blob blob-3"></div>
+
+  <!-- TopNavBar -->
+  <nav
+    class="bg-white/95 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200/60 shadow-[0_4px_8px_rgba(0,0,0,0.08)]">
+    <div class="flex justify-between items-center max-w-[1440px] mx-auto px-6 h-16">
+      <div class="text-2xl font-bold font-serif text-slate-900">CareerBuddy AI</div>
+      <div class="hidden md:flex gap-8 items-center">
+        <a href="{% url 'evaluation' %}" onclick="localStorage.setItem('activeSidebarTab','curriculum');"
+          data-sidebar-tab="curriculum"
+          class="top-nav-link text-slate-500 hover:text-slate-900 transition-colors font-serif text-[15px]">Tech
+          Center</a>
+        <a href="{% url 'evaluation' %}" onclick="localStorage.setItem('activeSidebarTab','resources');"
+          data-sidebar-tab="resources"
+          class="top-nav-link text-slate-500 hover:text-slate-900 transition-colors font-serif text-[15px]">Dashboard</a>
+        <a href="{% url 'resume_analytics' %}" data-sidebar-tab="analytics"
+          class="top-nav-link text-slate-900 transition-colors font-serif text-[15px]">Career Path</a>
+
+        <a href="{% url 'resume_builder' %}"
+          class="bg-[#0ea5e9] text-white px-5 py-2 rounded-full font-serif font-bold shadow-[0_4px_8px_rgba(0,0,0,0.08)] hover:brightness-110 transition-all">Resume
+          Builder</a>
+
+      </div>
+      <div
+        class="w-10 h-10 rounded-full bg-sky-100 border border-slate-200 flex items-center justify-center text-sky-700 font-bold text-sm font-serif">
+        {{ request.user.username|slice:":1"|upper }}
+      </div>
+    </div>
+  </nav>
+
+  <div class="flex max-w-[1440px] mx-auto h-[calc(100vh-64px)] overflow-hidden">
+
+    {% include 'includes/cb_sidebar.html' %}
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 md:p-12 overflow-y-auto pb-24">
+
+      <!-- Header -->
+      <header class="mb-10">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <span class="text-xs font-bold tracking-widest uppercase text-sky-600 mb-2 block">Interview
+              Intelligence</span>
+            <h1 class="font-serif text-4xl font-bold text-slate-900">Interview Analysis</h1>
+          </div>
+          {% if not error %}
+          <div class="bg-white px-6 py-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+            <div class="w-12 h-12 bg-sky-50 rounded-xl flex items-center justify-center text-sky-600">
+              <span class="material-symbols-outlined" style="font-size:28px;">analytics</span>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Overall Score</p>
+              <p class="text-2xl font-bold font-serif text-slate-900">{{ avg_score|floatformat:1 }}<span
+                  class="text-sm text-slate-300 font-normal ml-1">/ 10</span></p>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </header>
+
+      {% if error %}
+      <div class="bg-white p-12 text-center rounded-[32px] shadow-sm border border-slate-100">
+        <div class="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6">
+          <span class="material-symbols-outlined" style="font-size:40px;">error</span>
+        </div>
+        <h2 class="font-serif text-2xl font-bold text-slate-900 mb-2">Analysis Unavailable</h2>
+        <p class="text-slate-500 font-serif mb-8 max-w-md mx-auto">{{ error }}</p>
+        <a href="{% url 'resume_builder' %}"
+          class="bg-sky-600 text-white px-8 py-3 rounded-full font-serif font-bold shadow-lg shadow-sky-200 hover:brightness-110 transition-all inline-block no-underline">Start
+          New Session</a>
+      </div>
+      {% else %}
+
+      <!-- Insight Bento Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+
+        <!-- Chart Card -->
+        <div
+          class="lg:col-span-2 bg-white rounded-[32px] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
+          <div class="flex items-center justify-between mb-8">
+            <h3 class="font-serif text-xl font-bold text-slate-900">Topic Performance</h3>
+            <div class="flex gap-2">
+              <div class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Strong
+              </div>
+              <div class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span> Average
+              </div>
+              <div class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
+                <span class="w-2 h-2 rounded-full bg-rose-500"></span> Improve
+              </div>
+            </div>
+          </div>
+          <div class="h-[300px]">
+            <canvas id="topicChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Quick Stats Card -->
+        <div
+          class="bg-white rounded-[32px] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col justify-between">
+          <div>
+            <h3 class="font-serif text-xl font-bold text-slate-900 mb-6">Session Summary</h3>
+            <div class="space-y-6">
+              <div class="flex items-center justify-between">
+                <span class="text-slate-500 text-sm font-serif">Questions Asked</span>
+                <span class="font-bold text-slate-900">{{ total_questions }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-500 text-sm font-serif">Completed Answers</span>
+                <span class="font-bold text-slate-900">{{ answered_count }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-500 text-sm font-serif">Completion Rate</span>
+                <span class="font-bold text-emerald-600">{% if total_questions %}{% widthratio answered_count total_questions 100 %}{% else %}0{% endif %}%</span>
+              </div>
+
+            </div>
+          </div>
+
+          <a href="{% url 'resume_builder' %}"
+            class="w-full py-4 bg-sky-50 text-sky-600 rounded-2xl font-serif font-bold text-center hover:bg-sky-100 transition-all no-underline mt-8">
+            Try Another Mock
+          </a>
+        </div>
+      </div>
+
+      <!-- Detailed Breakdown Table -->
+      <div
+        class="bg-white rounded-[32px] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden">
+        <h3 class="font-serif text-xl font-bold text-slate-900 mb-8">Detailed Breakdown</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="border-b border-slate-50 text-slate-400 font-serif text-xs uppercase tracking-widest">
+                <th class="pb-6 font-semibold">Topic</th>
+                <th class="pb-6 font-semibold">Assessment</th>
+                <th class="pb-6 font-semibold">Score</th>
+                <th class="pb-6">Detailed Feedback</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+              {% for item in data %}
+              <tr class="group hover:bg-slate-50/50 transition-colors">
+                <td class="py-6 pr-4">
+                  <span class="px-3 py-1 bg-slate-50 rounded-full text-[10px] font-bold text-slate-500 uppercase tracking-tight">{{ item.topic }}</span>
+                </td>
+                <td class="py-6 pr-4">
+                  <p class="font-serif font-bold text-slate-900 text-sm mb-1">{{ item.question|truncatechars:80 }}</p>
+                  <p class="text-slate-400 text-[11px] font-serif italic">{{ item.answer|default:"No answer provided"|truncatechars:100 }}</p>
+                </td>
+
+                <td class="py-6">
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="font-serif font-bold text-lg {% if item.score >= 8 %}text-emerald-600{% elif item.score >= 5 %}text-amber-600{% else %}text-rose-600{% endif %}">
+                      {{ item.score|default:"-" }}
+                    </span>
+                    <span class="text-[10px] text-slate-300">/ 10</span>
+                  </div>
+                </td>
+                <td class="py-6">
+                  <p class="text-slate-600 font-serif text-xs leading-relaxed max-w-sm">
+                    {{ item.feedback|default:"No feedback available for this response." }}
+                  </p>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </main>
+  </div>
+
+
+
+  {% include 'includes/aria_assistant.html' %}
+
+  <script id="analytics-data" type="application/json">
+    {{ json_data|safe }}
+</script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Initialize Topic Performance Chart
+      const rawData = JSON.parse(document.getElementById('analytics-data').textContent || '[]');
+      if (rawData && rawData.length > 0) {
+        // Group scores by topic
+        const topicScores = {};
+        rawData.forEach(item => {
+          if (item.score !== null && item.score !== undefined) {
+            if (!topicScores[item.topic]) {
+              topicScores[item.topic] = [];
+            }
+            topicScores[item.topic].push(Number(item.score));
+          }
+        });
+
+        // Calculate average score per topic
+        const topics = Object.keys(topicScores);
+        const avgScores = topics.map(topic => {
+          const scores = topicScores[topic];
+          const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+          return Math.round(avg * 10) / 10;
+        });
+
+        // Determine colors based on score
+        const colors = avgScores.map(score => {
+          if (score >= 8) return '#10b981'; // emerald-500
+          if (score >= 5) return '#f59e0b'; // amber-500
+          return '#f43f5e'; // rose-500
+        });
+
+
+        // Create chart
+        const ctx = document.getElementById('topicChart');
+        if (ctx) {
+          new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: topics,
+              datasets: [{
+                label: 'Average Score',
+                data: avgScores,
+                backgroundColor: colors,
+                borderColor: colors,
+                borderWidth: 1,
+                borderRadius: 6,
+                tension: 0.1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              plugins: {
+                legend: {
+                  display: true,
+                  labels: {
+                    font: { size: 12, weight: '500' },
+                    color: '#64748b',
+                    padding: 15
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  max: 10,
+                  ticks: {
+                    font: { size: 11 },
+                    color: '#94a3b8'
+                  },
+                  grid: {
+                    color: 'rgba(226, 232, 240, 0.5)',
+                    drawBorder: false
+                  }
+                },
+                x: {
+                  ticks: {
+                    font: { size: 11 },
+                    color: '#64748b'
+                  },
+                  grid: {
+                    display: false
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

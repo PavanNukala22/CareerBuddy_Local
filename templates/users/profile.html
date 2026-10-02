@@ -1,0 +1,1352 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load mask_filters %}
+
+{% block extra_css %}
+<style>
+  .profile-page {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    min-height: 100vh;
+    padding: 6rem 0 3rem;
+  }
+  .profile-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  }
+  .profile-avatar-wrap {
+    position: relative;
+    width: 120px; height: 120px;
+    margin: 0 auto 1.5rem;
+    border-radius: 50%;
+    padding: 4px;
+    background: linear-gradient(135deg, #14213D, #1b2a4a);
+    box-shadow: 0 8px 24px rgba(20, 33, 61, 0.2);
+  }
+  .profile-avatar-img {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #f1f5f9;
+    border: 3px solid #ffffff;
+  }
+  .profile-avatar-initials {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: #f1f5f9;
+    color: #0f172a; font-size: 2.2rem; font-weight: 700;
+    border: 3px solid #ffffff;
+  }
+  .profile-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  .profile-stat {
+    text-align: center;
+  }
+  .profile-stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+  .profile-stat-label {
+    font-size: 0.72rem;
+    color: #64748b;
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+  }
+
+  /* Right column: dashboard card tabs */
+  .profile-tabs-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+  }
+  .nav-tabs-profile {
+    display: flex;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0.5rem 1rem 0;
+    gap: 0.5rem;
+  }
+  .nav-tabs-profile .nav-link {
+    color: #64748b;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 0.75rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: color 0.2s, border-color 0.2s;
+    border-radius: 8px 8px 0 0;
+  }
+  .nav-tabs-profile .nav-link:hover {
+    color: #FCA311;
+  }
+  .nav-tabs-profile .nav-link.active {
+    color: #FCA311;
+    border-bottom-color: #FCA311;
+    background: #ffffff;
+  }
+  .tab-content-profile {
+    padding: 2rem;
+  }
+
+  /* Overview layouts */
+  .info-group-title {
+    color: #14213D;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 1.5rem 0 0.75rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .info-group-title:first-of-type { margin-top: 0; }
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+  }
+  .info-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .info-item-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #14213D;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.95rem; flex-shrink: 0;
+  }
+  .info-item-content {
+    display: flex; flex-direction: column;
+  }
+  .info-item-label {
+    font-size: 0.72rem; color: #64748b; text-transform: uppercase; font-weight: 500;
+  }
+  .info-item-value {
+    font-size: 0.88rem; color: #0f172a; font-weight: 600;
+  }
+
+  /* Form layouts */
+  .form-section-title {
+    color: #0f172a;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 1.5rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .form-section-title:first-of-type { margin-top: 0; }
+  .form-control, .form-select {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #0f172a !important;
+    border-radius: 8px !important;
+    padding: 0.55rem 0.85rem !important;
+  }
+  .form-control:focus, .form-select:focus {
+    border-color: #FCA311 !important;
+    box-shadow: 0 0 0 3px rgba(252,163,17,0.18) !important;
+    background: #ffffff !important;
+  }
+  .form-label {
+    color: #475569; font-size: 0.78rem; font-weight: 500; margin-bottom: 0.3rem;
+  }
+  .required-star { color: #ef4444; margin-left: 2px; }
+  .conditional-block {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 0.5rem;
+    display: none;
+  }
+  .conditional-block.show { display: block; }
+  .invalid-feedback { color: #ef4444; font-size: 0.78rem; }
+
+  /* History table */
+  .table { color: #0f172a; }
+  .table-hover tbody tr:hover { background-color: #f8fafc; }
+  .table-light { background-color: #f1f5f9; border-color: #e2e8f0; }
+  .table-light th { color: #475569; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; border: none; }
+  .table td { border-color: #e2e8f0; vertical-align: middle; }
+
+  /* Profile sidebar text overrides */
+  .profile-card h4 { color: #0f172a !important; }
+  .profile-card .text-white { color: #0f172a !important; }
+  .profile-card .text-slate-400 { color: #64748b !important; }
+  .profile-card .border-slate-800 { border-color: #e2e8f0 !important; }
+  .profile-card .badge { background: #eff6ff !important; color: #14213D !important; border-color: #bfdbfe !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+  <div class="container">
+    <div class="row g-4">
+
+      <!-- Profile Sidebar (Left) -->
+      <div class="col-lg-4">
+        <div class="profile-card text-center">
+          <div class="profile-avatar-wrap">
+            {% if profile.selfie %}
+              <img src="{{ profile.selfie.url }}" alt="Candidate Selfie" class="profile-avatar-img">
+            {% elif profile.avatar %}
+              <img src="{{ profile.avatar.url }}" alt="Candidate Avatar" class="profile-avatar-img">
+            {% else %}
+              <div class="profile-avatar-initials text-primary">
+                {% if user.first_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% else %}<i class="fas fa-user-circle"></i>{% endif %}
+              </div>
+            {% endif %}
+          </div>
+          <h4 class="mt-3 mb-1 text-white font-semibold">{{ user.get_full_name|default:user.username }}</h4>
+          <p class="text-slate-400 text-sm mb-2">@{{ user.username }}</p>
+          <span class="badge bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-full text-xs font-semibold">
+            {{ user.profile.get_english_level_display }}
+          </span>
+          <hr class="border-slate-800 my-4">
+          
+          <div class="profile-stats-grid">
+            <div class="profile-stat">
+              <div class="profile-stat-value text-indigo-400">{{ activities_started }}</div>
+              <div class="profile-stat-label">Started</div>
+            </div>
+            <div class="profile-stat">
+              <div class="profile-stat-value text-emerald-400">{{ completed_subs }}</div>
+              <div class="profile-stat-label">Done</div>
+            </div>
+            <div class="profile-stat">
+              <div class="profile-stat-value text-amber-400">{{ total_score }}</div>
+              <div class="profile-stat-label">Score</div>
+            </div>
+          </div>
+          {% if recent_results %}
+          <hr class="border-slate-800 my-4">
+          <div id="recent-exercise-results">
+            <p class="text-slate-400 text-xs fw-bold text-uppercase mb-2">Recent Exercise Results</p>
+            {% for result in recent_results %}
+            <div class="d-flex justify-content-between align-items-center text-slate-300 small mb-1 recent-result-row">
+              <span class="text-truncate me-2">{{ result.exercise.title }}</span>
+              <span class="text-amber-400 fw-semibold">{{ result.score }}/{{ result.max_score }}</span>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+          <hr class="border-slate-800 my-4">
+          <p class="text-slate-400 text-xs mb-0">
+            <i class="fas fa-calendar me-1 text-indigo-400"></i>Joined {{ user.profile.joined_at|date:"F Y" }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Main Profile Dashboard (Right) -->
+      <div class="col-lg-8">
+        <div class="profile-tabs-card">
+          <!-- Nav Tabs -->
+          <div class="nav-tabs-profile">
+            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button">
+              <i class="fas fa-id-card me-1.5"></i>Profile Details
+            </button>
+            <button class="nav-link" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit" type="button">
+              <i class="fas fa-user-edit me-1.5"></i>Edit Details
+            </button>
+          </div>
+
+          <!-- Tab Content -->
+          <div class="tab-content tab-content-profile">
+
+            <!-- Tab 1: Profile Overview Details -->
+            <div class="tab-pane fade show active" id="overview">
+              <!-- Account -->
+              <div class="info-group-title">Account Details</div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-envelope"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Email Address</span>
+                    <span class="info-item-value">{{ user.email }}</span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-user"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Username</span>
+                    <span class="info-item-value">{{ user.username }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Personal -->
+              <div class="info-group-title">Personal &amp; Contact Information</div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-phone"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Mobile Number</span>
+                    <span class="info-item-value">{{ profile.mobile|default:"Not Provided" }}</span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-phone-alt"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Alternate Mobile</span>
+                    <span class="info-item-value">{{ profile.alternate_mobile|default:"Not Provided" }}</span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-venus-mars"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Gender</span>
+                    <span class="info-item-value">{{ profile.get_gender_display|default:"Not Provided" }}</span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-tint"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Blood Group</span>
+                    <span class="info-item-value">{{ profile.blood_group|default:"Not Provided" }}</span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-language"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Languages Known</span>
+                    <span class="info-item-value">{{ profile.languages_known|default:"Not Provided" }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Identity -->
+              <div class="info-group-title">Government Identity Documents</div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-fingerprint"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Aadhar Number</span>
+                    <span class="info-item-value">{{ profile.aadhar_number|mask_aadhar|default:"Not Provided" }}</span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-credit-card"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">PAN Number</span>
+                    <span class="info-item-value">{{ profile.pan_number|mask_pan|default:"Not Provided" }}</span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-passport"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Passport Number</span>
+                    <span class="info-item-value">{{ profile.passport_number|mask_passport|default:"Not Provided" }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Education -->
+              <div class="info-group-title">Education Details</div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-graduation-cap"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Highest Qualification</span>
+                    <span class="info-item-value">{{ profile.get_education_level_display|default:"Not Provided" }}</span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-calendar-alt"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Year of Passing</span>
+                    <span class="info-item-value">{{ profile.passed_out_year|default:"Not Provided" }}</span>
+                  </div>
+                </div>
+                {% if profile.higher_education_degree %}
+                <div class="info-item" style="grid-column: span 2;">
+                  <div class="info-item-icon"><i class="fas fa-university"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Degree / Course Name</span>
+                    <span class="info-item-value">{{ profile.higher_education_degree }}</span>
+                  </div>
+                </div>
+                {% endif %}
+                {% if profile.iti_diploma_specialization %}
+                <div class="info-item" style="grid-column: span 2;">
+                  <div class="info-item-icon"><i class="fas fa-cogs"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">ITI / Diploma Specialization</span>
+                    <span class="info-item-value">{{ profile.iti_diploma_specialization }}</span>
+                  </div>
+                </div>
+                {% endif %}
+
+                {% if profile.education_level_2 and not profile.additional_educations_json %}
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-graduation-cap"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Additional Qualification</span>
+                    <span class="info-item-value">{{ profile.get_education_level_2_display }}</span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-calendar-alt"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Additional Year of Passing</span>
+                    <span class="info-item-value">{{ profile.passed_out_year_2|default:"Not Provided" }}</span>
+                  </div>
+                </div>
+                {% if profile.higher_education_degree_2 %}
+                <div class="info-item" style="grid-column: span 2;">
+                  <div class="info-item-icon"><i class="fas fa-university"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Additional Degree / Course</span>
+                    <span class="info-item-value">{{ profile.higher_education_degree_2 }}</span>
+                  </div>
+                </div>
+                {% endif %}
+                {% if profile.iti_diploma_specialization_2 %}
+                <div class="info-item" style="grid-column: span 2;">
+                  <div class="info-item-icon"><i class="fas fa-cogs"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Additional ITI / Diploma Specialization</span>
+                    <span class="info-item-value">{{ profile.iti_diploma_specialization_2 }}</span>
+                  </div>
+                </div>
+                {% endif %}
+                {% endif %}
+
+                {% for edu in profile.additional_educations_json %}
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-graduation-cap"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Additional Qualification</span>
+                    <span class="info-item-value">
+                      {% if edu.level == '7th' %}7th Standard
+                      {% elif edu.level == '8th' %}8th Standard
+                      {% elif edu.level == '9th' %}9th Standard
+                      {% elif edu.level == '10th' %}10th / SSLC
+                      {% elif edu.level == '11th' %}11th Standard
+                      {% elif edu.level == '12th' %}12th / HSC / PUC
+                      {% elif edu.level == 'iti' %}ITI
+                      {% elif edu.level == 'diploma' %}Diploma
+                      {% elif edu.level == 'ug' %}Under-Graduate / Degree
+                      {% elif edu.level == 'pg' %}Post-Graduate
+                      {% else %}{{ edu.level|title }}
+                      {% endif %}
+                    </span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-calendar-alt"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Additional Year of Passing</span>
+                    <span class="info-item-value">{{ edu.passed_out_year|default:"Not Provided" }}</span>
+                  </div>
+                </div>
+                {% if edu.specialization %}
+                <div class="info-item" style="grid-column: span 2;">
+                  <div class="info-item-icon"><i class="fas fa-university"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Additional Specialization / Degree</span>
+                    <span class="info-item-value">{{ edu.specialization }}</span>
+                  </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+              </div>
+
+              <!-- Experience -->
+              <div class="info-group-title">Work Experience &amp; Skills</div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-briefcase"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Experience Status</span>
+                    <span class="info-item-value">{% if profile.has_experience %}Experienced Candidate{% else %}Fresher{% endif %}</span>
+                  </div>
+                </div>
+                {% if profile.has_experience %}
+                {% if profile.company_name %}
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-building"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Company Name</span>
+                    <span class="info-item-value">{{ profile.company_name }}</span>
+                  </div>
+                </div>
+                {% endif %}
+                {% if profile.experience_years %}
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-business-time"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Years of Experience</span>
+                    <span class="info-item-value">{{ profile.experience_years }} yr(s)</span>
+                  </div>
+                </div>
+                {% endif %}
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-industry"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Industry Sector</span>
+                    <span class="info-item-value">{{ profile.get_industry_display|default:"Not Provided" }}</span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-coins"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Current CTC</span>
+                    <span class="info-item-value">{{ profile.current_ctc|default:"0.0" }} LPA</span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-money-bill-wave"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Expected CTC</span>
+                    <span class="info-item-value">{{ profile.expected_ctc|default:"0.0" }} LPA</span>
+                  </div>
+                </div>
+                {% if profile.contact_person_mobile or profile.contact_person_email %}
+                <div class="info-item" style="grid-column: span 2;">
+                  <div class="info-item-icon"><i class="fas fa-user-check"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Contact Person (Manager / HR)</span>
+                    <span class="info-item-value">
+                      {% if profile.contact_person_role %}{{ profile.contact_person_role }}: {% endif %}
+                      {% if profile.contact_person_mobile %}{{ profile.contact_person_mobile }}{% endif %}
+                      {% if profile.contact_person_email %} ({{ profile.contact_person_email }}){% endif %}
+                    </span>
+                  </div>
+                </div>
+                {% endif %}
+                {% endif %}
+                <div class="info-item" style="grid-column: span 2;">
+                  <div class="info-item-icon"><i class="fas fa-tools"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Skillset &amp; Expertise</span>
+                    <span class="info-item-value">{{ profile.skills|default:"Not Provided" }}</span>
+                  </div>
+                </div>
+                <div class="info-item" style="grid-column: span 2;">
+                  <div class="info-item-icon"><i class="fas fa-certificate"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Certifications</span>
+                    <span class="info-item-value">{{ profile.certification|default:"Not Provided" }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Location -->
+              <div class="info-group-title">Location Preferences</div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-home"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Current Location</span>
+                    <span class="info-item-value">{{ profile.current_location|default:"Not Provided" }}</span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-map-pin"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Preferred Location</span>
+                    <span class="info-item-value">{{ profile.preferred_location|default:"Not Provided" }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Abroad -->
+              <div class="info-group-title">Abroad Experience Details</div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-plane"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Abroad Experience</span>
+                    <span class="info-item-value">{% if profile.has_abroad_experience %}Yes{% else %}No{% endif %}</span>
+                  </div>
+                </div>
+                {% if profile.has_abroad_experience %}
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-history"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Years Abroad</span>
+                    <span class="info-item-value">{{ profile.abroad_years }} Years</span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-flag"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Country</span>
+                    <span class="info-item-value">{{ profile.abroad_country }}</span>
+                  </div>
+                </div>
+                <div class="info-item">
+                  <div class="info-item-icon"><i class="fas fa-building"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Industry Abroad</span>
+                    <span class="info-item-value">{{ profile.abroad_industry }}</span>
+                  </div>
+                </div>
+                <div class="info-item" style="grid-column: span 2;">
+                  <div class="info-item-icon"><i class="fas fa-star"></i></div>
+                  <div class="info-item-content">
+                    <span class="info-item-label">Skills Gained Abroad</span>
+                    <span class="info-item-value">{{ profile.abroad_skills|default:"Not Provided" }}</span>
+                  </div>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Tab 2: Edit Profile details -->
+            <div class="tab-pane fade" id="edit">
+              <form id="profile-form" method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+
+                <!-- Section: Core Account Details -->
+                <div class="form-section-title"><i class="fas fa-user-circle me-1 text-indigo-400"></i>Basic &amp; Contact Info</div>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label">First Name <span class="required-star">*</span></label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}<div class="invalid-feedback d-block">{{ form.first_name.errors.0 }}</div>{% endif %}
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Last Name <span class="required-star">*</span></label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}<div class="invalid-feedback d-block">{{ form.last_name.errors.0 }}</div>{% endif %}
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Email Address <span class="required-star">*</span></label>
+                    {{ form.email }}
+                    {% if form.email.errors %}<div class="invalid-feedback d-block">{{ form.email.errors.0 }}</div>{% endif %}
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">English Level</label>
+                    {{ form.english_level }}
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Gender</label>
+                    {{ form.gender }}
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Blood Group</label>
+                    {{ form.blood_group }}
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Mobile Number</label>
+                    {{ form.mobile }}
+                    {% include 'includes/phone_input.html' with field_name='mobile' placeholder='Mobile Number' %}
+                    {% if form.mobile.errors %}<div class="invalid-feedback d-block">{{ form.mobile.errors.0 }}</div>{% endif %}
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Alternative Mobile</label>
+                    {{ form.alternate_mobile }}
+                    {% include 'includes/phone_input.html' with field_name='alternate_mobile' placeholder='Alternative Mobile (optional)' %}
+                    {% if form.alternate_mobile.errors %}<div class="invalid-feedback d-block">{{ form.alternate_mobile.errors.0 }}</div>{% endif %}
+                  </div>
+                  <!-- Language Proficiency Sub-Section -->
+                  <div class="col-12 mt-2 pt-2" style="border-top: 1px dashed rgba(0,0,0,0.08);">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                      <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-language text-primary" style="font-size:0.85rem;"></i>
+                        <span class="text-muted" style="font-size:0.82rem; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Languages Known</span>
+                      </div>
+                      <button type="button" class="btn btn-sm btn-outline-primary py-1 px-3 rounded-pill text-xs fw-semibold" id="add-edit-lang-btn">
+                        <i class="fas fa-plus me-1"></i> Add Language
+                      </button>
+                    </div>
+                  </div>
+                  <div class="col-12 mb-2">
+                    <div id="edit-lang-container" data-existing-languages="{{ profile.languages_known|default:'' }}">
+                      <div class="row g-2 align-items-center mb-2 lang-entry-row">
+                        <div class="col-md-7">
+                          <input type="text" name="lang_name[]" class="form-control" placeholder="Hindi, Telugu, Gujarati, English, others...">
+                        </div>
+                        <div class="col-md-4 col-10">
+                          <select name="lang_level[]" class="form-select">
+                            <option value="">Select Level</option>
+                            <option value="Good">Good</option>
+                            <option value="Intermediate">Intermediate</option>
+                            <option value="Expert">Expert</option>
+                          </select>
+                        </div>
+                        <div class="col-md-1 col-2 text-end">
+                          <button type="button" class="btn btn-outline-danger btn-sm rounded-circle remove-lang-row" style="display:none; width:32px; height:32px; padding:0; line-height:30px;">
+                            <i class="fas fa-trash-alt"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Recent Selfie</label>
+                    {{ form.selfie }}
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">Short Bio</label>
+                    {{ form.bio }}
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">Profile Picture (Avatar)</label>
+                    {{ form.avatar }}
+                  </div>
+                </div>
+
+                <!-- Section: Identity Info -->
+                <div class="form-section-title"><i class="fas fa-id-card-alt me-1 text-indigo-400"></i>Identity Documents</div>
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <label class="form-label">Aadhar Number <span class="required-star">*</span></label>
+                    {% include 'includes/mask_reveal_field.html' with field=form.aadhar_number masked_value=profile.aadhar_number|mask_aadhar %}
+                    <small id="aadhar-validation-profile" class="mt-1 d-block" style="font-weight:600;"></small>
+                    {% if form.aadhar_number.errors %}<div class="invalid-feedback d-block">{{ form.aadhar_number.errors.0 }}</div>{% endif %}
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">PAN Number</label>
+                    {% include 'includes/mask_reveal_field.html' with field=form.pan_number masked_value=profile.pan_number|mask_pan %}
+                    <small id="pan-validation-profile" class="mt-1 d-block" style="font-weight:600;"></small>
+                    {% if form.pan_number.errors %}<div class="invalid-feedback d-block">{{ form.pan_number.errors.0 }}</div>{% endif %}
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">Passport Number</label>
+                    {% include 'includes/mask_reveal_field.html' with field=form.passport_number masked_value=profile.passport_number|mask_passport %}
+                    <small id="passport-validation-profile" class="mt-1 d-block" style="font-weight:600;"></small>
+                    {% if form.passport_number.errors %}<div class="invalid-feedback d-block">{{ form.passport_number.errors.0 }}</div>{% endif %}
+                  </div>
+                </div>
+
+                <!-- Section: Education Info -->
+                <div class="form-section-title"><i class="fas fa-graduation-cap me-1 text-indigo-400"></i>Education</div>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label">Highest Education</label>
+                    {{ form.education_level }}
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Year of Passing</label>
+                    {{ form.passed_out_year }}
+                  </div>
+                </div>
+                <div class="conditional-block" id="iti-diploma-block-edit">
+                  <div class="row g-3">
+                    <div class="col-12">
+                      <label class="form-label">ITI / Diploma Specialization</label>
+                      {{ form.iti_diploma_specialization }}
+                    </div>
+                  </div>
+                </div>
+                <div class="conditional-block" id="higher-edu-block-edit">
+                  <div class="row g-3">
+                    <div class="col-12">
+                      <label class="form-label">Degree / Course Name</label>
+                      {{ form.higher_education_degree }}
+                      <small class="text-muted" style="font-size:.75rem;">e.g. B.Tech (CSE), B.Com, MBA, M.Sc Physics, BCA</small>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ── Additional Education ── -->
+                <div class="mt-3 pt-3" style="border-top: 1px dashed rgba(0,0,0,0.08);">
+                  <div class="d-flex align-items-center gap-2 mb-3" style="cursor: pointer; user-select: none;" id="toggle-additional-edu-edit">
+                    <i class="fas fa-plus-circle text-primary" style="font-size:0.85rem;" id="additional-edu-icon-edit"></i>
+                    <span class="text-muted" style="font-size:0.82rem; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Additional Education (Optional)</span>
+                  </div>
+                  <div id="additional-edu-fields-edit" class="d-none">
+                    <div id="dynamic-edu-container-edit"></div>
+                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add-additional-edu-btn-edit">
+                      <i class="fas fa-plus me-1"></i> Add Another Education
+                    </button>
+                    <input type="hidden" name="additional_educations_json" id="additional_educations_json_field_edit" value="[]">
+                  </div>
+                </div>
+
+                <!-- Section: Experience Info -->
+                <div class="form-section-title"><i class="fas fa-briefcase me-1 text-indigo-400"></i>Experience &amp; Skills</div>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label">Do you have work experience?</label>
+                    {{ form.has_experience }}
+                  </div>
+                  <!-- Skills stays visible for both Yes (experienced) and No (fresher) -->
+                  <div class="col-md-6">
+                    <label class="form-label">Skills / Expertise</label>
+                    {{ form.skills }}
+                    <small class="text-muted" style="font-size:.75rem;">Comma separated. Freshers can list skills learnt in college / training.</small>
+                  </div>
+                </div>
+                <div class="conditional-block" id="experience-block-edit">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label">Years of Experience</label>
+                      {{ form.experience_years }}
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Company Name</label>
+                      {{ form.company_name }}
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Industry</label>
+                      {{ form.industry }}
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Current CTC (LPA)</label>
+                      {{ form.current_ctc }}
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Expected CTC (LPA)</label>
+                      {{ form.expected_ctc }}
+                    </div>
+
+                    <!-- Contact Person (Manager / HR) Reference Sub-Section -->
+                    <div class="col-12 mt-3 pt-2" style="border-top: 1px dashed rgba(0,0,0,0.08);">
+                      <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="fas fa-id-card text-primary" style="font-size:0.85rem;"></i>
+                        <span class="text-muted" style="font-size:0.82rem; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">Reference / Contact Person (Manager or HR)</span>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label">Contact Person Role</label>
+                      {{ form.contact_person_role }}
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label">Contact Mobile / Phone</label>
+                      {{ form.contact_person_mobile }}
+                      {% include 'includes/phone_input.html' with field_name='contact_person_mobile' placeholder='Contact Mobile / Phone' %}
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label">Contact Email ID</label>
+                      {{ form.contact_person_email }}
+                    </div>
+                  </div>
+                </div>
+                <div class="row g-3 mt-1">
+                  <div class="col-12">
+                    <label class="form-label">Certifications</label>
+                    {{ form.certification }}
+                  </div>
+                </div>
+                <div class="row g-3 mt-1">
+                  <div class="col-12">
+                    <label class="form-label"><i class="fas fa-file-upload me-1"></i>Resume Upload</label>
+                    {{ form.resume }}
+                    <small class="text-muted" style="font-size:.75rem;">Upload your resume (PDF / DOC / DOCX). Helps employers shortlist you faster.</small>
+                    {% if profile.resume %}
+                    <div class="mt-1">
+                      <a href="{{ profile.resume.url }}" target="_blank" class="small text-decoration-none">
+                        <i class="fas fa-file-alt me-1"></i>Current resume: {{ profile.resume.name|cut:"resumes/" }}
+                      </a>
+                      <span class="text-muted small">— uploading a new file will replace it.</span>
+                    </div>
+                    {% endif %}
+                    {% if form.resume.errors %}<div class="text-danger small mt-1">{{ form.resume.errors.0 }}</div>{% endif %}
+                  </div>
+                </div>
+
+                <!-- Section: Location Info -->
+                <div class="form-section-title"><i class="fas fa-map-marked-alt me-1 text-indigo-400"></i>Location Preferences</div>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label">Current Location</label>
+                    {{ form.current_location }}
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Preferred Location</label>
+                    {{ form.preferred_location }}
+                  </div>
+                </div>
+
+                <!-- Section: Abroad Info -->
+                <div class="form-section-title"><i class="fas fa-globe-americas me-1 text-indigo-400"></i>Abroad Experience</div>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label">Have you worked abroad?</label>
+                    {{ form.has_abroad_experience }}
+                  </div>
+                </div>
+                <div class="conditional-block" id="abroad-block-edit">
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <label class="form-label">Years Abroad</label>
+                      {{ form.abroad_years }}
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label">Country</label>
+                      {{ form.abroad_country }}
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label">Industry Abroad</label>
+                      {{ form.abroad_industry }}
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label">Skills Gained Abroad</label>
+                      {{ form.abroad_skills }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-4 pt-2">
+                  <button type="submit" class="btn btn-primary px-4 py-2" style="border-radius: 8px;">
+                    <i class="fas fa-save me-2"></i>Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/country-codes.js' %}"></script>
+<script src="{% static 'js/phone-input.js' %}"></script>
+<script src="{% static 'js/mask-reveal.js' %}"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ── Edit profile conditional controls ──────────────────────────────────────
+  const abroadSelect = document.getElementById('id_has_abroad');
+  const abroadBlock  = document.getElementById('abroad-block-edit');
+
+  function toggleAbroad() {
+    const show = abroadSelect && abroadSelect.value === 'True';
+    if (abroadBlock) abroadBlock.classList.toggle('show', show);
+  }
+  if (abroadSelect) {
+    abroadSelect.addEventListener('change', toggleAbroad);
+    toggleAbroad();
+  }
+
+  const expSelect = document.getElementById('id_has_experience');
+  const expBlock  = document.getElementById('experience-block-edit');
+
+  function toggleExperience() {
+    const show = expSelect && expSelect.value === 'True';
+    if (expBlock) expBlock.classList.toggle('show', show);
+  }
+  if (expSelect) {
+    expSelect.addEventListener('change', toggleExperience);
+    toggleExperience();
+  }
+
+  const eduSelect = document.getElementById('id_education_level');
+  const itiBlock  = document.getElementById('iti-diploma-block-edit');
+  const higherEduBlockEdit = document.getElementById('higher-edu-block-edit');
+  const itiValues = new Set(['iti', 'diploma']);
+  const higherValues = new Set(['ug', 'pg']);
+
+  function toggleIti() {
+    const val = eduSelect ? eduSelect.value : '';
+    if (itiBlock) itiBlock.classList.toggle('show', itiValues.has(val));
+    if (higherEduBlockEdit) higherEduBlockEdit.classList.toggle('show', higherValues.has(val));
+  }
+  if (eduSelect) {
+    eduSelect.addEventListener('change', toggleIti);
+    toggleIti();
+  }
+
+  // ── Dynamic Multiple Additional Education ─────────────────────────────────
+  const addEduToggleEdit = document.getElementById('toggle-additional-edu-edit');
+  const addEduFieldsEdit = document.getElementById('additional-edu-fields-edit');
+  const addEduIconEdit   = document.getElementById('additional-edu-icon-edit');
+  const addEduBtnEdit    = document.getElementById('add-additional-edu-btn-edit');
+  const dynamicEduContainerEdit = document.getElementById('dynamic-edu-container-edit');
+  const eduJsonFieldEdit = document.getElementById('additional_educations_json_field_edit');
+
+  const educationChoicesEdit = `
+    <option value="">Select Level</option>
+    <option value="7th">7th Standard</option>
+    <option value="8th">8th Standard</option>
+    <option value="9th">9th Standard</option>
+    <option value="10th">10th / SSLC</option>
+    <option value="11th">11th Standard</option>
+    <option value="12th">12th / HSC / PUC</option>
+    <option value="iti">ITI</option>
+    <option value="diploma">Diploma</option>
+    <option value="ug">Under-Graduate / Degree</option>
+    <option value="pg">Post-Graduate</option>
+  `;
+
+  function createEduBlockEdit(data = {}) {
+    const block = document.createElement('div');
+    block.className = 'edu-entry-block p-3 mb-3 border rounded bg-white position-relative shadow-sm';
+    
+    block.innerHTML = `
+      <button type="button" class="btn-close position-absolute top-0 end-0 m-2 remove-edu-btn" aria-label="Close"></button>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Education Level</label>
+          <select class="form-select edu-level-select">
+            ${educationChoicesEdit}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Year of Passing</label>
+          <select class="form-select edu-year">
+            <option value="">Select Year</option>
+            ${(() => {
+              let opts = '';
+              // Mirrors get_max_passed_out_year() in users/forms.py: the
+              // current year and later are not valid passing-out years.
+              const maxYear = new Date().getFullYear() - 1;
+              for(let y = maxYear; y >= 1990; y--) {
+                opts += '<option value="' + y + '" ' + (data.passed_out_year == y ? 'selected' : '') + '>' + y + '</option>';
+              }
+              return opts;
+            })()}
+          </select>
+        </div>
+      </div>
+      <div class="row g-3 mt-1 edu-specialization-block" style="display:none;">
+        <div class="col-12">
+          <label class="form-label edu-spec-label">Specialization / Degree</label>
+          <input type="text" class="form-control edu-spec" placeholder="" value="${data.specialization || ''}">
+        </div>
+      </div>
+    `;
+
+    const select = block.querySelector('.edu-level-select');
+    if (data.level) select.value = data.level;
+
+    const specBlock = block.querySelector('.edu-specialization-block');
+    const specLabel = block.querySelector('.edu-spec-label');
+    const specInput = block.querySelector('.edu-spec');
+    
+    function updateSpec() {
+      const val = select.value;
+      if (['iti', 'diploma'].includes(val)) {
+        specBlock.style.display = 'block';
+        specLabel.textContent = 'ITI / Diploma Specialization';
+        specInput.placeholder = 'Trade / Branch, e.g. Electrician';
+      } else if (['ug', 'pg'].includes(val)) {
+        specBlock.style.display = 'block';
+        specLabel.textContent = 'Degree / Course Name';
+        specInput.placeholder = 'e.g. B.Tech, MBA, M.Sc';
+      } else {
+        specBlock.style.display = 'none';
+        specInput.value = '';
+      }
+    }
+    
+    select.addEventListener('change', updateSpec);
+    updateSpec();
+    
+    block.querySelector('.remove-edu-btn').addEventListener('click', function() {
+      block.remove();
+    });
+    
+    return block;
+  }
+
+  function toggleAddEduSectionEdit() {
+    if (!addEduFieldsEdit) return;
+    const isHidden = addEduFieldsEdit.classList.contains('d-none');
+    if (isHidden) {
+      addEduFieldsEdit.classList.remove('d-none');
+      if (addEduIconEdit) {
+        addEduIconEdit.classList.remove('fa-plus-circle');
+        addEduIconEdit.classList.add('fa-minus-circle');
+      }
+      if (dynamicEduContainerEdit.children.length === 0) {
+        dynamicEduContainerEdit.appendChild(createEduBlockEdit());
+      }
+    } else {
+      addEduFieldsEdit.classList.add('d-none');
+      if (addEduIconEdit) {
+        addEduIconEdit.classList.remove('fa-minus-circle');
+        addEduIconEdit.classList.add('fa-plus-circle');
+      }
+    }
+  }
+
+  if (addEduToggleEdit) {
+    addEduToggleEdit.addEventListener('click', toggleAddEduSectionEdit);
+  }
+  if (addEduBtnEdit) {
+    addEduBtnEdit.addEventListener('click', () => {
+      dynamicEduContainerEdit.appendChild(createEduBlockEdit());
+    });
+  }
+
+  // Prepopulate from DB
+  let existingEdus = [];
+  try {
+    const rawData = "{{ user.profile.additional_educations_json|escapejs }}";
+    // Because Django escapejs escapes single quotes as \\', replace them before JSON parsing
+    // Actually, it's safer to just parse it if it's a valid JSON representation of a list
+    const parsed = JSON.parse(rawData.replace(/&quot;/g, '"'));
+    // wait, escapejs encodes characters for JS. But Django template variable is a python list!
+    // Instead of doing tricky parsing, we can just use Django's built in json_script filter which is cleaner, 
+    // but we didn't add it in the template. We can inject it securely:
+  } catch(e) {}
+  
+  // Actually a better way to safely inject a python list as JSON without json_script tag:
+  existingEdus = [
+    {% for edu in user.profile.additional_educations_json %}
+      {
+        level: "{{ edu.level|escapejs }}",
+        passed_out_year: "{{ edu.passed_out_year|escapejs }}",
+        specialization: "{{ edu.specialization|escapejs }}"
+      }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ];
+
+  // Load old single record if JSON is empty (backwards compatibility)
+  {% if user.profile.education_level_2 and not user.profile.additional_educations_json %}
+    existingEdus.push({
+      level: "{{ user.profile.education_level_2|escapejs }}",
+      passed_out_year: "{{ user.profile.passed_out_year_2|escapejs }}",
+      specialization: "{% if user.profile.education_level_2 in 'iti,diploma' %}{{ user.profile.iti_diploma_specialization_2|escapejs }}{% else %}{{ user.profile.higher_education_degree_2|escapejs }}{% endif %}"
+    });
+  {% endif %}
+
+  if (existingEdus.length > 0) {
+    existingEdus.forEach(data => {
+      if(dynamicEduContainerEdit) dynamicEduContainerEdit.appendChild(createEduBlockEdit(data));
+    });
+    // Auto expand
+    if(addEduFieldsEdit) {
+      addEduFieldsEdit.classList.remove('d-none');
+      if (addEduIconEdit) {
+        addEduIconEdit.classList.remove('fa-plus-circle');
+        addEduIconEdit.classList.add('fa-minus-circle');
+      }
+    }
+  }
+
+  const profileForm = document.getElementById('profile-form');
+  if (profileForm) {
+    profileForm.addEventListener('submit', function() {
+      const blocks = dynamicEduContainerEdit.querySelectorAll('.edu-entry-block');
+      const eduData = [];
+      blocks.forEach(block => {
+        const level = block.querySelector('.edu-level-select').value;
+        const year = block.querySelector('.edu-year').value;
+        const spec = block.querySelector('.edu-spec').value;
+        if (level) {
+          eduData.push({ level: level, passed_out_year: year, specialization: spec });
+        }
+      });
+      if (eduJsonFieldEdit) {
+        eduJsonFieldEdit.value = JSON.stringify(eduData);
+      }
+    });
+  }
+
+  // ── Dynamic Languages Add/Remove & Prepopulation ───────────────────────────
+  const editLangContainer = document.getElementById('edit-lang-container');
+  const addEditLangBtn    = document.getElementById('add-edit-lang-btn');
+
+  function updateEditRemoveBtns() {
+    if (!editLangContainer) return;
+    const rows = editLangContainer.querySelectorAll('.lang-entry-row');
+    rows.forEach(row => {
+      const btn = row.querySelector('.remove-lang-row');
+      if (btn) btn.style.display = rows.length > 1 ? 'inline-block' : 'none';
+    });
+  }
+
+  function createLangRow(nameVal = '', levelVal = '') {
+    const newRow = document.createElement('div');
+    newRow.className = 'row g-2 align-items-center mb-2 lang-entry-row';
+    const levels = ['Good', 'Intermediate', 'Expert'];
+    let opts = '<option value="">Select Level</option>';
+    levels.forEach(lvl => {
+      const sel = (lvl.toLowerCase() === levelVal.toLowerCase()) ? 'selected' : '';
+      opts += `<option value="${lvl}" ${sel}>${lvl}</option>`;
+    });
+
+    newRow.innerHTML = `
+      <div class="col-md-7">
+        <input type="text" name="lang_name[]" class="form-control" placeholder="Hindi, Telugu, Gujarati, English, others..." value="${nameVal}">
+      </div>
+      <div class="col-md-4 col-10">
+        <select name="lang_level[]" class="form-select">${opts}</select>
+      </div>
+      <div class="col-md-1 col-2 text-end">
+        <button type="button" class="btn btn-outline-danger btn-sm rounded-circle remove-lang-row" style="width:32px; height:32px; padding:0; line-height:30px;">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </div>
+    `;
+    return newRow;
+  }
+
+  if (editLangContainer) {
+    const rawData = editLangContainer.getAttribute('data-existing-languages') || '';
+    if (rawData.trim()) {
+      editLangContainer.innerHTML = '';
+      const items = rawData.split(',');
+      items.forEach(item => {
+        item = item.trim();
+        if (!item) return;
+        const match = item.match(/^(.*?)\s*(?:\((Good|Intermediate|Expert)\))?$/i);
+        const lName = match ? match[1].trim() : item;
+        const lLevel = (match && match[2]) ? match[2].trim() : '';
+        editLangContainer.appendChild(createLangRow(lName, lLevel));
+      });
+      if (editLangContainer.children.length === 0) {
+        editLangContainer.appendChild(createLangRow());
+      }
+    }
+    updateEditRemoveBtns();
+
+    if (addEditLangBtn) {
+      addEditLangBtn.addEventListener('click', function () {
+        editLangContainer.appendChild(createLangRow());
+        updateEditRemoveBtns();
+      });
+    }
+
+    editLangContainer.addEventListener('click', function (e) {
+      const removeBtn = e.target.closest('.remove-lang-row');
+      if (removeBtn) {
+        const row = removeBtn.closest('.lang-entry-row');
+        if (row && editLangContainer.querySelectorAll('.lang-entry-row').length > 1) {
+          row.remove();
+          updateEditRemoveBtns();
+        }
+      }
+    });
+  }
+
+  // Fail-safe Vanilla JS Tab Switcher
+  const tabs = document.querySelectorAll('.nav-tabs-profile .nav-link');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      // Update tab active state
+      tabs.forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      
+      // Update pane active state
+      const targetId = this.getAttribute('data-bs-target');
+      const panes = document.querySelectorAll('.tab-content-profile .tab-pane');
+      panes.forEach(pane => {
+        pane.classList.remove('show', 'active');
+      });
+      
+      const targetPane = document.querySelector(targetId);
+      if (targetPane) {
+        targetPane.classList.add('show', 'active');
+      }
+    });
+  });
+
+  // Restore active tab from URL hash if available
+  const hash = window.location.hash;
+  if (hash) {
+    const activeTab = document.querySelector(`button[data-bs-target="${hash}"]`);
+    if (activeTab) {
+      activeTab.click();
+    }
+  }
+
+  // Auto-switch to Edit Details tab if form validation has errors
+  {% if form.errors %}
+  const editTabBtn = document.getElementById('edit-tab');
+  if (editTabBtn) {
+    editTabBtn.click();
+  }
+  {% endif %}
+})();
+</script>
+
+<script>
+// Helper: hide any server-side Django error next to this input
+function hideServerError(input) {
+  const col = input.closest('.col-md-6, .col-md-4, .col-md-12');
+  if (col) {
+    col.querySelectorAll('.invalid-feedback, .text-danger').forEach(el => {
+      el.classList.remove('d-block');
+      el.classList.add('d-none');
+      el.style.setProperty('display', 'none', 'important');
+    });
+  }
+}
+
+// ── Real-time PAN Validation ──────────────────────────────────────────────
+(function () {
+  const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+  const panInput = document.getElementById('id_pan_number');
+  const panMsg   = document.getElementById('pan-validation-profile');
+  if (!panInput || !panMsg) return;
+
+  panInput.addEventListener('input', function () {
+    hideServerError(this);
+    let val = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    this.value = val;
+    if (!val) { panMsg.textContent = ''; return; }
+    if (PAN_REGEX.test(val)) {
+      panMsg.textContent = '✔ Valid';
+      panMsg.style.color = '#16a34a';
+    } else {
+      panMsg.textContent = '✘ Invalid — must be AAAAA9999A (5 letters, 4 digits, 1 letter)';
+      panMsg.style.color = '#dc2626';
+    }
+  });
+})();
+
+// ── Real-time Aadhar Validation ───────────────────────────────────────────
+(function () {
+  const AADHAR_REGEX = /^[0-9]{12}$/;
+  const aadharInput = document.getElementById('id_aadhar_number');
+  const aadharMsg   = document.getElementById('aadhar-validation-profile');
+  if (!aadharInput || !aadharMsg) return;
+
+  aadharInput.addEventListener('input', function () {
+    hideServerError(this);
+    let val = this.value.replace(/[^0-9]/g, '');
+    this.value = val;
+    if (!val) { aadharMsg.textContent = ''; return; }
+    if (AADHAR_REGEX.test(val)) {
+      aadharMsg.textContent = '✔ Valid';
+      aadharMsg.style.color = '#16a34a';
+    } else {
+      aadharMsg.textContent = '✘ Invalid — must be exactly 12 digits';
+      aadharMsg.style.color = '#dc2626';
+    }
+  });
+})();
+
+// ── Real-time Passport Validation ─────────────────────────────────────────
+(function () {
+  const PASSPORT_REGEX = /^[A-Z][0-9]{7}$/;
+  const passportInput = document.getElementById('id_passport_number');
+  const passportMsg   = document.getElementById('passport-validation-profile');
+  if (!passportInput || !passportMsg) return;
+
+  passportInput.addEventListener('input', function () {
+    hideServerError(this);
+    let val = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    this.value = val;
+    if (!val) { passportMsg.textContent = ''; return; }
+    if (PASSPORT_REGEX.test(val)) {
+      passportMsg.textContent = '✔ Valid';
+      passportMsg.style.color = '#16a34a';
+    } else {
+      passportMsg.textContent = '✘ Invalid — must be A9999999 (1 letter, 7 digits)';
+      passportMsg.style.color = '#dc2626';
+    }
+  });
+})();
+</script>
+{% endblock %}

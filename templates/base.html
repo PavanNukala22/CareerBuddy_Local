@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CareerBuddy – Learn. Grow. Get Hired.{% endblock %}</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    {% load static %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/all.min.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <!-- display=block (not swap): while the icon font downloads, swap renders the
+         ligature source as literal text ("mic", "play_arrow"). block hides it
+         until the font is ready, so an icon never shows as its text name. -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/riya_assistant.css' %}?v=riya-welcome-v12">
+    <link rel="stylesheet" href="{% static 'css/tailwind.build.css' %}">
+    <style>
+      /* Navbar "Pro" button — keep the gold colour fixed in every state */
+      .navbar .nav-link.pro-nav-btn,
+      .navbar .nav-link.pro-nav-btn:hover,
+      .navbar .nav-link.pro-nav-btn:focus,
+      .navbar .nav-link.pro-nav-btn:active,
+      .navbar .nav-link.pro-nav-btn.active {
+        background: linear-gradient(135deg, #FCA311, #e0900c) !important;
+        color: #14213D !important;
+        box-shadow: 0 2px 10px rgba(252, 163, 17, 0.35) !important;
+        border: none !important;
+      }
+      .navbar .nav-link.pro-nav-btn i.fa-crown { color: #14213D !important; }
+      .navbar .nav-link.pro-nav-btn:hover { filter: brightness(1.03); }
+      
+      /* Fix Tailwind/Bootstrap conflict for navbar */
+      .collapse.navbar-collapse {
+          visibility: visible !important;
+      }
+    </style>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💼</text></svg>">
+    {% block extra_css %}{% endblock %}
+<style id="site-font-outfit">
+body{font-family:'Outfit',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif !important}
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="navbar navbar-expand-xl navbar-light fixed-top" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
+            <div class="brand-icon">
+                <svg width="36" height="36" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <rect width="24" height="24" rx="5" fill="#14213D"/>
+                    <path d="M8 5.5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2V7H8V5.5Z" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
+                    <rect x="3.5" y="7" width="17" height="11.5" rx="2.2" fill="#fff"/>
+                    <rect x="3.5" y="10.7" width="17" height="1.6" fill="#14213D"/>
+                </svg>
+            </div>
+            <span class="brand-text">Career <span class="brand-accent">Buddy</span></span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">
+                        <i class="fas fa-home me-1"></i>Home
+                    </a>
+                </li>
+                {% if user.is_authenticated and request.session.portal != 'employer' and not user.employer_profile %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-layer-group me-1"></i>Skill Up
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'skill_up' %}#depth-english"><i class="fas fa-language me-2"></i>English &amp; Vocabulary</a></li>
+                        <li><a class="dropdown-item" href="{% url 'skill_up' %}#depth-aptitude"><i class="fas fa-brain me-2"></i>Aptitude</a></li>
+                        <li><a class="dropdown-item" href="{% url 'skill_up' %}#depth-tech"><i class="fas fa-code me-2"></i>Tech</a></li>
+                        <li><a class="dropdown-item" href="{% url 'skill_up' %}#section-depth"><i class="fas fa-th-large me-2"></i>Browse All</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'skill_up' %}#section-sitemap">
+                        <i class="fas fa-sitemap me-1"></i>Sitemap
+                    </a>
+                </li>
+                {% endif %}
+                {% if user.is_authenticated %}
+                    {% if request.session.portal == 'employer' or user.employer_profile %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'employer_portal:dashboard' %}">
+                                <i class="fas fa-tachometer-alt me-1"></i>Employer Dashboard
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'resume_builder' or request.resolver_match.url_name == 'resume_job_match' or request.resolver_match.url_name == 'resume_analytics' %}active{% endif %}" href="{% url 'resume_builder' %}">
+                                <i class="fas fa-file-invoice me-1"></i>Resume Parsing
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'subject' or 'subject' in request.path %}active{% endif %}" href="{% url 'subject' %}">
+                                <i class="fas fa-spell-check me-1"></i>Grammar
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'activity_list' %}active{% endif %}" href="{% url 'activity_list' %}">
+                                <i class="fas fa-th-large me-1"></i>Activities
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}" href="{% url 'student_dashboard' %}">
+                                <i class="fas fa-chart-line me-1"></i>Dashboard
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+            <ul class="navbar-nav ms-auto align-items-center">
+                {% if user.is_authenticated %}
+                {% if request.path|slice:":9" != '/employer' %}
+                <li class="nav-item me-2 me-xl-3">
+                    <a class="nav-link pro-nav-btn fw-bold px-2 py-1 rounded-pill d-inline-flex align-items-center gap-1.5 {% if request.resolver_match.url_name == 'pro_page' %}active{% endif %}" href="{% url 'pro_page' %}" style="font-size: 0.8rem;">
+                        <i class="fas fa-crown" style="color: #fef08a !important; font-size: 0.75rem;"></i>
+                        <span>Pro</span>
+                        {% if user.profile.plan_type == 'pro' or user.profile.plan_type == 'normal' or user.is_superuser %}
+                        <span class="badge bg-white text-dark rounded-pill ms-1" style="font-size:0.6rem; padding:0.15em 0.4em;">ACTIVE</span>
+                        {% endif %}
+                    </a>
+                </li>
+                {% endif %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
+                        <div class="nav-avatar">
+                            {% if user.profile.avatar %}
+                                <img src="{{ user.profile.avatar.url }}" alt="avatar">
+                            {% elif user.employer_profile %}
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                            {% else %}
+                                <span>{% if user.first_name or user.last_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% else %}{{ user.username|slice:":2"|upper }}{% endif %}</span>
+                            {% endif %}
+                        </div>
+                        <span class="d-none d-md-inline">{{ user.first_name|default:user.username }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        {% if not user.employer_profile %}
+                        <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                        {% else %}
+                        <li><a class="dropdown-item" href="{% url 'employer_portal:employer_profile_edit' %}"><i class="fas fa-building me-2"></i>Company Profile</a></li>
+                        {% endif %}
+                        
+                        {% if user.is_staff %}
+                        <li><a class="dropdown-item" href="/admin/"><i class="fas fa-cog me-2"></i>Admin</a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form action="{% url 'logout' %}" method="post" class="m-0 p-0">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item text-danger" style="cursor:pointer;">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-user-tie me-1"></i>Job Seeker Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'employer_portal:employer_login' %}"><i class="fas fa-building me-1"></i>Employer Login</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Messages -->
+<div class="messages-container">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show toast-message" role="alert">
+        {% if message.tags == 'success' %}<i class="fas fa-check-circle me-2"></i>
+        {% elif message.tags == 'error' or message.tags == 'danger' %}<i class="fas fa-exclamation-circle me-2"></i>
+        {% elif message.tags == 'warning' %}<i class="fas fa-exclamation-triangle me-2"></i>
+        {% else %}<i class="fas fa-info-circle me-2"></i>{% endif %}
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Main Content -->
+<main class="main-content">
+    {% block content %}{% endblock %}
+</main>
+
+<!-- Global Back Button (hidden on main pages) -->
+<button id="globalBackBtn" onclick="history.back()" title="Go back" style="display:none;">
+    <i class="fas fa-arrow-left"></i>
+    <span>Back</span>
+</button>
+
+<!-- Footer -->
+<footer class="site-footer">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <div class="footer-brand d-flex align-items-center gap-2">
+                    <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="border-radius:5px; box-shadow: 0 0 0 1px rgba(255,255,255,0.25);">
+                        <rect width="24" height="24" rx="5" fill="#14213D"/>
+                        <path d="M8 5.5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2V7H8V5.5Z" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
+                        <rect x="3.5" y="7" width="17" height="11.5" rx="2.2" fill="#fff"/>
+                        <rect x="3.5" y="10.7" width="17" height="1.6" fill="#14213D"/>
+                    </svg>
+                    <span>Career <span class="brand-accent">Buddy</span></span>
+                </div>
+                <p class="footer-tagline">Master Business English for the global workplace</p>
+            </div>
+            <div class="col-md-4 text-center">
+                {# Learning-module strip is student-only: hidden for employer sessions and on the employer login/register pages. Column kept so the brand/copyright alignment is unchanged. #}
+                {% with rm=request.resolver_match %}
+                {% if not request.session.portal == 'employer' and not user.employer_profile and rm.url_name != 'employer_login' and rm.url_name != 'employer_register' and rm.url_name != 'job_login' and rm.url_name != 'job_register' %}
+                <div class="footer-stats">
+                    <span><i class="fas fa-book me-1"></i>Activities</span>
+                    <span><i class="fas fa-tasks me-1"></i>Sub-Activities</span>
+                    <span><i class="fas fa-gamepad me-1"></i>Interactive Exercises</span>
+                </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+            <div class="col-md-4 text-md-end">
+                <p class="footer-copy">&copy; 2026 Career Buddy. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/main.js' %}?v=1.1"></script>
+{% include 'includes/aria_assistant.html' %}
+{% block extra_js %}{% endblock %}
+
+{% if sub_show_expired or sub_show_warning %}
+<!-- Subscription notice popup (payment/subscription module) -->
+<div class="modal fade" id="subNoticeModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+     data-expired="{{ sub_show_expired|yesno:'1,0' }}">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
+    <div class="modal-content border-0 shadow-lg" style="border-radius:20px; overflow:hidden;">
+      <div class="modal-header border-0 pb-0">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center px-4 pt-0">
+        {% if sub_show_expired %}
+        <div style="width:66px;height:66px;margin:4px auto 16px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;">
+          <i class="fas fa-hourglass-end" style="color:#dc2626;font-size:27px;"></i>
+        </div>
+        <h5 class="fw-bold mb-1" style="color:#1e293b;">Your plan has expired</h5>
+        <p class="text-muted small mb-3">Your 1-year subscription has ended, so your account has moved to the <strong>Free plan</strong>. Renew any time to unlock the paid features again.</p>
+        <a href="{% url 'pro_page' %}" class="btn btn-primary fw-bold w-100 py-2" style="border-radius:14px;background:linear-gradient(135deg,#0284c7,#2563eb);border:none;">Renew my plan</a>
+        {% else %}
+        <div style="width:66px;height:66px;margin:4px auto 16px;border-radius:50%;background:#fffbeb;display:flex;align-items:center;justify-content:center;">
+          <i class="fas fa-bell" style="color:#d97706;font-size:27px;"></i>
+        </div>
+        <h5 class="fw-bold mb-1" style="color:#1e293b;">Your plan expires soon</h5>
+        <p class="text-muted small mb-3">
+          Your <strong>{{ sub_plan_label }}</strong> plan ends
+          {% if sub_days_left == 0 %}<strong>today</strong>{% elif sub_days_left == 1 %}<strong>tomorrow</strong>{% else %}in <strong>{{ sub_days_left }} days</strong>{% endif %}{% if sub_expiry_date %} ({{ sub_expiry_date|date:"d M Y" }}){% endif %}.
+          Renew now to keep your access.
+        </p>
+        <a href="{% url 'pro_page' %}" class="btn btn-primary fw-bold w-100 py-2" style="border-radius:14px;background:linear-gradient(135deg,#0284c7,#2563eb);border:none;">Renew now</a>
+        <button type="button" class="btn btn-link text-muted w-100 mt-1" data-bs-dismiss="modal" style="font-size:.85rem;text-decoration:none;">Remind me later</button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var el = document.getElementById('subNoticeModal');
+  if (!el || typeof bootstrap === 'undefined') return;
+  // Read the flag off the element's data attribute rather than interpolating a
+  // template tag into the script body — that parses as valid JS either way.
+  var isExpired = el.dataset.expired === '1';
+  var show = function () { new bootstrap.Modal(el).show(); };
+  if (isExpired) {
+    show();                       // one-time, server-controlled
+  } else {
+    try {
+      if (!sessionStorage.getItem('subRenewalDismissed')) show();
+      el.addEventListener('hidden.bs.modal', function () {
+        sessionStorage.setItem('subRenewalDismissed', '1');   // don't nag every page this session
+      });
+    } catch (e) { show(); }
+  }
+})();
+</script>
+{% endif %}
+<!-- Custom Validation Modal -->
+<div class="modal fade" id="wordCountValidationModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+      <div class="modal-header border-0 pb-0">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="wordCountValidationCloseBtn"></button>
+      </div>
+      <div class="modal-body text-center px-4 pt-0 pb-4">
+        <div style="width: 66px; height: 66px; margin: 4px auto 16px; border-radius: 50%; background: #fef2f2; display: flex; align-items: center; justify-content: center;">
+          <i class="fas fa-exclamation-triangle" style="color: #dc2626; font-size: 27px;"></i>
+        </div>
+        <h5 class="fw-bold mb-1" style="color: #1e293b;">Answer Too Short</h5>
+        <p class="text-muted small mb-3" id="wordCountValidationMessage">Your response is too short. Please provide at least 15 words to continue.</p>
+        <button type="button" class="btn btn-primary fw-bold w-100 py-2" data-bs-dismiss="modal" style="border-radius: 14px; background: linear-gradient(135deg, #0ea5e9, #0284c7); border: none;">Got it</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Reusable Word Count Validation Component
+window.CareerBuddyValidation = {
+    validateWordCount: function(text, minWords = 15) {
+        if (!text) return 0;
+        const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+        return words.length;
+    },
+    
+    showShortAnswerWarning: function(message, focusElementId = null) {
+        const modalEl = document.getElementById('wordCountValidationModal');
+        if (!modalEl) return;
+        
+        if (message) {
+            document.getElementById('wordCountValidationMessage').textContent = message;
+        } else {
+            document.getElementById('wordCountValidationMessage').textContent = "Your response is too short. Please provide at least 15 words to continue.";
+        }
+        
+        const modal = new bootstrap.Modal(modalEl);
+        
+        if (focusElementId) {
+            modalEl.addEventListener('hidden.bs.modal', function onHidden() {
+                const el = document.getElementById(focusElementId);
+                if (el) el.focus();
+                modalEl.removeEventListener('hidden.bs.modal', onHidden);
+            });
+        }
+        
+        modal.show();
+    }
+};
+</script>
+</body>
+</html>

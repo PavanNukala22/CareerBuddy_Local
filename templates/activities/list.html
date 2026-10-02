@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block content %}
+<div class="activities-page">
+
+    <!-- Page Header -->
+    <div class="page-header-band">
+        <div class="container">
+            <h1 class="page-header-title"><i class="fas fa-th-large me-3"></i>English Activities</h1>
+            <p class="page-header-sub mb-4">
+                {% if is_free_preview %}
+                Free Plan — choose any one of the 4 activities below. Once started, the rest will be locked.
+                {% else %}
+                {{ total_activities }} comprehensive activities to master professional communication
+                {% endif %}
+            </p>
+
+            <!-- Module Category Cards -->
+            {% if not is_free_preview %}
+            <div class="module-grid">
+                <a href="{% url 'activity_list' %}"
+                    class="module-card mod-all {% if not selected_category %}mod-active{% endif %}">
+                    <div class="mod-icon"><i class="fas fa-border-all"></i></div>
+                    <span class="mod-label">All</span>
+                </a>
+                {% for value, label in categories %}
+                <a href="{% url 'activity_list' %}?category={{ value }}"
+                    class="module-card mod-{{ value }} {% if selected_category == value %}mod-active{% endif %}">
+                    <div class="mod-icon">
+                        {% if value == 'speaking' %}<i class="fas fa-microphone"></i>
+                        {% elif value == 'writing' %}<i class="fas fa-pen-fancy"></i>
+                        {% elif value == 'vocabulary' %}<i class="fas fa-puzzle-piece"></i>
+                        {% elif value == 'negotiation' %}<i class="fas fa-handshake"></i>
+                        {% elif value == 'communication' %}<i class="fas fa-globe"></i>
+                        {% elif value == 'analysis' %}<i class="fas fa-chart-pie"></i>
+                        {% elif value == 'workshop' %}<i class="fas fa-chalkboard-teacher"></i>
+                        {% endif %}
+                    </div>
+                    <span class="mod-label">{{ label }}</span>
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="container py-4">
+
+        {% if is_free_preview %}
+        <!-- Free Preview Alert Banner -->
+        <div class="alert alert-warning border-0 rounded-4 shadow-sm p-4 mb-4"
+            style="background: linear-gradient(135deg, #fff7ed, #ffedd5); border: 1.5px solid #fed7aa !important;">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div
+                        style="width:48px;height:48px;background:#f97316;border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-size:1.2rem;flex-shrink:0;">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1" style="color:#9a3412;font-family:'Outfit',sans-serif;">🎁 Free Trial
+                            Preview Active</h5>
+                        {% if free_selected_activity %}
+                        <p class="mb-0 text-muted small">You have used your one free activity on <strong>{{ free_selected_activity_title }}</strong> — the other 3 are now locked. Upgrade
+                            to <strong>Normal User (₹499/yr)</strong> or <strong>Pro User (₹999/yr)</strong> to unlock
+                            all {{ total_activities }} activities!</p>
+                        {% else %}
+                        <p class="mb-0 text-muted small">You are on the Free Plan — pick <strong>any one</strong> of the
+                            4 activities below to start free. Once you open it, the remaining 3 will be locked. Upgrade
+                            to <strong>Normal User (₹499/yr)</strong> or <strong>Pro User (₹999/yr)</strong> to unlock
+                            all {{ total_activities }} activities!</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <a href="{% url 'pro_page' %}" class="btn btn-warning fw-bold px-4 py-2 rounded-3 shadow-sm text-dark"
+                    style="background:#f59e0b;border:none;">
+                    <i class="fas fa-crown me-1.5"></i>Upgrade Plan
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Activities Grid -->
+        <div class="row g-4">
+            {% for item in activities_data %}
+            {% with activity=item.activity rate=item.completion_rate p=item.progress locked=item.is_locked %}
+            <div class="col-md-6 col-lg-4">
+                <div
+                    class="activity-card {% if p.status == 'completed' %}activity-card-done{% endif %} {% if locked %}activity-card-locked{% endif %}">
+                    <div class="activity-card-header bg-{{ activity.color_class }}">
+                        <div class="activity-number">#{{ forloop.counter }}</div>
+                        <div class="activity-icon-lg">
+                            <i class="{% if locked %}fas fa-lock{% else %}{{ activity.icon_class }}{% endif %}"></i>
+                        </div>
+                        {% if p.status == 'completed' %}
+                        <div class="activity-done-badge" title="All exercises attempted"><i class="fas fa-check"></i></div>
+                        {% endif %}
+                    </div>
+                    <div class="activity-card-body">
+                        <div class="activity-meta mb-2">
+                            <span class="badge-level">{{ activity.level }}</span>
+                            <span class="badge-category" title="{{ activity.get_category_display }}">
+                                {% if activity.category == 'speaking' %}<i class="fas fa-microphone"></i>
+                                {% elif activity.category == 'writing' %}<i class="fas fa-pen"></i>
+                                {% elif activity.category == 'vocabulary' %}<i class="fas fa-puzzle-piece"></i>
+                                {% elif activity.category == 'negotiation' %}<i class="fas fa-handshake"></i>
+                                {% elif activity.category == 'communication' %}<i class="fas fa-globe"></i>
+                                {% elif activity.category == 'analysis' %}<i class="fas fa-chart-pie"></i>
+                                {% elif activity.category == 'workshop' %}<i class="fas fa-chalkboard-teacher"></i>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <h5 class="activity-title">{{ activity.title }}</h5>
+                        <p class="activity-objective">{{ activity.objective }}</p>
+
+                        {% if user.is_authenticated and p.attempted %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small class="text-muted">Progress (score)</small>
+                                <small class="fw-semibold text-{{ p.band }}">{{ p.percent }}%</small>
+                            </div>
+                            <div class="progress progress-sm mb-1" role="progressbar" aria-label="{{ activity.title }} performance"
+                                aria-valuenow="{{ p.percent }}" aria-valuemin="0" aria-valuemax="100">
+                                <div class="progress-bar bg-{{ p.band }}"
+                                    style="--progress: {{ p.percent }}%; width: var(--progress);"></div>
+                            </div>
+                            {% if p.total %}
+                            <small class="text-muted d-block mb-1">{{ p.attempted }}/{{ p.total }} exercises attempted</small>
+                            {% endif %}
+                            {% if item.started_at %}
+                            <small class="text-info"><i class="fas fa-clock me-1"></i>Started: {{ item.started_at|date:"M d Y h:i A" }}</small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        {% if locked %}
+                        <button type="button" class="btn btn-secondary w-100 js-locked-activity btn-locked-free"
+                            style="cursor:not-allowed;opacity:.65;pointer-events:auto;">
+                            <i class="fas fa-lock me-2"></i>Locked 🔒
+                        </button>
+                        {% else %}
+                        <a href="{% if item.direct_url %}{{ item.direct_url }}{% else %}{% url 'activity_detail' activity.pk %}{% endif %}"
+                            class="btn btn-primary w-100">
+                            {% if p.status == 'completed' and p.percent == 100 %}
+                            <i class="fas fa-redo me-2"></i>Review Activity
+                            {% elif p.status == 'completed' %}
+                            <i class="fas fa-redo me-2"></i>Improve Score
+                            {% elif p.attempted %}
+                            <i class="fas fa-play me-2"></i>Continue
+                            {% else %}
+                            <i class="fas fa-arrow-right me-2"></i>Start Activity
+                            {% endif %}
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endwith %}
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No activities found for this category.</p>
+                <a href="{% url 'activity_list' %}" class="btn btn-outline-primary">Show All</a>
+            </div>
+            {% endfor %}
+
+        </div>
+    </div>
+</div>
+
+<!-- Upgrade Required pop-up (Free Plan: one activity only) -->
+<div class="modal fade" id="upgradeRequiredModal" tabindex="-1" aria-labelledby="upgradeRequiredLabel"
+    aria-hidden="true" data-show-on-load="{% if show_locked_modal %}true{% else %}false{% endif %}">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="upgradeRequiredLabel">
+                    <i class="fas fa-lock text-warning me-2"></i>Upgrade Required
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <p class="mb-0 text-muted">
+                    You have already used your one free activity. Upgrade your plan to unlock and access all 3 remaining
+                    activities.
+                </p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <a href="{% url 'pro_page' %}" class="btn btn-primary fw-semibold">
+                    <i class="fas fa-crown me-1"></i>View Plans
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .activity-card-locked {
+        opacity: .72;
+    }
+
+    .activity-card-locked .activity-card-header {
+        filter: grayscale(.65);
+    }
+
+    .activity-card-locked .js-locked-activity {
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{{ show_locked_modal|yesno:'true,false'|json_script:'show-locked-modal-data' }}
+<script>
+    var SHOW_LOCKED_MODAL = JSON.parse(document.getElementById('show-locked-modal-data').textContent);
+    (function () {
+        'use strict';
+        var el = document.getElementById('upgradeRequiredModal');
+        if (!el || typeof bootstrap === 'undefined') return;
+        var modal = new bootstrap.Modal(el);
+
+        document.querySelectorAll('.js-locked-activity').forEach(function (btn) {
+            btn.addEventListener('click', function () { modal.show(); });
+        });
+
+        // Show modal immediately if server flagged a locked-activity direct access.
+        if (el.dataset.showOnLoad === 'true') {
+            modal.show();
+        }
+    })();
+</script>
+{% endblock %}

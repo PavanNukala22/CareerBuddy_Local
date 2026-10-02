@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+<style>
+    .resume-page { padding-top: 2rem; padding-bottom: 4rem; }
+    .resume-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0ea5e9 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .resume-hero::before {
+        content: '';
+        position: absolute;
+        top: -50px; right: -50px;
+        width: 200px; height: 200px;
+        background: rgba(14,165,233,0.15);
+        border-radius: 50%;
+    }
+    .resume-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -60px; left: 40%;
+        width: 250px; height: 250px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 50%;
+    }
+    .upload-zone {
+        border: 2px dashed #cbd5e1;
+        border-radius: 16px;
+        padding: 2.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        background: #f8fafc;
+        position: relative;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+        border-color: #0ea5e9;
+        background: #f0f9ff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(14,165,233,0.12);
+    }
+    .upload-zone input[type="file"] {
+        position: absolute; inset: 0;
+        opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-icon {
+        width: 64px; height: 64px;
+        background: linear-gradient(135deg, #0ea5e9, #0284c7);
+        border-radius: 16px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 1.6rem;
+        color: white;
+        box-shadow: 0 4px 15px rgba(14,165,233,0.3);
+    }
+    .upload-filename {
+        font-size: 0.9rem;
+        color: #0ea5e9;
+        font-weight: 600;
+        margin-top: 0.5rem;
+        display: none;
+    }
+    .analyze-btn {
+        background: linear-gradient(135deg, #0ea5e9, #0284c7);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.85rem 2.5rem;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.25s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .analyze-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(14,165,233,0.35);
+    }
+    .analyze-btn:disabled {
+        opacity: 0.6;
+        transform: none;
+        cursor: not-allowed;
+    }
+    .feature-card {
+        background: white;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.2s;
+    }
+    .feature-card:hover {
+        border-color: #0ea5e9;
+        box-shadow: 0 6px 20px rgba(14,165,233,0.1);
+        transform: translateY(-3px);
+    }
+    .feature-icon {
+        width: 48px; height: 48px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+    .error-box {
+        background: #fef2f2;
+        border: 1.5px solid #fecaca;
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        color: #dc2626;
+        display: flex; align-items: center; gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+    .loading-overlay {
+        position: fixed; inset: 0;
+        background: rgba(15,23,42,0.6);
+        backdrop-filter: blur(4px);
+        z-index: 9999;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        gap: 1.5rem;
+    }
+    .loading-spinner {
+        width: 60px; height: 60px;
+        border: 4px solid rgba(255,255,255,0.2);
+        border-top-color: #0ea5e9;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="resume-page">
+<div class="container">
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="text-center">
+            <h5 class="fw-bold mb-1">Analyzing Your Resume...</h5>
+            <p class="text-white-50 small mb-0">Our AI is reviewing your skills and experience</p>
+        </div>
+    </div>
+
+    <!-- Hero -->
+    <div class="resume-hero mb-4">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div style="width:52px;height:52px;background:rgba(255,255,255,0.15);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">
+                        <i class="fas fa-file-invoice"></i>
+                    </div>
+                    <span class="badge" style="background:rgba(14,165,233,0.3);color:#bae6fd;font-size:0.75rem;padding:0.35rem 0.75rem;border-radius:50px;">AI-Powered</span>
+                </div>
+                <h1 class="fw-bold mb-2" style="font-family:'Outfit',sans-serif;font-size:2rem;">Resume Analysis & ATS Score</h1>
+                <p class="mb-0" style="color:rgba(255,255,255,0.75);font-size:1rem;">Upload your resume to get an AI-powered evaluation of your skills, gaps, and relevant job opportunities.</p>
+            </div>
+            <div class="col-lg-5 d-none d-lg-flex justify-content-end align-items-center gap-3 mt-3 mt-lg-0">
+                <div style="background:rgba(255,255,255,0.1);border-radius:16px;padding:1.25rem;text-align:center;min-width:120px;">
+                    <div class="fw-bold" style="font-size:1.8rem;color:#38bdf8;">6.9K+</div>
+                    <div style="font-size:0.75rem;color:rgba(255,255,255,0.6);">Interview Questions</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.1);border-radius:16px;padding:1.25rem;text-align:center;min-width:120px;">
+                    <div class="fw-bold" style="font-size:1.8rem;color:#34d399;">AI</div>
+                    <div style="font-size:0.75rem;color:rgba(255,255,255,0.6);">Powered Analysis</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error -->
+    {% if error %}
+    <div class="error-box">
+        <i class="fas fa-exclamation-circle fa-lg"></i>
+        <div>{{ error }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Upload Form -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0" style="font-family:'Outfit',sans-serif;">
+                        <i class="fas fa-upload text-primary me-2"></i>Upload Resume
+                    </h5>
+                    <a href="{% url 'resume_history' %}" class="btn btn-sm btn-outline-secondary rounded-3">
+                        <i class="fas fa-clock-rotate-left me-1"></i> Resume History
+                    </a>
+                </div>
+                <form method="post" action="{% url 'resume_job_match' %}" enctype="multipart/form-data" id="resumeForm">
+                    {% csrf_token %}
+                    
+                    <!-- Drop Zone -->
+                    <div class="upload-zone mb-4" id="dropZone">
+                        <input type="file" name="file" id="resumeFile" accept=".pdf,.docx" required>
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1">Drag & Drop your resume here</h6>
+                        <p class="text-muted small mb-0">or click to browse files</p>
+                        <p class="text-muted" style="font-size:0.75rem;margin-top:0.4rem;">Supports PDF and DOCX</p>
+                        <div class="upload-filename" id="fileName">
+                            <i class="fas fa-check-circle me-1"></i><span id="fileNameText"></span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="analyze-btn w-100" id="analyzeBtn">
+                        <i class="fas fa-robot"></i> Analyze Resume with AI
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Feature Cards -->
+        <div class="col-lg-5">
+            <div class="d-flex flex-column gap-3 h-100">
+                <div class="feature-card">
+                    <div class="feature-icon" style="background:#dbeafe;color:#1d4ed8;">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1" style="font-family:'Outfit',sans-serif;">ATS Score</h6>
+                    <p class="text-muted small mb-0">Get a percentage score showing how well your resume performs against Applicant Tracking Systems.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="background:#dcfce7;color:#15803d;">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1" style="font-family:'Outfit',sans-serif;">Skills Matched</h6>
+                    <p class="text-muted small mb-0">See exactly which of your skills align with the job requirements or your target profile.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon" style="background:#fef9c3;color:#a16207;">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1" style="font-family:'Outfit',sans-serif;">Job Recommendations</h6>
+                    <p class="text-muted small mb-0">Discover active job openings from our employer portal that match your profile and skills.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</div>
+
+{% block extra_js %}
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('resumeFile');
+const fileName = document.getElementById('fileName');
+const fileNameText = document.getElementById('fileNameText');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const loadingOverlay = document.getElementById('loadingOverlay');
+
+fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) {
+        fileNameText.textContent = fileInput.files[0].name;
+        fileName.style.display = 'block';
+    }
+});
+
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const dt = e.dataTransfer;
+    if (dt.files.length) {
+        fileInput.files = dt.files;
+        fileNameText.textContent = dt.files[0].name;
+        fileName.style.display = 'block';
+    }
+});
+
+document.getElementById('resumeForm').addEventListener('submit', () => {
+    loadingOverlay.style.display = 'flex';
+    analyzeBtn.disabled = true;
+});
+</script>
+{% endblock %}
+{% endblock %}

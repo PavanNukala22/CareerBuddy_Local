@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block content %}
+<div class="activity-detail-page">
+
+    <!-- Activity Hero -->
+    <div class="activity-hero bg-{{ activity.color_class }}" style="position: relative;">
+        <!-- Language Dropdown (top-right, fixed) - Customized with Images -->
+        <div class="dropdown custom-lang-dropdown" style="position: fixed; top: 85px; right: 1.5rem; z-index: 1050;">
+            <button class="btn btn-sm dropdown-toggle d-flex align-items-center justify-content-between" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width:auto; min-width:140px; border-radius: 8px; background-color: #fff; color: #333; font-weight: 600; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.12);">
+                <span class="currentLangDisplay d-flex align-items-center"><img src="https://flagcdn.com/w20/gb.png" class="me-2" style="width:20px; border-radius:2px;"> English</span>
+            </button>
+            <ul class="dropdown-menu shadow-sm" style="border-radius: 8px; border: 1px solid #e2e8f0; min-width: 140px; padding: 0.5rem 0;">
+                <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#" data-val="english"><img src="https://flagcdn.com/w20/gb.png" class="me-2" style="width:20px; border-radius:2px;"> English</a></li>
+                <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#" data-val="vietnam"><img src="https://flagcdn.com/w20/vn.png" class="me-2" style="width:20px; border-radius:2px;"> Vietnamese</a></li>
+                <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#" data-val="arabic"><img src="https://flagcdn.com/w20/sa.png" class="me-2" style="width:20px; border-radius:2px;"> Arabic</a></li>
+                <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#" data-val="russian"><img src="https://flagcdn.com/w20/ru.png" class="me-2" style="width:20px; border-radius:2px;"> Russian</a></li>
+            </ul>
+            <select id="languageSelect" class="d-none">
+                <option value="english" selected>English</option>
+                <option value="vietnam">Vietnamese</option>
+                <option value="arabic">Arabic</option>
+                <option value="russian">Russian</option>
+            </select>
+        </div>
+        
+        <script>
+        (function(){
+            setTimeout(() => {
+                const dropdownWrapper = document.querySelector('.custom-lang-dropdown');
+                if (!dropdownWrapper) return;
+                
+                const langOptions = dropdownWrapper.querySelectorAll('.lang-option');
+                const display = dropdownWrapper.querySelector('.currentLangDisplay');
+                const selectElement = document.getElementById('languageSelect');
+                
+                langOptions.forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const val = this.getAttribute('data-val');
+                        display.innerHTML = this.innerHTML;
+                        
+                        if (selectElement) {
+                            selectElement.value = val;
+                            selectElement.dispatchEvent(new Event('change'));
+                        }
+                    });
+                });
+                
+                if (selectElement) {
+                    selectElement.addEventListener('change', (e) => {
+                        const opt = Array.from(langOptions).find(o => o.getAttribute('data-val') === e.target.value);
+                        if (opt) display.innerHTML = opt.innerHTML;
+                    });
+                }
+            }, 100);
+        })();
+        </script>
+        <div class="container py-5">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <nav aria-label="breadcrumb" class="mb-3">
+                        <ol class="breadcrumb breadcrumb-light">
+                            <li class="breadcrumb-item"><a href="{% url 'activity_list' %}">Activities</a></li>
+                            <li class="breadcrumb-item active">Activity {{ activity.order }}</li>
+                        </ol>
+                    </nav>
+                    <div class="activity-hero-number">Activity {{ activity.order }}</div>
+                    <h1 class="activity-hero-title">{{ activity.title }}</h1>
+                    <p class="activity-hero-objective">{{ activity.objective }}</p>
+                    <div class="activity-hero-meta">
+                        <span><i class="fas fa-signal me-2"></i>{{ activity.level }}</span>
+                        <span><i class="fas fa-clock me-2"></i>{{ activity.duration }}</span>
+                        <span><i class="fas fa-layer-group me-2"></i>{{ activity.subactivities.count }} Sub-Activities</span>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-center d-none d-lg-block">
+                    <div class="activity-hero-icon-wrap">
+                        <i class="{{ activity.icon_class }}"></i>
+                    </div>
+                    {% if user.is_authenticated %}
+                    <div class="hero-progress-ring mt-3">
+                        <div class="ring-value">{{ activity_progress.percent }}%</div>
+                        <div class="ring-label">Score</div>
+                        {% if activity_progress.total %}
+                        <div class="ring-label small">{{ activity_progress.attempted }}/{{ activity_progress.total }} exercises</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-5">
+        <div class="row g-4">
+
+            <!-- Sub-Activities -->
+            <div class="col-lg-8">
+                <h4 class="mb-4 fw-bold"><i class="fas fa-layer-group me-2 text-primary"></i>Sub-Activities</h4>
+
+                {% for item in subs_with_status %}
+                {% with sub=item.sub status=item.status %}
+                <div class="sub-activity-card {% if status == 'completed' %}sub-done{% elif status == 'in_progress' %}sub-active{% endif %}">
+                    <div class="sub-activity-header">
+                        <div class="sub-number-badge {% if status == 'completed' %}bg-success{% elif status == 'in_progress' %}bg-primary{% else %}bg-secondary{% endif %}">
+                            {% if status == 'completed' %}
+                                <i class="fas fa-check"></i>
+                            {% else %}
+                                {{ forloop.counter }}
+                            {% endif %}
+                        </div>
+                        <div class="sub-activity-info">
+                            <h5 class="sub-title">{{ sub.title }}</h5>
+                            <div class="sub-meta">
+                                <span class="sub-status-badge status-{{ status }}">
+                                    {% if status == 'completed' %}<i class="fas fa-check-circle me-1"></i>Completed
+                                    {% elif status == 'in_progress' %}<i class="fas fa-spinner me-1"></i>In Progress
+                                    {% else %}<i class="fas fa-circle me-1"></i>Not Started{% endif %}
+                                </span>
+                                {% if item.progress.attempted %}
+                                <span class="badge bg-{{ item.progress.band }} ms-2" title="Average score across this sub-activity's exercises">
+                                    Score {{ item.progress.percent }}%
+                                </span>
+                                {% endif %}
+                                <span class="text-muted ms-3">
+                                    <i class="fas fa-gamepad me-1"></i>{{ sub.exercises.count }} Exercise{% if sub.exercises.count != 1 %}s{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'sub_activity_detail' activity.pk sub.pk %}"
+                           class="btn {% if status == 'completed' %}btn-outline-success{% elif status == 'in_progress' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm ms-auto">
+                            {% if status == 'completed' %}
+                                <i class="fas fa-redo me-1"></i>Review
+                            {% elif status == 'in_progress' %}
+                                <i class="fas fa-play me-1"></i>Continue
+                            {% else %}
+                                <i class="fas fa-arrow-right me-1"></i>Start
+                            {% endif %}
+                        </a>
+                        {% endif %}
+                    </div>
+                    <div class="sub-activity-body">
+                        <p class="sub-description">{{ sub.description }}</p>
+                        {% if item.started_at %}
+                        <small class="text-info d-block mb-1"><i class="fas fa-play-circle me-1"></i>Started {{ item.started_at|date:"M d Y h:i A" }}</small>
+                        {% endif %}
+                        {% if item.completed_at %}
+                        <small class="text-success d-block"><i class="fas fa-calendar-check me-1"></i>Completed {{ item.completed_at|date:"M d Y h:i A" }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endwith %}
+                {% endfor %}
+
+                <!-- Navigation -->
+                <div class="activity-nav mt-4">
+                    {% if prev_activity %}
+                    <a href="{% url 'activity_detail' prev_activity.pk %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>{{ prev_activity.title|truncatechars:25 }}
+                    </a>
+                    {% else %}<span></span>{% endif %}
+                    {% if next_activity %}
+                    <a href="{% url 'activity_detail' next_activity.pk %}" class="btn btn-outline-primary">
+                        {{ next_activity.title|truncatechars:25 }}<i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Materials -->
+                <div class="info-card mb-4">
+                    <div class="info-card-header"><i class="fas fa-toolbox me-2"></i>Materials</div>
+                    <div class="info-card-body">
+                        <ul class="materials-list">
+                            {% for material in activity.materials.split|slice:":6" %}
+                            <li><i class="fas fa-check-circle text-success me-2"></i>{{ material|capfirst }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Assessment -->
+                <div class="info-card mb-4">
+                    <div class="info-card-header"><i class="fas fa-clipboard-check me-2"></i>Assessment</div>
+                    <div class="info-card-body">
+                        <div class="assessment-items">
+                            <div class="assessment-item">
+                                <i class="fas fa-users text-primary me-2"></i>Peer evaluation rubrics
+                            </div>
+                            <div class="assessment-item">
+                                <i class="fas fa-chalkboard-teacher text-success me-2"></i>Instructor observation
+                            </div>
+                            <div class="assessment-item">
+                                <i class="fas fa-gamepad text-warning me-2"></i>Interactive exercises
+                            </div>
+                            <div class="assessment-item">
+                                <i class="fas fa-user-check text-info me-2"></i>Self-reflection
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if not user.is_authenticated %}
+                <div class="login-prompt-card">
+                    <i class="fas fa-lock fa-2x mb-3"></i>
+                    <h6>Login to Track Progress</h6>
+                    <p>Create a free account to save your progress and earn scores.</p>
+                    <a href="{% url 'register' %}" class="btn btn-accent w-100 mb-2">Get Started Free</a>
+                    <a href="{% url 'login' %}" class="btn btn-outline-light w-100">Login</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  'use strict';
+  const langSel = document.getElementById('languageSelect');
+  if (!langSel) return;
+
+  // ── Translation cache & API ───────────────────────────────────────────────
+  const cache = {};
+  async function translateTo(text, langCode) {
+    if (!text || !text.trim()) return text;
+    const key = text.trim() + '|' + langCode;
+    if (cache[key]) return cache[key];
+    try {
+      const res = await fetch(
+        'https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=' +
+        encodeURIComponent(langCode) + '&dt=t&q=' +
+        encodeURIComponent(text.trim())
+      );
+      const data = await res.json();
+      if (data && data[0]) {
+        const translated = data[0].map(x => x[0]).join('').trim();
+        cache[key] = translated;
+        return translated;
+      }
+    } catch (e) { /* silent */ }
+    return text.trim();
+  }
+
+  // ── Collect bold/heading elements (NOT description paragraphs) ────────────
+  // Store original text in data-orig so we can always restore correctly.
+  const boldSelectors = [
+    'h1.activity-hero-title',
+    'p.activity-hero-objective',
+    'h4.mb-4.fw-bold',
+    'h5.sub-title',
+    '.sub-description',
+    '.info-card-header',
+    '.materials-list li',
+    '.assessment-item',
+  ];
+
+  const targets = [];
+  boldSelectors.forEach(selector => {
+    document.querySelectorAll(selector).forEach(el => {
+      // Walk child nodes to find the LAST (or only) text node with content
+      // (h4 has <i> icon first, then the text node — we want the text node)
+      let targetTextNode = null;
+      el.childNodes.forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+          targetTextNode = node;
+        }
+      });
+      if (targetTextNode) {
+        const orig = targetTextNode.textContent.trim();
+        el.dataset.orig = orig;
+        targets.push({ textNode: targetTextNode, orig });
+      } else {
+        // Fallback: element has only text, no icon children
+        const orig = el.textContent.trim();
+        if (orig) {
+          el.dataset.orig = orig;
+          targets.push({ el, textNode: null, orig });
+        }
+      }
+    });
+  });
+
+  // ── Apply / Restore ───────────────────────────────────────────────────────
+  let currentLang = 'en';
+  async function applyTranslation(langCode) {
+    currentLang = langCode;
+    for (const t of targets) {
+      const translated = await translateTo(t.orig, langCode);
+      if (currentLang !== langCode) return; // abort if language changed
+      if (t.textNode) {
+        t.textNode.textContent = ' ' + translated + ' (' + t.orig + ')';
+      } else if (t.el) {
+        t.el.textContent = translated + ' (' + t.orig + ')';
+      }
+    }
+  }
+
+  function restoreEnglish() {
+    currentLang = 'en';
+    for (const t of targets) {
+      if (t.textNode) {
+        t.textNode.textContent = ' ' + t.orig;
+      } else if (t.el) {
+        t.el.textContent = t.orig;
+      }
+    }
+  }
+
+  // ── Persisted language (shared across every activity page) ─────────────────
+  const LANGUAGE_PREF_KEY = 'careerbuddy_selected_language';
+  const LANG_CODES = { vietnam: 'vi', russian: 'ru', arabic: 'ar' };
+
+  function applyForValue(val) {
+    const code = LANG_CODES[val];
+    if (code) applyTranslation(code); else restoreEnglish();
+  }
+
+  // Keep the visible dropdown label in sync when the language is restored on load.
+  function syncDropdownDisplay(val) {
+    const wrapper = document.querySelector('.custom-lang-dropdown');
+    if (!wrapper) return;
+    const display = wrapper.querySelector('.currentLangDisplay');
+    const opt = wrapper.querySelector('.lang-option[data-val="' + val + '"]');
+    if (display && opt) display.innerHTML = opt.innerHTML;
+  }
+
+  // ── Listen for language change ────────────────────────────────────────────
+  // Translation applies to the current view only and is never persisted, so a
+  // refresh returns the page to English (the default rendered markup).
+  langSel.addEventListener('change', function () {
+    applyForValue(this.value);
+  });
+})();
+</script>
+{% endblock %}
+

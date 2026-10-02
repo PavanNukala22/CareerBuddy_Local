@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tax Invoice {{ payment.invoice_number }}</title>
+    <style>
+        :root { --ink:#1e293b; --muted:#64748b; --line:#e2e8f0; --accent:#2563eb; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; color: var(--ink); background: #f1f5f9; margin: 0; padding: 24px; }
+        .sheet { max-width: 820px; margin: 0 auto; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 40px; }
+        .top { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--accent); padding-bottom: 20px; margin-bottom: 24px; gap: 24px; }
+        .title { font-size: 26px; font-weight: 700; letter-spacing: 1px; color: var(--accent); }
+        .seller-name { font-size: 18px; font-weight: 700; }
+        .muted { color: var(--muted); font-size: 13px; line-height: 1.5; }
+        .meta { text-align: right; font-size: 13px; }
+        .meta b { color: var(--ink); }
+        .parties { display: flex; gap: 24px; margin-bottom: 24px; }
+        .party { flex: 1; border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; }
+        .party h3 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+        table.items { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
+        table.items th, table.items td { padding: 10px 12px; border: 1px solid var(--line); text-align: left; }
+        table.items th { background: #f8fafc; font-size: 12px; text-transform: uppercase; letter-spacing: .3px; color: var(--muted); }
+        table.items td.num, table.items th.num { text-align: right; }
+        table.totals { width: 320px; margin-left: auto; border-collapse: collapse; font-size: 14px; }
+        table.totals td { padding: 8px 12px; }
+        table.totals td.num { text-align: right; font-weight: 600; }
+        table.totals tr.grand td { border-top: 2px solid #cbd5e1; font-size: 16px; color: var(--accent); font-weight: 700; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; }
+        .badge.refunded { background: #fef2f2; color: #dc2626; }
+        .note { margin-top: 28px; padding-top: 16px; border-top: 1px dashed var(--line); font-size: 12px; color: var(--muted); }
+        .warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-bottom: 20px; }
+        .actions { max-width: 820px; margin: 0 auto 16px; text-align: right; }
+        .btn { display: inline-block; padding: 10px 20px; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+        @media print {
+            body { background: #fff; padding: 0; }
+            .sheet { border: none; border-radius: 0; padding: 0; max-width: none; }
+            .actions { display: none; }
+        }
+    </style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+<style id="site-font-outfit">
+body{font-family:'Outfit',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif !important}
+</style>
+</head>
+<body>
+    <div class="actions">
+        <a href="{% url 'pro_page' %}" class="btn" style="background:#64748b; margin-right:8px;">Back</a>
+        <button class="btn" onclick="window.print()">Download / Print</button>
+    </div>
+
+    <div class="sheet">
+        {% if not seller.gstin %}
+        <div class="warn">This invoice is missing the supplier's GSTIN and registered details. An administrator must configure the company GST settings before this can be used as a valid tax invoice.</div>
+        {% endif %}
+
+        <div class="top">
+            <div>
+                <div class="seller-name">{{ seller.name }}</div>
+                <div class="muted">
+                    {% if seller.address %}{{ seller.address }}<br>{% endif %}
+                    {% if seller.state %}State: {{ seller.state }}{% if seller.state_code %} (Code: {{ seller.state_code }}){% endif %}<br>{% endif %}
+                    {% if seller.gstin %}GSTIN: {{ seller.gstin }}<br>{% endif %}
+                    {% if seller.email %}{{ seller.email }}{% endif %}
+                </div>
+            </div>
+            <div class="meta">
+                <div class="title">TAX INVOICE</div>
+                <div style="margin-top:10px;">
+                    Invoice No: <b>{{ payment.invoice_number }}</b><br>
+                    Date: <b>{{ payment.created_at|date:"d M Y" }}</b><br>
+                    {% if payment.status != 'captured' %}
+                    <span class="badge refunded">{{ payment.get_status_display }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="parties">
+            <div class="party">
+                <h3>Billed To</h3>
+                <div><b>{{ buyer.name }}</b></div>
+                <div class="muted">{{ buyer.email }}</div>
+            </div>
+            <div class="party">
+                <h3>Payment Reference</h3>
+                <div class="muted">
+                    Payment ID: {{ payment.razorpay_payment_id }}<br>
+                    Order ID: {{ payment.razorpay_order_id }}<br>
+                    Currency: {{ payment.currency }}
+                </div>
+            </div>
+        </div>
+
+        <table class="items">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>SAC</th>
+                    <th class="num">Taxable Value</th>
+                    <th class="num">CGST ({{ half_gst_percent }}%)</th>
+                    <th class="num">SGST ({{ half_gst_percent }}%)</th>
+                    <th class="num">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ plan_label }}</td>
+                    <td>{{ seller.sac_code }}</td>
+                    <td class="num">&#8377;{{ payment.taxable_value|floatformat:2 }}</td>
+                    <td class="num">&#8377;{{ payment.cgst_rupees|floatformat:2 }}</td>
+                    <td class="num">&#8377;{{ payment.sgst_rupees|floatformat:2 }}</td>
+                    <td class="num">&#8377;{{ payment.total_rupees|floatformat:2 }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table class="totals">
+            <tr>
+                <td>Taxable Value</td>
+                <td class="num">&#8377;{{ payment.taxable_value|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td>CGST ({{ half_gst_percent }}%)</td>
+                <td class="num">&#8377;{{ payment.cgst_rupees|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td>SGST ({{ half_gst_percent }}%)</td>
+                <td class="num">&#8377;{{ payment.sgst_rupees|floatformat:2 }}</td>
+            </tr>
+            <tr class="grand">
+                <td>Total ({{ gst_percent }}% GST incl.)</td>
+                <td class="num">&#8377;{{ payment.total_rupees|floatformat:2 }}</td>
+            </tr>
+        </table>
+
+        <div class="note">
+            Tax is charged on an intra-state basis; CGST and SGST are each half of the {{ gst_percent }}% GST.
+            This is a computer-generated invoice and does not require a signature.
+        </div>
+    </div>
+</body>
+</html>

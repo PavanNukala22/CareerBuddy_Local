@@ -1,0 +1,223 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareerBuddy – Learn. Grow. Get Hired.</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#0ea5e9",
+                        "surface-bright": "#fcf8f8",
+                        "success": "#10b981",
+                        "warning": "#f59e0b",
+                        "background": "#fcf8f8",
+                    },
+                    fontFamily: {
+                        serif: ["Newsreader", "serif"],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Newsreader', serif; background-color: #fcf8f8; }
+        .glass-panel { background: rgba(255,255,255,0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 8px 32px rgba(0,0,0,0.05); }
+        .ambient-blob { position:fixed; border-radius:50%; filter:blur(80px); opacity:0.15; z-index:-1; animation:blob 10s infinite; }
+        .blob-1 { top:-10%; left:-10%; width:500px; height:500px; background:#bae6fd; }
+        .blob-2 { bottom:-10%; right:-10%; width:400px; height:400px; background:#7dd3fc; animation-delay:2s; }
+        .blob-3 { top:40%; left:40%; width:300px; height:300px; background:#e0f2fe; animation-delay:4s; }
+        @keyframes blob { 0%{transform:translate(0,0) scale(1)} 33%{transform:translate(30px,-50px) scale(1.1)} 66%{transform:translate(-20px,20px) scale(0.9)} 100%{transform:translate(0,0) scale(1)} }
+    </style>
+</head>
+<body class="text-on-surface bg-[#fcf8f8] font-serif">
+
+<div class="ambient-blob blob-1"></div>
+<div class="ambient-blob blob-2"></div>
+<div class="ambient-blob blob-3"></div>
+
+<nav class="bg-white/95 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200/60 shadow-[0_4px_8px_rgba(0,0,0,0.08)]">
+  <div class="flex justify-between items-center max-w-[1440px] mx-auto px-6 h-16">
+    <div class="text-2xl font-bold font-serif text-slate-900">CareerBuddy AI</div>
+    <div class="hidden md:flex gap-8 items-center">
+      <a href="{% url 'evaluation' %}" onclick="localStorage.setItem('activeSidebarTab','curriculum');" data-sidebar-tab="curriculum" class="top-nav-link text-slate-500 hover:text-slate-900 transition-colors font-serif text-[15px]">Tech Center</a>
+      <a href="{% url 'evaluation' %}" onclick="localStorage.setItem('activeSidebarTab','resources');" data-sidebar-tab="resources" class="top-nav-link text-slate-500 hover:text-slate-900 transition-colors font-serif text-[15px]">Dashboard</a>
+      <a href="{% url 'resume_analytics' %}" data-sidebar-tab="analytics" class="top-nav-link text-slate-500 hover:text-slate-900 transition-colors font-serif text-[15px]">Career Path</a>
+      <a href="{% url 'resume_builder' %}" class="bg-[#0ea5e9] text-white px-5 py-2 rounded-full font-serif font-bold shadow-[0_4px_8px_rgba(0,0,0,0.08)] hover:brightness-110 transition-all">Resume Builder</a>
+    </div>
+    <div class="w-10 h-10 rounded-full bg-sky-100 border border-slate-200 flex items-center justify-center text-sky-700 font-bold text-sm font-serif">
+      {{ request.user.username|slice:":1"|upper }}
+    </div>
+  </div>
+</nav>
+
+<div class="flex max-w-[1440px] mx-auto h-[calc(100vh-64px)] overflow-hidden">
+  <main class="flex-1 p-6 md:p-10 overflow-y-auto pb-24">
+    <!-- Header with Score -->
+    <div class="glass-panel p-8 rounded-3xl mb-8 flex flex-col md:flex-row items-center gap-8 animate-slide-up">
+        <div class="relative w-40 h-40 flex items-center justify-center flex-shrink-0">
+            <svg class="transform -rotate-90 w-40 h-40">
+                <circle cx="80" cy="80" r="70" stroke="currentColor" stroke-width="10" fill="transparent" class="text-slate-200"/>
+                <circle cx="80" cy="80" r="70" stroke="currentColor" stroke-width="10" fill="transparent"
+                    stroke-dasharray="440"
+                    stroke-dashoffset="440"
+                    class="text-sky-500 transition-all duration-1000 ease-out"
+                    id="score-ring"/>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span class="text-4xl font-bold text-slate-800" id="pct-text">0%</span>
+                <span class="text-xs text-slate-500 uppercase tracking-widest mt-1">{% if is_ats_only %}ATS Score{% else %}Match{% endif %}</span>
+            </div>
+        </div>
+
+        <div class="flex-1 text-center md:text-left">
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">{% if is_ats_only %}Resume Analysis Complete{% else %}Match Analysis Complete{% endif %}</h2>
+            <p class="text-slate-600 leading-relaxed">{{ analysis.analysis }}</p>
+            {% if not resume_valid and validation_msg %}
+            <div class="mt-4 p-4 rounded-lg bg-red-50 border border-red-200 flex items-start gap-3">
+                <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600 shrink-0 mt-0.5"></i>
+                <p class="text-sm text-red-700 font-medium">{{ validation_msg }}</p>
+            </div>
+            {% endif %}
+            <div class="flex flex-wrap gap-3 mt-6 justify-center md:justify-start">
+                <a href="{% url 'resume_start_interview' %}" class="bg-sky-600 hover:bg-sky-500 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg shadow-sky-500/20 {% if not resume_valid %}opacity-50 cursor-not-allowed pointer-events-none{% endif %}" {% if not resume_valid %}aria-disabled="true" tabindex="-1"{% endif %}>
+                    <i data-lucide="play-circle" class="w-4 h-4"></i>Start Interview
+                </a>
+                <a href="{% url 'resume_builder' %}" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-6 py-2 rounded-lg font-medium transition-colors">
+                    Try Another
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="glass-panel p-6 rounded-2xl animate-slide-up" style="animation-delay:0.1s">
+            <h3 class="text-lg font-semibold text-sky-600 mb-4 flex items-center gap-2">
+                <i data-lucide="check-circle" class="w-5 h-5"></i> {% if is_ats_only %}Found Skills{% else %}Matching Skills{% endif %}
+            </h3>
+            <div class="flex flex-wrap gap-2">
+                {% for skill in analysis.matching_skills %}
+                <span class="px-3 py-1 rounded-full bg-sky-100 text-sky-700 border border-sky-200 text-sm font-medium">{{ skill }}</span>
+                {% empty %}<span class="text-slate-400 italic">No exact matches found.</span>{% endfor %}
+            </div>
+        </div>
+        <div class="glass-panel p-6 rounded-2xl animate-slide-up" style="animation-delay:0.2s">
+            <h3 class="text-lg font-semibold text-red-600 mb-4 flex items-center gap-2">
+                <i data-lucide="x-circle" class="w-5 h-5"></i> {% if is_ats_only %}Gaps Found{% else %}Missing Skills{% endif %}
+            </h3>
+            <div class="flex flex-wrap gap-2">
+                {% for skill in analysis.missing_skills %}
+                <span class="px-3 py-1 rounded-full bg-red-100 text-red-700 border border-red-200 text-sm font-medium">{{ skill }}</span>
+                {% empty %}<span class="text-slate-400 italic">No significant skills missing!</span>{% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Suitable Jobs Section -->
+    <div class="mt-6 animate-slide-up" style="animation-delay:0.3s">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                <i data-lucide="briefcase" class="w-6 h-6 text-sky-600"></i> Recommended Opportunities
+            </h3>
+            <span class="text-sm text-slate-500 font-medium bg-slate-100 px-3 py-1 rounded-full">{{ suitable_jobs|length }} Jobs Found</span>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for job in suitable_jobs %}
+            <div class="glass-panel p-5 rounded-2xl hover:border-sky-300 transition-all group flex flex-col h-full">
+                <div class="flex items-start gap-4 mb-4">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white shrink-0 shadow-lg shadow-sky-500/20">
+                        <i data-lucide="building-2" class="w-6 h-6"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-bold text-slate-800 truncate group-hover:text-sky-600 transition-colors">{{ job.title }}</h4>
+                        <p class="text-xs text-slate-500 font-medium">{{ job.employer.company_name }}</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-1.5 mb-4">
+                    {% for skill in job.get_skills_list|slice:":3" %}
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium border border-slate-200">{{ skill }}</span>
+                    {% endfor %}
+                    {% if job.get_skills_list|length > 3 %}
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-50 text-slate-400 font-medium italic">+{{ job.get_skills_list|length|add:"-3" }} more</span>
+                    {% endif %}
+                </div>
+
+                <div class="mt-auto space-y-3">
+                    <div class="flex items-center justify-between text-[11px] text-slate-500">
+                        <div class="flex items-center gap-1">
+                            <i data-lucide="map-pin" class="w-3 h-3"></i>
+                            {{ job.location }}
+                        </div>
+                        <div class="flex items-center gap-1 font-semibold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-md">
+                            {{ job.get_job_type_display }}
+                        </div>
+                    </div>
+
+                    <a href="{% url 'job_detail' job.pk %}" class="flex items-center justify-center gap-2 w-full py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-sky-600 transition-all shadow-md hover:shadow-sky-500/20">
+                        View Details
+                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full py-12 glass-panel rounded-3xl flex flex-col items-center justify-center text-center">
+                <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-slate-300">
+                    <i data-lucide="search-x" class="w-8 h-8"></i>
+                </div>
+                <h4 class="font-bold text-slate-700">No matching jobs yet</h4>
+                <p class="text-sm text-slate-500 mt-1 max-w-xs mx-auto">Keep exploring other skills or check back later for new opportunities.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Career Advice Section -->
+    <div class="glass-panel p-6 rounded-2xl mt-12 animate-slide-up" style="animation-delay:0.4s">
+        <h3 class="text-lg font-semibold text-yellow-600 mb-4 flex items-center gap-2">
+            <i data-lucide="lightbulb" class="w-5 h-5"></i> Career Advice
+        </h3>
+        <ul class="space-y-3">
+            {% for advice in analysis.career_advice %}
+            <li class="flex items-start gap-3 text-slate-600 text-sm">
+                <i data-lucide="chevron-right" class="w-4 h-4 text-yellow-500 mt-0.5 shrink-0"></i>{{ advice }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+  </main>
+</div>
+
+
+<script type="application/json" id="match-data">
+    {{ analysis.match_percentage|default:0 }}
+</script>
+<script>
+    lucide.createIcons();
+    const pctText = document.getElementById('match-data').textContent.trim();
+    const pct = parseInt(pctText, 10) || 0;
+    const ring = document.getElementById('score-ring');
+    const circumference = 440;
+    setTimeout(() => {
+        ring.style.strokeDashoffset = circumference - (circumference * pct / 100);
+        document.getElementById('pct-text').textContent = pct + '%';
+    }, 200);
+</script>
+
+{% include 'includes/aria_assistant.html' %}
+
+
+</body>
+</html>
+
+
+

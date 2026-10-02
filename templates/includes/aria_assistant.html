@@ -1,0 +1,1242 @@
+
+{% load static %}
+
+<div id="riya-assistant-root" class="riya-assistant"
+    data-riya-page="{{ request.resolver_match.url_name|default:'unknown' }}"
+    data-riya-path="{{ request.path|default:'/' }}"
+    data-riya-role="{% if request.path == '/employer-home/' or '/employer/' in request.path %}employer{% else %}student{% endif %}"
+    data-riya-idle-model="{% static 'model/Girl_standing_new.glb' %}"
+    data-riya-speaking-model="{% static 'model/aria video_default.glb' %}"
+    data-riya-username="{% if request.user.is_authenticated %}{{ request.user.get_full_name|default:request.user.username }}{% endif %}">
+
+    <!-- Persistent greeting bubble -->
+    <div id="riya-greeting-bubble" class="riya-greeting-bubble" aria-hidden="true">
+
+        <span id="riya-greeting-text">
+            Hello, click me to chat!
+        </span>
+
+        <div class="riya-greeting-tail"></div>
+    </div>
+
+
+    <!-- Buddy launcher -->
+    <button type="button" id="riya-launcher" class="riya-launcher" aria-label="Open Buddy assistant"
+        aria-controls="riya-thought-bubble" aria-expanded="false" onclick="openChat()">
+
+        <span class="riya-launcher-model-shell" aria-hidden="true">
+
+            <img src="{% static 'images/Ai_Robot.png' %}" alt="Buddy" class="riya-launcher-img">
+
+        </span>
+
+    </button>
+
+
+    <!-- Buddy chat window -->
+    <section id="riya-thought-bubble" class="riya-thought-bubble" role="dialog" aria-label="Buddy assistant"
+        aria-hidden="true">
+
+        <!-- Header -->
+        <div class="riya-bubble-header">
+
+            <div class="riya-bubble-title-group">
+                <img src="{% static 'images/Ai_Robot.png' %}" alt="" class="riya-header-avatar">
+                <div class="riya-header-text">
+                    <span class="riya-bubble-name">Buddy</span>
+                    <span class="riya-bubble-status">
+                        <span class="riya-online-dot"></span> Online &middot; {% if request.path == '/employer-home/' or '/employer/' in request.path %}Employer Portal{% elif request.user.is_authenticated %}Job Seeker Portal{% else %}CareerBuddy{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Top-right controls -->
+            <div class="riya-bubble-actions">
+
+                <!-- Language selector -->
+                <select id="chatbotLanguageSelect" class="form-select form-select-sm" style="width: auto; margin-right: 5px; font-size: 0.8rem; padding: 2px 20px 2px 5px; border-radius: 5px; border: 1px solid #ccc; background-color: #f8f9fa;" aria-label="Chatbot language">
+                    <option value="english">English</option>
+                    <option value="vietnam">Vietnamese</option>
+                    <option value="hindi">Hindi</option>
+                    <option value="arabic">Arabic</option>
+                    <option value="russian">Russian</option>
+                </select>
+
+                <button type="button" id="riya-mic-button" class="riya-mic-button" aria-label="Speak to Buddy" aria-pressed="false" title="Click to speak" style="margin-right: 4px;">
+                    <svg class="riya-mic-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="9" y="2" width="6" height="12" rx="3"></rect>
+                        <path d="M5 11a7 7 0 0 0 14 0"></path>
+                        <line x1="12" y1="18" x2="12" y2="22"></line>
+                        <line x1="8" y1="22" x2="16" y2="22"></line>
+                    </svg>
+                    <span id="riya-mic-button-label" class="sr-only">Speak</span>
+                </button>
+
+                <!-- Speaker button: pause / resume AI speech (speech only) -->
+                <button type="button" id="riya-speaker-button" class="riya-speaker-button" data-state="idle"
+                    aria-label="AI narration" title="AI narration">
+
+                    <svg class="riya-speaker-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        aria-hidden="true">
+
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path class="riya-speaker-wave" d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        <path class="riya-speaker-wave" d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                        <line class="riya-speaker-slash" x1="23" y1="9" x2="17" y2="15"></line>
+                        <line class="riya-speaker-slash" x1="17" y1="9" x2="23" y2="15"></line>
+
+                    </svg>
+
+                </button>
+
+                <!-- Conversation history: full transcript, while the panel
+                     itself shows only the most recent few messages. -->
+                <button type="button" id="riya-history-button" class="riya-history-button"
+                    aria-label="Conversation history" title="Conversation history" aria-expanded="false">
+                    <!-- Chat bubble with text lines + a history (clock with
+                         counter-clockwise arrow) badge on its lower right. -->
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12.5 15.5H8l-3.5 3v-3H4.5A2.5 2.5 0 0 1 2 13V5.5A2.5 2.5 0 0 1 4.5 3h11A2.5 2.5 0 0 1 18 5.5V9"></path>
+                        <path d="M5.5 7h8M5.5 10h5"></path>
+                        <circle cx="17.5" cy="16.5" r="5" fill="currentColor" fill-opacity="0.12"></circle>
+                        <path d="M17.5 14v2.5l1.6 1"></path>
+                        <path d="M14.4 14.6l-.2-1.6 1.6-.1"></path>
+                    </svg>
+                </button>
+
+
+                <!-- Close button -->
+                <button type="button" id="riya-close-button" class="riya-close-button"
+                    aria-label="Close Buddy assistant" onclick="closeChat()">
+
+                    <span aria-hidden="true">
+                        &times;
+                    </span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- Accessibility/status -->
+        <p id="riya-status-text" class="riya-status-text sr-only" aria-live="polite">
+        </p>
+
+
+        <!-- Wrapper for scrollable content -->
+        <div class="riya-bubble-content">
+            <!-- Response area -->
+            <div id="riya-response-slot" class="riya-response-slot" aria-live="polite">
+
+                <div class="riya-response-card is-placeholder">
+
+                    <p id="riya-greeting-slot-text">
+                        Hi! How can I help you today?
+                    </p>
+
+                </div>
+
+            </div>
+
+            <!-- Full transcript, hidden until the history button is pressed. -->
+            <div id="riya-history-panel" class="riya-history-panel" hidden aria-label="Conversation history">
+                <div class="riya-history-head">
+                    <span class="riya-history-title">Conversation history</span>
+                    <button type="button" id="riya-history-close" class="riya-history-close"
+                        aria-label="Close history">&times;</button>
+                </div>
+                <div id="riya-history-list" class="riya-history-list"></div>
+            </div>
+
+            <!-- Persistent Buddy suggestions: intentionally outside the conversation
+                 stream so they remain visible after every user message. -->
+            <div id="riya-welcome-panel" class="riya-welcome-panel" aria-label="Buddy suggestions"></div>
+        </div>
+
+
+        <!-- ============================================================
+             BUDDY TEXT INPUT
+             Text uses the exact same processTranscript() flow as voice.
+             ============================================================ -->
+        <form id="riya-text-form" class="riya-text-form" autocomplete="off">
+            <div class="riya-text-input-wrap">
+                <input type="text" id="riya-text-input" class="riya-text-input" placeholder="Type a question..."
+                    aria-label="Type a message to Buddy" maxlength="1000" autocomplete="off" enterkeyhint="send">
+
+                <button type="submit" id="riya-text-send" class="riya-text-send" aria-label="Send message" title="Send">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M22 2 11 13"></path>
+                        <path d="m22 2-7 9-4-4-9 2"></path>
+                    </svg>
+                </button>
+            </div>
+        </form>
+
+        <!-- Audio animation -->
+        <div id="riya-audio-bars" class="riya-audio-bars" aria-hidden="true">
+
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+
+        </div>
+
+    </section>
+
+</div>
+
+<style>
+    /* ============================================================
+       BUDDY — ATTRACTIVE INTERNAL CHAT
+       ============================================================ */
+
+    .riya-bubble-content {
+        flex: 1;
+        position: relative; /* anchors the absolutely-positioned history panel */
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .riya-response-slot {
+        flex: 1;
+        overflow-y: auto;
+        position: relative;
+        padding: 16px;
+        scrollbar-gutter: stable;
+        scroll-behavior: smooth;
+        overscroll-behavior: contain;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    /* A reply held until its voice starts (BOTscript revealPendingCard). */
+    .riya-response-slot .riya-response-card[hidden] {
+        display: none !important;
+    }
+
+    /* Give every conversation item breathing room */
+    .riya-response-slot .riya-response-card {
+        margin: 0;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+
+    /* User messages */
+    .riya-response-slot .riya-response-card.riya-user-transcript {
+        align-self: flex-end;
+        background: #1b4fd6 !important; /* CareerBuddy brand color */
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 16px 16px 4px 16px !important;
+        padding: 10px 14px !important;
+        max-width: 78%;
+        font-size: 14.5px;
+        line-height: 1.5;
+        font-style: normal !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        white-space: pre-wrap;
+    }
+
+    .riya-response-slot .riya-response-card.riya-user-transcript a,
+    .riya-response-slot .riya-response-card.riya-user-transcript * {
+        color: #ffffff !important;
+    }
+
+    .riya-response-slot .riya-response-card.riya-user-transcript::before {
+        content: "";
+        display: none !important;
+    }
+
+    /* Buddy responses */
+    .riya-response-slot .riya-response-card:not(.riya-user-transcript) {
+        align-self: flex-start;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        color: #1e293b;
+        border-radius: 16px 16px 16px 4px;
+        padding: 10px 14px;
+        max-width: 82%;
+        font-size: 14.5px;
+        line-height: 1.5;
+        font-style: normal;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Show "🤖 Buddy" only on the FIRST message in a consecutive group */
+    .riya-response-slot .riya-response-card:not(.riya-user-transcript)::before {
+        content: "🤖 Buddy";
+        display: block;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 6px;
+        margin-top: -2px;
+    }
+
+    .riya-response-slot .riya-response-card:not(.riya-user-transcript) + .riya-response-card:not(.riya-user-transcript)::before {
+        display: none;
+    }
+    
+    /* Make consecutive assistant bubbles closer together */
+    .riya-response-slot .riya-response-card:not(.riya-user-transcript) + .riya-response-card:not(.riya-user-transcript) {
+        margin-top: -6px;
+    }
+    
+    .riya-response-slot .riya-response-card:not(.riya-user-transcript) p {
+        margin: 0 0 8px 0;
+        white-space: pre-wrap;
+    }
+    .riya-response-slot .riya-response-card:not(.riya-user-transcript) p:last-child {
+        margin-bottom: 0;
+    }
+
+
+
+    .riya-response-slot .riya-response-card pre {
+        white-space: pre-wrap;
+        overflow-x: auto;
+        max-width: 100%;
+        background: rgba(0, 0, 0, 0.04);
+        padding: 8px;
+        border-radius: 6px;
+    }
+
+    .riya-response-slot .riya-response-card code {
+        word-break: break-word;
+    }
+
+    .riya-response-slot .riya-response-card table {
+        display: block;
+        overflow-x: auto;
+        max-width: 100%;
+    }
+
+    .riya-response-slot .riya-response-card img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* No short-screen override here any more: a fixed 300px is larger than
+       the space available on a genuinely short viewport, which is what
+       pushed the header — and with it the microphone and the language
+       selector — above the top of the screen. The min() rule above scales
+       continuously and covers every height. */
+
+    /* Mobile — handled by riya_assistant.css flex layout (flex:1 fills remaining space) */
+</style>
+
+<style>
+    /* ============================================================
+   BUDDY VOICE BUTTON
+   ============================================================ */
+
+    .riya-mic-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        margin: 0;
+        padding: 0;
+
+        border: none;
+        border-radius: 50%;
+        background: transparent;
+        color: #64748b;
+
+        cursor: pointer;
+
+        transition:
+            background 0.2s ease,
+            color 0.2s ease,
+            transform 0.15s ease,
+            box-shadow 0.2s ease;
+    }
+
+    .riya-mic-button:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+        transform: translateY(-1px);
+    }
+
+    .riya-mic-button:active {
+        transform: scale(0.96);
+    }
+
+    .riya-mic-button.is-listening {
+        background: #ef4444;
+        border-color: #ef4444;
+        color: #fff;
+        box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.12);
+    }
+
+    .riya-mic-button.is-listening .riya-mic-icon {
+        animation: riyaMicPulse 1.1s infinite;
+    }
+
+    .riya-mic-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    @keyframes riyaMicPulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.12);
+        }
+    }
+
+    /* ── Top-right control cluster: Mic -> Speaker -> Close, 3px apart ── */
+    .riya-bubble-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .riya-bubble-actions {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        flex-shrink: 0;
+        margin-left: auto;
+    }
+
+    /* The close button is absolutely positioned by default (pinned to the
+       panel corner) which overlaps the speaker. Inside the cluster it must
+       flow normally so the 3px gap actually separates the three controls. */
+    .riya-bubble-actions .riya-close-button {
+        position: static;
+        top: auto;
+        right: auto;
+        margin: 0;
+    }
+
+    /* ── Speaker button (pause / resume AI speech) ── */
+    .riya-speaker-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border: 1px solid rgba(37, 99, 235, 0.20);
+        border-radius: 50%;
+        background: rgba(37, 99, 235, 0.08);
+        color: #2563eb;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease,
+            box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+
+    .riya-speaker-button:hover {
+        background: rgba(37, 99, 235, 0.14);
+        transform: translateY(-1px);
+    }
+
+    .riya-speaker-button:active {
+        transform: scale(0.94);
+    }
+
+    .riya-speaker-button:focus-visible {
+        outline: 2px solid #2563eb;
+        outline-offset: 2px;
+    }
+
+    /* Idle: dimmed, no slash. */
+    .riya-speaker-button[data-state="idle"] {
+        opacity: 0.55;
+    }
+
+    .riya-speaker-button[data-state="idle"] .riya-speaker-slash {
+        display: none;
+    }
+
+    /* Speaking: active, waves shown, no slash (normal volume icon). */
+    .riya-speaker-button[data-state="speaking"] {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #fff;
+        box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.12);
+    }
+
+    .riya-speaker-button[data-state="speaking"] .riya-speaker-slash {
+        display: none;
+    }
+
+    /* Paused: muted look — hide waves, show the diagonal slash. */
+    .riya-speaker-button[data-state="paused"] .riya-speaker-wave {
+        display: none;
+    }
+
+    .riya-speaker-button[data-state="paused"] .riya-speaker-slash {
+        display: inline;
+    }
+
+    /* ============================================================
+   BUDDY HEADER — FINAL RESPONSIVE FIX
+   ============================================================ */
+
+    .riya-thought-bubble {
+        container-type: inline-size;
+    }
+
+    @container (max-width: 450px) {
+
+        .riya-bubble-header {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+            gap: 6px;
+            padding: 8px 8px 8px 10px;
+            overflow: visible;
+        }
+
+        .riya-bubble-title-group {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            flex: 1;
+            gap: 5px;
+            overflow: visible;
+        }
+
+        .riya-bubble-name {
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        #chatbotLanguageSelect {
+            width: 88px !important;
+            min-width: 88px !important;
+            max-width: 88px !important;
+            margin-left: 2px !important;
+            flex-shrink: 1;
+            box-sizing: border-box;
+        }
+
+        .riya-mic-button {
+            width: 42px !important;
+            min-width: 42px !important;
+            max-width: 42px !important;
+            height: 42px;
+
+            margin-left: 2px;
+            padding: 0 !important;
+
+            border-radius: 50%;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            gap: 0;
+            flex-shrink: 0;
+        }
+
+        .riya-mic-button svg {
+            width: 19px;
+            height: 19px;
+            flex-shrink: 0;
+        }
+
+        .riya-mic-button-label {
+            display: none !important;
+        }
+
+        .riya-speaker-button {
+            width: 40px !important;
+            min-width: 40px !important;
+            height: 40px;
+            flex-shrink: 0;
+        }
+
+        .riya-close-button {
+            width: 32px;
+            min-width: 32px;
+            height: 32px;
+
+            margin-left: 0;
+            padding: 0;
+
+            flex-shrink: 0;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            z-index: 10;
+        }
+    }
+
+    @container (max-width: 360px) {
+
+        .riya-bubble-header {
+            gap: 4px;
+            padding-left: 7px;
+            padding-right: 5px;
+        }
+
+        #chatbotLanguageSelect {
+            width: 78px !important;
+            min-width: 78px !important;
+            max-width: 78px !important;
+        }
+
+        .riya-mic-button {
+            width: 38px !important;
+            min-width: 38px !important;
+            max-width: 38px !important;
+            height: 38px;
+        }
+
+        .riya-close-button {
+            width: 29px;
+            min-width: 29px;
+            height: 29px;
+        }
+    }
+</style>
+
+
+
+
+
+<style>
+    /* ============================================================
+       BUDDY TEXT COMPOSER
+       ============================================================ */
+
+    .riya-text-form {
+        width: 100%;
+        box-sizing: border-box;
+        margin: 0;
+        padding: 6px 10px 8px;
+    }
+
+    .riya-text-input-wrap {
+        width: 100%;
+        min-height: 38px;
+        box-sizing: border-box;
+
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        padding: 3px 4px;
+
+        border: 1px solid rgba(37, 99, 235, 0.18);
+        border-radius: 23px;
+
+        background: rgba(248, 250, 252, 0.97);
+
+        box-shadow:
+            0 2px 8px rgba(15, 23, 42, 0.06);
+
+        transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease,
+            background 0.2s ease;
+    }
+
+    .riya-text-input-wrap:focus-within {
+        background: #fff;
+        border-color: rgba(37, 99, 235, 0.42);
+        box-shadow:
+            0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+    .riya-text-input {
+        flex: 1;
+        min-width: 0;
+        height: 34px;
+
+        padding: 0 4px;
+        border: 0;
+        outline: none;
+        background: transparent;
+
+        color: #172033;
+        font-family: inherit;
+        font-size: 13.5px;
+        font-weight: 500;
+    }
+
+    .riya-attach-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        margin: 0;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background: transparent;
+        color: #64748b;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .riya-attach-button:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+
+    .riya-text-input::placeholder {
+        color: #64748b;
+        font-weight: 400;
+    }
+
+    .riya-text-input:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+
+    /* The site-wide accessibility rule (input:focus-visible) adds a square
+       gold outline on focus, which doesn't follow this input's rounded pill
+       shape. The wrapper above already has its own correctly-rounded focus
+       glow (.riya-text-input-wrap:focus-within), so just turn the square
+       outline off here and let that glow be the only focus indicator. */
+    #riya-text-input:focus-visible {
+        outline: none !important;
+    }
+
+    .riya-text-send {
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+
+        background: #2563eb;
+        color: #fff;
+
+        cursor: pointer;
+
+        transition:
+            transform 0.15s ease,
+            background 0.2s ease,
+            opacity 0.2s ease;
+    }
+
+    .riya-text-send:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+    }
+
+    .riya-text-send:active {
+        transform: scale(0.94);
+    }
+
+    .riya-text-send:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    @media (max-width: 600px) {
+        .riya-text-form {
+            padding: 6px 8px 8px;
+        }
+
+        .riya-text-input {
+            font-size: 13px;
+        }
+
+        .riya-text-send {
+            width: 35px;
+            min-width: 35px;
+            height: 35px;
+        }
+    }
+</style>
+
+<!-- ============================================================
+     BUDDY LANGUAGE MANAGEMENT
+     ============================================================ -->
+
+<script>
+
+    (function () {
+
+        "use strict";
+
+
+        /*
+         * The selected language is stored in localStorage.
+         *
+         * This prevents Buddy from returning to English whenever
+         * the user navigates to another page.
+         */
+
+        const LANGUAGE_STORAGE_KEY =
+            "riya_buddy_language";
+
+
+        /*
+         * Supported language aliases.
+         */
+
+        const LANGUAGE_ALIASES = {
+
+            english: "english",
+
+            vietnam: "vietnam",
+            vietnamese: "vietnam",
+
+            hindi: "hindi",
+
+            arabic: "arabic",
+
+            russian: "russian"
+
+        };
+
+
+        /*
+         * Normalize language value.
+         */
+
+        function normalizeLanguage(value) {
+
+            const normalized =
+                String(value || "")
+                    .trim()
+                    .toLowerCase();
+
+            return (
+                LANGUAGE_ALIASES[normalized] ||
+                "english"
+            );
+
+        }
+
+
+        /*
+         * Get saved language.
+         */
+
+        function getSavedLanguage() {
+
+            try {
+
+                const saved =
+                    localStorage.getItem(
+                        LANGUAGE_STORAGE_KEY
+                    );
+
+                return normalizeLanguage(saved);
+
+            } catch (error) {
+
+                console.warn(
+                    "Buddy language read failed:",
+                    error
+                );
+
+                return "english";
+
+            }
+
+        }
+
+
+        /*
+         * Save language.
+         */
+
+        function saveLanguage(language) {
+
+            const normalized =
+                normalizeLanguage(language);
+
+            try {
+
+                localStorage.setItem(
+                    LANGUAGE_STORAGE_KEY,
+                    normalized
+                );
+
+            } catch (error) {
+
+                console.warn(
+                    "Buddy language save failed:",
+                    error
+                );
+
+            }
+
+            return normalized;
+
+        }
+
+
+        /*
+         * Expose language state to BOTscript.js.
+         *
+         * BOTscript.js can use:
+         *
+         * window.RiyaBuddyLanguage.get()
+         * window.RiyaBuddyLanguage.set(...)
+         */
+
+        window.RiyaBuddyLanguage = {
+
+            get: getSavedLanguage,
+
+            set: saveLanguage
+
+        };
+
+
+        /*
+         * Get username.
+         */
+
+        function getUsername() {
+
+            const root =
+                document.getElementById(
+                    "riya-assistant-root"
+                );
+
+            if (!root) {
+
+                return "";
+
+            }
+
+            /*
+             * Greet by first name, capitalised — "Hello Jagadeesh!", not
+             * "Hello jagadeesh m!". The raw account value may be a full
+             * name, an email-style username, or carry a trailing surname
+             * initial that text-to-speech reads aloud as a stray letter.
+             */
+
+            let raw = String(
+                root.dataset.riyaUsername || ""
+            ).trim();
+
+            if (!raw || raw.toLowerCase() === "there") {
+
+                return "";
+
+            }
+
+            if (raw.indexOf("@") !== -1) {
+
+                raw = raw.split("@")[0];
+
+            }
+
+            raw = raw
+                .replace(/[._\-]+/g, " ")
+                .replace(/\d+/g, " ")
+                .trim();
+
+            const parts =
+                raw.split(/\s+/).filter(Boolean);
+
+            if (!parts.length) {
+
+                return "";
+
+            }
+
+            const first = parts[0];
+
+            return (
+                first.charAt(0).toUpperCase() +
+                first.slice(1).toLowerCase()
+            );
+
+        }
+
+
+        /*
+         * Update greeting according to selected language.
+         */
+
+        function updateGreeting(language) {
+
+            language =
+                normalizeLanguage(language);
+
+
+            const username =
+                getUsername();
+
+
+            const isGuest =
+                !username ||
+                username.toLowerCase() === "there";
+
+
+            const greetings = {
+
+
+                english: {
+
+                    greeting:
+                        isGuest
+                            ? "Hello there! Job seeker or employer?"
+                            : `Hello ${username}!`,
+
+                    slot:
+                        isGuest
+                            ? "Hello there! Are you a job seeker or an employer?"
+                            : `Hello ${username}! How can I help you?`
+
+                },
+
+
+                vietnam: {
+
+                    greeting:
+                        isGuest
+                            ? "Xin chào! Người tìm việc hay nhà tuyển dụng?"
+                            : `Xin chào ${username}!`,
+
+                    slot:
+                        isGuest
+                            ? "Xin chào! Bạn là người tìm việc hay nhà tuyển dụng?"
+                            : `Xin chào ${username}! Tôi có thể giúp gì cho bạn?`
+
+                },
+
+
+                hindi: {
+
+                    greeting:
+                        isGuest
+                            ? "नमस्ते! नौकरी की तलाश या नियोक्ता?"
+                            : `नमस्ते ${username}!`,
+
+                    slot:
+                        isGuest
+                            ? "नमस्ते! क्या आप नौकरी की तलाश में हैं या नियोक्ता हैं?"
+                            : `नमस्ते ${username}! मैं आपकी कैसे मदद कर सकता हूँ?`
+
+                },
+
+
+                arabic: {
+
+                    greeting:
+                        isGuest
+                            ? "مرحباً! باحث عن عمل أم صاحب عمل؟"
+                            : `مرحباً ${username}!`,
+
+                    slot:
+                        isGuest
+                            ? "مرحباً! هل تبحث عن عمل أم صاحب عمل؟"
+                            : `مرحباً ${username}! كيف يمكنني مساعدتك؟`
+
+                },
+
+
+                russian: {
+
+                    greeting:
+                        isGuest
+                            ? "Здравствуйте! Ищете работу или работодатель?"
+                            : `Здравствуйте, ${username}!`,
+
+                    slot:
+                        isGuest
+                            ? "Здравствуйте! Вы ищете работу или работодатель?"
+                            : `Здравствуйте, ${username}! Чем я могу вам помочь?`
+
+                }
+
+            };
+
+
+            const selected =
+                greetings[language] ||
+                greetings.english;
+
+
+            const greetingText =
+                document.getElementById(
+                    "riya-greeting-text"
+                );
+
+            if (greetingText) {
+
+                greetingText.textContent =
+                    selected.greeting;
+
+            }
+
+
+            const slotText =
+                document.getElementById(
+                    "riya-greeting-slot-text"
+                );
+
+            if (slotText) {
+
+                slotText.textContent =
+                    selected.slot;
+
+            }
+
+        }
+
+
+        /*
+         * Initialize Buddy language.
+         */
+
+        function initializeLanguage() {
+
+            const languageSelect =
+                document.getElementById(
+                    "chatbotLanguageSelect"
+                );
+
+
+            if (!languageSelect) {
+
+                return;
+
+            }
+
+
+            /*
+             * Restore previous language.
+             */
+
+            const savedLanguage =
+                getSavedLanguage();
+
+
+            languageSelect.value =
+                savedLanguage;
+
+
+            /*
+             * Update greeting.
+             */
+
+            updateGreeting(
+                savedLanguage
+            );
+
+
+            /*
+             * Handle language changes.
+             */
+
+            languageSelect.addEventListener(
+                "change",
+                function () {
+
+                    const selectedLanguage =
+                        saveLanguage(
+                            languageSelect.value
+                        );
+
+
+                    /*
+                     * Keep dropdown synchronized.
+                     */
+
+                    languageSelect.value =
+                        selectedLanguage;
+
+
+                    /*
+                     * Update greeting immediately.
+                     */
+
+                    updateGreeting(
+                        selectedLanguage
+                    );
+
+
+                    /*
+                     * Tell BOTscript.js that language changed.
+                     */
+
+                    document.dispatchEvent(
+
+                        new CustomEvent(
+                            "riyaLanguageChanged",
+                            {
+                                detail: {
+                                    language:
+                                        selectedLanguage
+                                }
+                            }
+                        )
+
+                    );
+
+                }
+            );
+
+        }
+
+
+        /*
+         * Start.
+         */
+
+        if (
+            document.readyState ===
+            "loading"
+        ) {
+
+            document.addEventListener(
+                "DOMContentLoaded",
+                initializeLanguage
+            );
+
+        } else {
+
+            initializeLanguage();
+
+        }
+
+
+    })();
+
+</script>
+
+
+<!-- ============================================================
+     BUDDY MAIN JAVASCRIPT
+     ============================================================ -->
+
+{# Same translated section names the backend uses (riya_bot/section_names.py). #}
+{% load riya_i18n %}{% riya_section_names as riya_section_names_data %}
+{{ riya_section_names_data|json_script:"riya-section-names" }}
+<script src="{% static 'js/voice_prosody.js' %}?v=prosody-v2"></script>
+<script src="{% static 'js/BOTscript.js' %}?v=riya-welcome-voice-v22"></script>

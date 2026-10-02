@@ -1,0 +1,438 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block content %}
+<div class="dashboard-page">
+
+    <div class="container-fluid px-4 pb-4">
+
+
+
+        <!-- Language selector (Dashboard-only; resets to English on every load) -->
+        <div class="row">
+            <div class="col-12 d-flex justify-content-end mb-2">
+                <div class="dropdown dash-lang-dropdown">
+                    <button class="btn btn-sm dropdown-toggle d-flex align-items-center justify-content-between"
+                        type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                        style="width:auto; min-width:150px; border-radius:8px; background-color:#fff; color:#333; font-weight:600; border:1.5px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.12);">
+                        <span class="dashCurrentLang d-flex align-items-center"><img
+                                src="https://flagcdn.com/w20/gb.png" class="me-2"
+                                style="width:20px; border-radius:2px;"> English</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm"
+                        style="border-radius:8px; border:1px solid #e2e8f0; min-width:150px; padding:0.5rem;">
+                        <li><a class="dropdown-item d-flex align-items-center fw-semibold dash-lang-option py-2"
+                                href="#" data-val="english"><img src="https://flagcdn.com/w20/gb.png" class="me-2"
+                                    style="width:20px; border-radius:2px;"> English</a></li>
+                        <li><a class="dropdown-item d-flex align-items-center fw-semibold dash-lang-option py-2"
+                                href="#" data-val="vietnam"><img src="https://flagcdn.com/w20/vn.png" class="me-2"
+                                    style="width:20px; border-radius:2px;"> Vietnamese</a></li>
+                        <li><a class="dropdown-item d-flex align-items-center fw-semibold dash-lang-option py-2"
+                                href="#" data-val="arabic"><img src="https://flagcdn.com/w20/sa.png" class="me-2"
+                                    style="width:20px; border-radius:2px;"> Arabic</a></li>
+                        <li><a class="dropdown-item d-flex align-items-center fw-semibold dash-lang-option py-2"
+                                href="#" data-val="russian"><img src="https://flagcdn.com/w20/ru.png" class="me-2"
+                                    style="width:20px; border-radius:2px;"> Russian</a></li>
+                    </ul>
+                    <select id="dashLanguageSelect" class="d-none">
+                        <option value="english" selected>English</option>
+                        <option value="vietnam">Vietnamese</option>
+                        <option value="arabic">Arabic</option>
+                        <option value="russian">Russian</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Welcome Row -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="dashboard-welcome">
+                    <div>
+                        <h2 class="mb-1">Welcome back, <span class="text-accent">{{ user.first_name|default:user.username }}</span></h2>
+                        <p class="text-muted mb-0">Continue your Career Journey</p>
+                    </div>
+                    <a href="{% url 'activity_list' %}" class="btn btn-primary">
+                        <i class="fas fa-th-large me-2"></i>Browse Activities
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="stat-card stat-card-blue">
+                    <div class="stat-card-icon"><i class="fas fa-book-open"></i></div>
+                    <div class="stat-card-value">{{ total_activities }}</div>
+                    <div class="stat-card-label">Total Activities</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card stat-card-green">
+                    <div class="stat-card-icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-card-value">{{ completed_count }}</div>
+                    <div class="stat-card-label">Completed</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card stat-card-orange">
+                    <div class="stat-card-icon"><i class="fas fa-spinner"></i></div>
+                    <div class="stat-card-value">{{ in_progress_count }}</div>
+                    <div class="stat-card-label">In Progress</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card stat-card-purple">
+                    <div class="stat-card-icon"><i class="fas fa-star"></i></div>
+                    <div class="stat-card-value">{{ total_score }}</div>
+                    <div class="stat-card-label">Total Score</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommended Jobs — unlocked by scoring above 70 in the AI mock interview -->
+        {% if recommended_jobs %}
+        <!-- id + scroll-margin: Buddy links here with /dashboard/#recommended-jobs, and
+             the margin keeps the heading clear of the sticky navbar on arrival. -->
+        <div id="recommended-jobs" style="scroll-margin-top: 90px;"
+             class="card border-0 rounded-4 shadow-sm p-4 mb-4 bg-white">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span
+                        style="width:36px;height:36px;background:#dcfce7;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#15803d;font-size:1.1rem;">
+                        <i class="fas fa-briefcase"></i>
+                    </span>
+                    <div>
+                        <h5 class="fw-bold mb-0" style="font-family:'Outfit',sans-serif;color:#0f172a;">Recommended Job
+                            Opportunities</h5>
+                        <small class="text-muted">Unlocked with your interview score of <strong>{{ interview_score }}/100</strong> — matched to your experience &amp; skills.</small>
+                    </div>
+                </div>
+                <span class="badge rounded-pill px-3 py-2" style="background:rgba(252,163,17,.16);color:#a86a08;">
+                    {{ recommended_jobs|length }} Matched Job{{ recommended_jobs|length|pluralize }}
+                </span>
+            </div>
+
+            <div class="row g-3">
+                {% for job in recommended_jobs %}
+                <div class="col-md-4">
+                    <div class="job-card border rounded-3 p-3 h-100 overflow-hidden">
+                        <div class="d-flex align-items-start gap-3 mb-2">
+                            <div class="job-logo"><i class="fas fa-building text-primary"></i></div>
+                            <div class="overflow-hidden">
+                                <h6 class="fw-bold mb-0 text-truncate" title="{{ job.title }}">{{ job.title }}</h6>
+                                <small class="text-muted">{{ job.employer.company_name }}</small>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-1 mb-2">
+                            {% for skill in job.get_skills_list|slice:":3" %}
+                            <span class="badge bg-light text-dark border text-truncate" style="max-width:100%;">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2" style="font-size:0.8rem;">
+                            <span class="text-muted"><i class="fas fa-map-marker-alt me-1"></i>{{ job.location }}</span>
+                            <span class="badge bg-primary bg-opacity-10 text-primary">{{ job.get_job_type_display }}</span>
+                        </div>
+                        {% if job.department %}<div class="text-muted mb-2" style="font-size:0.8rem;"><i class="fas fa-sitemap me-1"></i>{{ job.get_department_display }}</div>{% endif %}
+                        <div class="mb-2" style="font-size:0.8rem;">
+                            <span class="text-muted"><i class="fas fa-briefcase me-1"></i>{{ job.get_experience_display }}</span>
+                        </div>
+                        <div class="mb-3 p-2 rounded bg-light border">
+                            <small class="fw-bold text-success"><i class="fas fa-rupee-sign me-1"></i>{{ job.salary_display }}</small>
+                        </div>
+                        <a href="{% url 'employer_portal:job_detail' job.pk %}"
+                            class="btn btn-primary btn-sm w-100 rounded-3 fw-bold" target="_blank">
+                            <i class="fas fa-paper-plane me-1"></i> View &amp; Apply
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <!-- Same anchor when nothing is unlocked yet, so Buddy's "Job Recommendations"
+             always lands on this section instead of the top of the page. -->
+        <div id="recommended-jobs" style="scroll-margin-top: 90px;"
+             class="card border-0 rounded-4 shadow-sm p-4 mb-4 bg-white">
+            <h5 class="fw-bold mb-1" style="font-family:'Outfit',sans-serif;color:#0f172a;">Recommended Job Opportunities</h5>
+            <small class="text-muted">Score 70 or above in the AI mock interview to unlock jobs matched to your experience &amp; skills.</small>
+        </div>
+        {% endif %}
+
+        <div class="row g-4">
+            <!-- Activities Progress -->
+            <div class="col-lg-8">
+                <div class="dashboard-card">
+                    <div class="dashboard-card-header">
+                        <div>
+                            <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Activity Progress</h5>
+                            {% if overall_performance %}
+                            <small class="text-muted">Average score
+                                <strong class="text-{{ overall_performance.band }}">{{ overall_performance.percent }}%</strong>
+                                across {{ overall_performance.attempted }} started activit{{ overall_performance.attempted|pluralize:"y,ies" }}</small>
+                            {% else %}
+                            <small class="text-muted">Progress is based on your scores</small>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'activity_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    <div class="dashboard-card-body">
+                        {% for item in activities_with_progress %}
+                        <div class="progress-activity-item">
+                            <a href="{% if item.direct_url %}{{ item.direct_url }}{% else %}{% url 'activity_detail' item.activity.pk %}{% endif %}"
+                                class="progress-activity-link">
+                                <div class="progress-activity-icon bg-{{ item.activity.color_class }}">
+                                    <i class="{{ item.activity.icon_class }}"></i>
+                                </div>
+                                <div class="progress-activity-info">
+                                    {% with p=item.progress %}
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="progress-activity-name">{{ item.activity.order }}. {{ item.activity.title }}</span>
+                                        <span class="progress-activity-pct {% if p.attempted %}text-{{ p.band }}{% else %}text-muted{% endif %}"
+                                            title="Score-based progress">
+                                            {{ p.percent }}%
+                                        </span>
+                                    </div>
+                                    <div class="progress progress-thin mb-1" role="progressbar" aria-label="{{ item.activity.title }} performance"
+                                        aria-valuenow="{{ p.percent }}" aria-valuemin="0" aria-valuemax="100">
+                                        <div class="progress-bar bg-{{ p.band }}"
+                                            style="--progress: {{ p.percent }}%; width: var(--progress);">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            {% if item.is_workshop %}
+                                                {% if p.attempted %}Session score · {{ p.attempted }} session{{ p.attempted|pluralize }}{% else %}No sessions yet{% endif %}
+                                            {% elif p.total %}
+                                                {{ p.attempted }}/{{ p.total }} exercises attempted
+                                            {% else %}
+                                                No scored exercises
+                                            {% endif %}
+                                        </small>
+                                    {% endwith %}
+                                        {% if item.started_at %}
+                                        <small class="text-info"><i class="fas fa-calendar-alt me-1"></i>Started {{ item.started_at|date:"M d, Y" }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        {% empty %}
+                        <div class="empty-state py-4 text-center">
+                            <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No activities started yet.</p>
+                            <a href="{% url 'activity_list' %}" class="btn btn-primary">Start Learning</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Payment History -->
+                {% if payment_history %}
+                <div class="dashboard-card mt-4">
+                    <div class="dashboard-card-header">
+                        <h5><i class="fas fa-credit-card me-2"></i>Payment History</h5>
+                    </div>
+                    <div class="dashboard-card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Plan Status</th>
+                                        <th>Amount</th>
+                                        <th>Method</th>
+
+                                        <th>Transaction ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in payment_history %}
+                                    <tr>
+                                        <td>{{ payment.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            {% if payment.is_plan_active %}
+                                            <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                            <span class="badge bg-danger" style="cursor: pointer;"
+                                                onclick="if(typeof Swal !== 'undefined'){Swal.fire('Plan Status', 'This plan is no longer active.', 'info');}else{alert('This plan is no longer active.');}">Non-Active</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>₹{{ payment.total_rupees|floatformat:2 }}</td>
+                                        <td>Razorpay</td>
+
+                                        <td><small class="text-muted">{{ payment.razorpay_payment_id }}</small></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Recent Results -->
+                <div class="dashboard-card mb-4">
+                    <div class="dashboard-card-header">
+                        <h5><i class="fas fa-history me-2"></i>Recent Results</h5>
+                    </div>
+                    <div class="dashboard-card-body p-0">
+                        {% for result in recent_results %}
+                        <div class="recent-result-item">
+                            <div class="result-exercise-name">{{ result.title|truncatechars:30 }}</div>
+                            <div class="result-activity-name text-muted">{{ result.activity_name|truncatechars:25 }}
+                            </div>
+                            <div class="result-score">
+                                <span
+                                    class="score-badge {% if result.percentage >= 80 %}score-high{% elif result.percentage >= 50 %}score-mid{% else %}score-low{% endif %}">
+                                    {{ result.score }}/{{ result.max_score }}
+                                </span>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="py-3 text-center text-muted">
+                            <i class="fas fa-gamepad fa-2x mb-2 d-block"></i>
+                            No exercises completed yet
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="dashboard-card">
+                    <div class="dashboard-card-header">
+                        <h5><i class="fas fa-bolt me-2"></i>Quick Start</h5>
+                    </div>
+                    <div class="dashboard-card-body">
+                        <div class="quick-links">
+                            <a href="{% url 'activity_list' %}?category=speaking" class="quick-link-item">
+                                <i class="fas fa-microphone"></i><span>Speaking</span>
+                            </a>
+                            <a href="{% url 'activity_list' %}?category=writing" class="quick-link-item">
+                                <i class="fas fa-pen"></i><span>Writing</span>
+                            </a>
+                            <a href="{% url 'activity_list' %}?category=vocabulary" class="quick-link-item">
+                                <i class="fas fa-puzzle-piece"></i><span>Vocabulary</span>
+                            </a>
+                            <a href="{% url 'activity_list' %}?category=negotiation" class="quick-link-item">
+                                <i class="fas fa-handshake"></i><span>Negotiation</span>
+                            </a>
+                            <a href="{% url 'activity_list' %}?category=communication" class="quick-link-item">
+                                <i class="fas fa-globe"></i><span>Communication</span>
+                            </a>
+                            <a href="{% url 'activity_list' %}?category=analysis" class="quick-link-item">
+                                <i class="fas fa-chart-pie"></i><span>Analysis</span>
+                            </a>
+                            <a href="{% url 'activity_list' %}?category=workshop" class="quick-link-item">
+                                <i class="fas fa-chalkboard-teacher"></i><span>Workshop</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // ── Dashboard-only language selector ───────────────────────────────────────
+    // Isolated from the activity language system on purpose: it uses its own select
+    // id (#dashLanguageSelect) and stores NOTHING, so the dashboard always opens in
+    // English and resets to English on every refresh. It translates only text inside
+    // .dashboard-page, never the shared global navigation or any other page.
+    (function () {
+        'use strict';
+        var sel = document.getElementById('dashLanguageSelect');
+        var wrapper = document.querySelector('.dash-lang-dropdown');
+        var scope = document.querySelector('.dashboard-page');
+        if (!sel || !wrapper || !scope) return;
+
+        var options = wrapper.querySelectorAll('.dash-lang-option');
+        var display = wrapper.querySelector('.dashCurrentLang');
+        var LANG_CODES = { vietnam: 'vi', russian: 'ru', arabic: 'ar' };
+
+        // Collect translatable text nodes inside the dashboard (skip the selector
+        // itself, scripts/styles, and nodes with no letters like pure numbers).
+        var targets = [];
+        var walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT, {
+            acceptNode: function (node) {
+                if (!node.textContent || !/[A-Za-z]/.test(node.textContent)) return NodeFilter.FILTER_REJECT;
+                var p = node.parentElement;
+                if (!p) return NodeFilter.FILTER_REJECT;
+                if (p.closest('.dash-lang-dropdown')) return NodeFilter.FILTER_REJECT;
+                if (p.tagName === 'SCRIPT' || p.tagName === 'STYLE') return NodeFilter.FILTER_REJECT;
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        });
+        var node;
+        while ((node = walker.nextNode())) targets.push({ node: node, orig: node.textContent });
+
+        // ── Google Translate helper (same endpoint used elsewhere in the app) ──────
+        var cache = {};
+        function translateTo(text, code) {
+            var key = text + '|' + code;
+            if (cache[key]) return Promise.resolve(cache[key]);
+            return fetch(
+                'https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=' +
+                encodeURIComponent(code) + '&dt=t&q=' + encodeURIComponent(text)
+            )
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data && data[0]) {
+                        var t = data[0].map(function (x) { return x[0]; }).join('');
+                        cache[key] = t;
+                        return t;
+                    }
+                    return text;
+                })
+                .catch(function () { return text; });
+        }
+
+        var current = 'english';
+
+        function restoreEnglish() {
+            current = 'english';
+            targets.forEach(function (t) { t.node.textContent = t.orig; });
+        }
+
+        function applyLanguage(val) {
+            var code = LANG_CODES[val];
+            if (!code) { restoreEnglish(); return; }
+            current = val;
+            // Fire all translations in parallel; preserve each node's surrounding space.
+            targets.forEach(function (t) {
+                var core = t.orig.trim();
+                if (!core) return;
+                var leading = t.orig.match(/^\s*/)[0];
+                var trailing = t.orig.match(/\s*$/)[0];
+                translateTo(core, code).then(function (translated) {
+                    if (current !== val) return; // language changed mid-flight — drop
+                    t.node.textContent = leading + translated + trailing;
+                });
+            });
+        }
+
+        options.forEach(function (opt) {
+            opt.addEventListener('click', function (e) {
+                e.preventDefault();
+                var val = this.getAttribute('data-val');
+                if (display) display.innerHTML = this.innerHTML;
+                sel.value = val;
+                if (val === 'english') restoreEnglish(); else applyLanguage(val);
+            });
+        });
+
+        // Always start in English — no persistence, so a refresh returns to English.
+        sel.value = 'english';
+        restoreEnglish();
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,237 @@
+{% comment %}
+Language selector shared by the activity modules and the Interactive Workshop
+apps (Group Discussion, JAM, Role Play).
+
+It is a styled wrapper around a hidden <select id="languageSelect">. Page code
+keeps reading that select exactly as before — the dropdown only sets its value
+and fires a `change` event — so behaviour stays identical to the modules that
+already had this markup inline.
+
+Fully self-contained: it does not depend on Bootstrap's .dropdown/.dropdown-menu
+CSS or its data-bs-toggle JS to open, close, or look right. On JAM's page (the
+one page in the app styled with Tailwind, loaded globally via base.html) the
+menu rendered permanently expanded in the normal page flow instead of as a
+floating, hidden-until-clicked overlay — i.e. Bootstrap's .dropdown-menu
+display:none/position:absolute never took effect there, for reasons not worth
+chasing further. Supplying that behaviour here, scoped and !important-guarded,
+means it can't depend on however a given page's CSS happens to cascade.
+
+Include once per page (the select id must stay unique):
+
+    {% include 'includes/language_dropdown.html' %}
+
+Pass `fixed=False` to lay it out inline instead of pinned to the top-right:
+
+    {% include 'includes/language_dropdown.html' with fixed=False %}
+{% endcomment %}
+<style>
+    .custom-lang-dropdown {
+        /* position itself is always set inline below (fixed or relative), not
+           here, so there is no !important cascade question about which wins. */
+        display: inline-block !important;
+        /* This wrapper carries no visual chrome of its own — only
+           .lang-toggle-btn (the visible pill) and .lang-menu (the panel,
+           hidden until opened) should ever paint anything. Reset explicitly
+           so nothing from the surrounding page can be inherited or bleed
+           through as an unwanted background/border/shadow around the button. */
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+    }
+    .custom-lang-dropdown .lang-toggle-btn {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: .5rem;
+        width: auto;
+        min-width: 160px;   /* same as the menu, so the two line up edge to edge */
+        border-radius: 8px !important;
+        background-color: #fff !important;
+        color: #333 !important;
+        font-weight: 600;
+        font-size: .875rem;
+        border: 1.5px solid #e2e8f0 !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        padding: .375rem .75rem;
+        cursor: pointer;
+    }
+    .custom-lang-dropdown .lang-menu {
+        display: none;
+        position: absolute !important;
+        top: calc(100% + 4px) !important;
+        left: 0 !important;
+        right: auto;
+        z-index: 1060 !important;
+        /* Never narrower than the button it opens from. */
+        min-width: max(160px, 100%);
+        box-sizing: border-box;
+        margin: 0;
+        padding: .5rem 0 !important;
+        list-style: none !important;
+        background-color: #fff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 12px 28px rgba(15,23,42,.16) !important;
+    }
+    .custom-lang-dropdown.lang-open .lang-menu {
+        display: block !important;
+    }
+    /* Set by the script when a left-aligned menu would run past the right
+       edge of the screen: it then lines up with the button's right edge. */
+    .custom-lang-dropdown .lang-menu.lang-menu-end {
+        left: auto !important;
+        right: 0 !important;
+    }
+    .custom-lang-dropdown .lang-option {
+        display: flex !important;
+        align-items: center !important;
+        padding: .5rem 1rem !important;
+        color: #1e293b !important;
+        text-decoration: none !important;
+        font-weight: 600;
+        font-size: .9rem;
+        white-space: nowrap;
+    }
+    .custom-lang-dropdown .lang-option:hover {
+        background-color: #f1f5f9 !important;
+    }
+    .custom-lang-dropdown img {
+        width: 20px !important;
+        height: 14px !important;
+        max-width: 20px !important;
+        min-width: 20px;
+        object-fit: cover;
+        display: inline-block !important;
+        vertical-align: middle;
+        border-radius: 2px;
+        flex-shrink: 0;
+        /* Belt-and-braces alongside the flex `gap` above: this page's CSS
+           cascade has proven unpredictable twice already, so the spacing
+           between flag and label does not rely on `gap` support alone. */
+        margin-right: .5rem !important;
+    }
+</style>
+<div class="custom-lang-dropdown" style="{% if fixed is not False %}position: fixed; top: 85px; right: 1.5rem; z-index: 1050;{% else %}position: relative;{% endif %}">
+    <button type="button" class="lang-toggle-btn" aria-haspopup="true" aria-expanded="false" aria-label="Select language">
+        <span class="currentLangDisplay d-flex align-items-center"><img src="https://flagcdn.com/w20/gb.png" alt=""> English</span>
+        <i class="fas fa-caret-down" style="font-size:.75rem;"></i>
+    </button>
+    <ul class="lang-menu">
+        <li><a class="lang-option" href="#" data-val="english"><img src="https://flagcdn.com/w20/gb.png" alt=""> English</a></li>
+        <li><a class="lang-option" href="#" data-val="vietnam"><img src="https://flagcdn.com/w20/vn.png" alt=""> Vietnamese</a></li>
+        <li><a class="lang-option" href="#" data-val="arabic"><img src="https://flagcdn.com/w20/sa.png" alt=""> Arabic</a></li>
+        <li><a class="lang-option" href="#" data-val="russian"><img src="https://flagcdn.com/w20/ru.png" alt=""> Russian</a></li>
+    </ul>
+    <select id="languageSelect" class="d-none" aria-hidden="true" tabindex="-1">
+        <option value="english" selected>English</option>
+        <option value="vietnam">Vietnamese</option>
+        <option value="arabic">Arabic</option>
+        <option value="russian">Russian</option>
+    </select>
+</div>
+
+<script>
+(function () {
+    function wireLanguageDropdown() {
+        var wrappers = document.querySelectorAll('.custom-lang-dropdown');
+        wrappers.forEach(function (wrapper) {
+            if (wrapper.dataset.langWired === '1') return;
+            wrapper.dataset.langWired = '1';
+
+            var toggleBtn = wrapper.querySelector('.lang-toggle-btn');
+            var options = wrapper.querySelectorAll('.lang-option');
+            var display = wrapper.querySelector('.currentLangDisplay');
+            var select = wrapper.querySelector('#languageSelect') || document.getElementById('languageSelect');
+
+            // Opens directly below the button, left edges lined up; if that
+            // would push the menu off the right side of the screen, it lines
+            // up with the button's right edge instead.
+            var menu = wrapper.querySelector('.lang-menu');
+            function alignMenu() {
+                if (!menu) return;
+                menu.classList.remove('lang-menu-end');
+                var rect = menu.getBoundingClientRect();
+                if (rect.right > document.documentElement.clientWidth - 8) menu.classList.add('lang-menu-end');
+            }
+            window.addEventListener('resize', function () { if (wrapper.classList.contains('lang-open')) alignMenu(); });
+
+            function closeMenu() {
+                wrapper.classList.remove('lang-open');
+                if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+            }
+            function toggleMenu(e) {
+                e.stopPropagation();
+                var willOpen = !wrapper.classList.contains('lang-open');
+                // Close any other open instance on the page first.
+                document.querySelectorAll('.custom-lang-dropdown.lang-open').forEach(function (w) {
+                    if (w !== wrapper) w.classList.remove('lang-open');
+                });
+                wrapper.classList.toggle('lang-open', willOpen);
+                if (toggleBtn) toggleBtn.setAttribute('aria-expanded', String(willOpen));
+                if (willOpen) alignMenu();
+            }
+
+            if (toggleBtn) toggleBtn.addEventListener('click', toggleMenu);
+
+            options.forEach(function (item) {
+                item.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    display.innerHTML = this.innerHTML;
+                    if (select) {
+                        select.value = this.getAttribute('data-val');
+                        // Page code listens on the select, not on these links.
+                        select.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    closeMenu();
+                });
+            });
+
+            if (select) {
+                // Keep the button label in sync with the select's current value.
+                // Called on change AND on several load-phase events because the
+                // language is often restored (localStorage) by another script whose
+                // timing relative to this wiring is not guaranteed — without the
+                // extra re-syncs the pill can be left reading "English" on a
+                // persisted-language load even though the content is translated.
+                function syncLabel() {
+                    var match = Array.prototype.find.call(options, function (o) {
+                        return o.getAttribute('data-val') === select.value;
+                    });
+                    if (match && display) display.innerHTML = match.innerHTML;
+                }
+                select.addEventListener('change', syncLabel);
+                syncLabel();
+                window.addEventListener('load', syncLabel);
+                window.addEventListener('pageshow', syncLabel);
+                setTimeout(syncLabel, 300);
+            }
+        });
+
+        // One shared outside-click / Escape handler for every dropdown on the page.
+        if (!document.body.dataset.langDropdownGlobalWired) {
+            document.body.dataset.langDropdownGlobalWired = '1';
+            document.addEventListener('click', function (e) {
+                document.querySelectorAll('.custom-lang-dropdown.lang-open').forEach(function (w) {
+                    if (!w.contains(e.target)) w.classList.remove('lang-open');
+                });
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.custom-lang-dropdown.lang-open').forEach(function (w) {
+                        w.classList.remove('lang-open');
+                    });
+                }
+            });
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', wireLanguageDropdown);
+    } else {
+        wireLanguageDropdown();
+    }
+})();
+</script>

@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script src="/static/js/content-protection.js?v=2" data-cb-protect></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Level 1 — Letter Sounds & First Words</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+:root{
+  --navy:#14213D;--navy-2:#0b1526;--gold:#FCA311;--gold-soft:#fdeecb;--gold-ink:#7a5c00;
+  --bg:#f9f9ff;--bg-soft:#f1f3ff;--ink:#161c27;--body:#4a5568;--muted:#718096;
+  --line:#e2e8f0;--line-2:#dde2f3;--teal-50:#e6ebf3;
+  --success:#38a169;--success-bg:#e9f7ef;--danger:#e53e3e;--danger-bg:#fdecec;
+  --radius:8px;--radius-lg:14px;
+  --shadow-sm:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.06);
+  --shadow:0 8px 24px -12px rgba(16,24,40,.18);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{min-height:100%;font-family:'Outfit',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+body{background:var(--bg);color:var(--ink);padding:14px;-webkit-font-smoothing:antialiased}
+.container{min-height:calc(100vh - 24px);display:flex;flex-direction:column;gap:12px}
+.top-section{flex:0 0 auto;background:#fff;border-radius:var(--radius-lg);padding:8px 14px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;border:1px solid var(--line)}
+.top-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:10px}
+.top-title{font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+.level-badge{background:var(--gold-soft);color:var(--gold-ink);padding:5px 12px;border-radius:999px;font-size:11px;font-weight:700;border:1px solid rgba(238,188,29,.4)}
+.include-badge{background:var(--bg-soft);color:var(--body);padding:5px 14px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--line)}
+.book-list{display:flex;gap:10px;overflow-x:auto;overflow-y:visible;padding:4px 2px 6px;flex:0 0 auto;align-items:stretch;scrollbar-width:thin}
+.mini-book{flex-shrink:0;width:148px;min-width:148px;height:92px;border-radius:10px;cursor:pointer;background:#fff;border:1px solid var(--line);border-top:3px solid var(--accent,var(--navy));transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink);box-shadow:var(--shadow-sm);position:relative;user-select:none;padding:5px 4px;gap:1px}
+.mini-book .b-emoji{font-size:15px;line-height:1;margin-bottom:0}
+.mini-book .b-pattern{font-size:11px;line-height:1.05;font-weight:800;color:var(--navy);width:100%;text-align:center;overflow-wrap:anywhere;word-break:normal}
+.mini-book .b-count{font-size:8px;background:var(--bg-soft);color:var(--muted);padding:1px 6px;border-radius:8px;font-weight:700;white-space:nowrap}
+.mini-book:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.mini-book.active{border-color:var(--navy);box-shadow:0 0 0 2px var(--navy);z-index:2}
+.mini-book.active::after{content:'✓';position:absolute;top:-7px;right:-7px;background:var(--gold);color:var(--navy);width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;box-shadow:var(--shadow-sm)}
+.bottom-section{flex:1;min-height:440px;display:grid;grid-template-columns:45% 55%;gap:12px}
+.card-display{background:#fff;border-radius:var(--radius-lg);padding:16px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;align-items:center;justify-content:space-between;perspective:1500px;position:relative;border:1px solid var(--line)}
+.book-title{background:var(--navy);color:#fff;padding:7px 16px;border-radius:var(--radius);font-size:13.5px;font-weight:700;text-align:center}
+.pronounce-btn{position:absolute;top:14px;right:14px;background:var(--navy);border:none;color:#fff;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:15px;box-shadow:var(--shadow-sm);transition:.15s;z-index:10}
+.pronounce-btn:hover{background:var(--navy-2)}
+.flip-card{width:90%;height:65%;position:relative;cursor:pointer;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.4,0,.2,1)}
+.flip-card.flipped{transform:rotateY(180deg)}
+.flip-face{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;flex-direction:column;box-shadow:var(--shadow);border:1px solid var(--line);overflow:hidden;padding:14px;gap:10px}
+.flip-front{background:linear-gradient(150deg,var(--navy),var(--navy-2));color:#fff;border-color:transparent}
+.flip-back{background:#fff;color:var(--ink);transform:rotateY(180deg)}
+.big-emoji{font-size:clamp(50px,7vw,90px);filter:drop-shadow(0 4px 8px rgba(0,0,0,.25))}
+.word-display{font-size:clamp(40px,6.5vw,76px);font-weight:800;text-align:center;letter-spacing:-.01em}
+.word-display .h1{color:#fff}.word-display .h2{color:var(--gold)}
+.phoneme-split{display:flex;gap:12px;font-size:clamp(28px,5vw,52px);font-weight:800;align-items:center}
+.phoneme-chunk{background:var(--bg-soft);color:var(--navy);padding:6px 18px;border-radius:10px;border:1px solid var(--line-2)}
+.phoneme-chunk.h2{background:var(--gold-soft);color:var(--gold-ink);border-color:rgba(238,188,29,.5)}
+.meaning-display{font-size:clamp(15px,1.8vw,20px);font-weight:500;text-align:center;line-height:1.45;color:var(--body);padding:0 8px}
+.word-nav{display:flex;align-items:center;gap:10px;background:var(--bg-soft);padding:6px 12px;border-radius:999px;border:1px solid var(--line)}
+.nav-btn{background:#fff;border:1px solid var(--line);color:var(--navy);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:700;transition:.15s;display:flex;align-items:center;justify-content:center}
+.nav-btn:hover:not(:disabled){border-color:var(--navy);background:var(--teal-50)}
+.nav-btn:disabled{opacity:.35;cursor:not-allowed}
+.word-counter{font-size:13px;font-weight:700;color:var(--navy);min-width:60px;text-align:center;font-variant-numeric:tabular-nums}
+.details-panel{background:#fff;border-radius:var(--radius-lg);padding:18px 22px;overflow-y:auto;box-shadow:var(--shadow-sm);border:1px solid var(--line)}
+.details-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.details-word-wrap{display:flex;align-items:center;gap:10px}
+.details-emoji{font-size:32px}
+.details-word{font-size:28px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.details-word .h1{color:var(--ink)}.details-word .h2{color:var(--gold)}
+.pos-badge{background:var(--gold-soft);color:var(--gold-ink);padding:4px 12px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:1px solid rgba(238,188,29,.4)}
+.detail-section{margin-bottom:16px}
+.detail-label{display:flex;align-items:center;gap:6px;font-weight:700;color:var(--navy);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.phonetic-box{background:var(--teal-50);border-left:3px solid var(--navy);padding:8px 14px;border-radius:var(--radius);font-style:italic;font-size:16px;color:var(--navy);font-weight:600}
+.phoneme-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.phoneme-pill{background:var(--bg-soft);color:var(--navy);padding:5px 13px;border-radius:999px;font-size:15px;font-weight:700;border:1px solid var(--line-2)}
+.phoneme-pill.h2{background:var(--gold-soft);color:var(--gold-ink);border-color:rgba(238,188,29,.5)}
+.phoneme-pill.full{background:var(--navy);color:#fff;border-color:transparent}
+.phoneme-plus{color:var(--muted);font-size:16px;font-weight:700}
+.meaning-box{font-size:14px;color:var(--body);line-height:1.55;background:var(--teal-50);padding:10px 14px;border-radius:var(--radius);border-left:3px solid var(--navy)}
+.example-item{background:var(--gold-soft);padding:10px 14px;border-left:3px solid var(--gold);margin-bottom:6px;border-radius:var(--radius);font-size:13px;color:var(--ink);line-height:1.55;font-style:italic}
+.example-item::before{content:'"';font-size:18px;color:var(--gold-ink);font-weight:700;margin-right:4px}
+.tag-list{display:flex;flex-wrap:wrap;gap:6px}
+.tag{padding:5px 11px;border-radius:999px;font-size:13px;font-weight:600;color:var(--navy);border:1px solid var(--line-2);cursor:pointer;background:var(--bg-soft);transition:.15s}
+.tag:hover{border-color:var(--navy)}
+.tag.active{background:var(--navy);color:#fff;border-color:transparent}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--bg-soft);border-radius:10px}
+::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:10px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+@media(max-width:900px){.bottom-section{grid-template-columns:1fr;grid-template-rows:1fr 1fr}}
+.b-tier{font-size:8px;font-weight:700;padding:1px 6px;border-radius:8px;background:var(--bg-soft);color:var(--muted);letter-spacing:.3px;text-transform:uppercase}
+.assign-btn{background:var(--navy);color:#fff;padding:7px 16px;border:none;border-radius:var(--radius);font-size:12px;font-weight:700;cursor:pointer;transition:.15s}
+.assign-btn:hover{background:var(--navy-2)}
+.modal-overlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:100;align-items:stretch;justify-content:center;padding:0}
+.modal-overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:0;border:none;box-shadow:none;max-width:none;width:100%;height:100%;max-height:none;overflow-y:auto;padding:22px 24px 48px}
+.modal-head,#quizStage{max-width:760px;margin-left:auto;margin-right:auto;width:100%}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.modal-title{font-size:20px;font-weight:700;color:var(--ink)}
+.modal-close{background:var(--bg-soft);color:var(--body);border:1px solid var(--line);width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;cursor:pointer;transition:.15s}
+.modal-close:hover{background:var(--line);color:var(--ink)}
+.quiz-progress-wrap{background:var(--bg-soft);border-radius:20px;height:8px;overflow:hidden;margin-bottom:14px}
+.quiz-progress-bar{background:var(--navy);height:100%;transition:width .3s}
+.quiz-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:11px;font-weight:700;color:var(--muted)}
+.quiz-difficulty{padding:3px 10px;border-radius:999px;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.diff-Beginner{background:var(--success)}
+.diff-Intermediate{background:var(--navy)}
+.diff-Advanced{background:var(--gold);color:var(--navy)}
+.quiz-type-tag{background:var(--gold-soft);color:var(--gold-ink);padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700;text-transform:uppercase}
+.quiz-q{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:14px;line-height:1.4}
+.quiz-options{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.quiz-opt-btn{text-align:left;padding:11px 14px;border-radius:var(--radius);border:1px solid var(--line);background:#fff;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;transition:.15s}
+.quiz-opt-btn:hover:not(:disabled){border-color:var(--navy);background:var(--bg-soft)}
+.quiz-opt-btn.correct{background:var(--success-bg);border-color:var(--success);color:#276749}
+.quiz-opt-btn.wrong{background:var(--danger-bg);border-color:var(--danger);color:#c53030}
+.quiz-opt-btn:disabled{cursor:default}
+.quiz-input-row{display:flex;gap:8px;margin-bottom:12px}
+.quiz-input{flex:1;padding:11px 14px;border-radius:var(--radius);border:1px solid var(--line);font-family:inherit;font-size:14px;font-weight:600;color:var(--ink)}
+.quiz-input:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(20,33,61,.1)}
+.quiz-check-btn{background:var(--navy);color:#fff;border:none;padding:0 18px;border-radius:var(--radius);font-weight:700;cursor:pointer;font-family:inherit;transition:.15s}
+.quiz-check-btn:hover{background:var(--navy-2)}
+.quiz-hint{font-size:12px;color:var(--muted);font-style:italic;margin-bottom:8px}
+.quiz-feedback{padding:10px 14px;border-radius:var(--radius);font-size:13px;font-weight:600;margin-bottom:10px}
+.quiz-feedback.correct{background:var(--success-bg);color:#276749;border-left:3px solid var(--success)}
+.quiz-feedback.wrong{background:var(--danger-bg);color:#c53030;border-left:3px solid var(--danger)}
+.quiz-explain{font-size:12.5px;color:var(--body);line-height:1.5;background:var(--bg-soft);padding:8px 12px;border-radius:var(--radius);border-left:3px solid var(--line-2);margin-bottom:12px}
+.quiz-next-btn{background:var(--gold);color:var(--navy);border:none;padding:9px 20px;border-radius:var(--radius);font-weight:700;cursor:pointer;font-family:inherit;transition:.15s}
+.quiz-next-btn:hover{background:#e0900c}
+.quiz-intro-title{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:10px}
+.quiz-intro-text{font-size:13.5px;color:var(--body);line-height:1.6;margin-bottom:14px}
+.quiz-intro-list{font-size:13px;color:var(--body);line-height:1.8;margin:0 0 16px 18px}
+.quiz-start-btn{background:var(--navy);color:#fff;border:none;padding:12px 28px;border-radius:var(--radius);font-weight:700;font-size:15px;cursor:pointer;font-family:inherit;display:block;margin:0 auto;transition:.15s}
+.quiz-start-btn:hover{background:var(--navy-2)}
+.quiz-result-score{font-size:44px;font-weight:800;color:var(--navy);text-align:center;margin:10px 0}
+.quiz-result-msg{font-size:14px;color:var(--body);text-align:center;margin-bottom:16px;line-height:1.5}
+.quiz-result-breakdown{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.quiz-bd-row{display:flex;justify-content:space-between;font-size:12.5px;background:var(--bg-soft);padding:8px 12px;border-radius:var(--radius);font-weight:600;color:var(--body)}
+.quiz-retry-btn{background:var(--navy);color:#fff;border:none;padding:10px 24px;border-radius:var(--radius);font-weight:700;cursor:pointer;font-family:inherit;display:block;margin:0 auto;transition:.15s}
+.quiz-retry-btn:hover{background:var(--navy-2)}
+
+@media (max-width:1100px){
+  .mini-book{width:132px;min-width:132px;height:90px}
+  .mini-book .b-pattern{font-size:13px}
+}
+@media (max-width:760px){
+  .mini-book{width:122px;min-width:122px;height:88px}
+  .mini-book .b-pattern{font-size:12px}
+}
+</style><!-- ── Global theme overlay (DESIGN-CBuddy.md) ── -->
+<link rel="stylesheet" href="/theme-cbuddy.css">
+<style id="sticky-phonics-nav">
+.sticky-nav{position:sticky;top:0;z-index:40;display:flex;flex-direction:column;gap:12px;background:var(--bg,#f9f9ff);padding-bottom:8px;box-shadow:0 6px 12px -8px rgba(20,33,61,.25)}
+</style>
+<style>
+/* sidebar-unify — navy active items + no rainbow bar (match course UI) */
+.toc-progress, .side-progress, .rail-progress { background:#14213D !important; background-image:none !important; }
+.nav-item.active, .sidebar-nav .active, .sidebar .active, .toc .active,
+[class*="toc"] a.active, aside a.active, .side-nav .active, .nav-sub .active {
+  background:#14213D !important; color:#fff !important; border-radius:8px !important;
+}
+.nav-item.active *, .sidebar .active *, .toc .active *, .sidebar-nav .active * { color:#fff !important; }
+.nav-item.active .nav-dot, .sidebar .active .nav-dot { background:#FCA311 !important; }
+</style>
+<style>/* CareerBuddy: nav bar scrollbar visible (en) */
+.tabbar,.tabs,.tab-bar,.tab-nav,[role="tablist"],.book-list,.books,.modules,.module-list,.mode-tabs{scrollbar-width:thin !important;scrollbar-color:#9aa4b8 transparent !important;overflow-x:auto !important}
+.tabbar::-webkit-scrollbar,.tabs::-webkit-scrollbar,.tab-bar::-webkit-scrollbar,.book-list::-webkit-scrollbar,.books::-webkit-scrollbar,.modules::-webkit-scrollbar,.module-list::-webkit-scrollbar,.mode-tabs::-webkit-scrollbar,[role="tablist"]::-webkit-scrollbar{display:block !important;height:8px !important}
+.tabbar::-webkit-scrollbar-thumb,.tabs::-webkit-scrollbar-thumb,.tab-bar::-webkit-scrollbar-thumb,.book-list::-webkit-scrollbar-thumb,.books::-webkit-scrollbar-thumb,.modules::-webkit-scrollbar-thumb,.module-list::-webkit-scrollbar-thumb,.mode-tabs::-webkit-scrollbar-thumb,[role="tablist"]::-webkit-scrollbar-thumb{background:#cbd2e0 !important;border-radius:8px}
+.tabbar::-webkit-scrollbar-track,.tabs::-webkit-scrollbar-track,.tab-bar::-webkit-scrollbar-track,.book-list::-webkit-scrollbar-track,.books::-webkit-scrollbar-track,.modules::-webkit-scrollbar-track,.module-list::-webkit-scrollbar-track,.mode-tabs::-webkit-scrollbar-track,[role="tablist"]::-webkit-scrollbar-track{background:transparent}
+</style>
+<style>/* CareerBuddy: uniform nav pill (v3) */
+.tab,.tab-btn,.mode-btn,.mode-tab{border-radius:8px !important;border-bottom:none !important;padding:9px 16px !important;font-weight:700 !important;font-size:13.5px !important;cursor:pointer;transition:background .15s,color .15s !important;box-shadow:none !important}
+.tab:not(.active):not(.on),.tab-btn:not(.active):not(.on),.mode-btn:not(.active):not(.on),.mode-tab:not(.active):not(.on){color:#4a5568 !important;background:transparent !important;border-color:transparent !important}
+.tab:not(.active):not(.on):hover,.tab-btn:not(.active):not(.on):hover,.mode-btn:not(.active):not(.on):hover,.mode-tab:not(.active):not(.on):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active,.tab.on,.tab-btn.active,.tab-btn.on,.mode-btn.active,.mode-btn.on,.mode-tab.active,.mode-tab.on,.tabbar .active,.tabs .active,.tab-bar .active,[role="tab"][aria-selected="true"]{background:#14213D !important;color:#fff !important;border-radius:8px !important;border-color:transparent !important;font-weight:700 !important}
+.tab.active:hover,.tab.on:hover,.tab-btn.active:hover,.tab-btn.on:hover,.mode-btn.active:hover,.mode-btn.on:hover,.mode-tab.active:hover,.mode-tab.on:hover{background:#0b1526 !important}
+.tab.active::after,.tab.on::after,.tab-btn.active::after,.tab-btn.on::after,.mode-tab.active::after,.mode-tab.on::after{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-icon,.tab-btn .tab-icon,.tab .ico,.tab .icon,.tab .emoji{display:none !important}
+</style>
+<style>/* CareerBuddy: nav bar bg effect (v1) */
+.tabbar,.tabs,.tab-bar,.nav-tabs,.mode-tabs,.mode-bar,nav.tabs,[role="tablist"]{
+ background:#ffffff !important;
+ border-top:none !important;
+ border-bottom:1px solid #e2e8f0 !important;
+ box-shadow:0 2px 6px rgba(20,33,61,.05) !important;
+}
+</style>
+<style>/* CareerBuddy: nav 2px gap (v1) */
+.tabs,.tabbar,.tab-bar,.nav-tabs,.mode-tabs,.mode-bar,nav.tabs,[role="tablist"]{gap:2px !important;column-gap:2px !important}
+.tab,.tab-btn,.mode-btn,.mode-tab{margin:0 !important;border-left:none !important;border-right:none !important}
+.tab::before,.tab::after,.tab-btn::before,.tab-btn::after,.mode-tab::before,.mode-tab::after{display:none !important}
+.tabs .tab+.tab,.tabbar .tab+.tab,.tab-bar .tab+.tab{border-left:none !important}
+</style>
+<style>/* CareerBuddy: cbx nav scrollbar (v1) */
+.cbx-tabbar{scrollbar-width:thin !important;scrollbar-color:#9aa4b8 transparent !important;overflow-x:auto !important;padding-bottom:2px !important}
+.cbx-tabbar::-webkit-scrollbar{display:block !important;height:8px !important}
+.cbx-tabbar::-webkit-scrollbar-thumb{background:#cbd2e0 !important;border-radius:8px}
+.cbx-tabbar::-webkit-scrollbar-track{background:transparent !important}
+</style>
+<!-- CareerBuddy: font preconnect (v1) -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style id="site-font-outfit">
+body{font-family:'Outfit',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif !important}
+</style>
+<style id="nav-gap-fix">
+.tabbar,.tabs,.tabstrip,.topic-nav,.topnav,.topnav-links,.tab-bar{gap:5px !important}
+.tabbar,.tabs,.tabstrip,.topic-nav,.topnav,.tab-bar{padding-bottom:10px !important}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="sticky-nav">
+<div class="top-section">
+<div class="top-header">
+<div class="top-title">📚 Advanced Phonics Lab → Stress → Reduction → Fluent Pronunciation</div>
+<div class="level-badge">⭐ LEVEL 10 · Intermediate → Advanced</div>
+<button class="assign-btn" id="assignBtn">📝 Assessment</button>
+<div class="include-badge"><span id="bookProgress">1 of 9</span></div>
+</div>
+<div class="book-list" id="bookList"></div>
+</div>
+</div>
+<div class="bottom-section">
+<div class="card-display">
+<div class="book-title" id="bookTitle">LONG VOWELS · /iː/</div>
+<button class="pronounce-btn" id="pronounceBtn">🔊</button>
+<div class="flip-card" id="flipCard">
+<div class="flip-face flip-front" id="flipFront"><div class="big-emoji" id="bigEmoji">🔤</div><div class="word-display" id="wordDisplay"></div></div>
+<div class="flip-face flip-back"><div class="phoneme-split" id="phonemeSplit"></div><div class="meaning-display" id="meaningDisplay"></div></div>
+</div>
+<div class="word-nav"><button class="nav-btn" id="prevBtn">‹</button><div class="word-counter" id="wordCounter">1 / 5</div><button class="nav-btn" id="nextBtn">›</button></div>
+</div>
+<div class="details-panel">
+<div class="details-header"><div class="details-word-wrap"><div class="details-emoji" id="detailsEmoji">🍎</div><div class="details-word" id="detailsWord"></div></div><div class="pos-badge" id="posBadge">Noun</div></div>
+<div class="detail-section"><div class="detail-label">🔤 Sound it out</div><div class="phoneme-row" id="phonemeRow"></div></div>
+<div class="detail-section"><div class="detail-label">🗣️ Says</div><div class="phonetic-box" id="phoneticDisplay"></div></div>
+<div class="detail-section"><div class="detail-label">📖 Meaning</div><div class="meaning-box" id="definitionDisplay"></div></div>
+<div class="detail-section"><div class="detail-label">💬 Sentence</div><div id="examplesDisplay"></div></div>
+<div class="detail-section"><div class="detail-label">🎯 More Words</div><div class="tag-list" id="familyDisplay"></div></div>
+</div>
+</div></div>
+
+<div class="modal-overlay" id="assignModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">📝 Phonics Assessment</div>
+      <button class="modal-close" id="modalCloseBtn">✕</button>
+    </div>
+    <div id="quizStage"></div>
+  </div>
+</div>
+
+
+<script>
+const modules=[
+{name:'LONG VOWELS',icon:'🔤',color:'#1765c0',items:[
+['machine','/məˈʃiːn/','Noun','ma·CHINE','The final “-ine” pattern can represent /iː/ in many words.','A device that performs a task automatically.',['magazine','routine','marine'],'Compare machine /iː/ with imagine /ɪ/. The spelling pattern alone does not guarantee the sound.','Do not pronounce the final -ine as /aɪn/ in machine.'],
+['routine','/ruːˈtiːn/','Noun','rou·TINE','The final “-ine” is /iː/ and the stress falls on the second syllable.','A regular sequence of actions.',['machine','marine','canteen'],'Mark the stressed syllable before reading the whole word aloud.','Avoid making every syllable equally strong.'],
+['marine','/məˈriːn/','Adj','ma·RINE','The spelling “-ine” represents /iː/; the first syllable contains a reduced vowel.','Related to the sea.',['routine','machine','serene'],'The unstressed first syllable is usually reduced toward schwa.','Do not over-pronounce the first vowel.'],
+['unique','/juːˈniːk/','Adj','u·NIQUE','The “-ique” ending commonly represents /iːk/ in words borrowed from French.','One of a kind; unlike anything else.',['antique','technique','boutique'],'Recognize -ique as a recurring advanced spelling pattern.','Do not add a final /e/ sound.'],
+['technique','/tekˈniːk/','Noun','tech·NIQUE','The “-nique” sequence ends with /niːk/.','A particular method or skill for doing something.',['unique','antique','boutique'],'Keep the /k/ sound clear at the end.','Avoid dropping the final consonant.'],
+['antique','/ænˈtiːk/','Noun','an·TIQUE','The “-ique” ending represents /iːk/.','An old object valued for its age or craftsmanship.',['unique','technique','boutique'],'Notice that spelling conventions often reflect word origin.','Do not pronounce -ique as two syllables.'],
+['fatigue','/fəˈtiːɡ/','Noun','fa·TIGUE','The final “-igue” contributes to /iːɡ/.','Extreme tiredness.',['intrigue','league','unique'],'This is a useful example of a non-transparent spelling pattern.','Do not pronounce every written vowel.'],
+['intrigue','/ɪnˈtriːɡ/','Noun','in·TRIGUE','The “-igue” ending is pronounced /iːɡ/.','Curiosity or strong interest; a secret plan.',['fatigue','technique','unique'],'Read by sound chunks rather than letter-by-letter.','Avoid /ɪn-trig-yoo/ in normal English.'] ]},
+{name:'VOWEL TEAMS',icon:'🧩',color:'#2e7d32',items:[
+['achieve','/əˈtʃiːv/','Verb','a·CHIEVE','“ie” represents /iː/ after the consonant cluster.','To successfully reach a goal.',['believe','relieve','retrieve'],'Compare spelling with receive: English has several competing vowel-team patterns.','Do not rely on one spelling rule without checking the word.'],
+['believe','/bɪˈliːv/','Verb','be·LIEVE','“ie” represents /iː/.','To accept something as true.',['achieve','relieve','retrieve'],'Use the phrase “I believe” as a high-frequency pronunciation anchor.','Avoid /be-leeve/ with stress on the first syllable.'],
+['ceiling','/ˈsiːlɪŋ/','Noun','CEIL·ING','“ei” represents /iː/ in ceiling.','The upper surface of a room.',['receipt','conceive','deceive'],'The “i before e” rule has important exceptions; ceiling is one.','Do not pronounce ei as /eɪ/ here.'],
+['receive','/rɪˈsiːv/','Verb','re·CEIVE','“ei” represents /iː/ after c.','To get or accept something.',['receipt','deceive','conceive'],'A useful pattern: -ceive commonly contains /siːv/.','Do not spell or pronounce it as recive.'],
+['deceive','/dɪˈsiːv/','Verb','de·CEIVE','“ei” represents /iː/.','To deliberately make someone believe something false.',['receive','conceive','perceive'],'Notice the shared -ceive chunk across related words.','Keep the second syllable stressed.'],
+['conceive','/kənˈsiːv/','Verb','con·CEIVE','“ei” represents /iː/.','To form an idea or plan in the mind.',['receive','deceive','perceive'],'Reduced vowel in the first syllable helps natural fluency.','Do not stress the first syllable heavily.'],
+['retrieve','/rɪˈtriːv/','Verb','re·TRIEVE','“ie” represents /iː/.','To get something back or recover information.',['achieve','believe','relieve'],'The prefix re- is normally unstressed here.','Avoid stressing RE-.'],
+['relieve','/rɪˈliːv/','Verb','re·LIEVE','“ie” represents /iː/.','To reduce pain, pressure or worry.',['believe','achieve','retrieve'],'Keep the /iː/ long and the second syllable prominent.','Do not shorten /iː/ to /ɪ/.'] ]},
+{name:'SILENT LETTERS',icon:'🤫',color:'#c62828',items:[
+['subtle','/ˈsʌtəl/','Adj','SUB·TLE','The “b” is silent; “-tle” ends with a syllabic /əl/.','Not obvious or easy to notice.',['doubt','debt','island'],'Silent letters often preserve historical spelling.','Do not pronounce the b.'],
+['debt','/det/','Noun','DEBT','The “b” is silent.','Money that is owed.',['doubt','subtle','receipt'],'Connect debt with debtor, but note that pronunciation remains /det/.','Avoid /debt/ with a spoken b.'],
+['doubt','/daʊt/','Noun','DOUBT','The “b” is silent.','Uncertainty about something.',['debt','subtle','island'],'The spelling reflects French/Latin history rather than modern sound.','Do not say /daʊbt/.'],
+['island','/ˈaɪlənd/','Noun','IS·LAND','The “s” is silent.','Land surrounded by water.',['isle','aisle','subtle'],'The word is not pronounced as if it were “is-land.”','Do not pronounce the s.'],
+['receipt','/rɪˈsiːt/','Noun','re·CEIPT','The “p” is silent.','A written record showing payment.',['receive','debt','subtle'],'The spelling is linked to Latin/French history.','Do not pronounce the p.'],
+['psychology','/saɪˈkɒlədʒi/','Noun','psy·CHOL·o·gy','The initial “p” is silent.','The scientific study of mind and behavior.',['psychiatry','psychological','psychologist'],'Initial ps- commonly begins with /s/ in Greek-derived words.','Do not start with /p/.'],
+['knight','/naɪt/','Noun','KNIGHT','The “k” and “gh” are silent.','A medieval mounted soldier; also a title.',['know','knee','though'],'Historical spelling preserves sounds that changed over time.','Do not pronounce k or gh.'],
+['honest','/ˈɒnɪst/','Adj','HON·EST','The initial “h” is silent.','Truthful and sincere.',['hour','honour','heir'],'Some words beginning h take vowel-like pronunciation.','Do not add a strong /h/.'] ]},
+{name:'SCHWA & REDUCTION',icon:'🗣️',color:'#6a1b9a',items:[
+['about','/əˈbaʊt/','Prep','a·BOUT','The first vowel is reduced to schwa /ə/.','On the subject of; approximately.',['above','around','across'],'Schwa is common in unstressed syllables and makes speech efficient.','Do not stress the first syllable as strongly as the second.'],
+['support','/səˈpɔːrt/','Verb','sup·PORT','The first vowel is commonly reduced to /ə/.','To help someone or something.',['report','export','import'],'Stress changes can affect vowel quality in related words.','Avoid a fully stressed first vowel.'],
+['photograph','/ˈfoʊtəɡræf/','Noun','PHO·TO·GRAPH','The middle vowel is reduced; primary stress is first syllable.','A picture made with a camera.',['photography','photographic','photographer'],'Compare photograph and photography: stress shift changes vowel reduction.','Do not give all three syllables equal stress.'],
+['photography','/fəˈtɒɡrəfi/','Noun','pho·TOG·ra·phy','Stress shifts to the second syllable and other vowels reduce.','The art or practice of taking photographs.',['photograph','photographic','photographer'],'Stress shift is a major advanced pronunciation feature.','Avoid keeping photograph stress in the same place.'],
+['analysis','/əˈnæləsɪs/','Noun','a·NAL·y·sis','Initial and final unstressed vowels are reduced.','Detailed examination of something.',['analytical','analyse','analyst'],'Use schwa-like reduction to sound natural in connected speech.','Do not over-articulate every vowel.'],
+['develop','/dɪˈveləp/','Verb','de·VEL·op','The final syllable contains a reduced vowel.','To grow or improve over time.',['development','developer','developing'],'Keep the second syllable prominent.','Avoid /DE-vel-op/ with equal stress.'],
+['professional','/prəˈfeʃənəl/','Adj','pro·FESS·ion·al','Several unstressed vowels reduce toward schwa.','Relating to a profession or skilled work.',['profession','professionally','professionalism'],'Long words become easier when unstressed syllables are weakened.','Do not stress every syllable.'],
+['opportunity','/ˌɒpərˈtjuːnəti/','Noun','op·por·TUN·i·ty','Multiple unstressed vowels reduce while primary stress falls on TUN.','A favorable chance or possibility.',['opportune','opportunistic','opportunist'],'Use primary and secondary stress to organize long words.','Avoid four or five equally strong beats.'] ]},
+{name:'MULTISYLLABIC STRESS',icon:'🎯',color:'#ef6c00',items:[
+['record','/ˈrekɔːd/','Noun','RE·cord','As a noun, stress is commonly on the first syllable.','A written or stored account of something.',['record (verb)','present','object'],'Word stress can distinguish grammatical category.','Do not use verb stress for the noun.'],
+['record','/rɪˈkɔːd/','Verb','re·CORD','As a verb, stress commonly shifts to the second syllable.','To store or write down information.',['record (noun)','present','object'],'This noun–verb stress pattern is important in formal speech.','Do not keep first-syllable stress when using the verb.'],
+['permit','/ˈpɜːrmɪt/','Noun','PER·mit','The noun usually stresses the first syllable.','An official document giving permission.',['permit (verb)','present','increase'],'Recognize stress as a grammatical clue.','Avoid /per-MIT/ for the noun.'],
+['permit','/pərˈmɪt/','Verb','per·MIT','The verb usually stresses the second syllable.','To allow something.',['permit (noun)','present','increase'],'Reduced first vowel plus final stress is common.','Do not stress PER-.'],
+['increase','/ˈɪnkriːs/','Noun','IN·crease','Noun stress is commonly first syllable.','A rise in amount or level.',['increase (verb)','decrease','progress'],'Stress can signal meaning and grammatical function.','Avoid using verb stress for the noun.'],
+['increase','/ɪnˈkriːs/','Verb','in·CREASE','Verb stress is commonly second syllable.','To become greater in amount or degree.',['increase (noun)','decrease','progress'],'Listen for the stronger syllable rather than the spelling.','Do not stress IN-.'],
+['present','/ˈprezənt/','Noun','PRE·sent','As a noun, first-syllable stress is common.','A gift or the current time.',['present (verb)','record','permit'],'Context plus stress can identify the intended use.','Do not confuse noun and verb stress.'],
+['present','/prɪˈzent/','Verb','pre·SENT','As a verb, stress commonly shifts to the second syllable.','To show, introduce or give formally.',['present (noun)','record','permit'],'Use this pattern in meetings and presentations.','Avoid first-syllable stress for the verb.'] ]},
+{name:'CONSONANT CLUSTERS',icon:'🔗',color:'#00838f',items:[
+['strength','/streŋθ/','Noun','STRENGTH','The word contains a complex initial /str/ and final /ŋθ/ cluster.','Physical or mental power.',['length','strange','strong'],'Build clusters gradually: /s/ + /tr/ + vowel, then final /ŋθ/.','Do not insert a vowel between consonants.'],
+['length','/leŋθ/','Noun','LENGTH','The final sequence /ŋθ/ requires two consonant gestures.','The measurement from end to end.',['strength','width','depth'],'Keep /ŋ/ and /θ/ distinct enough for clarity.','Avoid dropping the final /θ/.'],
+['threat','/θret/','Noun','THREAT','Initial /θr/ is a consonant cluster.','A statement or sign of possible harm.',['three','thread','through'],'Start /θ/ with the tongue between the teeth, then move quickly to /r/.','Do not replace /θ/ with /t/.'],
+['through','/θruː/','Prep','THROUGH','The spelling “ough” represents /uː/ here.','From one side or point to another.',['thought','though','throughout'],'This family demonstrates why advanced readers must learn word-specific patterns.','Do not pronounce the gh.'],
+['world','/wɜːrld/','Noun','WORLD','The /rld/ ending is a dense consonant sequence in many accents.','The earth or human society.',['word','would','worked'],'Use a clear vowel before moving through /rld/.','Do not add an extra vowel: /wor-uhld/.'],
+['months','/mʌnθs/','Noun','MONTHS','The final /nθs/ cluster is pronounced in careful speech.','Calendar divisions of a year.',['sixths','fifths','lengths'],'Practice the base word month before adding plural -s.','Do not automatically delete the /θ/.'],
+['crisps','/krɪsps/','Noun','CRISPS','The ending /sps/ creates a challenging cluster.','Thin slices of potato or similar food.',['grasped','tasks','desks'],'Move from /s/ directly into /p/ and back to /s/.','Avoid inserting a vowel before the final /s/.'],
+['texts','/teksts/','Noun','TEXTS','The ending /ksts/ is a complex consonant cluster.','Written messages or passages.',['contexts','next','sixths'],'Say text first, then add plural /s/ without inserting a vowel.','Avoid /text-iz/.'] ]},
+{name:'OUGH & AWKWARD SPELLINGS',icon:'🧠',color:'#4527a0',items:[
+['though','/ðoʊ/','Conj','THOUGH','“ough” represents /oʊ/.','Despite the fact that.',['although','thought','through'],'Learn ough words as families, not one universal rule.','Do not use the /θ/ sound.'],
+['thought','/θɔːt/','Noun','THOUGHT','“ough” represents /ɔːt/ in this word.','An idea or mental process.',['though','through','bought'],'Contrast thought with though to train vowel discrimination.','Do not pronounce the gh.'],
+['cough','/kɒf/','Verb','COUGH','“ough” represents /ɒf/ in this word.','To force air out of the lungs noisily.',['rough','enough','tough'],'The spelling is historically complex and must be learned word by word.','Do not use /koʊ/.'],
+['enough','/ɪˈnʌf/','Adj','e·NOUGH','“ough” represents /ʌf/.','As much as needed.',['tough','rough','though'],'Notice both vowel reduction and unusual spelling.','Do not pronounce gh.'],
+['through','/θruː/','Prep','THROUGH','“ough” represents /uː/.','From one side to the other.',['though','thought','throughout'],'Use visual contrast cards for ough families.','Do not say /θrʌf/.'],
+['rough','/rʌf/','Adj','ROUGH','“ough” represents /ʌf/.','Having an uneven or harsh surface.',['tough','enough','cough'],'Group rough with tough and enough.','Do not use /roʊf/.'],
+['bough','/baʊ/','Noun','BOUGH','“ough” represents /aʊ/.','A large branch of a tree.',['plough','though','boughs'],'This is a useful example of why spelling-to-sound mapping is not one-to-one.','Do not use /boʊ/.'],
+['plough','/plaʊ/','Noun','PLOUGH','“ough” represents /aʊ/ in British English; “plow” is the common US spelling.','A farm tool used to turn soil.',['bough','though','rough'],'Accent and spelling conventions can vary by region.','Do not assume every ough word follows the same pronunciation.'] ]},
+{name:'PREFIXES & SOUND BOUNDARIES',icon:'🧱',color:'#ad1457',items:[
+['unusual','/ʌnˈjuːʒuəl/','Adj','un·US·u·al','Prefix un- forms a separate meaning unit; stress falls later.','Not usual or common.',['unaware','unfair','unrelated'],'Recognizing morphemes helps you predict where syllables begin, but not every boundary is pronounced equally.','Do not stress UN- strongly.'],
+['reconsider','/ˌriːkənˈsɪdər/','Verb','re·con·SID·er','Prefix re- plus root consider; primary stress is on SID.','To think about a decision again.',['rebuild','reconnect','reassess'],'Use secondary stress lightly and keep the primary stress clear.','Avoid making RE- the strongest beat.'],
+['misunderstand','/ˌmɪsʌndərˈstænd/','Verb','mis·un·der·STAND','Multiple morphemes create a long word with one main stress.','To understand something incorrectly.',['misinterpret','miscalculate','misinform'],'Chunk the word by meaning before pronouncing it.','Do not give equal stress to all four parts.'],
+['international','/ˌɪntərˈnæʃənəl/','Adj','in·ter·NA·tion·al','Primary stress falls on NATION; several vowels reduce.','Involving more than one country.',['internationally','national','nationwide'],'Morphology plus stress is a powerful strategy for long academic words.','Avoid stressing IN- or -AL.'],
+['counterproductive','/ˌkaʊntərprəˈdʌktɪv/','Adj','coun·ter·pro·DUC·tive','The main stress falls on DUC; earlier syllables reduce.','Having the opposite of the intended effect.',['productive','counterargument','counterintuitive'],'Read in chunks: counter + productive.','Do not stress every morpheme equally.'],
+['unpredictable','/ˌʌnprɪˈdɪktəbəl/','Adj','un·pre·DICT·a·ble','The root predict carries the main stress.','Not able to be predicted.',['predictable','unplanned','unexpected'],'Use the stressed root as the anchor.','Avoid stressing UN- and PRE-.'],
+['disagreement','/ˌdɪsəˈɡriːmənt/','Noun','dis·a·GREE·ment','The root agree carries the main stress.','A lack of agreement.',['agreement','disapprove','discontent'],'Morphological awareness helps you locate the semantic core and stress.','Do not stress DIS-.'],
+['miscommunication','/ˌmɪskəmjuːnɪˈkeɪʃən/','Noun','mis·com·mu·ni·CA·tion','The main stress is late in the word; earlier vowels reduce.','A failure to communicate accurately.',['communication','misunderstanding','misinterpretation'],'Long words become manageable when broken into meaningful chunks.','Do not pronounce every vowel with full strength.'] ]},
+{name:'ADVANCED FLUENCY',icon:'🚀',color:'#1565c0',items:[
+['comfortable','/ˈkʌmftəbəl/','Adj','COMF·ter·ble','In natural speech, one middle vowel may disappear or reduce.','Providing physical ease; causing no discomfort.',['comfortably','comfort','uncomfortable'],'Natural speech often compresses common words. Careful speech may vary by accent.','Avoid forcing every written syllable.'],
+['vegetable','/ˈvedʒtəbəl/','Noun','VEG·ta·ble','The word is commonly reduced to three syllables in fluent speech.','A plant or edible plant part.',['vegetarian','vegetable-based','vegetation'],'Compare careful and conversational pronunciation.','Avoid /ve-ge-ta-ble/ with four equally clear syllables.'],
+['interesting','/ˈɪntrəstɪŋ/','Adj','IN·ter·est·ing','The middle vowel may reduce in connected speech.','Arousing curiosity or attention.',['interest','interested','interestingly'],'Fluent speakers often compress unstressed syllables.','Do not over-stress the middle vowel.'],
+['different','/ˈdɪfrənt/','Adj','DIF·frent','The middle vowel is often reduced or omitted in fluent speech.','Not the same.',['difference','differently','differentiate'],'Learn both careful and natural forms without confusing them.','Avoid inserting a strong extra vowel.'],
+['family','/ˈfæməli/','Noun','FAM·i·ly','The middle syllable is commonly reduced in natural speech.','A group of related people.',['familial','family-owned','families'],'Reduction improves rhythm and keeps the stressed syllable prominent.','Avoid three equally strong syllables.'],
+['temperature','/ˈtemprətʃər/','Noun','TEM·prə·ture','The middle vowel reduces and the word compresses in fluent speech.','A measure of how hot or cold something is.',['temperate','temperature-controlled','thermometer'],'Chunk the word as TEM + prə + ture.','Avoid reading every letter separately.'],
+['probably','/ˈprɒbəbli/','Adv','PROB·a·bly','The middle vowel is reduced; casual speech may compress further.','Very likely.',['probable','probability','improbable'],'Aim for clarity first, then natural reduction.','Do not force a fully pronounced -ably in fast speech.'],
+['actually','/ˈæktʃuəli/','Adv','AC·tu·al·ly','The spelling and conversational pronunciation can differ slightly because of reduction.','In fact; really.',['actual','actuality','actuate'],'Use the clear form first, then develop fluent reduction through listening practice.','Do not swallow the first syllable or over-stress every vowel.'] ]}
+];
+
+let bookIdx=0, wordIdx=0;
+let quizIdx=0, quizScore=0, quizAnswered=false, quizBreakdown={Beginner:{c:0,t:0},Intermediate:{c:0,t:0},Advanced:{c:0,t:0}};
+
+const $=id=>document.getElementById(id);
+
+function makeBooks(){
+  return modules.map((m)=>({
+    name:m.name,
+    pattern:m.name,
+    type:"advanced",
+    tier:"Advanced",
+    em:m.icon,
+    c:[m.color,m.color],
+    w:m.items.map(x=>[
+      x[0], x[0], x[2], x[4], x[4],
+      x[5], x[6], x[1], x[3], x[7], x[8]
+    ])
+  }));
+}
+const books=makeBooks();
+
+function buildBookList(){
+  const L=$('bookList'); L.innerHTML='';
+  books.forEach((b,i)=>{
+    const c=document.createElement('div');
+    c.className='mini-book'+(i===bookIdx?' active':'');
+    c.style.setProperty('--accent',b.c[0]);
+    c.innerHTML=`<div class="b-emoji">${b.em}</div><div class="b-pattern">${b.name}</div><div class="b-tier">${b.tier}</div><div class="b-count">${b.w.length} words</div>`;
+    c.onclick=()=>selectBook(i);
+    L.appendChild(c);
+  });
+}
+
+function selectBook(i){
+  bookIdx=i; wordIdx=0;
+  document.querySelectorAll('.mini-book').forEach((c,x)=>c.classList.toggle('active',x===i));
+  $('flipCard').classList.remove('flipped');
+  updateDisplay();
+  const a=document.querySelectorAll('.mini-book')[i];
+  if(a)a.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+}
+
+function selectWord(j){
+  wordIdx=j;
+  $('flipCard').classList.remove('flipped');
+  updateDisplay();
+}
+
+function advancedPattern(word,m,index){
+  return m.items[index][4];
+}
+
+function updateDisplay(){
+  const m=modules[bookIdx], x=m.items[wordIdx];
+  const [word,ipa,pos,stress,patternMeaning,meaning,related,tip,mistake]=x;
+  $('bookTitle').textContent=m.name+' · '+stress;
+  $('bookProgress').textContent=`${bookIdx+1} of ${books.length}`;
+  $('bigEmoji').textContent=m.icon;
+  $('wordDisplay').innerHTML=`<span class="h1">${word}</span>`;
+  $('phonemeSplit').innerHTML=`<div class="phoneme-chunk">${ipa}</div>`;
+  $('meaningDisplay').textContent=meaning;
+  $('wordCounter').textContent=`${wordIdx+1} / ${m.items.length}`;
+  $('prevBtn').disabled=wordIdx===0;
+  $('nextBtn').disabled=wordIdx===m.items.length-1;
+
+  $('detailsEmoji').textContent=m.icon;
+  $('detailsWord').innerHTML=`<span class="h1">${word}</span>`;
+  $('posBadge').textContent=pos;
+  $('phonemeRow').innerHTML=
+    `<div class="phoneme-pill">${word}</div><span class="phoneme-plus">→</span><div class="phoneme-pill h2">${ipa}</div>`;
+  $('phoneticDisplay').textContent=`${ipa} · Stress: ${stress}`;
+  $('definitionDisplay').textContent=patternMeaning + ' ' + meaning;
+  $('examplesDisplay').innerHTML=
+    `<div class="example-item">${word} — ${meaning}</div>
+     <div class="example-item">${tip}</div>
+     <div class="example-item">⚠️ ${mistake}</div>`;
+  $('familyDisplay').innerHTML=related.map(v=>`<div class="tag" onclick="jumpToWord('${String(v).replace(/'/g,"\\'")}')">${v}</div>`).join('');
+}
+
+function jumpToWord(term){
+  const m=modules[bookIdx];
+  const idx=m.items.findIndex(x=>x[0].toLowerCase()===term.toLowerCase());
+  if(idx>=0) selectWord(idx);
+}
+
+$('flipCard').addEventListener('click',()=>$('flipCard').classList.toggle('flipped'));
+$('pronounceBtn').addEventListener('click',e=>{
+  e.stopPropagation();
+  const u=new SpeechSynthesisUtterance(modules[bookIdx].items[wordIdx][0]);
+  u.rate=.72; speechSynthesis.cancel(); speechSynthesis.speak(u);
+});
+$('prevBtn').addEventListener('click',e=>{e.stopPropagation();if(wordIdx>0)selectWord(wordIdx-1)});
+$('nextBtn').addEventListener('click',e=>{e.stopPropagation();if(wordIdx<modules[bookIdx].items.length-1)selectWord(wordIdx+1)});
+document.addEventListener('keydown',e=>{
+  if($('assignModal').classList.contains('open')) return;
+  if(e.key==='ArrowLeft'&&wordIdx>0)selectWord(wordIdx-1);
+  if(e.key==='ArrowRight'&&wordIdx<modules[bookIdx].items.length-1)selectWord(wordIdx+1);
+  if(e.key==='ArrowUp'&&bookIdx>0)selectBook(bookIdx-1);
+  if(e.key==='ArrowDown'&&bookIdx<modules.length-1)selectBook(bookIdx+1);
+  if(e.key===' '){e.preventDefault();$('flipCard').classList.toggle('flipped')}
+});
+
+// Advanced assessment: uses the actual Level 10 content.
+const quizQuestions=[
+  {type:"mcq",tier:"Vowel Teams",difficulty:"Advanced",
+   q:"In 'machine', which spelling pattern represents /iː/?",
+   options:["final -ine","initial ma-","-chine","the letter m"],answer:"final -ine",
+   explain:"The Level 10 material identifies the final -ine pattern as /iː/ in machine."},
+  {type:"mcq",tier:"Vowel Teams",difficulty:"Advanced",
+   q:"Which word uses '-ique' to represent /iːk/?",
+   options:["unique","ceiling","receipt","rough"],answer:"unique",
+   explain:"Unique uses the -ique ending for /iːk/."},
+  {type:"mcq",tier:"Silent Letters",difficulty:"Intermediate",
+   q:"Which letter is silent in 'subtle'?",
+   options:["b","s","t","l"],answer:"b",
+   explain:"The Level 10 lesson marks the b in subtle as silent."},
+  {type:"mcq",tier:"Silent Letters",difficulty:"Intermediate",
+   q:"What is silent in 'knight'?",
+   options:["k and gh","n and t","i only","nothing"],answer:"k and gh",
+   explain:"Knight contains silent k and gh."},
+  {type:"mcq",tier:"Schwa & Reduction",difficulty:"Advanced",
+   q:"What happens to the first vowel in 'about'?",
+   options:["It reduces to schwa /ə/","It becomes /iː/","It is silent","It receives primary stress"],answer:"It reduces to schwa /ə/",
+   explain:"About is a classic example of an unstressed vowel reducing toward schwa."},
+  {type:"mcq",tier:"Multisyllabic Stress",difficulty:"Advanced",
+   q:"As a verb, where is the main stress in 'record'?",
+   options:["Second syllable","First syllable","Both equally","No stress"],answer:"Second syllable",
+   explain:"The verb record commonly shifts stress to the second syllable: re-CORD."},
+  {type:"mcq",tier:"Multisyllabic Stress",difficulty:"Advanced",
+   q:"As a noun, where is the main stress in 'permit'?",
+   options:["First syllable","Second syllable","Final consonant","Both equally"],answer:"First syllable",
+   explain:"The noun permit commonly has first-syllable stress: PER-mit."},
+  {type:"mcq",tier:"Consonant Clusters",difficulty:"Advanced",
+   q:"Which word contains the complex final /ŋθ/ sequence?",
+   options:["length","though","machine","unique"],answer:"length",
+   explain:"Length ends with /ŋθ/, a challenging consonant sequence."},
+  {type:"mcq",tier:"OUGH",difficulty:"Advanced",
+   q:"In 'though', how is 'ough' pronounced?",
+   options:["/oʊ/","/uː/","/ʌf/","/aʊ/"],answer:"/oʊ/",
+   explain:"Though uses /oʊ/ for ough; ough spellings vary across words."},
+  {type:"mcq",tier:"OUGH",difficulty:"Advanced",
+   q:"Which word uses 'ough' for /ʌf/?",
+   options:["enough","though","bough","through"],answer:"enough",
+   explain:"Enough has /ʌf/ for the ough sequence."},
+  {type:"mcq",tier:"Prefixes & Sound Boundaries",difficulty:"Advanced",
+   q:"In 'international', which part carries the primary stress?",
+   options:["NATION","IN","TER","AL"],answer:"NATION",
+   explain:"The lesson marks primary stress on NATION while other vowels reduce."},
+  {type:"mcq",tier:"Prefixes & Sound Boundaries",difficulty:"Advanced",
+   q:"Which word has its main stress late in the word on 'CA'?",
+   options:["miscommunication","unusual","predictable","agreement"],answer:"miscommunication",
+   explain:"Miscommunication has the main stress on the final major chunk: CA-tion."},
+  {type:"fill",tier:"Advanced Fluency",difficulty:"Advanced",
+   q:"Type the word that means 'very likely' and is commonly reduced in fluent speech.",
+   accept:["probably"],hint:"It begins with 'prob-' and ends with '-ably'.",
+   explain:"Probably is commonly reduced in natural speech; clarity comes first, then fluent reduction."},
+  {type:"fill",tier:"Silent Letters",difficulty:"Intermediate",
+   q:"Type the word meaning 'money that is owed' with a silent letter.",
+   accept:["debt"],hint:"It rhymes with 'bet'.",
+   explain:"Debt is pronounced /det/; the b is silent."},
+  {type:"fill",tier:"OUGH",difficulty:"Advanced",
+   q:"Type the word where 'ough' represents /aʊ/ and means a large branch of a tree.",
+   accept:["bough"],hint:"It rhymes with 'cow'.",
+   explain:"Bough uses /aʊ/ for ough."}
+];
+
+function openQuiz(){$('assignModal').classList.add('open');showQuizIntro()}
+function closeQuiz(){$('assignModal').classList.remove('open')}
+function showQuizIntro(){
+  const stage=$('quizStage');
+  stage.innerHTML=`
+    <div class="quiz-intro-title">Test your advanced phonics control</div>
+    <div class="quiz-intro-text">This assessment checks spelling-to-sound patterns, silent letters, schwa reduction, consonant clusters, multisyllabic stress, and fluent pronunciation.</div>
+    <ul class="quiz-intro-list">
+      <li><strong>${quizQuestions.filter(q=>q.type==='mcq').length} Multiple-Choice</strong> — identify the correct pattern or pronunciation idea</li>
+      <li><strong>${quizQuestions.filter(q=>q.type==='fill').length} Type-the-Answer</strong> — produce the word yourself</li>
+      <li>Covers the major Level 10 Advanced Phonics modules</li>
+    </ul>
+    <button class="quiz-start-btn" id="quizStartBtn">▶ Start Assessment</button>`;
+  $('quizStartBtn').addEventListener('click',startQuiz);
+}
+function startQuiz(){
+  quizIdx=0;quizScore=0;quizAnswered=false;
+  quizBreakdown={Beginner:{c:0,t:0},Intermediate:{c:0,t:0},Advanced:{c:0,t:0}};
+  renderQuizQuestion();
+}
+function renderQuizQuestion(){
+  quizAnswered=false;
+  const q=quizQuestions[quizIdx],stage=$('quizStage');
+  const pct=Math.round((quizIdx/quizQuestions.length)*100);
+  stage.innerHTML=`
+    <div class="quiz-progress-wrap"><div class="quiz-progress-bar" style="width:${pct}%"></div></div>
+    <div class="quiz-meta"><span>Question ${quizIdx+1} of ${quizQuestions.length}</span>
+    <span><span class="quiz-difficulty diff-${q.difficulty}">${q.difficulty}</span>
+    <span class="quiz-type-tag">${q.type==='mcq'?'Choose Answer':'Type Answer'}</span></span></div>
+    <div class="quiz-q">${q.q}</div><div id="quizBody"></div><div id="quizFeedbackArea"></div>`;
+  const body=$('quizBody');
+  if(q.type==='mcq'){
+    body.innerHTML=`<div class="quiz-options">${q.options.map(o=>`<button class="quiz-opt-btn" data-opt="${o}">${o}</button>`).join('')}</div>`;
+    body.querySelectorAll('.quiz-opt-btn').forEach(btn=>btn.addEventListener('click',()=>checkMCQ(btn,q)));
+  }else{
+    body.innerHTML=`<div class="quiz-hint">💡 Hint: ${q.hint}</div><div class="quiz-input-row"><input type="text" class="quiz-input" id="quizInput" placeholder="Type your answer..." autocomplete="off"><button class="quiz-check-btn" id="quizCheckBtn">Check</button></div>`;
+    $('quizCheckBtn').addEventListener('click',()=>checkFill(q));
+    $('quizInput').addEventListener('keydown',e=>{if(e.key==='Enter')checkFill(q)});
+  }
+}
+function afterAnswer(q,isCorrect){
+  quizAnswered=true;
+  quizBreakdown[q.difficulty].t++;
+  if(isCorrect){quizScore++;quizBreakdown[q.difficulty].c++}
+  const area=$('quizFeedbackArea');
+  area.innerHTML=`<div class="quiz-feedback ${isCorrect?'correct':'wrong'}">${isCorrect?'✅ Correct!':'❌ Not quite.'}</div>
+    <div class="quiz-explain">${q.explain}</div>
+    <button class="quiz-next-btn" id="quizNextBtn">${quizIdx<quizQuestions.length-1?'Next Question →':'See Results →'}</button>`;
+  $('quizNextBtn').addEventListener('click',()=>{if(quizIdx<quizQuestions.length-1){quizIdx++;renderQuizQuestion()}else showQuizResults()});
+}
+function checkMCQ(btn,q){
+  if(quizAnswered)return;
+  const chosen=btn.getAttribute('data-opt'),isCorrect=chosen===q.answer;
+  document.querySelectorAll('.quiz-opt-btn').forEach(b=>{b.disabled=true;if(b.getAttribute('data-opt')===q.answer)b.classList.add('correct');else if(b===btn)b.classList.add('wrong')});
+  afterAnswer(q,isCorrect);
+}
+function checkFill(q){
+  if(quizAnswered)return;
+  const val=$('quizInput').value.trim().toLowerCase();
+  if(!val)return;
+  const isCorrect=q.accept.includes(val);
+  $('quizInput').disabled=true;$('quizCheckBtn').disabled=true;
+  afterAnswer(q,isCorrect);
+}
+function showQuizResults(){
+  const total=quizQuestions.length,pct=Math.round((quizScore/total)*100);
+  let msg="Keep practicing the harder patterns and stress contrasts.";
+  if(pct>=90)msg="Outstanding! You have strong advanced phonics control.";
+  else if(pct>=70)msg="Great work! Your advanced phonics foundation is solid.";
+  else if(pct>=50)msg="Good progress. Revisit stress, reduction and unusual spellings.";
+  $('quizStage').innerHTML=`
+    <div class="quiz-result-score">${quizScore} / ${total}</div>
+    <div class="quiz-result-msg">${msg}</div>
+    <div class="quiz-result-breakdown">${Object.entries(quizBreakdown).map(([d,v])=>`<div class="quiz-bd-row"><span>${d}</span><span>${v.c} / ${v.t} correct</span></div>`).join('')}</div>
+    <button class="quiz-retry-btn" id="quizRetryBtn">↻ Try Again</button>`;
+  $('quizRetryBtn').addEventListener('click',startQuiz);
+}
+$('assignBtn').addEventListener('click',openQuiz);
+$('modalCloseBtn').addEventListener('click',closeQuiz);
+$('assignModal').addEventListener('click',e=>{if(e.target.id==='assignModal')closeQuiz()});
+
+buildBookList();updateDisplay();
+</script>
+
+</body></html>

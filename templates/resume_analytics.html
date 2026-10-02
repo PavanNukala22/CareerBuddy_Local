@@ -1,0 +1,589 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+<style>
+    .analytics-page { padding-top: 2rem; padding-bottom: 4rem; }
+
+    /* Hero */
+    .analytics-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0ea5e9 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 2rem 2.5rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .analytics-hero::before {
+        content: '';
+        position: absolute;
+        top: -40px; right: -40px;
+        width: 180px; height: 180px;
+        background: rgba(14,165,233,0.15);
+        border-radius: 50%;
+    }
+
+    /* Stat Cards */
+    .stat-card {
+        background: white;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.4rem;
+        text-align: center;
+        transition: all 0.2s;
+    }
+    .stat-card:hover {
+        border-color: #0ea5e9;
+        box-shadow: 0 6px 20px rgba(14,165,233,0.1);
+        transform: translateY(-2px);
+    }
+    .stat-icon {
+        width: 52px; height: 52px;
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem;
+        margin: 0 auto 0.85rem;
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        font-family: 'Outfit', sans-serif;
+        color: #0f172a;
+        line-height: 1;
+    }
+    .stat-label {
+        font-size: 0.78rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-top: 0.3rem;
+    }
+
+    /* Chart Card */
+    .chart-card {
+        background: white;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 1.75rem;
+    }
+
+    /* Table Card */
+    .table-card {
+        background: white;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+    .table-card-header {
+        padding: 1.25rem 1.75rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .analytics-table th {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #94a3b8;
+        font-weight: 600;
+        padding: 0.75rem 1rem;
+        border-bottom: 1.5px solid #e2e8f0;
+        background: #f8fafc;
+    }
+    .analytics-table td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.88rem;
+        color: #334155;
+    }
+    .analytics-table tbody tr:last-child td { border-bottom: none; }
+    .analytics-table tbody tr:hover td { background: #f8fafc; }
+
+    /* Score chips */
+    .score-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+    .score-high { background: #dcfce7; color: #15803d; }
+    .score-mid  { background: #fef9c3; color: #a16207; }
+    .score-low  { background: #fee2e2; color: #dc2626; }
+
+    .topic-tag {
+        display: inline-block;
+        padding: 0.25rem 0.65rem;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: #f8fafc;
+        border-radius: 16px;
+        border: 1.5px dashed #e2e8f0;
+    }
+
+    /* Feedback quote */
+    .feedback-text {
+        font-size: 0.82rem;
+        color: #475569;
+        font-style: italic;
+        border-left: 3px solid #0ea5e9;
+        padding-left: 0.6rem;
+        margin-top: 0.3rem;
+        line-height: 1.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-page">
+<div class="container">
+
+    <!-- Hero -->
+    <div class="analytics-hero mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-7">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <div style="width:48px;height:48px;background:rgba(255,255,255,0.15);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <span class="badge" style="background:rgba(14,165,233,0.3);color:#bae6fd;font-size:0.75rem;padding:0.35rem 0.75rem;border-radius:50px;">Interview Intelligence</span>
+                </div>
+                <h1 class="fw-bold mb-1" style="font-family:'Outfit',sans-serif;font-size:1.85rem;">Interview Analysis</h1>
+                <p class="mb-0" style="color:rgba(255,255,255,0.72);font-size:0.95rem;">Your detailed performance breakdown with scores and AI feedback for every question.</p>
+            </div>
+            {% if not error %}
+            <div class="col-md-5 d-none d-md-flex justify-content-end align-items-center gap-3">
+                <div style="background:rgba(255,255,255,0.1);border-radius:14px;padding:1rem 1.4rem;text-align:center;">
+                    <div class="fw-bold" style="font-size:1.6rem;color:#34d399;">{{ avg_score|floatformat:1 }}</div>
+                    <div style="font-size:0.72rem;color:rgba(255,255,255,0.6);">Avg Score /5</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.1);border-radius:14px;padding:1rem 1.4rem;text-align:center;">
+                    <div class="fw-bold" style="font-size:1.6rem;color:#38bdf8;">{{ answered_count }}/{{ total_questions }}</div>
+                    <div style="font-size:0.72rem;color:rgba(255,255,255,0.6);">Completed</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if error %}
+    <!-- Error State -->
+    <div class="empty-state">
+        <div style="width:64px;height:64px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
+            <i class="fas fa-exclamation-circle fa-2x text-danger"></i>
+        </div>
+        <h4 class="fw-bold" style="font-family:'Outfit',sans-serif;">No Analysis Available</h4>
+        <p class="text-muted mb-4">{{ error }}</p>
+        <a href="{% url 'resume_builder' %}" class="btn btn-primary d-inline-flex align-items-center gap-2 rounded-3">
+            <i class="fas fa-redo"></i> Start New Session
+        </a>
+    </div>
+
+    {% else %}
+
+    <!-- Score Banner -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            {% if is_passed %}
+            <div class="card border-0 rounded-4 shadow-sm p-4 text-white" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="badge bg-white bg-opacity-20 text-white mb-2 px-3 py-1 rounded-pill" style="font-size:0.8rem;">
+                            <i class="fas fa-check-circle me-1"></i> Qualified Candidate (Score &ge; 70/100)
+                        </div>
+                        <h2 class="fw-bold mb-1" style="font-family:'Outfit',sans-serif;">🎉 Congratulations! You are Recommended for Jobs!</h2>
+                        <p class="mb-0 opacity-90">Your interview score of <strong>{{ total_integer_score }}/100</strong> meets industry standards. Check out our curated, experience-matched opportunities below.</p>
+                    </div>
+                    <div class="text-center bg-white rounded-3 p-3"
+     style="width:170px;height:140px;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+    <div style="font-size:3rem;font-weight:800;font-family:'Outfit',sans-serif;color:#2563eb;line-height:1;">
+        {{ total_integer_score }}
+    </div>
+
+    <div style="font-size:0.9rem;font-weight:600;color:#64748b;margin-top:8px;">
+        TOTAL SCORE / 100
+    </div>
+</div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card border-0 rounded-4 shadow-sm p-4 text-white" style="background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="badge rounded-pill px-3 py-2 d-inline-flex align-items-center"
+     style="
+        background:#ffffff;
+        color:#2563eb;
+        font-size:0.85rem;
+        font-weight:700;
+        box-shadow:0 4px 10px rgba(0,0,0,.12);
+     ">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    Action Required (Score &lt; 70/100)
+</div>
+                        <h2 class="fw-bold mb-1" style="font-family:'Outfit',sans-serif;">You should upgrade your skill.</h2>
+                        <p class="mb-0 opacity-90" style="font-size:1.05rem;">Refer to the skill upgradation courses on our website to boost your technical competence and re-interview.</p>
+                    </div>
+                    <div class="stat-card"
+     style="width:170px;height:140px;padding:20px;">
+    <div class="stat-value"
+         style="font-size:56px;color:#2563eb;">
+        {{ total_integer_score }}
+    </div>
+
+    <div class="stat-label"
+         style="font-size:15px;margin-top:8px;">
+        TOTAL SCORE / 100
+    </div>
+</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Stat Cards Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#dbeafe;color:#1d4ed8;">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <div class="stat-value" style="color:{% if is_passed %}#15803d{% else %}#dc2626{% endif %};">
+                    {{ total_integer_score }}
+                </div>
+                <div class="stat-label">Total Score / 100</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#dcfce7;color:#15803d;">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-value text-success">{{ answered_count }}</div>
+                <div class="stat-label">Answered</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#fef9c3;color:#a16207;">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+                <div class="stat-value">{{ total_questions }}</div>
+                <div class="stat-label">Total Questions</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#fce7f3;color:#9d174d;">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div class="stat-value" style="color:#9d174d;">
+                    {{ years_exp|floatformat:1 }} yrs
+                </div>
+                <div class="stat-label">Experience Level</div>
+            </div>
+        </div>
+    </div>
+
+    {% if not is_passed %}
+    <!-- Skill Upgradation Courses Card (Triggered for Score < 70) -->
+    <div class="card border-0 rounded-4 shadow-sm p-4 mb-4" style="background:#fff;border:1.5px solid #fed7aa !important;">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <span style="width:36px;height:36px;background:#ffedd5;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#c2410c;font-size:1.1rem;">
+                <i class="fas fa-graduation-cap"></i>
+            </span>
+            <div>
+                <h5 class="fw-bold mb-0" style="font-family:'Outfit',sans-serif;color:#9a3412;">Recommended Skill Upgradation Courses</h5>
+                <small class="text-muted">Master these core activities to raise your score above 70/100 and unlock top employer job offers.</small>
+            </div>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="border rounded-3 p-3 bg-light text-center h-100">
+                    <div class="mb-2 text-primary"><i class="fas fa-comments fa-2x"></i></div>
+                    <h6 class="fw-bold mb-1">Business Communication &amp; Speaking</h6>
+                    <p class="text-muted small mb-3">Practice oral fluency, interview articulation, and presentation skills.</p>
+                    <a href="{% url 'activity_list' %}?category=speaking" class="btn btn-sm btn-primary w-100 rounded-3">
+                        <i class="fas fa-play me-1"></i> Start Course
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="border rounded-3 p-3 bg-light text-center h-100">
+                    <div class="mb-2 text-success"><i class="fas fa-pen-fancy fa-2x"></i></div>
+                    <h6 class="fw-bold mb-1">Professional Email &amp; Report Writing</h6>
+                    <p class="text-muted small mb-3">Master corporate correspondence, technical writing, and grammar.</p>
+                    <a href="{% url 'activity_list' %}?category=writing" class="btn btn-sm btn-success w-100 rounded-3">
+                        <i class="fas fa-play me-1"></i> Start Course
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="border rounded-3 p-3 bg-light text-center h-100">
+                    <div class="mb-2 text-warning"><i class="fas fa-handshake fa-2x"></i></div>
+                    <h6 class="fw-bold mb-1">Negotiation &amp; Technical Discussion</h6>
+                    <p class="text-muted small mb-3">Learn interview negotiation tactics, team collaboration, and debate.</p>
+                    <a href="{% url 'activity_list' %}?category=negotiation" class="btn btn-sm btn-warning w-100 rounded-3 text-white">
+                        <i class="fas fa-play me-1"></i> Start Course
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-3">
+            <a href="{% url 'activity_list' %}" class="btn btn-outline-secondary btn-sm px-4 rounded-3">
+                <i class="fas fa-th-large me-1"></i> View All 23 Skill Learning Activities
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if is_passed and suitable_jobs %}
+    <!-- Experience-Matched Recommended Jobs (Triggered for Score >= 70) -->
+    <div class="card border-0 rounded-4 shadow-sm p-4 mb-4 bg-white">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex align-items-center gap-2">
+                <span style="width:36px;height:36px;background:#dcfce7;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#15803d;font-size:1.1rem;">
+                    <i class="fas fa-briefcase"></i>
+                </span>
+                <div>
+                    <h5 class="fw-bold mb-0" style="font-family:'Outfit',sans-serif;color:#0f172a;">Recommended Job Opportunities</h5>
+                    <small class="text-muted">Matched for candidate experience (<strong>{{ years_exp|floatformat:1 }} years</strong>) &amp; verified skills.</small>
+                </div>
+            </div>
+            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2">
+                {{ suitable_jobs|length }} Matched Jobs
+            </span>
+        </div>
+
+        <div class="row g-3">
+            {% for job in suitable_jobs %}
+            <div class="col-md-4">
+                <div class="job-card border rounded-3 p-3 h-100">
+                    <div class="d-flex align-items-start gap-3 mb-2">
+                        <div class="job-logo"><i class="fas fa-building text-primary"></i></div>
+                        <div class="overflow-hidden">
+                            <h6 class="fw-bold mb-0 text-truncate" title="{{ job.title }}">{{ job.title }}</h6>
+                            <small class="text-muted">{{ job.employer.company_name }}</small>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-1 mb-2">
+                        {% for skill in job.get_skills_list|slice:":3" %}
+                        <span class="badge bg-light text-dark border">{{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2" style="font-size:0.8rem;">
+                        <span class="text-muted"><i class="fas fa-map-marker-alt me-1"></i>{{ job.location }}</span>
+                        <span class="badge bg-primary bg-opacity-10 text-primary">{{ job.get_job_type_display }}</span>
+                    </div>
+                    {% if job.department %}<div class="text-muted mb-2" style="font-size:0.8rem;"><i class="fas fa-sitemap me-1"></i>{{ job.get_department_display }}</div>{% endif %}
+                    <div class="mb-2" style="font-size:0.8rem;">
+                        <span class="text-muted"><i class="fas fa-briefcase me-1"></i>{{ job.get_experience_display }}</span>
+                    </div>
+                    <div class="mb-3 p-2 rounded bg-light border">
+                        <small class="fw-bold text-success"><i class="fas fa-rupee-sign me-1"></i>{{ job.salary_display }}</small>
+                    </div>
+                    <a href="{% url 'employer_portal:job_detail' job.pk %}" class="btn btn-primary btn-sm w-100 rounded-3 fw-bold" target="_blank">
+                        <i class="fas fa-paper-plane me-1"></i> View &amp; Apply
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Chart + Actions Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="chart-card h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold mb-0" style="font-family:'Outfit',sans-serif;">Topic Performance</h5>
+                    <div class="d-flex gap-3" style="font-size:0.75rem;">
+                        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#22c55e;margin-right:4px;"></span>Strong (4–5)</span>
+                        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;margin-right:4px;"></span>Average (2–3)</span>
+                        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;margin-right:4px;"></span>Needs Work (&lt;2)</span>
+                    </div>
+                </div>
+                <div style="height:280px;">
+                    <canvas id="topicChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="h-100 d-flex flex-column gap-3">
+                <!-- Session Info -->
+                <div class="chart-card flex-fill">
+                    <h6 class="fw-bold mb-3" style="font-family:'Outfit',sans-serif;">Session Summary</h6>
+                    <div class="d-flex flex-column gap-2">
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span class="text-muted" style="font-size:0.85rem;">Questions Asked</span>
+                            <span class="fw-bold">{{ total_questions }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span class="text-muted" style="font-size:0.85rem;">Answered</span>
+                            <span class="fw-bold text-success">{{ answered_count }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center py-2">
+                            <span class="muted" style="font-size:0.85rem;">Overall Score</span>
+                            <span class="fw-bold" style="color:#0ea5e9;font-size:1.1rem;">{{ avg_score|floatformat:1 }}/5</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- CTA Buttons -->
+                <a href="{% url 'resume_start_interview' %}" class="btn btn-success d-flex align-items-center justify-content-center gap-2 rounded-3 py-3 fw-bold">
+                    <i class="fas fa-redo"></i> Retry Interview
+                </a>
+                <a href="{% url 'resume_builder' %}" class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2 rounded-3 py-2">
+                    <i class="fas fa-upload"></i> Analyze Another Resume
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Breakdown Table -->
+    <div class="table-card">
+        <div class="table-card-header d-flex align-items-center gap-2">
+            <i class="fas fa-list-alt text-primary"></i>
+            <h5 class="fw-bold mb-0" style="font-family:'Outfit',sans-serif;">Detailed Breakdown</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table analytics-table mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:120px;">#&nbsp;Topic</th>
+                        <th>Question &amp; Your Answer</th>
+                        <th style="width:100px;">Score</th>
+                        <th>AI Feedback</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in data %}
+                    <tr>
+                        <td>
+                            <span class="topic-tag">{{ item.topic }}</span>
+                        </td>
+                        <td>
+                            <div class="fw-semibold mb-1" style="color:#0f172a;font-size:0.88rem;">{{ item.question|truncatechars:90 }}</div>
+                            {% if item.answer %}
+                            <div style="font-size:0.78rem;color:#94a3b8;font-style:italic;">{{ item.answer|truncatechars:100 }}</div>
+                            {% else %}
+                            <div style="font-size:0.78rem;color:#94a3b8;font-style:italic;">No answer provided</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.score >= 4 %}
+                            <span class="score-chip score-high"><i class="fas fa-star" style="font-size:0.65rem;"></i> {{ item.score }}/5</span>
+                            {% elif item.score >= 2 %}
+                            <span class="score-chip score-mid"><i class="fas fa-star" style="font-size:0.65rem;"></i> {{ item.score }}/5</span>
+                            {% else %}
+                            <span class="score-chip score-low"><i class="fas fa-star" style="font-size:0.65rem;"></i> {{ item.score }}/5</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <p class="feedback-text mb-0">{{ item.feedback|default:"No feedback available." }}</p>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">
+                            <div class="empty-state">
+                                <i class="fas fa-clipboard fa-2x text-muted mb-3 d-block"></i>
+                                <p class="text-muted mb-0">No answered questions found in this session.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% endif %}
+
+</div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script id="analytics-data" type="application/json">{{ json_data|safe }}</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const rawData = JSON.parse(document.getElementById('analytics-data').textContent || '[]');
+    if (!rawData || rawData.length === 0) return;
+
+    const topicScores = {};
+    rawData.forEach(item => {
+        if (item.score !== null && item.score !== undefined) {
+            if (!topicScores[item.topic]) topicScores[item.topic] = [];
+            topicScores[item.topic].push(Number(item.score));
+        }
+    });
+
+    const topics = Object.keys(topicScores);
+    const avgScores = topics.map(t => {
+        const s = topicScores[t];
+        return Math.round(s.reduce((a, b) => a + b, 0) / s.length * 10) / 10;
+    });
+    const colors = avgScores.map(s => s >= 4 ? '#22c55e' : s >= 2 ? '#f59e0b' : '#ef4444');
+    const borderColors = avgScores.map(s => s >= 4 ? '#16a34a' : s >= 2 ? '#d97706' : '#dc2626');
+
+    const ctx = document.getElementById('topicChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: topics.map(t => t.charAt(0).toUpperCase() + t.slice(1)),
+                datasets: [{
+                    label: 'Score',
+                    data: avgScores,
+                    backgroundColor: colors,
+                    borderColor: borderColors,
+                    borderWidth: 1.5,
+                    borderRadius: 8,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ` Score: ${ctx.parsed.y}/5`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true, max: 5,
+                        ticks: { font: { size: 11 }, color: '#94a3b8', stepSize: 1 },
+                        grid: { color: 'rgba(226,232,240,0.5)' }
+                    },
+                    x: {
+                        ticks: { font: { size: 11 }, color: '#64748b' },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,514 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+<style>
+    .result-page { padding-top: 2rem; padding-bottom: 4rem; }
+
+    /* Score Ring */
+    .score-ring-wrap {
+        width: 160px; height: 160px;
+        position: relative;
+        flex-shrink: 0;
+    }
+    .score-ring-wrap svg { transform: rotate(-90deg); }
+    .score-center {
+        position: absolute; inset: 0;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+    }
+    .score-number { font-size: 2.2rem; font-weight: 800; color: #0f172a; line-height: 1; }
+    .score-label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+
+    .result-card {
+        background: white;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.5rem;
+    }
+    .skill-chip {
+        display: inline-block;
+        padding: 0.3rem 0.85rem;
+        border-radius: 50px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        margin: 0.2rem;
+    }
+    .chip-found { background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .chip-gap  { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+
+    /* Job Cards */
+    .job-card {
+        background: white;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        transition: all 0.2s;
+    }
+    .job-card:hover {
+        border-color: #0ea5e9;
+        box-shadow: 0 6px 20px rgba(14,165,233,0.12);
+        transform: translateY(-3px);
+    }
+    .job-logo {
+        width: 46px; height: 46px;
+        background: linear-gradient(135deg, #0ea5e9, #0284c7);
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        color: white;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+    .job-skill-tag {
+        font-size: 0.72rem;
+        padding: 0.2rem 0.55rem;
+        border-radius: 4px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        color: #64748b;
+        font-weight: 500;
+    }
+    .view-job-btn {
+        display: block;
+        width: 100%;
+        padding: 0.6rem;
+        background: #0f172a;
+        color: white;
+        border-radius: 10px;
+        text-align: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: background 0.2s;
+        margin-top: auto;
+    }
+    .view-job-btn:hover { background: #0ea5e9; color: white; }
+
+    .advice-item {
+        display: flex; align-items: flex-start; gap: 0.75rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.9rem;
+        color: #475569;
+    }
+    .advice-item:last-child { border-bottom: none; }
+    .advice-dot {
+        width: 22px; height: 22px;
+        background: #fef3c7;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        color: #d97706;
+        font-size: 0.65rem;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    .section-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    /* Template Lightbox */
+    .template-lightbox {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(5, 10, 20, 0.88);
+        z-index: 9999;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 2rem;
+        overflow-y: auto;
+        backdrop-filter: blur(6px);
+    }
+    .template-lightbox.active { display: flex; }
+    .template-lightbox-content {
+        position: relative;
+        max-width: 680px;
+        width: 100%;
+        animation: lightboxIn 0.25s ease;
+        margin: auto;
+        padding-top: 52px; /* space for sticky header */
+    }
+    .template-lightbox-header {
+        position: sticky;
+        top: -2rem;
+        z-index: 10000;
+        background: rgba(5, 10, 20, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+        border-radius: 12px 12px 0 0;
+        margin-bottom: 0.5rem;
+    }
+    @keyframes lightboxIn {
+        from { opacity:0; transform:scale(0.94) translateY(16px); }
+        to   { opacity:1; transform:scale(1) translateY(0); }
+    }
+    .template-lightbox-close {
+        position: static;
+        background: rgba(255,255,255,0.15);
+        border: none;
+        color: white;
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        font-size: 1rem;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: background 0.2s;
+        flex-shrink: 0;
+    }
+    .template-lightbox-close:hover { background: rgba(255,255,255,0.3); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="result-page">
+<div class="container">
+
+    <!-- Score Header -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <div class="row align-items-center g-4">
+            <div class="col-auto">
+                <div class="score-ring-wrap">
+                    <svg width="160" height="160" viewBox="0 0 160 160">
+                        <circle cx="80" cy="80" r="65" stroke="#e2e8f0" stroke-width="10" fill="transparent"/>
+                        <circle cx="80" cy="80" r="65" stroke="#0ea5e9" stroke-width="10" fill="transparent"
+                            stroke-dasharray="408"
+                            stroke-dashoffset="408"
+                            id="score-ring"
+                            style="transition: stroke-dashoffset 1.2s ease-out;"/>
+                    </svg>
+                    <div class="score-center">
+                        <span class="score-number" id="pct-text">0%</span>
+                        <span class="score-label">{% if is_ats_only %}ATS Score{% else %}Match{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <h2 class="fw-bold mb-2" style="font-family:'Outfit',sans-serif;">
+                    {% if is_ats_only %}Resume Analysis Complete{% else %}Match Analysis Complete{% endif %}
+                </h2>
+                <p class="text-muted mb-3">{{ analysis.analysis }}</p>
+                {% if not resume_valid and validation_msg %}
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>{{ validation_msg }}
+                </div>
+                {% endif %}
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-2" style="font-size:0.82rem;font-weight:600;padding:.5rem .85rem;">
+                        <i class="fas fa-briefcase text-secondary"></i>
+                        Detected Experience:
+                        {% if years_exp >= 1 %}{{ years_exp|floatformat:"-1" }} year{{ years_exp|pluralize }}{% else %}Fresher{% endif %}
+                    </span>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    {% if can_interview %}
+                    <a href="{% url 'resume_start_interview' %}" class="btn btn-success d-inline-flex align-items-center gap-2 rounded-3 shadow-sm {% if not resume_valid %}disabled{% endif %}" {% if not resume_valid %}aria-disabled="true" tabindex="-1"{% endif %}>
+                        <i class="fas fa-play-circle"></i> Try Interview
+                    </a>
+
+                    {% else %}
+                    <a href="{% url 'pro_page' %}" class="btn btn-warning d-inline-flex align-items-center gap-2 rounded-3 shadow-sm">
+                        <i class="fas fa-crown"></i> Upgrade for AI Interview
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'resume_builder' %}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 rounded-3">
+                        <i class="fas fa-redo"></i> Analyze Another Resume
+                    </a>
+                    <a href="{% url 'resume_history' %}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 rounded-3">
+                        <i class="fas fa-clock-rotate-left"></i> Resume History
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Skills Grid -->
+    <div class="row g-4 mb-4">
+        <!-- Matching Skills -->
+        <div class="col-md-6">
+            <div class="result-card h-100">
+                <div class="section-title">
+                    <span style="width:32px;height:32px;background:#dbeafe;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#1d4ed8;font-size:0.9rem;">
+                        <i class="fas fa-check"></i>
+                    </span>
+                    Matching Skills
+                </div>
+                <div>
+                    {% for skill in analysis.matching_skills %}
+                    <span class="skill-chip chip-found">{{ skill }}</span>
+                    {% empty %}
+                    <span class="text-muted fst-italic small">No exact matches found.</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <!-- Missing Skills -->
+        <div class="col-md-6">
+            <div class="result-card h-100">
+                <div class="section-title">
+                    <span style="width:32px;height:32px;background:#fee2e2;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#dc2626;font-size:0.9rem;">
+                        <i class="fas fa-times"></i>
+                    </span>
+                    Missing Skills
+                </div>
+                <div>
+                    {% for skill in analysis.missing_skills %}
+                    <span class="skill-chip chip-gap">{{ skill }}</span>
+                    {% empty %}
+                    <span class="text-muted fst-italic small">No significant gaps found!</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complete Interview to Unlock Jobs Banner -->
+    {% if can_interview %}
+    <div class="result-card mb-4" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;">
+        <div class="d-flex align-items-center gap-3">
+            <div style="width:48px;height:48px;background:#22c55e;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-lock-open text-white fa-lg"></i>
+            </div>
+            <div>
+                <h6 class="fw-bold mb-1" style="color:#15803d;font-family:'Outfit',sans-serif;">🎯 Complete the Interview to Unlock Job Recommendations</h6>
+                <p class="text-muted mb-0 small">Score <strong>70 or above out of 100</strong> in the AI-powered mock interview to get personalised, experience-matched job opportunities.</p>
+            </div>
+            <a href="{% url 'resume_start_interview' %}" class="btn btn-success rounded-3 fw-bold ms-auto" style="white-space:nowrap;">
+                <i class="fas fa-play me-1"></i> Take Interview
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <div class="result-card mb-4" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1.5px solid #fcd34d;">
+        <div class="d-flex align-items-center gap-3">
+            <div style="width:48px;height:48px;background:#f59e0b;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-crown text-white fa-lg"></i>
+            </div>
+            <div>
+                <h6 class="fw-bold mb-1" style="color:#b45309;font-family:'Outfit',sans-serif;">🚀 Upgrade to Unlock the AI Interview &amp; Job Recommendations</h6>
+                <p class="text-muted mb-0 small">Your Free plan includes Resume Parsing &amp; ATS analysis. Upgrade to <strong>Normal (₹499/yr)</strong> for the 20-question AI mock interview — score 70 or above to unlock 5 experience-matched job opportunities.</p>
+            </div>
+            <a href="{% url 'pro_page' %}" class="btn btn-warning rounded-3 fw-bold ms-auto" style="white-space:nowrap;">
+                <i class="fas fa-crown me-1"></i> View Plans
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recommended Resume Templates Section -->
+    <div class="result-card mb-4">
+        <div class="section-title">
+            <span style="width:32px;height:32px;background:#e0f2fe;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#0284c7;font-size:0.9rem;">
+                <i class="fas fa-file-alt"></i>
+            </span>
+            Recommended ATS Resume Templates
+        </div>
+        <p class="text-muted small mb-3">Preview each template, then download the one you like to boost your ATS score:</p>
+        <div class="row g-3">
+
+            <!-- Template 1: Modern Professional -->
+            <div class="col-md-4">
+                <div class="border-0 rounded-4 shadow-sm overflow-hidden h-100" style="background:#fff;">
+                    <!-- Image Preview -->
+                    <div class="position-relative" style="cursor:pointer;" onclick="openTemplateModal('modalTpl1')">
+                        <img src="{% static 'images/template_modern_professional.png' %}?v=2" alt="Modern Professional ATS Template"
+                             class="w-100" style="height:220px;object-fit:cover;object-position:top;border-bottom:1px solid #e2e8f0;transition:transform 0.2s;"
+                             onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <span class="badge" style="background:#0ea5e9;font-size:0.7rem;">ATS Optimised</span>
+                        </div>
+                        <div class="position-absolute bottom-0 start-0 end-0 text-center py-2" style="background:rgba(15,23,42,0.55);">
+                            <span class="text-white small"><i class="fas fa-search-plus me-1"></i>Click to Preview</span>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h6 class="fw-bold mb-1" style="color:#0f172a;">Modern Professional</h6>
+                        <small class="text-muted d-block mb-3">Single-column, high-density keyword layout. Best for IT & corporate roles.</small>
+                        <a href="{% static 'templates/Modern_Professional_Resume.docx' %}"
+                           class="btn btn-primary btn-sm w-100 rounded-3 fw-semibold" download>
+                            <i class="fas fa-download me-1"></i> Download Template
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Template 2: Executive Tech -->
+            <div class="col-md-4">
+                <div class="border-0 rounded-4 shadow-sm overflow-hidden h-100" style="background:#fff;">
+                    <div class="position-relative" style="cursor:pointer;" onclick="openTemplateModal('modalTpl2')">
+                        <img src="{% static 'images/template_executive_tech.png' %}?v=2" alt="Executive Tech ATS Template"
+                             class="w-100" style="height:220px;object-fit:cover;object-position:top;border-bottom:1px solid #e2e8f0;transition:transform 0.2s;"
+                             onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <span class="badge" style="background:#059669;font-size:0.7rem;">Tech Focused</span>
+                        </div>
+                        <div class="position-absolute bottom-0 start-0 end-0 text-center py-2" style="background:rgba(15,23,42,0.55);">
+                            <span class="text-white small"><i class="fas fa-search-plus me-1"></i>Click to Preview</span>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h6 class="fw-bold mb-1" style="color:#0f172a;">Executive Tech</h6>
+                        <small class="text-muted d-block mb-3">Skills sidebar + project highlights. Ideal for tech & service desk roles.</small>
+                        <a href="{% static 'templates/Executive_Tech_Resume.docx' %}"
+                           class="btn btn-success btn-sm w-100 rounded-3 fw-semibold" download>
+                            <i class="fas fa-download me-1"></i> Download Template
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Template 3: Minimalist Career -->
+            <div class="col-md-4">
+                <div class="border-0 rounded-4 shadow-sm overflow-hidden h-100" style="background:#fff;">
+                    <div class="position-relative" style="cursor:pointer;" onclick="openTemplateModal('modalTpl3')">
+                        <img src="{% static 'images/template_minimalist_career.png' %}?v=2" alt="Minimalist Career ATS Template"
+                             class="w-100" style="height:220px;object-fit:cover;object-position:top;border-bottom:1px solid #e2e8f0;transition:transform 0.2s;"
+                             onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <span class="badge" style="background:#7c3aed;font-size:0.7rem;">Fresher Friendly</span>
+                        </div>
+                        <div class="position-absolute bottom-0 start-0 end-0 text-center py-2" style="background:rgba(15,23,42,0.55);">
+                            <span class="text-white small"><i class="fas fa-search-plus me-1"></i>Click to Preview</span>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <h6 class="fw-bold mb-1" style="color:#0f172a;">Minimalist Career</h6>
+                        <small class="text-muted d-block mb-3">Sleek, minimal typography. Optimised for freshers & entry-level applicants.</small>
+                        <a href="{% static 'templates/Minimalist_Career_Resume.docx' %}"
+                           class="btn btn-sm w-100 rounded-3 fw-semibold" style="background:#7c3aed;color:white;" download>
+                            <i class="fas fa-download me-1"></i> Download Template
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Preview Modals -->
+    <div id="modalTpl1" class="template-lightbox" onclick="closeTemplateModal('modalTpl1')">
+        <div class="template-lightbox-content" onclick="event.stopPropagation()">
+            <div class="template-lightbox-header">
+                <div>
+                    <h5 class="fw-bold text-white mb-0">Modern Professional</h5>
+                    <small class="text-white-50">Single-column ATS-optimised layout</small>
+                </div>
+                <button class="template-lightbox-close" onclick="closeTemplateModal('modalTpl1')"><i class="fas fa-times"></i></button>
+            </div>
+            <img src="{% static 'images/template_modern_professional.png' %}?v=2" alt="Modern Professional Template Preview" style="max-width:100%;border-radius:0 0 12px 12px;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+            <div class="text-center mt-3">
+                <a href="{% static 'templates/Modern_Professional_Resume.docx' %}"
+                   class="btn btn-primary rounded-3 px-5 fw-bold" download>
+                    <i class="fas fa-download me-2"></i>Download This Template
+                </a>
+            </div>
+        </div>
+    </div>
+    <div id="modalTpl2" class="template-lightbox" onclick="closeTemplateModal('modalTpl2')">
+        <div class="template-lightbox-content" onclick="event.stopPropagation()">
+            <div class="template-lightbox-header">
+                <div>
+                    <h5 class="fw-bold text-white mb-0">Executive Tech</h5>
+                    <small class="text-white-50">Skills sidebar + technical project highlights</small>
+                </div>
+                <button class="template-lightbox-close" onclick="closeTemplateModal('modalTpl2')"><i class="fas fa-times"></i></button>
+            </div>
+            <img src="{% static 'images/template_executive_tech.png' %}?v=2" alt="Executive Tech Template Preview" style="max-width:100%;border-radius:0 0 12px 12px;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+            <div class="text-center mt-3">
+                <a href="{% static 'templates/Executive_Tech_Resume.docx' %}"
+                   class="btn btn-success rounded-3 px-5 fw-bold" download>
+                    <i class="fas fa-download me-2"></i>Download This Template
+                </a>
+            </div>
+        </div>
+    </div>
+    <div id="modalTpl3" class="template-lightbox" onclick="closeTemplateModal('modalTpl3')">
+        <div class="template-lightbox-content" onclick="event.stopPropagation()">
+            <div class="template-lightbox-header">
+                <div>
+                    <h5 class="fw-bold text-white mb-0">Minimalist Career</h5>
+                    <small class="text-white-50">Clean, fresher-friendly layout with education focus</small>
+                </div>
+                <button class="template-lightbox-close" onclick="closeTemplateModal('modalTpl3')"><i class="fas fa-times"></i></button>
+            </div>
+            <img src="{% static 'images/template_minimalist_career.png' %}?v=2" alt="Minimalist Career Template Preview" style="max-width:100%;border-radius:0 0 12px 12px;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+            <div class="text-center mt-3">
+                <a href="{% static 'templates/Minimalist_Career_Resume.docx' %}"
+                   class="btn rounded-3 px-5 fw-bold" style="background:#7c3aed;color:white;" download>
+                    <i class="fas fa-download me-2"></i>Download This Template
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Career Advice / AI Suggestions -->
+    {% if analysis.career_advice %}
+    <div class="result-card">
+        <div class="section-title">
+            <span style="width:32px;height:32px;background:#fef3c7;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#d97706;font-size:0.9rem;">
+                <i class="fas fa-lightbulb"></i>
+            </span>
+            AI Suggestions
+        </div>
+        {% if analysis.missing_skills %}
+        <div class="mb-3 pb-3" style="border-bottom:1px solid #f1f5f9;">
+            <p class="text-muted small fw-semibold mb-2">Skills missing or not matched with your resume:</p>
+            <div>
+                {% for skill in analysis.missing_skills %}
+                <span class="skill-chip chip-gap">{{ skill }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% for advice in analysis.career_advice %}
+        <div class="advice-item">
+            <div class="advice-dot"><i class="fas fa-star"></i></div>
+            <span>{{ advice }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const pct = parseInt("{{ analysis.match_percentage|default:0 }}", 10) || 0;
+    const ring = document.getElementById('score-ring');
+    const circumference = 408;
+    setTimeout(() => {
+        ring.style.strokeDashoffset = circumference - (circumference * pct / 100);
+        document.getElementById('pct-text').textContent = pct + '%';
+    }, 300);
+});
+
+function openTemplateModal(id) {
+    document.getElementById(id).classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function closeTemplateModal(id) {
+    document.getElementById(id).classList.remove('active');
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        ['modalTpl1','modalTpl2','modalTpl3'].forEach(id => closeTemplateModal(id));
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

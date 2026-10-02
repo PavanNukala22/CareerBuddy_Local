@@ -1,0 +1,152 @@
+{% extends 'employer_base.html' %}
+
+{% block employer_css %}
+<style>
+    .editorial-header-band {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border: 1px solid #cbd5e1;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .status-filters {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+        justify-content: center;
+    }
+
+    .status-link {
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #475569;
+    }
+
+    .status-link:hover {
+        border-color: #185adb;
+        color: #185adb;
+    }
+
+    .status-link.active {
+        background: #185adb !important;
+        color: #ffffff !important;
+        border-color: #185adb !important;
+        box-shadow: 0 4px 12px rgba(24, 90, 219, 0.25);
+    }
+
+    .candidate-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        margin-bottom: 1rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    }
+
+    .candidate-card:hover {
+        border-color: #185adb;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+        transform: translateY(-2px);
+    }
+
+    .candidate-avatar {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #185adb, #1d4ed8);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #ffffff;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 10px rgba(24, 90, 219, 0.2);
+    .app-status-badge {
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.35rem 0.8rem;
+        border-radius: 50px;
+        display: inline-block;
+    }
+    .status-hired       { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .status-shortlisted { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .status-rejected    { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .status-applied,
+    .status-under_review { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+</style>
+{% endblock %}
+
+{% block employer_content %}
+<!-- Header -->
+<div class="editorial-header-band">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <a href="{% url 'employer_portal:dashboard' %}" class="btn btn-light btn-sm px-3 fw-bold" style="border-radius: 8px; border: 1px solid #cbd5e1;">
+            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+        </a>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1.5 rounded-full text-xs font-semibold">
+            <i class="fas fa-file-invoice me-1"></i>Job Submissions
+        </span>
+    </div>
+    <h1 class="fw-extrabold text-slate-900 mb-1" style="font-size: 2.2rem; letter-spacing: -1px;">{{ job.title }}</h1>
+    <p class="text-slate-600 mb-0" style="font-size: 0.95rem;">{{ applications|length }} candidate submission(s) for this job opening.</p>
+</div>
+
+<!-- Status Filters -->
+<div class="status-filters">
+    <a href="?" class="status-link {% if not status_filter %}active{% endif %}">All Candidates</a>
+    {% for val,label in status_choices %}
+    <a href="?status={{ val }}" class="status-link {% if status_filter == val %}active{% endif %}">{{ label }}</a>
+    {% endfor %}
+</div>
+
+<!-- Candidate List -->
+<div class="row g-3 justify-content-center">
+    {% for app in applications %}
+    <div class="col-12">
+        <div class="candidate-card p-4">
+            <div class="row align-items-center">
+                <div class="col-md-5 d-flex align-items-center gap-3">
+                    <div class="candidate-avatar">
+                        {{ app.applicant_name|truncatechars:2|upper|slice:":1" }}
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-slate-900 mb-0">{{ app.applicant_name }}</h5>
+                        <div class="text-slate-500 small"><i class="fas fa-envelope me-1 text-slate-400"></i>{{ app.applicant_email }}</div>
+                    </div>
+                </div>
+                <div class="col-md-2 text-center my-2 my-md-0">
+                    <div class="small text-slate-400 font-semibold text-uppercase">Experience</div>
+                    <div class="fw-bold text-slate-800">{{ app.years_experience }} yr(s)</div>
+                </div>
+                <div class="col-md-2 text-center my-2 my-md-0">
+                    <div class="small text-slate-400 font-semibold text-uppercase mb-1">Status</div>
+                    <span class="app-status-badge status-{{ app.status }}">
+                        {{ app.get_status_display }}
+                    </span>
+                </div>
+                <div class="col-md-3 text-md-end">
+                    <a href="{% url 'employer_portal:application_detail' app.pk %}" class="btn btn-primary px-4 py-2" style="border-radius: 10px; font-weight: 700; background: linear-gradient(135deg, #185adb, #1d4ed8); border: none; box-shadow: 0 4px 12px rgba(24, 90, 219, 0.25);">
+                        Review Submission <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5 bg-white border border-slate-200 rounded-3">
+        <i class="fas fa-user-slash fa-3x text-slate-300 mb-3"></i>
+        <h5 class="fw-bold text-slate-700">No applications found for this status.</h5>
+        <p class="text-slate-500 small">Try selecting another filter or viewing all candidates.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

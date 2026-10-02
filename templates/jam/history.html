@@ -1,0 +1,127 @@
+{% extends 'jam/base.html' %}
+{% load static %}
+
+
+{% block jam_content %}
+<div class="max-w-6xl mx-auto space-y-10 pb-20">
+    <!-- Header -->
+    <header class="flex items-center justify-between">
+        <div>
+            <a href="{% url 'jam:dashboard' %}" class="inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-colors mb-4 group">
+                <span class="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                <span class="text-sm font-serif font-bold">Back to Dashboard</span>
+            </a>
+            <h1 class="text-4xl font-bold text-slate-900 font-serif">Practice History</h1>
+            <p class="text-slate-500 font-serif mt-2">Track your progress and review previous sessions.</p>
+        </div>
+    </header>
+
+    <!-- Tabs -->
+    <div class="bg-white rounded-[32px] p-8 shadow-sm border border-slate-100">
+        <div class="flex gap-8 border-b border-slate-100 mb-8 px-4">
+            <button onclick="switchHistoryTab('regular')" id="tab-regular" class="pb-4 text-sm font-serif font-bold text-coral border-b-2 border-coral transition-all">Regular Sessions</button>
+            <button onclick="switchHistoryTab('assessments')" id="tab-assessments" class="pb-4 text-sm font-serif font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-900 transition-all">Assessments</button>
+        </div>
+
+        <!-- Regular Sessions List -->
+        <div id="content-regular" class="space-y-4">
+            {% if sessions %}
+                {% for session in sessions %}
+                <div class="group flex items-center justify-between p-5 rounded-2xl border border-slate-50 hover:border-coral/20 hover:bg-coral/[0.02] transition-all relative">
+                    <a href="{% url 'jam:session_detail' session.id %}" class="absolute inset-0 z-0"></a>
+                    <div class="flex items-center gap-5 relative z-10">
+                        <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-coral/10 group-hover:text-coral transition-all">
+                            <span class="material-symbols-outlined">description</span>
+                        </div>
+                        <div>
+                            <h4 class="font-serif font-bold text-slate-900 group-hover:text-coral transition-all">{{ session.topic.title }}</h4>
+                            <div class="flex items-center gap-3 mt-1">
+                                <span class="badge-jam badge-jam-{{ session.topic.difficulty }}">{{ session.topic.difficulty }}</span>
+                                <span class="text-xs text-slate-400 font-serif">{{ session.created_at|date:"M d Y h:i A" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-8 relative z-10">
+                        <div class="text-right">
+                            <div class="text-sm font-bold font-serif text-slate-900">{{ session.duration_display }}</div>
+                            <div class="text-[10px] text-slate-400 font-serif uppercase tracking-wider">Duration</div>
+                        </div>
+                        {% if session.overall_score_display %}
+                        <div class="text-right">
+                            <div class="text-sm font-bold font-serif text-amber-500">★ {{ session.overall_score_display }}</div>
+                            <div class="text-[10px] text-slate-400 font-serif uppercase tracking-wider">Score</div>
+                        </div>
+                        {% endif %}
+                        <form action="{% url 'jam:delete_session' session.id %}" method="POST" onsubmit="return confirm('Delete this session?')">
+                            {% csrf_token %}
+                            <button type="submit" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all">
+                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-12 text-slate-400 font-serif">No regular sessions found.</div>
+            {% endif %}
+        </div>
+
+        <!-- Assessments List -->
+        <div id="content-assessments" class="hidden space-y-6">
+            {% if assessments %}
+                {% for assessment in assessments %}
+                <div class="p-6 rounded-[32px] border border-slate-100 bg-slate-50/50 hover:bg-white hover:shadow-md transition-all relative">
+                    <a href="{% url 'jam:assessment_result' assessment.id %}" class="absolute inset-0 z-0"></a>
+                    <div class="flex items-center justify-between relative z-10">
+                        <div>
+                            <div class="text-[10px] font-bold text-coral uppercase tracking-widest mb-2">3-Stage Diagnostic</div>
+                            <h3 class="font-serif text-xl font-bold text-slate-900 mb-1">Assessment on {{ assessment.created_at|date:"M d Y h:i A" }}</h3>
+                            <div class="flex gap-2 mt-3">
+                                <span class="px-3 py-1 rounded-full bg-white border border-slate-100 text-[10px] font-bold text-slate-500">{{ assessment.easy_session.topic.title }}</span>
+                                <span class="px-3 py-1 rounded-full bg-white border border-slate-100 text-[10px] font-bold text-slate-500">{{ assessment.medium_session.topic.title }}</span>
+                                <span class="px-3 py-1 rounded-full bg-white border border-slate-100 text-[10px] font-bold text-slate-500">{{ assessment.hard_session.topic.title }}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-6">
+                            <div class="text-right">
+                                <div class="text-xs font-serif font-bold text-emerald-600">Complete</div>
+                                <div class="text-[10px] text-slate-400 font-serif uppercase tracking-wider">Status</div>
+                            </div>
+                            <form action="{% url 'jam:delete_assessment' assessment.id %}" method="POST" onsubmit="return confirm('Delete this assessment and all its sessions?')">
+                                {% csrf_token %}
+                                <button type="submit" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all">
+                                    <span class="material-symbols-outlined text-[20px]">delete</span>
+                                </button>
+                            </form>
+                            <span class="material-symbols-outlined text-slate-300">chevron_right</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-12 text-slate-400 font-serif">No diagnostic assessments found.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function switchHistoryTab(tab) {
+    // Buttons
+    document.getElementById('tab-regular').classList.remove('text-coral', 'border-coral');
+    document.getElementById('tab-regular').classList.add('text-slate-400', 'border-transparent');
+    document.getElementById('tab-assessments').classList.remove('text-coral', 'border-coral');
+    document.getElementById('tab-assessments').classList.add('text-slate-400', 'border-transparent');
+
+    // Content
+    document.getElementById('content-regular').classList.add('hidden');
+    document.getElementById('content-assessments').classList.add('hidden');
+
+    // Activate
+    document.getElementById('tab-' + tab).classList.add('text-coral', 'border-coral');
+    document.getElementById('tab-' + tab).classList.remove('text-slate-400', 'border-transparent');
+    document.getElementById('content-' + tab).classList.remove('hidden');
+}
+</script>
+{% endblock %}

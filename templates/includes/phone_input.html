@@ -1,0 +1,79 @@
+{% comment %}
+Country-code phone input widget: a flag/dial-code picker + local-number
+input that keeps a Django-bound hidden field (forms.CharField with
+widget=forms.HiddenInput()) in sync as "+<dial code><digits>" for the
+server-side validator (users/forms.py: validate_international_mobile) to
+check with the `phonenumbers` library.
+
+Self-contained (no Bootstrap dropdown JS dependency) so it behaves the same
+regardless of what else is loaded on the page — see
+includes/language_dropdown.html for the same reasoning.
+
+Requires, once per page (not once per widget):
+    <script src="{% static 'js/country-codes.js' %}"></script>
+    <script src="{% static 'js/phone-input.js' %}"></script>
+
+Usage — must appear right after the matching hidden Django field so the
+widget can find and sync it by id ("id_<field_name>", Django's default):
+    {{ form.mobile }}
+    {% include 'includes/phone_input.html' with field_name='mobile' placeholder='Mobile Number' %}
+
+Pass `required=True` to reject an empty value on submit ("This field is
+required.") — omit it (the default) for an optional field like the mobile /
+alternate mobile pickers, where an empty value is valid.
+
+Pass `suffix` when the SAME form is rendered more than once on one page (e.g.
+one modal per item in a {% for %} loop) — Django's auto id ("id_<field_name>")
+is otherwise identical in every copy, so only the first copy's hidden field
+would ever get updated. Give the hidden field itself the matching id
+("id_<field_name>_<suffix>", typically the loop item's pk) and pass the same
+suffix here:
+    <input type="hidden" name="applicant_phone" id="id_applicant_phone_{{ job.id }}" value="">
+    {% include 'includes/phone_input.html' with field_name='applicant_phone' suffix=job.id placeholder='Phone Number' %}
+{% endcomment %}
+<style>
+    .phone-input-widget { display: flex; gap: .5rem; align-items: flex-start; flex-wrap: wrap; }
+    .phone-country-select { position: relative; }
+    .phone-country-btn {
+        display: flex !important; align-items: center !important; gap: .4rem;
+        width: 118px; cursor: pointer;
+    }
+    .phone-country-btn img { width: 20px; height: 14px; object-fit: cover; border-radius: 2px; flex-shrink: 0; }
+    .phone-country-btn .phone-country-dial { font-weight: 600; }
+    .phone-country-btn .fa-caret-down { margin-left: auto; font-size: .7rem; opacity: .6; }
+    .phone-country-menu {
+        display: none; position: absolute !important; top: calc(100% + 4px) !important; left: 0 !important;
+        z-index: 1060 !important; width: 300px; max-height: 300px; overflow-y: auto;
+        background: #fff !important; border: 1px solid #e2e8f0 !important; border-radius: 8px !important;
+        box-shadow: 0 12px 28px rgba(15,23,42,.16) !important;
+    }
+    .phone-country-select.open .phone-country-menu { display: block !important; }
+    .phone-country-search-wrap { padding: .5rem; position: sticky; top: 0; background: #fff; border-bottom: 1px solid #e2e8f0; }
+    .phone-country-list { list-style: none !important; margin: 0 !important; padding: .25rem 0 !important; }
+    .phone-country-option {
+        display: flex !important; align-items: center !important; gap: .5rem;
+        padding: .4rem .75rem !important; cursor: pointer; font-size: .9rem; color: #1e293b;
+    }
+    .phone-country-option:hover, .phone-country-option.active { background-color: #f1f5f9 !important; }
+    .phone-country-option img { width: 20px; height: 14px; object-fit: cover; border-radius: 2px; flex-shrink: 0; }
+    .phone-country-option .phone-country-option-dial { margin-left: auto; color: #64748b; font-size: .85rem; }
+    .phone-number-input { flex: 1 1 180px; min-width: 160px; }
+    .phone-input-error { display: none; width: 100%; color: #dc3545; font-size: .85rem; margin-top: .25rem; }
+</style>
+<div class="phone-input-widget" data-target="id_{{ field_name }}{% if suffix %}_{{ suffix }}{% endif %}" data-default-country="in" {% if required %}data-required="1"{% endif %}>
+    <div class="phone-country-select">
+        <button type="button" class="phone-country-btn form-control" aria-haspopup="true" aria-expanded="false">
+            <img class="phone-country-flag" src="https://flagcdn.com/w20/in.png" alt="">
+            <span class="phone-country-dial">+91</span>
+            <i class="fas fa-caret-down"></i>
+        </button>
+        <div class="phone-country-menu">
+            <div class="phone-country-search-wrap">
+                <input type="text" class="phone-country-search form-control form-control-sm" placeholder="Search country...">
+            </div>
+            <ul class="phone-country-list"></ul>
+        </div>
+    </div>
+    <input type="tel" class="phone-number-input form-control" placeholder="{{ placeholder }}" inputmode="numeric" autocomplete="tel-national">
+    <div class="phone-input-error"></div>
+</div>

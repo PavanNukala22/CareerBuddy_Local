@@ -1,0 +1,332 @@
+{% extends 'employer_base.html' %}
+{% load static %}
+{% load mask_filters %}
+
+{% block employer_css %}
+<style>
+    .profile-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 2.5rem 3rem 3rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .editorial-header-band {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border: 1px solid #cbd5e1;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .section-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #185adb;
+        margin: 2rem 0 1.2rem;
+        padding-bottom: 0.6rem;
+        border-bottom: 2px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .section-title:first-of-type { margin-top: 0; }
+
+    .form-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #0f172a;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control, .form-select, textarea {
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 10px !important;
+        padding: 0.65rem 0.9rem !important;
+        color: #0f172a !important;
+        font-weight: 500;
+        font-size: 0.92rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus, textarea:focus {
+        border-color: #185adb !important;
+        box-shadow: 0 0 0 3px rgba(24, 90, 219, 0.12) !important;
+        background: #ffffff !important;
+    }
+
+    .logo-upload-box {
+        background: #eff6ff;
+        border: 2px dashed #93c5fd;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.2s;
+    }
+
+    .logo-upload-box:hover {
+        border-color: #185adb;
+        background: #dbeafe;
+    }
+
+    .btn-group-custom {
+        display: flex;
+        gap: 1.25rem;
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e2e8f0;
+        justify-content: flex-end;
+    }
+</style>
+{% endblock %}
+
+{% block employer_content %}
+<div class="editorial-header-band">
+    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1.5 rounded-full text-xs font-semibold mb-2">
+        <i class="fas fa-building me-1"></i>Company Settings
+    </span>
+    <h1 class="fw-extrabold text-slate-900 mb-1" style="font-size: 2.2rem; letter-spacing: -1px;">{{ title|default:"Company Profile" }}</h1>
+    <p class="text-slate-600 mb-0" style="font-size: 0.95rem;">Manage your organization profile, contact info, and branding details.</p>
+</div>
+
+<div class="profile-card position-relative">
+    <div class="position-absolute" style="top: 2rem; right: 2.5rem;">
+        <button type="button" id="toggleEditBtn" class="btn btn-outline-primary px-3 py-1.5" style="border-radius: 8px; font-weight: 600;">
+            <i class="fas fa-edit me-1.5"></i>Edit Profile
+        </button>
+    </div>
+
+    {% comment %}
+    The "create profile" view now reuses the row registration already
+    created (so it can complete a GST/PAN-less profile rather than
+    inserting a duplicate — see jobs_app/views.py::employer_profile_create),
+    so form.instance.pk alone can no longer distinguish "brand-new,
+    start unlocked" from "already-complete, start locked for review".
+    title (set explicitly by each view) still can.
+    {% endcomment %}
+    <form method="post" enctype="multipart/form-data" id="profileForm" data-edit-mode="{% if title == 'Create Company Profile' or not form.instance.pk %}true{% else %}false{% endif %}">
+        {% csrf_token %}
+        
+        <div class="section-title">
+            <i class="fas fa-id-card"></i> Company Identity
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label class="form-label">Company Name *</label>
+                {{ form.company_name }}
+                {% if form.company_name.errors %}<div class="text-danger small mt-1">{{ form.company_name.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Industry *</label>
+                {{ form.industry }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Company Size</label>
+                {{ form.company_size }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Location *</label>
+                {{ form.location }}
+            </div>
+        </div>
+
+        <div class="section-title">
+            <i class="fas fa-globe"></i> Web Presence &amp; Branding
+        </div>
+        <div class="row g-4">
+            <div class="col-md-12">
+                <label class="form-label">Website URL</label>
+                {{ form.company_website }}
+            </div>
+            <div id="logoUploadSection" class="col-12">
+                <label class="form-label">Company Logo</label>
+                <div class="logo-upload-box">
+                    <i class="fas fa-cloud-upload-alt fa-2x mb-2 text-primary"></i>
+                    <p class="small text-slate-600 mb-2">Upload your official company logo (PNG, JPG, SVG)</p>
+                    {{ form.company_logo }}
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <i class="fas fa-align-left"></i> About the Organization
+        </div>
+        <div class="row g-4">
+            <div class="col-12">
+                <label class="form-label">Company Overview</label>
+                {{ form.description }}
+            </div>
+        </div>
+
+        <div class="section-title">
+            <i class="fas fa-map-marker-alt"></i> Headquarters Location
+        </div>
+        <div class="row g-4">
+            <div class="col-12">
+                <label class="form-label">Complete Office Address</label>
+                {{ form.company_address }}
+                {% if form.company_address.errors %}<div class="text-danger small mt-1">{{ form.company_address.errors }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="section-title">
+            <i class="fas fa-file-invoice-dollar"></i> Tax &amp; Legal Registration
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label class="form-label">Company GST (GSTIN) *</label>
+                {{ form.company_gst }}
+                <small id="gst-validation-employer-profile" class="mt-1 d-block" style="font-weight:600;"></small>
+                {% if form.company_gst.errors %}<div class="text-danger small mt-1">{{ form.company_gst.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Company PAN / TIN *</label>
+                {% include 'includes/mask_reveal_field.html' with field=form.company_pan_tin masked_value=profile.company_pan_tin|mask_pan %}
+                <small id="pan-validation-employer-profile" class="mt-1 d-block" style="font-weight:600;"></small>
+                {% if form.company_pan_tin.errors %}<div class="text-danger small mt-1">{{ form.company_pan_tin.errors }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="section-title">
+            <i class="fas fa-user-shield"></i> HR &amp; Contact Details
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label class="form-label">HR Phone Number</label>
+                {{ form.hr_contact }}
+                {% include 'includes/phone_input.html' with field_name='hr_contact' placeholder='HR Contact Number' %}
+                {% if form.hr_contact.errors %}<div class="text-danger small mt-1">{{ form.hr_contact.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">HR Email Address</label>
+                {{ form.hr_mail }}
+                {% if form.hr_mail.errors %}<div class="text-danger small mt-1">{{ form.hr_mail.errors }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div id="formActions" class="btn-group-custom d-none">
+            <button type="button" id="cancelEditBtn" class="btn btn-light px-4 py-2.5" style="border: 1px solid #cbd5e1; border-radius: 10px; font-weight: 600; color: #475569;">
+                Cancel
+            </button>
+            <button type="submit" class="btn btn-primary px-4 py-2.5" style="border-radius: 10px; font-weight: 700; background: linear-gradient(135deg, #185adb, #1d4ed8); border: none; box-shadow: 0 4px 15px rgba(24, 90, 219, 0.3);">
+                <i class="fas fa-save me-2"></i> Save Company Profile
+            </button>
+        </div>
+    </form>
+</div>
+
+<script src="{% static 'js/country-codes.js' %}"></script>
+<script src="{% static 'js/phone-input.js' %}"></script>
+<script src="{% static 'js/mask-reveal.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('profileForm');
+    const toggleEditBtn = document.getElementById('toggleEditBtn');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    const formActions = document.getElementById('formActions');
+    const logoUploadSection = document.getElementById('logoUploadSection');
+    const inputs = form.querySelectorAll('input, select, textarea');
+    
+    let isEditMode = form.dataset.editMode === 'true';
+
+    function updateMode() {
+        if (isEditMode) {
+            inputs.forEach(input => {
+                input.removeAttribute('disabled');
+                input.style.backgroundColor = '#ffffff';
+            });
+            formActions.classList.remove('d-none');
+            toggleEditBtn.classList.add('d-none');
+            if (logoUploadSection) logoUploadSection.classList.remove('d-none');
+        } else {
+            inputs.forEach(input => {
+                input.setAttribute('disabled', 'true');
+                input.style.backgroundColor = '#f8fafc';
+            });
+            formActions.classList.add('d-none');
+            toggleEditBtn.classList.remove('d-none');
+        }
+    }
+
+    toggleEditBtn.addEventListener('click', function() {
+        isEditMode = true;
+        updateMode();
+    });
+
+    cancelEditBtn.addEventListener('click', function() {
+        if (confirm('Discard unsaved changes?')) {
+            isEditMode = false;
+            updateMode();
+            form.reset();
+        }
+    });
+
+    updateMode();
+});
+
+// Helper: hide any server-side Django error next to this input
+function hideServerError(input) {
+  const col = input.closest('.col-md-6, .col-md-4, .col-md-12');
+  if (col) {
+    col.querySelectorAll('.invalid-feedback, .text-danger').forEach(el => {
+      el.classList.remove('d-block');
+      el.classList.add('d-none');
+      el.style.setProperty('display', 'none', 'important');
+    });
+  }
+}
+
+// ── Real-time PAN Validation ──────────────────────────────────────────────
+(function () {
+  const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+  const panInput = document.getElementById('id_company_pan_tin');
+  const panMsg   = document.getElementById('pan-validation-employer-profile');
+  if (!panInput || !panMsg) return;
+
+  panInput.addEventListener('input', function () {
+    hideServerError(this);
+    let val = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    this.value = val;
+    if (!val) { panMsg.textContent = ''; return; }
+    if (PAN_REGEX.test(val)) {
+      panMsg.textContent = '✔ Valid';
+      panMsg.style.color = '#16a34a';
+    } else {
+      panMsg.textContent = '✘ Invalid — must be AAAAA9999A (5 letters, 4 digits, 1 letter)';
+      panMsg.style.color = '#dc2626';
+    }
+  });
+})();
+
+// ── Real-time GST Validation ──────────────────────────────────────────────
+(function () {
+  const GST_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}Z[A-Z0-9]{1}$/;
+  const gstInput = document.getElementById('id_company_gst');
+  const gstMsg   = document.getElementById('gst-validation-employer-profile');
+  if (!gstInput || !gstMsg) return;
+
+  gstInput.addEventListener('input', function () {
+    hideServerError(this);
+    let val = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    this.value = val;
+    if (!val) { gstMsg.textContent = ''; return; }
+    if (GST_REGEX.test(val)) {
+      gstMsg.textContent = '✔ Valid';
+      gstMsg.style.color = '#16a34a';
+    } else {
+      gstMsg.textContent = '✘ Invalid — must be 99AAAAA9999A1Z9';
+      gstMsg.style.color = '#dc2626';
+    }
+  });
+})();
+
+</script>
+{% endblock %}

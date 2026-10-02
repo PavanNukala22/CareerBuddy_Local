@@ -1,0 +1,284 @@
+{% extends 'jam/base.html' %}
+{% load static %}
+
+
+{% block jam_content %}
+<div class="max-w-4xl mx-auto space-y-10 pb-20">
+
+    <!-- ── Header Navigation ─────────────────────────────────────────── -->
+    <header class="flex items-center justify-between">
+        <a href="{% url 'jam:dashboard' %}" class="inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-colors group">
+            <span class="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+            <span class="text-sm font-serif font-bold">Back to Dashboard</span>
+        </a>
+        <div class="flex gap-3">
+            <span class="px-4 py-1.5 bg-slate-900 text-amber-400 rounded-full text-[10px] font-bold uppercase tracking-widest border border-slate-800">
+                Final Assessment
+            </span>
+        </div>
+    </header>
+
+    <!-- ── Hero Result Card ──────────────────────────────────────────── -->
+    <div class="bg-white rounded-[48px] p-8 md:p-12 shadow-sm border border-slate-100 relative overflow-hidden">
+
+        <!-- Topic Section -->
+        <div class="relative z-10 mb-12">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="w-8 h-[1px] bg-coral/40"></span>
+                <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-coral">3-Stage JAM Assessment</span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900 font-serif mb-4 leading-tight">Diagnostic Performance Report</h1>
+            <p class="text-slate-500 font-serif">Based on your performance across Easy, Medium, and Hard difficulty topics.</p>
+        </div>
+
+        <!-- Score + Breakdown Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 relative z-10">
+
+            <!-- Left: Averaged Score Bars -->
+            <div class="space-y-8">
+                <h3 class="font-serif text-xl font-bold text-slate-900 flex items-center gap-3">
+                    <span class="w-2 h-2 rounded-full bg-coral"></span>
+                    Average Performance
+                </h3>
+
+                {% with easy=assessment.easy_session med=assessment.medium_session hard=assessment.hard_session %}
+                {% with avg_conf_raw=easy.confidence_score|add:med.confidence_score|add:hard.confidence_score avg_flu_raw=easy.fluency_score|add:med.fluency_score|add:hard.fluency_score avg_lang_raw=easy.language_score|add:med.language_score|add:hard.language_score avg_pron_raw=easy.pronunciation_score|add:med.pronunciation_score|add:hard.pronunciation_score avg_time_raw=easy.time_management_score|add:med.time_management_score|add:hard.time_management_score %}
+
+                <!-- Confidence -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-end">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Confidence</span>
+                        <span class="text-sm font-bold font-serif text-slate-900">{{ avg_conf_raw }}/15</span>
+                    </div>
+                    <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-coral rounded-full transition-all duration-1000" data-width="{% widthratio avg_conf_raw 15 100 %}"></div>
+                    </div>
+                </div>
+                <!-- Fluency -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-end">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Fluency</span>
+                        <span class="text-sm font-bold font-serif text-slate-900">{{ avg_flu_raw }}/15</span>
+                    </div>
+                    <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-amber-400 rounded-full transition-all duration-1000" data-width="{% widthratio avg_flu_raw 15 100 %}"></div>
+                    </div>
+                </div>
+                <!-- Language -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-end">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Language</span>
+                        <span class="text-sm font-bold font-serif text-slate-900">{{ avg_lang_raw }}/15</span>
+                    </div>
+                    <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-blue-400 rounded-full transition-all duration-1000" data-width="{% widthratio avg_lang_raw 15 100 %}"></div>
+                    </div>
+                </div>
+                <!-- Pronunciation -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-end">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Pronunciation</span>
+                        <span class="text-sm font-bold font-serif text-slate-900">{{ avg_pron_raw }}/15</span>
+                    </div>
+                    <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-emerald-400 rounded-full transition-all duration-1000" data-width="{% widthratio avg_pron_raw 15 100 %}"></div>
+                    </div>
+                </div>
+                <!-- Time Management -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-end">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Time Management</span>
+                        <span class="text-sm font-bold font-serif text-slate-900">{{ avg_time_raw }}/15</span>
+                    </div>
+                    <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-slate-900 rounded-full transition-all duration-1000" data-width="{% widthratio avg_time_raw 15 100 %}"></div>
+                    </div>
+                </div>
+
+                {% endwith %}
+                {% endwith %}
+            </div>
+
+            <!-- Right: Total Score Circle -->
+            <div class="flex flex-col items-center justify-center border-l border-slate-100 pl-0 md:pl-12">
+                {% with total=assessment.easy_session.overall_score_display|add:assessment.medium_session.overall_score_display|add:assessment.hard_session.overall_score_display %}
+                <div class="relative w-48 h-48 flex items-center justify-center">
+                    <svg class="absolute inset-0 w-full h-full -rotate-90">
+                        <circle cx="96" cy="96" r="88" stroke="currentColor" stroke-width="12" fill="transparent" class="text-slate-50" />
+                        <circle cx="96" cy="96" r="88" stroke="currentColor" stroke-width="12" fill="transparent" stroke-dasharray="553" class="text-coral transition-all duration-1000" stroke-linecap="round" data-total="{% widthratio total 75 553 %}" />
+                    </svg>
+                    <div class="text-center relative z-10">
+                        <span class="text-5xl font-bold font-serif text-slate-900 block">{{ total }}</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total / 75</span>
+                    </div>
+                </div>
+                {% endwith %}
+                <p class="mt-8 text-center text-sm font-serif text-slate-500 italic max-w-[240px]">
+                    "Consistency across difficulty levels is the mark of a skilled communicator."
+                </p>
+            </div>
+        </div>
+
+        <!-- Stage Summary Strip -->
+        <div class="mt-12 pt-10 border-t border-slate-100 grid grid-cols-3 gap-6">
+            <div class="text-center">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Easy Stage</div>
+                <div class="text-sm font-bold font-serif text-slate-900">{{ assessment.easy_session.topic.title }}</div>
+                <div class="text-xs text-emerald-500 font-bold mt-1">★ {{ assessment.easy_session.overall_score_display|default:"—" }}/25</div>
+            </div>
+            <div class="text-center">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Medium Stage</div>
+                <div class="text-sm font-bold font-serif text-slate-900">{{ assessment.medium_session.topic.title }}</div>
+                <div class="text-xs text-amber-500 font-bold mt-1">★ {{ assessment.medium_session.overall_score_display|default:"—" }}/25</div>
+            </div>
+            <div class="text-center">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Hard Stage</div>
+                <div class="text-sm font-bold font-serif text-slate-900">{{ assessment.hard_session.topic.title }}</div>
+                <div class="text-xs text-rose-500 font-bold mt-1">★ {{ assessment.hard_session.overall_score_display|default:"—" }}/25</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Feedback + Roadmap Row ─────────────────────────────────────── -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+        <!-- Diagnostic Feedback (AI Report) -->
+        <div class="md:col-span-2 space-y-6">
+            <div class="bg-white rounded-[40px] p-10 shadow-sm border border-slate-100 h-full">
+                <h3 class="font-serif text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3">
+                    <span class="material-symbols-outlined text-coral">auto_awesome</span>
+                    Diagnostic Feedback
+                </h3>
+
+                <div class="prose prose-slate max-w-none font-serif text-slate-700 leading-relaxed jam-feedback-content">
+                    {{ assessment.final_report|safe }}
+                </div>
+
+                <!-- Per-Stage Transcripts accordion -->
+                <div class="mt-10 pt-8 border-t border-slate-50 space-y-4">
+                    <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4">Speech Transcripts</h4>
+
+                    {% for stage_label, stage_session in stages %}
+                    <details class="group bg-slate-50/50 rounded-2xl border border-slate-100 open:border-slate-200 transition-all">
+                        <summary class="cursor-pointer list-none flex justify-between items-center p-5 font-serif font-bold text-slate-700 text-sm select-none">
+                            <span>{{ stage_label }}</span>
+                            <span class="material-symbols-outlined text-slate-400 text-[18px] group-open:rotate-180 transition-transform">expand_more</span>
+                        </summary>
+                        <div class="px-5 pb-5 text-sm font-serif text-slate-600 leading-relaxed">
+                            {% if stage_session.transcript %}
+                                {{ stage_session.transcript }}
+                            {% else %}
+                                <span class="italic text-slate-400">No transcript recorded for this stage.</span>
+                            {% endif %}
+                        </div>
+                    </details>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Growth Roadmap -->
+        <div class="space-y-6">
+            <div class="bg-slate-900 rounded-[40px] p-8 text-white h-full shadow-xl shadow-slate-900/10">
+                <h3 class="font-serif text-xl font-bold mb-6 flex items-center gap-3">
+                    <span class="material-symbols-outlined text-amber-400">rocket_launch</span>
+                    Growth Roadmap
+                </h3>
+
+                <div class="space-y-6">
+                    <!-- Collect improvement tips from all 3 stages -->
+                    {% if assessment.easy_session.improvement_tips or assessment.medium_session.improvement_tips or assessment.hard_session.improvement_tips %}
+                        {% if assessment.easy_session.improvement_tips %}
+                        <div>
+                            <div class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2">Easy Stage</div>
+                            <div class="jam-roadmap-content text-sm font-serif text-slate-300 leading-relaxed">
+                                {{ assessment.easy_session.improvement_tips|safe|linebreaks }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if assessment.medium_session.improvement_tips %}
+                        <div class="pt-4 border-t border-slate-800">
+                            <div class="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-2">Medium Stage</div>
+                            <div class="jam-roadmap-content text-sm font-serif text-slate-300 leading-relaxed">
+                                {{ assessment.medium_session.improvement_tips|safe|linebreaks }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if assessment.hard_session.improvement_tips %}
+                        <div class="pt-4 border-t border-slate-800">
+                            <div class="text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-2">Hard Stage</div>
+                            <div class="jam-roadmap-content text-sm font-serif text-slate-300 leading-relaxed">
+                                {{ assessment.hard_session.improvement_tips|safe|linebreaks }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-sm font-serif text-slate-400 italic">Complete more sessions to build a personalised roadmap.</p>
+                    {% endif %}
+                </div>
+
+                <div class="mt-12 pt-8 border-t border-slate-800 flex flex-col gap-4">
+                    <a href="{% url 'jam:jam_session' %}" class="w-full bg-white text-slate-900 py-4 rounded-2xl font-serif font-bold text-center hover:bg-slate-100 transition-all flex items-center justify-center gap-2">
+                        Start Practice
+                        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                    </a>
+                    <a href="{% url 'jam:history' %}" class="w-full bg-slate-800 text-slate-400 py-3 rounded-2xl font-serif font-bold text-center hover:text-white transition-all text-sm">
+                        View History
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+/* Diagnostic feedback body */
+.jam-feedback-content h1 {
+    font-size: 1.6rem; font-weight: 800; color: #0f172a;
+    margin-bottom: 1rem; font-family: Georgia, serif;
+}
+.jam-feedback-content h3 {
+    font-size: 1.1rem; font-weight: 700; color: #1e293b;
+    margin-top: 1.75rem; margin-bottom: .75rem;
+    border-left: 4px solid #ff4d6d; padding-left: .9rem;
+}
+.jam-feedback-content p { margin-bottom: .75rem; }
+.jam-feedback-content ul { list-style: none; padding: 0; margin: 0 0 1rem; }
+.jam-feedback-content li {
+    display: flex; align-items: flex-start; gap: .6rem;
+    margin-bottom: .6rem; font-size: .9rem;
+}
+.jam-feedback-content li::before { content: "→"; color: #ff4d6d; font-weight: 700; flex-shrink: 0; }
+.jam-feedback-content b { color: #0f172a; }
+
+/* Roadmap */
+.jam-roadmap-content .feedback-highlight {
+    color: #fbbf24; display: block;
+    margin-bottom: .25rem; font-size: .9rem;
+}
+.jam-roadmap-content b { color: #fff; }
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.addEventListener('load', () => {
+    // Set progress bar widths from data attributes (avoids CSS linter false-positives)
+    document.querySelectorAll('[data-width]').forEach(el => {
+        el.style.width = el.dataset.width + '%';
+    });
+
+    // Set SVG circle stroke-dashoffset from data attribute
+    const circle = document.querySelector('circle[data-total]');
+    if (circle) {
+        const ratio = parseInt(circle.dataset.total, 10) || 0;
+        circle.style.strokeDashoffset = (553 - ratio) + 'px';
+    }
+
+    const page = document.querySelector('.max-w-4xl');
+    if (page) page.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+</script>
+{% endblock %}

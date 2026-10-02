@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+<style>
+    .resume-page { padding-top: 2rem; padding-bottom: 4rem; }
+    .resume-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0ea5e9 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 2rem 2.5rem;
+        margin-bottom: 2rem;
+    }
+    .resume-history-card {
+        background: white;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .resume-history-card:hover {
+        border-color: #0ea5e9;
+        box-shadow: 0 4px 14px rgba(14,165,233,0.1);
+    }
+    .resume-history-card.current { border-color: #0ea5e9; background: #f0f9ff; }
+    .resume-history-icon {
+        width: 48px; height: 48px; flex-shrink: 0;
+        background: #eff6ff; color: #0ea5e9;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="resume-page">
+<div class="container">
+
+    <a href="{% url 'resume_builder' %}" class="btn btn-outline-secondary btn-sm mb-4 d-inline-flex align-items-center gap-2 rounded-3">
+        <i class="fas fa-arrow-left"></i> Upload Another Resume
+    </a>
+
+    <div class="resume-hero">
+        <h1 class="fw-bold mb-2" style="font-family:'Outfit',sans-serif;font-size:1.8rem;">
+            <i class="fas fa-clock-rotate-left me-2"></i>Resume History
+        </h1>
+        <p class="mb-0" style="color:rgba(255,255,255,0.75);">
+            Every resume you've uploaded is kept here — uploading a new one never removes the earlier ones.
+        </p>
+    </div>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags|default:'info' }} rounded-3">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+
+    {% if resumes %}
+    <div class="mb-3 text-muted small">{{ resumes|length }} resume{{ resumes|length|pluralize }} uploaded so far</div>
+    {% for resume in resumes %}
+    <div class="resume-history-card{% if resume.id == current_resume_id %} current{% endif %}">
+        <div class="resume-history-icon"><i class="fas fa-file-alt"></i></div>
+        <div class="flex-grow-1">
+            <div class="fw-bold text-dark">
+                {{ resume.file.name|cut:"resumes/" }}
+                {% if resume.id == current_resume_id %}
+                <span class="badge bg-primary bg-opacity-10 text-primary ms-1" style="font-size:0.7rem;">Current</span>
+                {% endif %}
+            </div>
+            <div class="text-muted small">Uploaded {{ resume.uploaded_at|date:"d M Y, g:i A" }}</div>
+        </div>
+        <div class="d-flex gap-2">
+            {% if resume.file %}
+            <a href="{{ resume.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary rounded-3">
+                <i class="fas fa-eye me-1"></i> View File
+            </a>
+            {% endif %}
+            {% if resume.extracted_text %}
+            <form method="post" action="{% url 'resume_reanalyze' resume.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-primary rounded-3">
+                    <i class="fas fa-chart-line me-1"></i> View ATS Analysis
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="text-center py-5 bg-white border rounded-4">
+        <i class="fas fa-file-circle-question fa-3x text-muted mb-3"></i>
+        <h5 class="fw-bold">No resumes uploaded yet</h5>
+        <p class="text-muted mb-4">Upload your first resume to get an AI-powered ATS score.</p>
+        <a href="{% url 'resume_builder' %}" class="btn btn-primary rounded-3 px-4">Upload a Resume</a>
+    </div>
+    {% endif %}
+
+</div>
+</div>
+{% endblock %}

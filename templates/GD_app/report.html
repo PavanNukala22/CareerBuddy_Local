@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'GD_app/css/style.css' %}">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+<style>
+  .report-page { padding-top: 80px; background: #f8fafc; min-height: 100vh; padding-bottom: 3rem; }
+  .report-header { text-align: center; margin-bottom: 3rem; }
+  .report-badge {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: #eff6ff; border: 1px solid #bfdbfe;
+    border-radius: 50rem; padding: .35rem 1rem; font-size: .72rem;
+    font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: #2563eb; margin-bottom: 1rem;
+  }
+  .report-title { font-size: 2.2rem; font-weight: 900; color: #1e293b; margin-bottom: .5rem; }
+  .topic-pill {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 50rem;
+    padding: .4rem 1.2rem; font-size: .88rem; color: #2563eb; font-weight: 600;
+  }
+
+  /* Score Ring */
+  .score-ring-wrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 3rem; }
+  .score-ring-svg { width: 180px; height: 180px; }
+
+  /* Dimension Card */
+  .dim-card {
+    background: #fff; border-radius: 16px; border: 1px solid #e2e8f0;
+    padding: 1.75rem; box-shadow: 0 2px 10px rgba(0,0,0,.05);
+    transition: box-shadow .2s;
+  }
+  .dim-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.1); }
+  .dim-label { font-size: .65rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; margin-bottom: .25rem; }
+  .dim-name  { font-size: 1.05rem; font-weight: 800; color: #1e293b; margin-bottom: 1rem; }
+  .dim-score { font-size: 1.8rem; font-weight: 900; }
+  .dim-bar-track { height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; margin-bottom: 1rem; }
+  .dim-bar-fill  { height: 100%; border-radius: 4px; transition: width 1s ease-out; width: 0%; }
+  .dim-feedback  { font-size: .85rem; color: #64748b; line-height: 1.6; }
+
+  /* Strengths / Improvements */
+  .insight-card {
+    border-radius: 16px; padding: 1.75rem;
+  }
+  .insight-dark { background: #1e293b; }
+  .insight-light { background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+  .insight-item { display: flex; align-items: flex-start; gap: .75rem; margin-bottom: 1rem; }
+  .insight-item:last-child { margin-bottom: 0; }
+
+  /* Coach verdict */
+  .verdict-card {
+    background: linear-gradient(135deg, #f8fafc 0%, #fff 100%);
+    border: 1px solid #e2e8f0; border-radius: 16px; padding: 2rem;
+    position: relative; overflow: hidden;
+  }
+  .verdict-quote { font-size: 1.3rem; font-weight: 700; color: #1e293b; font-style: italic; margin-bottom: 1.5rem; line-height: 1.5; }
+  .coach-avatar { width: 44px; height: 44px; border-radius: 50%; background: #1e293b; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: .9rem; }
+
+  /* ── Mobile Responsiveness ── */
+  @media (max-width: 768px) {
+    .report-title { font-size: 1.8rem; }
+    .dim-card { padding: 1.25rem; }
+    .insight-card { padding: 1.25rem; }
+    .verdict-card { padding: 1.5rem; }
+    .verdict-quote { font-size: 1.1rem; }
+    .dim-score { font-size: 1.5rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-page">
+  <div class="container" style="max-width: 900px;">
+
+    <!-- Header -->
+    <div class="report-header">
+      <div class="report-badge">
+        <span class="material-symbols-outlined" style="font-size:14px;">analytics</span>
+        Performance Report
+      </div>
+      <h1 class="report-title">Discussion Analysis</h1>
+      <p class="text-muted mb-3">{{ session.created_at|date:"F d, Y · H:i" }}</p>
+      <div class="topic-pill">
+        <span class="material-symbols-outlined" style="font-size:16px;">topic</span>
+        Topic: {{ session.topic }}
+      </div>
+    </div>
+
+    {% if report %}
+
+    <!-- Score Ring -->
+    <div class="score-ring-wrap">
+      <svg class="score-ring-svg" viewBox="0 0 160 160" style="transform:rotate(-90deg);">
+        <circle cx="80" cy="80" r="68" fill="none" stroke="#f1f5f9" stroke-width="12"/>
+        <circle id="score-circle" cx="80" cy="80" r="68" fill="none" stroke="#2563eb" stroke-width="12"
+                stroke-linecap="round" style="stroke-dasharray: 427.26; stroke-dashoffset: 427.26; transition: stroke-dashoffset 1.5s ease-out;"/>
+      </svg>
+      <div style="margin-top:-110px; text-align:center; position:relative; z-index:2;">
+        <div style="font-size:3rem;font-weight:900;color:#1e293b;line-height:1;">{{ report.overall_score }}</div>
+        <div style="font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;">Overall Score</div>
+      </div>
+      <div style="margin-top:80px; font-size:.75rem; color:#22c55e; font-weight:700; letter-spacing:.06em;">
+        <i class="fas fa-check-circle me-1"></i>Evaluation Complete
+      </div>
+    </div>
+
+    <!-- Dimension Grid -->
+    <div class="row g-3 mb-4">
+      <!-- Fluency -->
+      <div class="col-md-6">
+        <div class="dim-card">
+          <div class="d-flex justify-content-between align-items-end mb-1">
+            <div>
+              <div class="dim-label">Articulation</div>
+              <div class="dim-name">Fluency</div>
+            </div>
+            <div class="dim-score text-primary">{{ report.fluency.score }}<span style="font-size:.9rem;color:#cbd5e1;">/25</span></div>
+          </div>
+          <div class="dim-bar-track"><div class="dim-bar-fill bg-primary" data-pct="{% widthratio report.fluency.score|default:0 25 100 %}"></div></div>
+          <div class="dim-feedback">{{ report.fluency.feedback }}</div>
+        </div>
+      </div>
+      <!-- Grammar -->
+      <div class="col-md-6">
+        <div class="dim-card">
+          <div class="d-flex justify-content-between align-items-end mb-1">
+            <div>
+              <div class="dim-label">Linguistic Precision</div>
+              <div class="dim-name">Grammar</div>
+            </div>
+            <div class="dim-score" style="color:#7c3aed;">{{ report.grammar.score }}<span style="font-size:.9rem;color:#cbd5e1;">/25</span></div>
+          </div>
+          <div class="dim-bar-track"><div class="dim-bar-fill" style="background:#7c3aed;" data-pct="{% widthratio report.grammar.score|default:0 25 100 %}"></div></div>
+          <div class="dim-feedback">{{ report.grammar.feedback }}</div>
+        </div>
+      </div>
+      <!-- Relevance -->
+      <div class="col-md-6">
+        <div class="dim-card">
+          <div class="d-flex justify-content-between align-items-end mb-1">
+            <div>
+              <div class="dim-label">Contextual Alignment</div>
+              <div class="dim-name">Relevance</div>
+            </div>
+            <div class="dim-score text-success">{{ report.relevance.score }}<span style="font-size:.9rem;color:#cbd5e1;">/25</span></div>
+          </div>
+          <div class="dim-bar-track"><div class="dim-bar-fill bg-success" data-pct="{% widthratio report.relevance.score|default:0 25 100 %}"></div></div>
+          <div class="dim-feedback">{{ report.relevance.feedback }}</div>
+        </div>
+      </div>
+      <!-- Confidence -->
+      <div class="col-md-6">
+        <div class="dim-card">
+          <div class="d-flex justify-content-between align-items-end mb-1">
+            <div>
+              <div class="dim-label">Delivery Style</div>
+              <div class="dim-name">Confidence</div>
+            </div>
+            <div class="dim-score" style="color:#d97706;">{{ report.confidence.score }}<span style="font-size:.9rem;color:#cbd5e1;">/25</span></div>
+          </div>
+          <div class="dim-bar-track"><div class="dim-bar-fill" style="background:#d97706;" data-pct="{% widthratio report.confidence.score|default:0 25 100 %}"></div></div>
+          <div class="dim-feedback">{{ report.confidence.feedback }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Strengths & Improvements -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-6">
+        <div class="insight-card insight-dark">
+          <h5 class="fw-bold text-white mb-3">
+            <span class="material-symbols-outlined me-2" style="color:#4ade80;vertical-align:middle;">thumb_up</span>
+            Key Strengths
+          </h5>
+          {% for s in report.strengths %}
+          <div class="insight-item">
+            <span class="material-symbols-outlined" style="color:#4ade80;font-size:18px;margin-top:2px;">check_circle</span>
+            <p style="color:#94a3b8;margin:0;font-size:.88rem;line-height:1.5;">{{ s }}</p>
+          </div>
+          {% empty %}
+          <p style="color:#475569;font-style:italic;font-size:.88rem;">No significant strengths recorded.</p>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="insight-card insight-light">
+          <h5 class="fw-bold text-dark mb-3">
+            <span class="material-symbols-outlined me-2 text-primary" style="vertical-align:middle;">lightbulb</span>
+            Areas for Growth
+          </h5>
+          {% for i in report.improvements %}
+          <div class="insight-item">
+            <span class="material-symbols-outlined text-primary" style="font-size:18px;margin-top:2px;">arrow_circle_up</span>
+            <p class="text-muted mb-0" style="font-size:.88rem;line-height:1.5;">{{ i }}</p>
+          </div>
+          {% empty %}
+          <p class="text-muted fst-italic small">No improvement areas suggested.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Coach Verdict -->
+    <div class="verdict-card mb-4">
+      <div style="font-size:.65rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#94a3b8;margin-bottom:.75rem;">
+        <span class="material-symbols-outlined me-1" style="font-size:14px;vertical-align:middle;">psychology</span>
+        Coach's Final Verdict
+      </div>
+      <div class="verdict-quote">"{{ report.summary }}"</div>
+      <div class="d-flex align-items-center gap-3">
+        <div class="coach-avatar">CB</div>
+        <div>
+          <div style="font-weight:700;color:#1e293b;font-size:.9rem;">CareerBuddy AI</div>
+          <div style="font-size:.7rem;color:#94a3b8;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Linguistic Analyst</div>
+        </div>
+      </div>
+    </div>
+
+    {% else %}
+    <!-- No Report -->
+    <div class="text-center py-5 bg-white rounded-4 border border-dashed mb-4" style="border-color:#cbd5e1!important;">
+      <span class="material-symbols-outlined" style="font-size:48px;color:#cbd5e1;">analytics</span>
+      <h5 class="fw-bold mt-3">No analysis yet</h5>
+      <p class="text-muted">This session hasn't been analyzed. Return to the room to finalize.</p>
+      <a href="{% url 'GD_app:gd_room' session.id %}" class="btn btn-primary rounded-pill px-4">Go to Room</a>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="d-flex flex-column flex-md-row justify-content-center gap-3 pt-3 border-top">
+      <a href="{% url 'GD_app:home' %}" class="btn btn-primary rounded-pill px-4">
+        <i class="fas fa-plus me-2"></i>Start New Discussion
+      </a>
+      <a href="{% url 'activity_list' %}" class="btn btn-outline-secondary rounded-pill px-4">
+        <i class="fas fa-th me-2"></i>Back to Activities
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+window.addEventListener('load', () => {
+  // Animate score ring
+  const circle = document.getElementById('score-circle');
+  if (circle) {
+    const score = {{ report.overall_score|default:0 }};
+    const circumference = 2 * Math.PI * 68;
+    const offset = circumference - (score / 100) * circumference;
+    setTimeout(() => { circle.style.strokeDashoffset = offset; }, 400);
+  }
+  // Animate bars
+  document.querySelectorAll('.dim-bar-fill[data-pct]').forEach(el => {
+    const pct = el.getAttribute('data-pct');
+    setTimeout(() => { el.style.width = pct + '%'; }, 600);
+  });
+});
+</script>
+{% endblock %}

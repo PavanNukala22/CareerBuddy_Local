@@ -1,0 +1,35 @@
+{% comment %}
+Masks a sensitive ID field (Aadhaar / PAN / Passport) in an edit form so the
+saved value is never sent to the browser in full plain text. Shows
+"XXXX XXXX 1234" (computed server-side) plus a "Change" button by default;
+clicking it reveals the real <input>, which the form's own view (see
+users/forms.py: ProfileUpdateForm.__init__/clean_aadhar_number etc.) always
+renders EMPTY regardless of what's saved — leaving it untouched on submit
+means "keep the existing value", not "clear it". This is what makes it safe
+to leave the input empty here: there's no masked string that could
+accidentally be submitted in place of a real value, because the real value
+was never in the page at all unless the user types a new one.
+
+Requires, once per page:
+    <script src="{% static 'js/mask-reveal.js' %}"></script>
+
+Usage — `masked_value` is the pre-computed masked string (e.g.
+`profile.aadhar_number|mask_aadhar`); `field` is the bound form field, whose
+widget must render an EMPTY value by default for this to be safe:
+    {% include 'includes/mask_reveal_field.html' with field=form.aadhar_number masked_value=profile.aadhar_number|mask_aadhar %}
+{% endcomment %}
+<div class="mask-reveal-field">
+    {% if masked_value %}
+    <div class="mask-reveal-display d-flex align-items-center gap-2">
+        <span class="form-control mask-reveal-masked" style="background:#f8fafc;color:#475569;letter-spacing:.03em;">{{ masked_value }}</span>
+        <button type="button" class="btn btn-sm btn-outline-secondary mask-reveal-toggle flex-shrink-0">
+            <i class="fas fa-pen me-1"></i>Change
+        </button>
+    </div>
+    <div class="mask-reveal-input d-none">
+        {{ field }}
+    </div>
+    {% else %}
+    {{ field }}
+    {% endif %}
+</div>

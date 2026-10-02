@@ -1,0 +1,67 @@
+{% extends "skillup_assessment/_skillup_base.html" %}
+
+
+{% block content %}
+<div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+    <div>
+        <h1>Certifications</h1>
+        <p>Your achievements and earned certificates</p>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <span class="badge-count">{{ total_count }} total</span>
+        <span class="badge-count">{{ attempted_count }} attempted</span>
+        <span class="badge-count">{{ earned_count }} earned</span>
+    </div>
+</div>
+
+{% for cat in categories %}
+<div style="margin-bottom:36px;">
+    <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; margin-bottom:14px; border-bottom:1px solid var(--line); padding-bottom:8px;">
+        <h2 style="margin:0; font-size:19px;">{{ cat.label }}</h2>
+        <span style="color:var(--body); font-size:13px;">{{ cat.total }} assessment{{ cat.total|pluralize }} &middot; {{ cat.attempted }} attempted &middot; {{ cat.earned }} earned</span>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px;">
+        {% for m in cat.subjects %}
+        <div class="card" style="display:flex; flex-direction:column; gap:10px;">
+            <p style="font-weight:700; font-size:15px; margin:0;">{{ m.label }}</p>
+
+            {% if m.state == 'certified' %}
+                <span style="color:var(--body); font-size:13px; margin:0;">Score: {{ m.certificate.score }} / {{ m.certificate.total }}</span>
+                <span class="status-pill status-certified" style="align-self:flex-start;">
+                    <span class="material-symbols-outlined">workspace_premium</span>CERTIFICATE EARNED
+                </span>
+                <a href="{% url 'skillup_module_detail' m.subject %}" class="btn btn-primary" style="margin-top:auto;">
+                    <span class="material-symbols-outlined" style="font-size:16px;">workspace_premium</span>View / Download
+                </a>
+            {% elif m.state == 'eligible' %}
+                <span style="color:var(--body); font-size:13px; margin:0;">Score: {{ m.result.score }} / {{ m.result.total }}</span>
+                <span class="status-pill status-eligible" style="align-self:flex-start;">
+                    <span class="material-symbols-outlined">star</span>ELIGIBLE
+                </span>
+                <a href="{% url 'skillup_module_detail' m.subject %}" class="btn btn-primary" style="margin-top:auto;">
+                    Generate Certificate
+                </a>
+            {% elif m.state == 'locked' %}
+                <span style="color:var(--body); font-size:13px; margin:0;">Score: {{ m.result.score }} / {{ m.result.total }} &mdash; below {{ m.pass_threshold }}% required</span>
+                <span class="status-pill status-locked" style="align-self:flex-start;">
+                    <span class="material-symbols-outlined">lock</span>LOCKED
+                </span>
+                <a href="{% url 'skillup_module_detail' m.subject %}" class="btn btn-outline" style="margin-top:auto;">
+                    View Details
+                </a>
+            {% else %}
+                <span style="color:var(--body); font-size:13px; margin:0;">Not attempted yet</span>
+                <span class="status-pill status-not-completed" style="align-self:flex-start;">
+                    <span class="material-symbols-outlined">hourglass_empty</span>NOT ATTEMPTED
+                </span>
+                <a href="{% url 'skillup_module_detail' m.subject %}" class="btn btn-outline" style="margin-top:auto;">
+                    View Details
+                </a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'GD_app/css/style.css' %}">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+<style>
+  /* Allow scrolling in case shell overflows due to padding differences */
+  body { overflow: auto; }
+  /* base.html's fixed navbar is cleared by body{padding-top:76px} in
+     static/css/style.css. Adding a margin-top here offset it a second time, so
+     the shell ran 76px past the viewport and the footer holding "Start
+     Discussion" was pushed out of reach of body{overflow:hidden}. Subtract the
+     same 76px instead, and keep it in one variable so the two stay in sync. */
+  :root { --gd-nav-h: 76px; }
+  .gd-room-shell {
+    display: flex; height: calc(100vh - var(--gd-nav-h));
+    background: #f8fafc;
+  }
+
+  /* ── Sidebar ── */
+  .gd-sidebar {
+    width: 280px; background: #fff; border-right: 1px solid #e2e8f0;
+    display: flex; flex-direction: column; padding: 1.5rem; overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .gd-topic-box {
+    background: #eff6ff; border-radius: 12px; padding: 1rem;
+    border: 1px solid #bfdbfe; margin-bottom: 1.5rem;
+  }
+  .gd-topic-label {
+    font-size: .65rem; font-weight: 800; letter-spacing: .12em;
+    text-transform: uppercase; color: #3b82f6; margin-bottom: .4rem;
+  }
+  .gd-topic-text { font-weight: 700; color: #1e293b; font-size: .9rem; line-height: 1.4; }
+
+  .agent-row {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .75rem 1rem; border-radius: 10px;
+    border: 1px solid #e2e8f0; background: #fafafa;
+    margin-bottom: .5rem; transition: all .2s;
+  }
+  .agent-row.speaking { border-color: #3b82f6; background: #eff6ff; }
+  .agent-avatar { width: 36px; height: 36px; border-radius: 8px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.1); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+  .agent-info .name { font-weight: 700; font-size: .82rem; color: #1e293b; }
+  .agent-info .role { font-size: .65rem; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; }
+  .sound-wave { display: flex; gap: 2px; align-items: center; opacity: 0; transition: opacity .3s; }
+  .agent-row.speaking .sound-wave { opacity: 1; }
+  .sound-wave span { display: block; width: 3px; border-radius: 2px; background: currentColor; animation: swav 1s ease-in-out infinite alternate; }
+  .sound-wave span:nth-child(2) { animation-delay: .15s; }
+  .sound-wave span:nth-child(3) { animation-delay: .3s; }
+  @keyframes swav { from { height: 4px; } to { height: 14px; } }
+
+  .status-bar { display: flex; align-items: center; gap: .5rem; margin-top: auto; padding-top: 1rem; border-top: 1px solid #e2e8f0; }
+  #status-dot { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; }
+  #status-text { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; }
+
+  /* ── Main Chat Area ── */
+  .gd-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  .gd-header {
+    background: rgba(255,255,255,.9); backdrop-filter: blur(8px);
+    border-bottom: 1px solid #e2e8f0; padding: .875rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .gd-header-title { font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: .6rem; }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+  #gd-timer {
+    background: #1e293b; color: #fff; padding: .2rem .7rem;
+    border-radius: 50rem; font-size: .72rem; font-weight: 700; letter-spacing: .08em;
+    display: none;
+  }
+
+  /* ── Chat Feed ── */
+  #chat-feed {
+    flex: 1; overflow-y: auto; padding: 1.5rem;
+    display: flex; flex-direction: column; gap: 1.25rem; scroll-behavior: smooth;
+  }
+  .empty-chat { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #94a3b8; gap: .75rem; }
+  .empty-chat-icon { width: 72px; height: 72px; border-radius: 18px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; }
+  .empty-chat h3 { font-weight: 800; color: #475569; margin: 0; }
+  .empty-chat p  { font-size: .88rem; color: #94a3b8; margin: 0; max-width: 280px; }
+
+  .message-wrap { display: flex; gap: .75rem; max-width: 78%; }
+  .message-wrap.user-msg { margin-left: auto; flex-direction: row-reverse; }
+  .avatar-circle { width: 36px; height: 36px; border-radius: 10px; background: #f1f5f9; box-shadow: 0 1px 4px rgba(0,0,0,.08); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+  .message-body { display: flex; flex-direction: column; gap: .25rem; }
+  .speaker-label { font-size: .72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; }
+  .user-msg .speaker-label { text-align: right; }
+  .message-bubble {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 14px;
+    padding: .75rem 1rem; font-size: .9rem; color: #334155; line-height: 1.5;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  }
+  .user-msg .message-bubble { background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05)); border-color: rgba(245,158,11,0.25); color: #92400e; }
+
+  /* ── Controls Footer ── */
+  .gd-footer {
+    background: #fff; border-top: 1px solid #e2e8f0;
+    padding: 1rem 1.5rem; display: flex; align-items: center;
+    justify-content: center; gap: .75rem; flex-shrink: 0;
+  }
+  .gd-btn {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .7rem 1.75rem; border-radius: 12px; font-weight: 700;
+    font-size: .9rem; border: none; cursor: pointer;
+    transition: opacity .15s, transform .1s;
+  }
+  .gd-btn:hover { opacity: .9; transform: translateY(-1px); }
+  .gd-btn-green  { background: #16a34a; color: #fff; box-shadow: 0 4px 14px rgba(22,163,74,.3); }
+  .gd-btn-blue   { background: #2563eb; color: #fff; box-shadow: 0 4px 14px rgba(37,99,235,.3); }
+  .gd-btn-amber  { background: #d97706; color: #fff; box-shadow: 0 4px 14px rgba(217,119,6,.3); }
+  .gd-btn-red    { background: #dc2626; color: #fff; box-shadow: 0 4px 14px rgba(220,38,38,.3); }
+  .gd-btn-primary { background: linear-gradient(135deg,#0369a1,#4f46e5); color:#fff; box-shadow:0 4px 14px rgba(79,70,229,.3); }
+
+  .hidden { display: none !important; }
+
+  /* ── Analyzing Overlay ── */
+  #analyzing-overlay {
+    position: fixed; inset: 0; background: rgba(15,23,42,.75);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 9999; gap: 1rem; display: none;
+  }
+  #analyzing-overlay.show { display: flex; }
+  .spinner { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,.2); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Mobile Responsiveness ── */
+  @media (max-width: 768px) {
+    .gd-room-shell { flex-direction: column; height: auto; min-height: calc(100vh - var(--gd-nav-h)); }
+    .gd-sidebar { width: 100%; border-right: none; border-bottom: 1px solid #e2e8f0; max-height: 250px; }
+    .gd-main { height: 65vh; flex: none; }
+    #chat-feed { padding: 1rem; }
+    .message-wrap { max-width: 95%; }
+    .gd-footer { flex-wrap: wrap; padding: .75rem 1rem; }
+    .gd-btn { width: 100%; justify-content: center; }
+    .gd-header { padding: .75rem 1rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Analyzing Overlay -->
+<div id="analyzing-overlay">
+  <div class="spinner"></div>
+  <p style="color:#fff; font-weight:700; font-size:1rem;">Analyzing your performance…</p>
+</div>
+
+<div class="gd-room-shell">
+
+  <!-- Sidebar -->
+  <aside class="gd-sidebar">
+    <div class="gd-topic-box">
+      <div class="gd-topic-label live-translate">Active Topic</div>
+      <div class="gd-topic-text">{{ session.topic }}</div>
+    </div>
+
+    <div class="live-translate" style="font-size:.65rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#94a3b8;margin-bottom:.75rem;">Discussion Panel</div>
+
+    <div id="agent-alex" class="agent-row">
+      <div class="agent-avatar">🔵</div>
+      <div class="agent-info flex-1">
+        <div class="name">Alex</div>
+        <div class="role live-translate">Analysis</div>
+      </div>
+      <div class="sound-wave text-primary">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <div id="agent-maya" class="agent-row">
+      <div class="agent-avatar">🟣</div>
+      <div class="agent-info flex-1">
+        <div class="name">Maya</div>
+        <div class="role live-translate">Creativity</div>
+      </div>
+      <div class="sound-wave" style="color:#7c3aed;">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <div id="agent-rishi" class="agent-row">
+      <div class="agent-avatar">🟢</div>
+      <div class="agent-info flex-1">
+        <div class="name">Rishi</div>
+        <div class="role live-translate">Moderator</div>
+      </div>
+      <div class="sound-wave text-success">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <div id="agent-user" class="agent-row">
+      <div class="agent-avatar">🧑</div>
+      <div class="agent-info flex-1">
+        <div class="name">You</div>
+        <div class="role live-translate">Candidate</div>
+      </div>
+      <div class="sound-wave" style="color:#d97706;">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <div id="status-dot"></div>
+      <span id="status-text">Ready</span>
+    </div>
+  </aside>
+
+  <!-- Main Chat -->
+  <main class="gd-main">
+
+    <!-- Header -->
+    <div class="gd-header">
+      <div class="gd-header-title live-translate">
+        <div class="live-dot"></div>
+        Discussion Arena
+        <div id="gd-timer">05:00</div>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        {% include 'includes/language_dropdown.html' with fixed=False %}
+        <button id="btn-end" class="live-translate gd-btn gd-btn-red py-1 px-3" style="font-size:.82rem; {% if not session.is_active %}display:none;{% endif %}">
+          <span class="material-symbols-outlined" style="font-size:16px;">stop_circle</span>
+          End Session
+        </button>
+        <a href="{% url 'GD_app:home' %}" class="btn btn-sm btn-outline-secondary rounded-circle" style="width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;">
+          <i class="fas fa-times"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Chat Feed -->
+    <div id="chat-feed">
+      {% if not chat_messages %}
+      <div class="empty-chat" style="flex:1;height:100%;">
+        <div class="empty-chat-icon">
+          <span class="material-symbols-outlined" style="font-size:32px;color:#94a3b8;">forum</span>
+        </div>
+        <h3 class="live-translate">Ready to start?</h3>
+        <p class="live-translate">Press Start Discussion below to invite the agents into the conversation.</p>
+      </div>
+      {% else %}
+        {% for m in chat_messages %}
+        <div class="message-wrap theme-{{ m.speaker }} {% if m.is_user %}user-msg{% endif %}">
+          <div class="avatar-circle">{{ m.avatar }}</div>
+          <div class="message-body">
+            <div class="speaker-label">
+              {% if m.is_user %}You{% else %}{{ m.speaker }}{% endif %}
+            </div>
+            <div class="message-bubble">{{ m.content }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+
+    <!-- Controls Footer -->
+    <div class="gd-footer">
+      {% if not session.is_active %}
+        <a href="{% url 'GD_app:session_report' session.id %}" class="gd-btn gd-btn-primary live-translate">
+          <span class="material-symbols-outlined" style="font-size:18px;">analytics</span>
+          View Performance Report
+        </a>
+      {% else %}
+        <button id="btn-start" class="live-translate gd-btn gd-btn-green {% if chat_messages %}hidden{% endif %}">
+          <span class="material-symbols-outlined" style="font-size:18px;">play_arrow</span>
+          Start Discussion
+        </button>
+        <button id="btn-speak" class="live-translate gd-btn gd-btn-blue hidden">
+          <span class="material-symbols-outlined" style="font-size:18px;">mic</span>
+          Speak Now
+        </button>
+        <button id="btn-done-speaking" class="live-translate gd-btn gd-btn-amber hidden">
+          <span class="material-symbols-outlined" style="font-size:18px;">check_circle</span>
+          Done Speaking
+        </button>
+        {% if chat_messages %}
+        <button id="btn-resume" class="live-translate gd-btn gd-btn-green">
+          <span class="material-symbols-outlined" style="font-size:18px;">refresh</span>
+          Resume GD
+        </button>
+        <button id="btn-end-footer" class="live-translate gd-btn gd-btn-red">
+          <span class="material-symbols-outlined" style="font-size:18px;">stop_circle</span>
+          End Session
+        </button>
+        {% endif %}
+      {% endif %}
+    </div>
+  </main>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>window.__GD_SESSION_ID__ = "{{ session.id }}";</script>
+<script src="{% static 'activities/js/linguavoice-common.js' %}"></script>
+<script src="{% static 'js/voice_prosody.js' %}?v=prosody-v2"></script>
+<script src="{% static 'GD_app/js/gd.js' %}?v=neural-v2"></script>
+<script src="{% static 'js/live-translate.js' %}"></script>
+<script>
+  // Same live-translation mechanism as the activity sub-activity page.
+  // gd.js separately handles the live chat feed, status text and the
+  // Vietnamese-only loading labels, so those are intentionally left out here
+  // to avoid two systems fighting over the same element.
+  document.addEventListener('DOMContentLoaded', function () {
+    LiveTranslate.init({ dynamicSelectors: ['.live-translate'] });
+  });
+</script>
+{% endblock %}

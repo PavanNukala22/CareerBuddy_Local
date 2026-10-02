@@ -1,0 +1,460 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/exercises.css' %}?v=tips-layout-2">
+{% endblock %}
+
+{% block content %}
+<div class="exercise-page pt-5">
+
+    <!-- Header -->
+    <div class="exercise-hero bg-{{ activity.color_class }}" style="position: relative;">
+        <!-- Language Dropdown (top-right, fixed) - Customized with Images -->
+        <div class="dropdown custom-lang-dropdown" style="position: fixed; top: 85px; right: 1.5rem; z-index: 1050;">
+            <button class="btn btn-sm dropdown-toggle d-flex align-items-center justify-content-between" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                style="width:auto; min-width:140px; border-radius: 8px; background-color: #fff; color: #333; font-weight: 600; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.12);">
+                <span class="currentLangDisplay d-flex align-items-center"><img src="https://flagcdn.com/w20/gb.png"
+                        class="me-2" style="width:20px; border-radius:2px;"> English</span>
+            </button>
+            <ul class="dropdown-menu shadow-sm"
+                style="border-radius: 8px; border: 1px solid #e2e8f0; min-width: 140px; padding: 0.5rem 0;">
+                <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#"
+                        data-val="english"><img src="https://flagcdn.com/w20/gb.png" class="me-2"
+                            style="width:20px; border-radius:2px;"> English</a></li>
+                <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#"
+                        data-val="vietnam"><img src="https://flagcdn.com/w20/vn.png" class="me-2"
+                            style="width:20px; border-radius:2px;"> Vietnamese</a></li>
+                <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#"
+                        data-val="arabic"><img src="https://flagcdn.com/w20/sa.png" class="me-2"
+                            style="width:20px; border-radius:2px;"> Arabic</a></li>
+                <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#"
+                        data-val="russian"><img src="https://flagcdn.com/w20/ru.png" class="me-2"
+                            style="width:20px; border-radius:2px;"> Russian</a></li>
+            </ul>
+            <select id="languageSelect" class="d-none">
+                <option value="english" selected>English</option>
+                <option value="vietnam">Vietnamese</option>
+                <option value="arabic">Arabic</option>
+                <option value="russian">Russian</option>
+            </select>
+        </div>
+
+        <script>
+            (function () {
+                setTimeout(() => {
+                    const dropdownWrapper = document.querySelector('.custom-lang-dropdown');
+                    if (!dropdownWrapper) return;
+
+                    const langOptions = dropdownWrapper.querySelectorAll('.lang-option');
+                    const display = dropdownWrapper.querySelector('.currentLangDisplay');
+                    const selectElement = document.getElementById('languageSelect');
+
+                    langOptions.forEach(item => {
+                        item.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            const val = this.getAttribute('data-val');
+                            display.innerHTML = this.innerHTML;
+
+                            if (selectElement) {
+                                selectElement.value = val;
+                                selectElement.dispatchEvent(new Event('change'));
+                            }
+                        });
+                    });
+
+                    if (selectElement) {
+                        selectElement.addEventListener('change', (e) => {
+                            const opt = Array.from(langOptions).find(o => o.getAttribute('data-val') === e.target.value);
+                            if (opt) display.innerHTML = opt.innerHTML;
+                        });
+                    }
+                }, 100);
+            })();
+        </script>
+        <div class="container py-4">
+            <nav aria-label="breadcrumb" class="mb-2">
+                <ol class="breadcrumb breadcrumb-light mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'activity_detail' activity.pk %}">{{ activity.title|truncatechars:25 }}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'sub_activity_detail' activity.pk sub.pk %}">{{ sub.title|truncatechars:25 }}</a></li>
+                    <li class="breadcrumb-item active">Exercise</li>
+                </ol>
+            </nav>
+            <div class="d-flex align-items-center gap-3 mt-2">
+                <div class="exercise-hero-icon exercise-icon-{{ exercise.exercise_type }}">
+                    {% if exercise.exercise_type == 'mcq' %}<i class="fas fa-list-ul"></i>
+                    {% elif exercise.exercise_type == 'fill_blank' %}<i class="fas fa-pen-to-square"></i>
+                    {% elif exercise.exercise_type == 'matching' %}<i class="fas fa-link"></i>
+                    {% elif exercise.exercise_type == 'ordering' %}<i class="fas fa-sort"></i>
+                    {% elif exercise.exercise_type == 'bingo' %}<i class="fas fa-th"></i>
+                    {% elif exercise.exercise_type == 'writing' %}<i class="fas fa-file-alt"></i>
+                    {% elif exercise.exercise_type == 'timer' %}<i class="fas fa-stopwatch"></i>
+                    {% endif %}
+                </div>
+                <div>
+                    <div class="text-white-50 small">{{ exercise.get_exercise_type_display }}</div>
+                    <h2 class="text-white mb-0">{{ exercise.title }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+
+
+
+                <!-- ============ MCQ Exercise ============ -->
+                {% if exercise.exercise_type == 'mcq' %}
+                <div id="mcq-exercise" class="exercise-container">
+                    <div class="exercise-progress-bar mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <div class="small text-muted fw-medium" id="progress-status">
+                                Question <span id="current-q">1</span> of {{ questions.count }}
+                            </div>
+                            <div class="small fw-bold text-dark" id="score-display">Score: 0</div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-custom">
+                                <div class="progress-bar-fill" id="q-progress-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <span style='color:blue'><b>Status: <span id="ui-status-text">Active</span></b></span>
+                    </div>
+
+                    {% for question in questions %}
+                    <div class="question-card" id="q-{{ forloop.counter }}" {% if not forloop.first %}
+                        style="display:none;" {% endif %}>
+                        <div class="question-number">Question {{ forloop.counter }}</div>
+                        <p class="question-text">{{ question.question_text }}</p>
+                        <div class="options-grid">
+                            {% if question.option_a %}
+                            <button class="option-btn" data-q="{{ forloop.counter }}" data-option="a"
+                                data-correct="{{ question.correct_answer }}"
+                                data-explanation="{{ question.explanation }}">
+                                <span class="option-letter">A</span>{{ question.option_a }}
+                            </button>
+                            {% endif %}
+                            {% if question.option_b %}
+                            <button class="option-btn" data-q="{{ forloop.counter }}" data-option="b"
+                                data-correct="{{ question.correct_answer }}"
+                                data-explanation="{{ question.explanation }}">
+                                <span class="option-letter">B</span>{{ question.option_b }}
+                            </button>
+                            {% endif %}
+                            {% if question.option_c %}
+                            <button class="option-btn" data-q="{{ forloop.counter }}" data-option="c"
+                                data-correct="{{ question.correct_answer }}"
+                                data-explanation="{{ question.explanation }}">
+                                <span class="option-letter">C</span>{{ question.option_c }}
+                            </button>
+                            {% endif %}
+                            {% if question.option_d %}
+                            <button class="option-btn" data-q="{{ forloop.counter }}" data-option="d"
+                                data-correct="{{ question.correct_answer }}"
+                                data-explanation="{{ question.explanation }}">
+                                <span class="option-letter">D</span>{{ question.option_d }}
+                            </button>
+                            {% endif %}
+                        </div>
+                        <div class="explanation-box" id="exp-{{ forloop.counter }}" style="display:none"></div>
+                        <div class="question-nav mt-3">
+                            {% if not forloop.last %}
+                            <button class="btn btn-primary next-btn" data-next="{{ forloop.counter|add:1 }}" disabled>
+                                Next <i class="fas fa-arrow-right ms-1"></i>
+                            </button>
+                            {% else %}
+                            <button class="btn btn-success submit-btn" id="submit-mcq" disabled>
+                                <i class="fas fa-check me-2"></i>Submit Answers
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- ============ Fill in the Blank ============ -->
+                {% elif exercise.exercise_type == 'fill_blank' %}
+                <div id="fill-exercise" class="exercise-container">
+                    {% for question in questions %}
+                    <div class="fill-question-card" data-correct="{{ question.correct_answer }}">
+                        <div class="question-number">Question {{ forloop.counter }}</div>
+                        <p class="question-text">{{ question.question_text }}</p>
+                        <div class="fill-input-row">
+                            <input type="text" class="fill-input form-control" placeholder="Type your answer here..."
+                                autocomplete="off" data-q="{{ forloop.counter }}"
+                                data-correct="{{ question.correct_answer }}">
+                            <button class="btn btn-outline-primary check-fill-btn" data-q="{{ forloop.counter }}">
+                                <i class="fas fa-check"></i> Check
+                            </button>
+                        </div>
+                        <div class="fill-feedback" id="fill-fb-{{ forloop.counter }}" style="display:none"></div>
+                        {% if question.explanation %}
+                        <div class="fill-hint text-muted small mt-1" id="fill-hint-{{ forloop.counter }}"
+                            style="display:none">
+                            <i class="fas fa-lightbulb me-1"></i>{{ question.explanation }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    <div class="text-center mt-4">
+                        <button class="btn btn-success btn-lg" id="submit-fill" disabled>
+                            <i class="fas fa-paper-plane me-2"></i>Submit All Answers
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ============ Matching Exercise ============ -->
+                {% elif exercise.exercise_type == 'matching' %}
+                <div id="matching-exercise" class="exercise-container">
+                    <div class="matching-grid">
+                        <div class="matching-col">
+                            <h6 class="matching-col-header">Terms</h6>
+                            {% for question in questions %}
+                            <div class="match-item left-item" data-id="{{ forloop.counter }}">
+                                {{ question.left_item|default:question.question_text }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="matching-arrows" id="matching-svg-container">
+                            <svg id="matching-svg" width="60" height="100%"></svg>
+                        </div>
+                        <div class="matching-col">
+                            <h6 class="matching-col-header">Definitions</h6>
+                            {% for question in questions %}
+                            <div class="match-item right-item" data-id="{{ forloop.counter }}"
+                                data-correct="{{ question.correct_answer }}">
+                                {{ question.right_item|default:question.correct_answer }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="text-center mt-4">
+                        <button class="btn btn-outline-secondary me-2" id="reset-matching">
+                            <i class="fas fa-redo me-1"></i>Reset
+                        </button>
+                        <button class="btn btn-success" id="submit-matching" disabled>
+                            <i class="fas fa-check me-2"></i>Check Matches
+                        </button>
+                    </div>
+                    <div id="matching-result" class="mt-3" style="display:none"></div>
+                </div>
+
+                <!-- ============ Vocabulary Bingo ============ -->
+                {% elif exercise.exercise_type == 'bingo' %}
+                <div id="bingo-exercise" class="exercise-container">
+                    <div class="bingo-header mb-4">
+                        <div class="bingo-word-display">
+                            <div class="bingo-word-label">Definition:</div>
+                            <div class="bingo-current-word" id="bingo-current-word">Press Start to begin</div>
+                            <div class="bingo-definition" id="bingo-definition"></div>
+                        </div>
+                        <div class="bingo-controls">
+                            <button class="btn btn-primary" id="bingo-start">
+                                <i class="fas fa-play me-1"></i>Start Game
+                            </button>
+                            <button class="btn btn-outline-secondary" id="bingo-next" disabled>
+                                <i class="fas fa-forward me-1"></i>Next Word
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bingo-board" id="bingo-board">
+                        {% for card in bingo_cards|slice:":25" %}
+                        <div class="bingo-cell" data-word="{{ card.word }}" data-def="{{ card.definition }}">
+                            {{ card.word }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="bingo-legend">
+                        <span class="bingo-legend-item"><span
+                                class="bingo-swatch swatch-unselected"></span>Unselected</span>
+                        <span class="bingo-legend-item"><span
+                                class="bingo-swatch swatch-selected"></span>Selected</span>
+                        <span class="bingo-legend-item"><span class="bingo-swatch swatch-correct"></span>Correct</span>
+                        <span class="bingo-legend-item"><span
+                                class="bingo-swatch swatch-incorrect"></span>Incorrect</span>
+                        <span class="bingo-legend-item"><span class="bingo-swatch swatch-bingo"></span>Bingo line (5 in
+                            a row)</span>
+                    </div>
+                    <div class="text-center mt-4">
+                        <div id="bingo-status" class="bingo-status-bar"></div>
+                        <button class="btn btn-success mt-3" id="submit-bingo" style="display:none">
+                            <i class="fas fa-trophy me-2"></i>Claim Score
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ============ Writing Submission ============ -->
+                {% elif exercise.exercise_type == 'writing' %}
+                <div id="writing-exercise" class="exercise-container">
+                    {% for question in questions %}
+                    <div class="writing-prompt-card mb-4">
+                        <div class="question-number">Prompt {{ forloop.counter }}</div>
+                        <p class="question-text">{{ question.question_text }}</p>
+                        {% if question.explanation %}
+                        <div class="writing-guide">
+                            <i class="fas fa-lightbulb me-2 text-warning"></i>
+                            <strong>Guide:</strong> {{ question.explanation }}
+                        </div>
+                        {% endif %}
+                        <textarea class="form-control writing-input mt-3" rows="6" data-q="{{ forloop.counter }}"
+                            placeholder="Write your response here..."></textarea>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="text-muted word-count" id="wc-{{ forloop.counter }}">0 words</small>
+                            <small class="text-muted writing-min-hint">150–200 words required</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <div class="text-center mt-2">
+                        <button class="btn btn-success btn-lg" id="submit-writing" disabled>
+                            <i class="fas fa-paper-plane me-2"></i>Submit Writing
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ============ Timer Activity ============ -->
+                {% elif exercise.exercise_type == 'timer' %}
+                <div id="timer-exercise" class="exercise-container text-center">
+                    <div class="timer-task-progress mb-4 d-flex justify-content-center flex-wrap gap-2">
+                        {% for question in questions %}
+                        <div class="timer-dot {% if forloop.first %}active{% endif %}" id="dot-{{ forloop.index0 }}">
+                            <i class="fas fa-check-circle me-1"></i>Task {{ forloop.counter }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="timer-display">
+                        <div class="timer-circle">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="timer-track" cx="60" cy="60" r="54" />
+                                <circle class="timer-progress" id="timer-arc" cx="60" cy="60" r="54"
+                                    stroke-dasharray="339.3" stroke-dashoffset="0" />
+                            </svg>
+                            <div class="timer-text" id="timer-text">60</div>
+                        </div>
+                    </div>
+                    <div class="timer-prompt mt-4">
+                        {% for question in questions %}
+                        <div class="timer-task-card {% if not forloop.first %}d-none{% endif %}"
+                            id="task-{{ forloop.counter }}">
+                            <h5>Task {{ forloop.counter }}: {{ question.question_text }}</h5>
+                            {% if question.explanation %}
+                            <p class="text-muted">{{ question.explanation }}</p>
+                            {% endif %}
+                            <p class="timer-word-count text-muted small mt-2 mb-0"
+                                id="task-word-count-{{ forloop.counter0 }}"></p>
+                            <div class="timer-recording mt-3 text-start" id="recording-{{ forloop.counter0 }}"
+                                style="display:none">
+                                <div class="d-flex align-items-center gap-3 p-3 rounded-3"
+                                    style="background:#f8fafc;border:1px solid #e2e8f0;">
+                                    <i class="fas fa-headphones text-primary fa-lg"></i>
+                                    <audio id="task-audio-{{ forloop.counter0 }}" controls class="flex-grow-1"
+                                        style="height:36px;"></audio>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div id="timer-recordings-summary" class="mt-4 text-start"></div>
+                    <div class="timer-controls mt-4">
+                        <button class="btn btn-success btn-lg me-3" id="timer-start">
+                            <i class="fas fa-play me-2"></i>Start Task
+                        </button>
+                        <button class="btn btn-danger btn-lg me-3" id="timer-stop" style="display:none">
+                            <i class="fas fa-stop me-2"></i>Stop Recording
+                        </button>
+                        <button class="btn btn-outline-secondary btn-lg" id="timer-reset">
+                            <i class="fas fa-redo me-2"></i>Reset
+                        </button>
+                    </div>
+                    <p id="timer-recording-status" class="text-muted small mt-3 mb-0" aria-live="polite"></p>
+                    <div id="timer-done" class="timer-done-panel mt-4" style="display:none">
+                        <i class="fas fa-flag-checkered fa-3x text-success mb-3"></i>
+                        <h4>Time's Up!</h4>
+                        <p>Great work! Mark this activity as complete.</p>
+                        <button class="btn btn-success btn-lg" id="submit-timer">
+                            <i class="fas fa-check me-2"></i>Mark Complete
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Result Panel (shown after submission) -->
+                <div id="result-panel" class="result-panel mt-4" style="display:none">
+                    <div class="result-panel-inner">
+                        <div class="result-icon" id="result-icon"></div>
+                        <h3 id="result-title"></h3>
+                        <div class="result-score-display">
+                            <span id="result-score-text"></span>
+                        </div>
+                        <div id="result-details" class="mt-4"></div>
+
+                        <!-- Improved Version Panel (timer activities only) -->
+                        <div id="improved-version-panel" class="improved-version-panel mt-4" style="display:none">
+                            <div class="improved-version-header">
+                                <i class="fas fa-lightbulb"></i>
+                                How to Improve — Detailed Feedback per Task
+                            </div>
+                            <div class="improved-version-body" id="improved-version-body"></div>
+                        </div>
+
+                        <div class="result-actions mt-4">
+                            <button class="btn btn-outline-primary me-2" onclick="location.reload()">
+                                <i class="fas fa-redo me-1"></i>Try Again
+                            </button>
+                            <a href="{% url 'sub_activity_detail' activity.pk sub.pk %}" class="btn btn-primary">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Sub-Activity
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Previous scores sidebar -->
+            <div class="col-lg-3">
+                <div class="card border-0 shadow-sm scores-sidebar">
+                    <div class="card-header bg-white fw-bold">
+                        <i class="fas fa-chart-line me-2 text-primary"></i>Previous Score
+                    </div>
+                    <div class="card-body">
+                        {% if all_attempts %}
+                        {% with attempt=all_attempts.0 %}
+                        <div class="text-center py-2">
+                            <div class="display-6 fw-bold mb-2">{{ attempt.score }}<span class="fs-5 text-muted">/{{ attempt.max_score }}</span></div>
+                        </div>
+                        {% endwith %}
+                        {% else %}
+                        <p class="text-muted small text-center py-3 mb-0">No attempts yet.<br>Your score will appear
+                            here.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const EXERCISE_TYPE = "{{ exercise.exercise_type }}";
+    const EXERCISE_ID = Number("{{ exercise.pk|default:0 }}");
+    const SUBMIT_URL = "{% url 'submit_exercise' exercise.pk %}";
+    const CSRF_TOKEN = "{{ csrf_token }}";
+    const TOTAL_QUESTIONS = Number("{{ questions.count|default:0 }}");
+</script>
+<script type="application/json" id="questions-data">{{ questions_json|safe }}</script>
+<script type="application/json" id="bingo-data">{{ bingo_json|safe }}</script>
+<script>
+    const QUESTIONS_DATA = JSON.parse(document.getElementById('questions-data').textContent);
+    const BINGO_DATA = JSON.parse(document.getElementById('bingo-data').textContent);
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/exercises.js' %}?v=speech-accuracy-2"></script>
+{% endblock %}

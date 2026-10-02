@@ -1,0 +1,491 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1"
+  rel="stylesheet" />
+<style>
+  /* ─── Utility ─── */
+  .hidden {
+    display: none !important;
+  }
+
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+
+  /* ─── Module Shell ─── */
+  .module-page {
+    padding-top: 60px;
+    min-height: 100vh;
+    background: #f8fafc;
+  }
+
+  .module-hero {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+    padding: 2.5rem 0 3rem;
+    color: #fff;
+  }
+
+  .module-hero h1 {
+    font-size: 1.9rem;
+    font-weight: 800;
+    margin-bottom: .4rem;
+  }
+
+  .module-hero p {
+    opacity: .85;
+    font-size: 1rem;
+  }
+
+  .module-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    background: rgba(255, 255, 255, .15);
+    border: 1px solid rgba(255, 255, 255, .3);
+    border-radius: 50rem;
+    padding: .25rem .8rem;
+    font-size: .8rem;
+    margin-bottom: .8rem;
+  }
+
+  /* ─── Cards ─── */
+  .panel-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, .07);
+    border: 1px solid #e2e8f0;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .recorder-card {
+    min-height: 453px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 2rem;
+  }
+
+  /* ─── Mic ─── */
+  .mic-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 2.25rem;
+  }
+
+  .mic-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: rgba(37, 99, 235, .18);
+    opacity: 0;
+    transition: all .3s;
+  }
+
+  /* JS adds .recording to mic-wrap; and adds/removes 'on' to ring1/ring2 */
+  #ring1.on,
+  #ring2.on {
+    opacity: 1;
+  }
+
+  #ring1.on {
+    width: 110px;
+    height: 110px;
+    animation: mring 1.5s infinite;
+  }
+
+  #ring2.on {
+    width: 140px;
+    height: 140px;
+    animation: mring 1.5s infinite .2s;
+  }
+
+  @keyframes mring {
+    0% {
+      transform: translate(-50%, -50%) scale(.8);
+      opacity: .6;
+    }
+
+    100% {
+      transform: translate(-50%, -50%) scale(1.6);
+      opacity: 0;
+    }
+  }
+
+  #micBtn {
+    width: 120px;
+    height: 120px;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, .32);
+    transition: transform .15s, box-shadow .15s, background .2s;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #micBtn:hover {
+    transform: scale(1.06);
+  }
+
+  #micBtn.rec {
+    background: #dc2626;
+    box-shadow: 0 4px 16px rgba(220, 38, 38, .4);
+  }
+
+  /* ─── Wave ─── */
+  .wave-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 0;
+    visibility: hidden;
+    opacity: 0;
+    overflow: hidden;
+    transition: height .25s, opacity .25s;
+  }
+
+  .wave-row.active {
+    height: 40px;
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .wbar {
+    width: 4px;
+    min-height: 6px;
+    border-radius: 4px;
+    background: #2563eb;
+    animation: wpulse 1.2s infinite ease-in-out alternate;
+  }
+
+  @keyframes wpulse {
+    from {
+      height: 6px;
+    }
+
+    to {
+      height: 30px;
+    }
+  }
+
+  /* ─── Transcript / Mistakes ─── */
+  .transcript-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    min-height: 80px;
+    font-size: .95rem;
+    line-height: 1.7;
+    color: #334155;
+  }
+
+  /* ─── Stat chips ─── */
+  .stat-chip {
+    background: #f1f5f9;
+    border-radius: 50rem;
+    padding: .45rem .9rem;
+    font-size: .95rem;
+    color: #475569;
+    display: inline-block;
+  }
+
+  .recorder-card #micLabel {
+    font-size: 1.2rem;
+    margin-bottom: .8rem !important;
+  }
+
+  .recorder-card .d-flex.justify-content-center {
+    gap: .65rem !important;
+  }
+
+  @media (max-width: 576px) {
+    .recorder-card {
+      min-height: 410px;
+      padding: 2rem 1rem;
+    }
+
+    .recorder-card .d-flex.justify-content-center {
+      gap: .4rem !important;
+    }
+
+    .stat-chip {
+      font-size: .78rem;
+      padding: .4rem .65rem;
+    }
+  }
+
+  /* ─── Buttons ─── */
+  .btn-primary-solid {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 50rem;
+    padding: .65rem 2rem;
+    font-weight: 700;
+    font-size: .95rem;
+    cursor: pointer;
+    transition: background .15s, transform .1s;
+  }
+
+  .btn-primary-solid:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+  }
+
+  .btn-primary-solid:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-outline-secondary-solid {
+    background: transparent;
+    border: 1.5px solid #cbd5e1;
+    color: #475569;
+    border-radius: 50rem;
+    padding: .5rem 1.5rem;
+    font-weight: 600;
+    font-size: .88rem;
+    cursor: pointer;
+    transition: background .15s;
+  }
+
+  .btn-outline-secondary-solid:hover {
+    background: #f1f5f9;
+  }
+
+  /* ─── Tips ─── */
+  .tips-card {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+  }
+
+  .tips-card li {
+    font-size: .88rem;
+    color: #1e40af;
+    margin-bottom: .3rem;
+  }
+
+  /* ─── Feedback rows ─── */
+  .feedback-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .75rem 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .feedback-row:last-child {
+    border: none;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="module-page">
+
+  <!-- Hero -->
+  <div class="module-hero" style="position: relative;">
+    {% include 'includes/language_dropdown.html' %}
+    <div class="container">
+      <div id="labelModuleHeader" class="module-badge"><i class="fas fa-microphone me-1"></i>Speaking Module</div>
+      <h1 class="activity-hero-title">{{ activity.title }}</h1>
+      <p class="activity-hero-objective">{{ activity.objective }}</p>
+      <nav aria-label="breadcrumb" class="mt-2">
+        <ol class="breadcrumb" style="font-size:.82rem;">
+          <li class="breadcrumb-item"><a href="{% url 'activity_list' %}" class="text-info">Activities</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'activity_detail' activity.pk %}" class="text-info">{{
+              activity.title }}</a></li>
+          <li class="breadcrumb-item active text-white">Practice</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <div class="container py-4">
+    <div class="row g-4">
+
+      <!-- ─── Left: recording panel ─── -->
+      <div class="col-lg-8">
+
+        <!-- Topic -->
+        <div class="panel-card" style="border-left: 4px solid #2563eb;">
+          <div>
+            <p id="labelYourTopic" class="text-uppercase text-primary fw-bold mb-1"
+              style="font-size:.75rem;letter-spacing:.08em;">Your Topic</p>
+            <h2 id="topicText" class="h5 fw-bold text-dark mb-3">Describe your best experience at the workplace.</h2>
+            <div class="d-flex flex-wrap gap-2">
+              <button type="button" id="newTopicBtn" class="btn-outline-secondary-solid btn-sm py-1 px-3"
+                style="border-radius:50rem;">
+                <i class="fas fa-sync-alt me-1"></i>New Topic
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recorder -->
+        <div class="panel-card recorder-card text-center">
+          <!-- Wave visualiser -->
+          <div class="wave-row mb-3" id="waveRow">
+            <div class="wbar" style="animation-delay:0ms"></div>
+            <div class="wbar" style="animation-delay:100ms"></div>
+            <div class="wbar" style="animation-delay:200ms"></div>
+            <div class="wbar" style="animation-delay:300ms"></div>
+            <div class="wbar" style="animation-delay:400ms"></div>
+            <div class="wbar" style="animation-delay:500ms"></div>
+            <div class="wbar" style="animation-delay:600ms"></div>
+            <div class="wbar" style="animation-delay:700ms"></div>
+            <div class="wbar" style="animation-delay:800ms"></div>
+            <div class="wbar" style="animation-delay:900ms"></div>
+          </div>
+
+          <!-- Mic button -->
+          <div class="mic-wrap mb-3" id="micWrap">
+            <div class="mic-ring" id="ring1"></div>
+            <div class="mic-ring" id="ring2"></div>
+            <button id="micBtn" aria-label="Start recording">
+              <span class="material-symbols-outlined" id="micIcon" style="font-size:2rem;">mic</span>
+            </button>
+          </div>
+
+          <p class="fw-semibold text-dark mb-2" id="micLabel">Click to start recording</p>
+
+          <div class="d-flex justify-content-center gap-2 flex-wrap mb-3">
+            <span class="stat-chip"><i class="fas fa-clock me-1"></i><span id="timeTxt">0s</span></span>
+            <span class="stat-chip" id="statusTxt">Idle</span>
+            <span class="stat-chip"><i class="fas fa-align-left me-1"></i><span id="wordCountTxt">0 words</span></span>
+            <span class="stat-chip"><i class="fas fa-pause me-1"></i>Pauses: <b id="pauseTxt">0</b></span>
+          </div>
+
+          <button id="pauseResumeBtn" class="btn-outline-secondary-solid hidden mb-3">Pause</button>
+          <div id="pauseAlert" class="alert alert-danger hidden py-2 small"></div>
+        </div>
+
+        <!-- Recorded audio + transcript -->
+        <div id="recordResult" class="panel-card hidden">
+          <h6 class="fw-bold text-dark mb-3 text-start"><i class="fas fa-headphones text-primary me-2"></i>Your
+            Recording</h6>
+          <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-3"
+            style="background:#f8fafc;border:1px solid #e2e8f0;">
+            <i class="fas fa-headphones text-primary fa-lg"></i>
+            <audio id="recordedAudio" controls class="flex-grow-1" style="height:36px;"></audio>
+          </div>
+          <h6 class="fw-bold text-dark mb-2"><i class="fas fa-search me-2 text-warning"></i><span
+              id="headingMistakes">Mistakes Review</span></h6>
+          <div id="transcriptText" class="transcript-box">Stop recording to view what you spoke.</div>
+          <div id="wordAlert" class="alert alert-danger hidden mt-2 py-2 small"></div>
+          <div class="text-center mt-3">
+            <button id="analyzeBtn" class="btn-primary-solid">
+              <i class="fas fa-brain me-2"></i>Submit for Analysis
+            </button>
+            <p id="analyzeNote" class="text-muted small mt-2">Click to generate scores and detailed feedback.</p>
+          </div>
+        </div>
+
+        <!-- Feedback card -->
+        <div id="feedbackCard" class="panel-card hidden">
+          <h5 class="fw-bold mb-4"><i class="fas fa-chart-bar me-2 text-primary"></i><span
+              id="headingEvaluation">Evaluation Results</span></h5>
+          <div class="feedback-row">
+            <span class="text-muted"><span id="labelScore">Evaluation Score</span></span>
+            <span id="lessonScore" class="h4 fw-black text-primary mb-0">0/25</span>
+          </div>
+          <div class="mt-3 mb-3">
+            <p class="fw-bold text-uppercase small text-muted mb-1">
+              <i class="fas fa-star me-1 text-warning"></i><span id="labelImproved">Improved Version</span>
+            </p>
+            <div id="improvedText" class="transcript-box">Your improved passage will appear here after analysis.</div>
+          </div>
+          <div class="mb-3">
+            <p class="fw-bold text-uppercase small text-muted mb-1">
+              <i class="fas fa-comment-dots me-1 text-success"></i><span id="labelFeedback">Overall Feedback</span>
+            </p>
+            <p id="feedbackText" class="transcript-box mb-0">Great effort! Your pronunciation and fluency are being
+              analyzed.</p>
+          </div>
+          <div class="text-center">
+            <button id="tryAgainBtn" class="btn-primary-solid">
+              <i class="fas fa-redo me-2"></i>Try Again
+            </button>
+          </div>
+        </div>
+
+        <!-- Mark complete -->
+        <div class="panel-card text-center" style="background:#f0fdf4; border:1px solid #bbf7d0;">
+          <form method="post" action="{% url 'mark_sub_complete' sub.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-primary-solid" style="background:#16a34a;">
+              <i class="fas fa-check-circle me-2"></i>Mark Sub-Activity Complete
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- ─── Right: tips ─── -->
+      <div class="col-lg-4">
+        <div class="panel-card">
+          <h6 class="fw-bold mb-3"><i class="fas fa-lightbulb text-warning me-2"></i><span id="labelQuickTip">Quick
+              Tips</span></h6>
+          <div class="tips-card mb-2">
+            <ul class="list-unstyled mb-0">
+              <li id="tip1">• Speak slowly and clearly.</li>
+              <li id="tip2">• Pause for breath, then continue.</li>
+              <li id="tip3">• Use short, complete sentences.</li>
+            </ul>
+          </div>
+          <p class="small text-muted mb-0" id="quickTipText">Speak slowly and clearly. Pause for breath, then continue
+            with short sentences.</p>
+        </div>
+        {% if previous_result %}
+        <div class="panel-card">
+          <h6 class="fw-bold mb-2"><i class="fas fa-history text-secondary me-2"></i>Previous Score</h6>
+          <div style="font-size:3rem; font-weight:900; color:#2563eb; line-height:1;">
+            {{ previous_result.score }}<span style="font-size:1.2rem;">/25</span>
+          </div>
+          <div class="small text-muted">{{ previous_result.completed_at|date:"M d, Y" }}</div>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- speaking-config MUST be inside content block (rendered before extra_js block) -->
+<script type="application/json" id="speaking-config">
+{
+  "analyzeEndpoint": "{% url 'analyze_speaking' exercise.pk %}",
+  "lessonsPath": "{{ request.path }}",
+  "isElevatorPitchTimed": {% if activity.title == "Elevator Pitch Workshop" and sub.order == 3 and exercise.exercise_type == "timer" %}true{% else %}false{% endif %}
+}
+</script>
+<script type="application/json" id="previous-result-data">
+{{ previous_result_json|safe }}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'activities/js/linguavoice-common.js' %}?v=i18n-persist-3"></script>
+<script src="{% static 'activities/js/speaking.js' %}?v=accurate-playback-v2"></script>
+<script src="{% static 'activities/js/activity-hero-i18n.js' %}?v=i18n-persist-3"></script>
+{% endblock %}

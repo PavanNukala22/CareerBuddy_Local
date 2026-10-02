@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script src="/static/js/content-protection.js?v=2" data-cb-protect></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CEFR B1–C1 — Vocabulary Builder</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{min-height:100%;overflow:auto;font-family:'Outfit'}
+body{background:var(--bg);padding:10px;color:#0f172a;min-height:100vh}
+.container{min-height:100vh;height:auto;display:flex;flex-direction:column;gap:10px}
+
+/* TOP - Book Selector */
+.top-section{height:23vh;min-height:160px;background:var(--navy);border-radius:16px;padding:10px 16px;box-shadow:0 8px 24px rgba(3,105,161,.25);display:flex;flex-direction:column;border:1px solid var(--line)}
+.top-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px}
+.top-title{font-size:16px;font-weight:700;color:#fff;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+.cefr-badge{background:#FCA311;color:#7a5c00;padding:4px 12px;border-radius:6px;font-size:12px;font-weight:800;letter-spacing:1px;border:1px solid var(--line)}
+.include-badge{background:#14213D;color:#fff;padding:4px 14px;border-radius:8px;font-size:12px;font-weight:600;letter-spacing:.5px}
+.header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+.tab-bar{display:flex;gap:6px}
+.tab-btn{background:rgba(255,255,255,.15);color:#fff;border:2px solid rgba(255,255,255,.5);padding:6px 16px;border-radius:8px;font-size:12px;font-weight:700;letter-spacing:.4px;cursor:pointer;transition:all .15s}
+.tab-btn.active{background:#fff;color:#0b1526;border-color:#fff}
+
+.filter-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.filter-label{color:rgba(255,255,255,.85);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.level-chip{background:rgba(255,255,255,.15);color:#fff;border:2px solid rgba(255,255,255,.5);padding:3px 12px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s}
+.level-chip.active{background:#FCA311;color:#7a5c00;border-color:#fff}
+
+.book-list{display:flex;gap:8px;overflow-x:auto;overflow-y:visible;padding:8px 2px 10px;flex:1;align-items:center}
+.mini-book{flex-shrink:0;width:108px;min-height:64px;border-radius:10px;cursor:pointer;background:#fff;border:1px solid #e2e8f0;border-top:3px solid var(--accent,#14213D);transition:transform .18s,box-shadow .18s;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#14213D;box-shadow:0 1px 3px rgba(16,24,40,.08);position:relative;user-select:none;padding:8px 6px;gap:3px}
+.mini-book .b-emoji{font-size:20px;line-height:1}
+.mini-book .b-name{font-size:11px;font-weight:700;text-align:center;line-height:1.2;letter-spacing:.3px;color:#14213D}
+.mini-book .b-count{font-size:9px;background:#f1f3ff;color:#718096;padding:1px 6px;border-radius:6px;font-weight:600}
+.mini-book:hover{transform:translateY(-3px);box-shadow:0 6px 18px rgba(0,0,0,.22)}
+.mini-book.active{transform:translateY(-5px) scale(1.05);box-shadow:0 0 0 2px #fff,0 0 0 4px #14213D,0 8px 20px rgba(0,0,0,.3);z-index:2}
+.mini-book.active::after{content:'✓';position:absolute;top:-7px;right:-7px;background:#14213D;color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:1px solid var(--line)}
+.mini-book.empty{opacity:.35;cursor:not-allowed}
+
+/* BOTTOM */
+.bottom-section{height:auto;min-height:calc(77vh - 10px);display:grid;grid-template-columns:42% 58%;gap:10px;min-height:0}
+.bottom-section.quiz-mode{grid-template-columns:1fr}
+
+/* LEFT - Flip card */
+.card-display{background:#fff;border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.1);display:flex;flex-direction:column;align-items:center;justify-content:space-between;perspective:1500px;position:relative;border:2px solid #e6ebf3}
+.book-title{background:var(--navy);color:#fff;padding:6px 16px;border-radius:8px;font-size:13px;font-weight:700;letter-spacing:.5px;border:1px solid var(--line);box-shadow:0 4px 10px rgba(3,105,161,.3)}
+.pronounce-btn{position:absolute;top:14px;right:14px;background:#14213D;border:1px solid var(--line);color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:16px;box-shadow:0 4px 10px rgba(16,185,129,.4);z-index:10;transition:transform .15s}
+.pronounce-btn:hover{transform:scale(1.08)}
+.level-pill{position:absolute;top:14px;left:14px;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:800;letter-spacing:.5px;z-index:10;border:1px solid var(--line)}
+.level-pill.B1{background:#38bdf8;color:#0b1526}
+.level-pill.B2{background:#fb923c;color:#431407}
+.level-pill.C1{background:#f43f5e;color:#4c0519}
+.flip-card{width:90%;height:60%;position:relative;cursor:pointer;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.4,0,.2,1)}
+.flip-card.flipped{transform:rotateY(180deg)}
+.flip-face{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-direction:column;box-shadow:0 10px 25px rgba(0,0,0,.15);overflow:hidden;padding:16px;gap:10px}
+.flip-front{background:var(--navy);color:#fff;border:none}
+.flip-back{background:#fff;color:#0f172a;transform:rotateY(180deg);border:2px solid #14213D}
+
+.big-emoji{font-size:clamp(36px,5vw,60px);filter:drop-shadow(2px 2px 0 rgba(0,0,0,.2))}
+.word-display{font-size:clamp(26px,4vw,44px);font-weight:700;text-align:center;letter-spacing:.5px;line-height:1.1}
+.word-pron{font-size:clamp(12px,1.3vw,16px);color:rgba(255,255,255,.85);font-style:italic;letter-spacing:.5px}
+.word-pos-front{display:inline-block;background:rgba(255,255,255,.2);padding:3px 12px;border-radius:6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;border:1px solid rgba(255,255,255,.3)}
+
+.back-label{font-size:11px;font-weight:700;color:#14213D;text-transform:uppercase;letter-spacing:2px}
+.back-meaning{font-size:clamp(14px,1.6vw,19px);font-weight:500;text-align:center;line-height:1.4;color:#1e293b;padding:0 12px}
+.back-example{font-size:clamp(11px,1.2vw,14px);color:#475569;font-style:italic;text-align:center;line-height:1.5;padding:0 12px;border-top:1px solid var(--line);padding-top:10px;margin-top:6px}
+
+.word-nav{display:flex;align-items:center;gap:10px;background:#f1f3ff;padding:6px 14px;border-radius:10px;border:2px solid #dde2f3}
+.nav-btn{background:#fff;border:2px solid #14213D;color:#14213D;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:700;transition:all .15s}
+.nav-btn:hover{background:#14213D;color:#fff}
+.nav-btn:disabled{opacity:.3;cursor:not-allowed}
+.word-counter{font-size:13px;font-weight:700;color:#14213D;min-width:64px;text-align:center}
+
+/* RIGHT - Details panel */
+.details-panel{background:#fff;border-radius:16px;padding:18px 22px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.1);border:2px solid #e2e8f0}
+.details-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #e6ebf3;flex-wrap:wrap;gap:6px}
+.details-word-wrap{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.details-word{font-size:26px;font-weight:700;color:#0b1526;letter-spacing:.3px}
+.details-pron{font-size:14px;color:#64748b;font-style:italic;font-weight:500}
+.pos-badge{background:var(--navy);color:#fff;padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.register-badge{padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-left:6px}
+
+.detail-section{margin-bottom:14px}
+.detail-label{display:flex;align-items:center;gap:6px;font-weight:700;color:#14213D;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.def-box{font-size:14px;color:#1e293b;line-height:1.6;background:#f1f3ff;padding:10px 14px;border-radius:8px;border-left:4px solid #14213D}
+.example-item{background:#fff9ef;padding:10px 14px;border-left:4px solid #FCA311;margin-bottom:6px;border-radius:8px;font-size:13px;color:#7a5c00;line-height:1.6;font-style:italic}
+.example-item::before{content:'"';font-size:22px;color:#14213D;font-weight:700;margin-right:4px}
+.collocation-list{display:flex;flex-wrap:wrap;gap:5px}
+.colloc{background:var(--gold-soft);color:#7a5c00;padding:5px 12px;border-radius:14px;font-size:12px;font-weight:600;border:1px solid #FCA311}
+.tag-list{display:flex;flex-wrap:wrap;gap:5px}
+.tag{padding:5px 12px;border-radius:14px;font-size:12px;font-weight:600;color:#fff;cursor:pointer;background:var(--navy);transition:transform .15s}
+.tag:hover{transform:translateY(-1px)}
+.tag.active{background:var(--navy)}
+.syn-list{display:flex;flex-wrap:wrap;gap:5px}
+.syn{background:var(--bg-soft);color:#14213D;padding:4px 12px;border-radius:14px;font-size:13px;font-weight:600;border:1px solid #dde2f3}
+
+/* QUIZ */
+.quiz-panel{background:#fff;border-radius:16px;padding:20px 24px;box-shadow:0 8px 24px rgba(0,0,0,.1);height:auto;min-height:100%;max-height:calc(100vh - 210px);overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column}
+.quiz-setup{max-width:640px;margin:0 auto;width:100%}
+.quiz-setup h2{font-size:20px;color:#0b1526;margin-bottom:4px}
+.quiz-setup p.sub{font-size:13px;color:#64748b;margin-bottom:18px}
+.setup-group{margin-bottom:18px}
+.setup-group-label{font-size:11px;font-weight:800;color:#14213D;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.chip-row{display:flex;flex-wrap:wrap;gap:8px}
+.setup-chip{background:#f1f3ff;border:2px solid #dde2f3;color:#14213D;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s}
+.setup-chip.active{background:var(--navy);color:#fff;border-color:#14213D}
+.start-btn{margin-top:8px;width:100%;background:var(--navy);color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:800;letter-spacing:.5px;cursor:pointer;box-shadow:0 6px 16px rgba(16,185,129,.35);transition:transform .15s}
+.start-btn:hover{transform:translateY(-2px)}
+.start-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+.quiz-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.quiz-progress-wrap{flex:1;height:8px;background:#e6ebf3;border-radius:6px;overflow:hidden}
+.quiz-progress-bar{height:100%;background:var(--navy);transition:width .3s}
+.quiz-score{font-size:13px;font-weight:800;color:#14213D;white-space:nowrap}
+.quiz-exit{background:none;border:none;color:#94a3b8;cursor:pointer;font-size:13px;font-weight:700}
+
+.quiz-question-box{max-width:680px;margin:0 auto;width:100%;flex:1;display:flex;flex-direction:column;justify-content:center}
+.q-topic-tag{display:inline-block;background:#f1f3ff;color:#14213D;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;align-self:flex-start}
+.q-prompt{font-size:19px;font-weight:700;color:#0f172a;line-height:1.5;margin-bottom:20px}
+.q-prompt .blank{display:inline-block;min-width:70px;border-bottom:3px solid #14213D;color:#14213D}
+.q-options{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.q-option{text-align:left;background:#f8fafc;border:2px solid #e2e8f0;padding:13px 16px;border-radius:10px;font-size:14px;font-weight:600;color:#1e293b;cursor:pointer;transition:all .15s}
+.q-option:hover{border-color:#14213D;background:#f1f3ff}
+.q-option.correct{background:#dcfce7;border-color:#16a34a;color:#14532d}
+.q-option.incorrect{background:#fee2e2;border-color:#dc2626;color:#7f1d1d}
+.q-option.disabled{pointer-events:none}
+.q-type-input{width:100%;padding:14px 16px;border:2px solid #dde2f3;border-radius:10px;font-size:16px;font-weight:600;color:#0f172a;margin-bottom:14px;outline:none}
+.q-type-input:focus{border-color:#14213D}
+.q-type-input.correct{border-color:#16a34a;background:#dcfce7}
+.q-type-input.incorrect{border-color:#dc2626;background:#fee2e2}
+.q-feedback{padding:12px 16px;border-radius:10px;font-size:13px;line-height:1.6;margin-bottom:14px}
+.q-feedback.correct{background:#dcfce7;color:#14532d;border-left:4px solid #16a34a}
+.q-feedback.incorrect{background:#fee2e2;color:#7f1d1d;border-left:4px solid #dc2626}
+.q-actions{display:flex;gap:10px;justify-content:flex-end}
+.q-btn{padding:11px 22px;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;border:none}
+.q-btn.primary{background:var(--navy);color:#fff}
+.q-btn.secondary{background:#f1f3ff;color:#14213D;border:2px solid #dde2f3}
+.q-btn:disabled{opacity:.4;cursor:not-allowed}
+
+.results-box{max-width:640px;margin:0 auto;width:100%}
+.results-score{text-align:center;margin-bottom:8px}
+.results-score .big-num{font-size:48px;font-weight:800;color:#14213D}
+.results-score .of{font-size:16px;color:#64748b;font-weight:600}
+.results-grade{text-align:center;font-size:15px;font-weight:700;color:#0b1526;margin-bottom:20px}
+.review-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;max-height:280px;overflow-y:auto}
+.review-item{padding:10px 14px;border-radius:10px;font-size:12.5px;line-height:1.5;border-left:4px solid #16a34a;background:#f8fafc}
+.review-item.wrong{border-left-color:#dc2626}
+.review-item .rw{font-weight:800;color:#0f172a}
+.review-item .ra{color:#64748b}
+.results-actions{display:flex;gap:10px}
+.results-actions .q-btn{flex:1}
+
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:#f1f3ff;border-radius:10px}
+::-webkit-scrollbar-thumb{background:var(--navy);border-radius:10px}
+.bottom-section.quiz-mode{height:calc(100vh - 23vh - 30px);min-height:520px}.bottom-section.quiz-mode #quizView{min-height:0}.bottom-section.quiz-mode .quiz-panel{height:100%;min-height:0;max-height:none}
+@media(max-width:900px){.bottom-section{grid-template-columns:1fr;grid-template-rows:1fr 1fr}.bottom-section.quiz-mode{grid-template-rows:1fr}}
+
+.learning-path{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;width:100%;margin-top:2px}
+.learning-step{font-size:10px;font-weight:800;color:#14213D;background:#f1f3ff;border:1px solid #dde2f3;border-radius:10px;padding:4px 9px}
+.assess-cta{background:var(--gold);color:#7a5c00;border:1px solid var(--line);padding:6px 12px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 4px 10px rgba(245,158,11,.25)}
+.assess-cta:hover{transform:translateY(-1px)}
+.assessment-note{background:#ecfeff;border:1px solid #a5f3fc;color:#155e75;padding:10px 12px;border-radius:10px;font-size:12px;line-height:1.5;margin-bottom:14px}
+</style><!-- ── Global theme overlay (DESIGN-CBuddy.md) ── -->
+<link rel="stylesheet" href="/theme-cbuddy.css">
+
+<style id="careerbuddy-ui-standard-v1">
+:root{
+  --navy:#14213D;--navy-2:#0b1526;--gold:#FCA311;--gold-soft:#fdeecb;--gold-ink:#7a5c00;
+  --bg:#f9f9ff;--bg-soft:#f1f3ff;--teal-50:#e6ebf3;
+  --ink:#161c27;--body:#4a5568;--muted:#718096;--line:#e2e8f0;--line-2:#dde2f3;
+  --success:#38a169;--success-bg:#e9f7ef;--danger:#e53e3e;--danger-bg:#fdecec;
+  --radius:8px;--radius-lg:14px;
+  --shadow-sm:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.06);
+  --shadow:0 8px 24px -12px rgba(16,24,40,.18);
+}
+html,body{font-family:'Outfit'}
+body{background:var(--bg);color:var(--ink);padding:14px;min-height:100vh}
+.container{min-height:0;height:100%;max-height:760px;max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.top-section{flex:0 0 auto;height:auto;min-height:0;background:#fff;border-radius:var(--radius-lg);padding:12px 18px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;border:1px solid var(--line)}
+.top-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:10px}
+.top-title{font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+.cefr-badge{background:var(--gold-soft);color:var(--gold-ink);padding:5px 12px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.02em;border:1px solid rgba(238,188,29,.4)}
+.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mode-toggle{display:flex;gap:3px;background:var(--bg-soft);padding:3px;border-radius:10px;border:1px solid var(--line)}
+.mode-btn{background:transparent;color:var(--body);border:none;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:700;letter-spacing:.2px;cursor:pointer;font-family:inherit}
+.mode-btn.active{background:var(--navy);color:#fff}
+.include-badge{background:var(--bg-soft);color:var(--body);padding:5px 12px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.02em;border:1px solid var(--line)}
+.filter-row{display:none!important}
+.book-list{display:flex;gap:10px;overflow-x:auto;overflow-y:visible;padding:6px 2px 8px;flex:0 0 auto;align-items:center;scroll-behavior:smooth;min-height:0}
+.mini-book{flex-shrink:0;width:84px;height:70px;min-height:70px;border-radius:10px;cursor:pointer;background:#fff;border:1px solid var(--line);border-top:3px solid var(--accent,var(--navy));transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink);box-shadow:var(--shadow-sm);position:relative;user-select:none;padding:6px 4px;gap:2px;overflow:visible}
+.mini-book .b-emoji{font-size:20px;line-height:1}
+.mini-book .b-name{font-size:10px;font-weight:700;text-align:center;line-height:1.2;letter-spacing:.2px;color:var(--navy)}
+.mini-book .b-count{font-size:9px;background:var(--bg-soft);color:var(--muted);padding:1px 7px;border-radius:8px;font-weight:600}
+.mini-book:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.mini-book.active{transform:translateY(-2px);box-shadow:0 0 0 2px var(--navy),var(--shadow);z-index:2}
+.mini-book.active::after{content:'✓';position:absolute;top:-7px;right:-7px;background:var(--gold);color:var(--navy);width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;border:1px solid var(--line)}
+.mini-book.empty{opacity:.35;cursor:not-allowed}
+.bottom-section{flex:1 1 auto;min-height:0;height:auto;display:grid;grid-template-columns:45% 55%;gap:12px}
+.bottom-section.quiz-mode{grid-template-columns:1fr}
+.card-display{background:#fff;border-radius:var(--radius-lg);padding:14px 16px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;align-items:center;justify-content:space-between;perspective:1500px;position:relative;border:1px solid var(--line);min-height:0}
+.book-title{background:var(--navy);color:#fff;padding:6px 16px;border-radius:var(--radius);font-size:13px;font-weight:700;letter-spacing:.5px;border:1px solid var(--navy);box-shadow:none}
+.pronounce-btn{position:absolute;top:14px;right:14px;background:var(--navy);border:1px solid var(--navy);color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:16px;box-shadow:var(--shadow-sm);z-index:10;transition:transform .15s}
+.pronounce-btn:hover{transform:scale(1.06);background:var(--navy-2)}
+.level-pill{position:absolute;top:14px;left:14px;padding:4px 10px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.5px;z-index:10;border:1px solid var(--line);background:var(--gold-soft)!important;color:var(--gold-ink)!important}
+.flip-card{width:90%;height:60%;min-height:190px;position:relative;cursor:pointer;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.4,0,.2,1)}
+.flip-card.flipped{transform:rotateY(180deg)}
+.flip-face{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;flex-direction:column;box-shadow:var(--shadow);border:1px solid var(--line);overflow:hidden;padding:14px;gap:10px}
+.flip-front{background:linear-gradient(150deg,#14213D,#0b1526)!important;color:#fff;border-color:transparent!important}
+.flip-back{background:#fff;color:var(--ink);transform:rotateY(180deg);border:1px solid var(--line)}
+.big-emoji{font-size:clamp(36px,5vw,60px);filter:none}
+.word-display{font-size:clamp(26px,4vw,44px);font-weight:700;text-align:center;letter-spacing:.2px;line-height:1.1}
+.word-pron{font-size:clamp(12px,1.3vw,16px);color:rgba(255,255,255,.85);font-style:italic;letter-spacing:.5px}
+.word-pos-front{display:inline-block;background:rgba(255,255,255,.12);padding:3px 12px;border-radius:6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;border:1px solid rgba(255,255,255,.2)}
+.back-label{font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:2px}
+.back-meaning{font-size:clamp(14px,1.6vw,19px);font-weight:500;text-align:center;line-height:1.4;color:var(--body);padding:0 12px}
+.back-example{font-size:clamp(11px,1.2vw,14px);color:var(--body);font-style:italic;text-align:center;line-height:1.5;padding:10px 12px 0;border-top:1px solid var(--line);margin-top:6px}
+.word-nav{display:flex;align-items:center;gap:10px;background:var(--bg-soft);padding:6px 14px;border-radius:10px;border:1px solid var(--line-2)}
+.nav-btn{background:#fff;border:1px solid var(--navy);color:var(--navy);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:700;transition:all .15s}
+.nav-btn:hover{background:var(--navy);color:#fff}
+.nav-btn:disabled{opacity:.3;cursor:not-allowed}
+.word-counter{font-size:13px;font-weight:700;color:var(--navy);min-width:64px;text-align:center}
+.details-panel{background:#fff;border-radius:var(--radius-lg);padding:18px 22px;overflow-y:auto;box-shadow:var(--shadow-sm);border:1px solid var(--line);min-height:0}
+.details-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line-2);flex-wrap:wrap;gap:6px}
+.details-word{font-size:26px;font-weight:700;color:var(--navy);letter-spacing:.3px}
+.details-pron{font-size:14px;color:var(--muted);font-style:italic;font-weight:500}
+.pos-badge{background:var(--navy)!important;color:#fff!important;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.detail-section{margin-bottom:14px}
+.detail-label{display:flex;align-items:center;gap:6px;font-weight:700;color:var(--navy);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.def-box{font-size:14px;color:var(--body);line-height:1.6;background:var(--bg-soft);padding:10px 14px;border-radius:var(--radius);border-left:3px solid var(--navy)}
+.example-item{background:var(--gold-soft);padding:10px 14px;border-left:3px solid var(--gold);margin-bottom:6px;border-radius:var(--radius);font-size:13px;color:var(--gold-ink);line-height:1.6;font-style:italic}
+.collocation-list{display:flex;flex-wrap:wrap;gap:5px}
+.colloc{background:var(--gold-soft);color:var(--gold-ink);padding:5px 12px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid var(--gold)}
+.tag-list{display:flex;flex-wrap:wrap;gap:5px}
+.tag{padding:5px 12px;border-radius:999px;font-size:12px;font-weight:600;color:#fff;cursor:pointer;background:var(--navy);transition:transform .15s}
+.tag:hover{transform:translateY(-1px);background:var(--navy-2)}
+.tag.active{background:var(--navy)}
+.syn-list{display:flex;flex-wrap:wrap;gap:5px}
+.syn{background:var(--bg-soft);color:var(--navy);padding:4px 12px;border-radius:999px;font-size:13px;font-weight:600;border:1px solid var(--line-2)}
+.quiz-panel{background:#fff;border-radius:var(--radius-lg);padding:28px 24px;box-shadow:var(--shadow-sm);height:auto;min-height:100%;max-height:none;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column}
+.quiz-setup{max-width:760px;margin:0 auto;width:100%}
+.quiz-setup h2{font-size:22px;color:var(--ink);margin-bottom:4px}
+.quiz-setup p.sub{font-size:13px;color:var(--body);margin-bottom:18px}
+.setup-group{margin-bottom:18px}
+.setup-group-label{font-size:11px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.chip-row{display:flex;flex-wrap:wrap;gap:8px}
+.setup-chip{background:var(--bg-soft);border:1px solid var(--line-2);color:var(--navy);padding:8px 16px;border-radius:var(--radius);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s}
+.setup-chip:hover{border-color:var(--navy)}
+.setup-chip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.start-btn{margin-top:8px;width:100%;background:var(--navy);color:#fff;border:none;padding:14px;border-radius:var(--radius);font-size:15px;font-weight:800;letter-spacing:.5px;cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .15s}
+.start-btn:hover{background:var(--navy-2);transform:translateY(-1px)}
+.assessment-note{background:var(--bg-soft);border:1px solid var(--line-2);color:var(--body);padding:10px 12px;border-radius:var(--radius);font-size:12px;line-height:1.5;margin-bottom:14px}
+.quiz-top{display:flex;flex-direction:column;gap:10px;max-width:760px;width:100%;margin:0 auto}
+.quiz-exit{align-self:flex-end;background:#fff;border:1px solid var(--line);color:var(--body);cursor:pointer;font-size:13px;font-weight:700;padding:7px 12px;border-radius:var(--radius)}
+.quiz-exit:hover{border-color:var(--navy);color:var(--navy)}
+.quiz-progress-wrap{height:8px;background:var(--bg-soft);border-radius:6px;overflow:hidden}
+.quiz-progress-bar{height:100%;background:var(--navy);transition:width .3s}
+.quiz-score{font-size:12px;font-weight:700;color:var(--navy);text-align:right}
+.quiz-question-box{max-width:760px;width:100%;margin:24px auto 0;background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm)}
+.q-topic-tag{display:inline-block;background:var(--gold-soft);color:var(--gold-ink);padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;margin-bottom:14px}
+.q-prompt{font-size:clamp(17px,2.2vw,22px);font-weight:700;color:var(--ink);line-height:1.4}
+.q-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.q-option{background:#fff;border:1px solid var(--line);padding:12px 16px;border-radius:var(--radius);font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;text-align:left;font-family:inherit;transition:.15s}
+.q-option:hover{border-color:var(--navy);background:var(--bg-soft)}
+.q-option.correct{background:var(--success-bg);border-color:var(--success);color:#276749}
+.q-option.incorrect{background:var(--danger-bg);border-color:var(--danger);color:#c53030}
+.type-answer-wrap{margin-top:18px}
+.type-answer{width:100%;padding:12px 16px;border-radius:var(--radius);border:1px solid var(--line);font-size:16px;font-family:inherit;color:var(--ink)}
+.type-answer:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(20,33,61,.1)}
+.q-feedback{margin-top:14px;padding:11px 16px;border-radius:var(--radius);font-weight:600;font-size:14px}
+.q-feedback.correct{background:var(--success-bg);color:#276749;border-left:3px solid var(--success)}
+.q-feedback.incorrect{background:var(--danger-bg);color:#c53030;border-left:3px solid var(--danger)}
+.q-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.q-btn{padding:11px 22px;border-radius:var(--radius);font-size:13px;font-weight:800;cursor:pointer;border:none;font-family:inherit}
+.q-btn.primary{background:var(--navy);color:#fff}
+.q-btn.primary:hover{background:var(--navy-2)}
+.q-btn.primary:disabled{opacity:.45;cursor:not-allowed}
+.q-btn.secondary{background:var(--bg-soft);color:var(--navy);border:1px solid var(--line)}
+.results-box{max-width:760px;width:100%;margin:0 auto;padding:10px}
+.results-score{text-align:center;color:var(--navy);font-weight:800;font-size:32px;margin-bottom:8px}
+.results-grade{text-align:center;font-size:16px;font-weight:700;color:var(--ink);margin:12px 0}
+.review-list{display:flex;flex-direction:column;gap:6px;margin:14px 0}
+.review-item{background:var(--success-bg);padding:10px 12px;border-radius:var(--radius);font-size:13px;color:#276749}
+.review-item.wrong{background:var(--danger-bg);color:#c53030}
+.results-actions{display:flex;justify-content:center;gap:8px;margin-top:14px;flex-wrap:wrap}
+#quizView.assess-fullscreen{position:fixed!important;inset:0!important;z-index:1000!important;width:100vw!important;height:100vh!important;min-height:100vh!important;margin:0!important;padding:28px 20px!important;background:var(--bg)!important;overflow:auto!important;display:block!important}
+#quizView.assess-fullscreen #quizPanel{max-width:100%!important;min-height:calc(100vh - 56px)!important;height:auto!important;margin:0 auto!important;background:transparent!important;box-shadow:none!important;border:0!important;padding:0!important;overflow:visible!important}
+#quizView.assess-fullscreen .quiz-setup,#quizView.assess-fullscreen .quiz-top,#quizView.assess-fullscreen .quiz-question-box,#quizView.assess-fullscreen .results-box{max-width:760px;margin-left:auto;margin-right:auto}
+#quizView.assess-fullscreen .quiz-setup{padding-top:10px;padding-bottom:24px}
+
+/* Assessment question/results view: full viewport only after Start Assessment */
+body.assessment-active{
+  overflow:hidden!important;
+  padding:0!important;
+}
+body.assessment-active .container{
+  max-width:none!important;
+  width:100vw!important;
+  height:100vh!important;
+  max-height:none!important;
+  margin:0!important;
+}
+body.assessment-active .top-section{
+  display:none!important;
+}
+body.assessment-active .bottom-section{
+  display:block!important;
+  width:100vw!important;
+  height:100vh!important;
+  min-height:100vh!important;
+  margin:0!important;
+}
+#quizView.assessment-started.assess-fullscreen{
+  position:fixed!important;
+  inset:0!important;
+  z-index:10000!important;
+  width:100vw!important;
+  height:100vh!important;
+  min-height:100vh!important;
+  margin:0!important;
+  padding:24px 28px!important;
+  background:var(--bg)!important;
+  overflow:auto!important;
+}
+#quizView.assessment-started.assess-fullscreen #quizPanel{
+  width:100%!important;
+  max-width:none!important;
+  min-height:calc(100vh - 48px)!important;
+  height:100%!important;
+  margin:0!important;
+  padding:0!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+#quizView.assessment-started.assess-fullscreen .quiz-top{
+  max-width:1100px!important;
+  margin:0 auto!important;
+}
+#quizView.assessment-started.assess-fullscreen .quiz-question-box{
+  max-width:1000px!important;
+  min-height:calc(100vh - 190px)!important;
+  margin:24px auto 0!important;
+  padding:36px 44px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+}
+#quizView.assessment-started.assess-fullscreen .q-prompt{
+  font-size:clamp(20px,2vw,28px)!important;
+}
+#quizView.assessment-started.assess-fullscreen .q-options{
+  gap:14px!important;
+}
+#quizView.assessment-started.assess-fullscreen .q-option{
+  padding:16px 20px!important;
+  font-size:16px!important;
+}
+@media(max-width:900px){
+  .bottom-section{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
+  .bottom-section.quiz-mode{grid-template-rows:1fr}
+  .q-options{grid-template-columns:1fr}
+  #quizView.assessment-started.assess-fullscreen{padding:16px!important}
+  #quizView.assessment-started.assess-fullscreen .quiz-question-box{
+    min-height:calc(100vh - 150px)!important;
+    padding:24px!important;
+  }
+}
+@media(min-width:901px){
+  #quizView.assessment-started.assess-fullscreen .q-options{
+    grid-template-columns:1fr 1fr!important;
+  }
+}
+@media(max-width:900px){.bottom-section{grid-template-columns:1fr;grid-template-rows:1fr 1fr}.bottom-section.quiz-mode{grid-template-rows:1fr}.q-options{grid-template-columns:1fr}}
+</style>
+
+<style id="cefr-sticky-fix">
+html,body{overflow:visible !important}
+.container{height:auto !important;min-height:calc(100vh - 28px) !important;max-height:none !important}
+.bottom-section{height:auto !important;min-height:440px !important}
+.sticky-nav{position:sticky;top:0;z-index:40;display:flex;flex-direction:column;gap:10px;background:var(--bg,#f9f9ff);padding-bottom:8px;box-shadow:0 6px 12px -8px rgba(20,33,61,.25)}
+</style>
+<style>
+/* sidebar-unify — navy active items + no rainbow bar (match course UI) */
+.toc-progress, .side-progress, .rail-progress { background:#14213D !important; background-image:none !important; }
+.nav-item.active, .sidebar-nav .active, .sidebar .active, .toc .active,
+[class*="toc"] a.active, aside a.active, .side-nav .active, .nav-sub .active {
+  background:#14213D !important; color:#fff !important; border-radius:8px !important;
+}
+.nav-item.active *, .sidebar .active *, .toc .active *, .sidebar-nav .active * { color:#fff !important; }
+.nav-item.active .nav-dot, .sidebar .active .nav-dot { background:#FCA311 !important; }
+</style>
+<style>/* CareerBuddy: nav bar scrollbar visible (en) */
+.tabbar,.tabs,.tab-bar,.tab-nav,[role="tablist"],.book-list,.books,.modules,.module-list,.mode-tabs{scrollbar-width:thin !important;scrollbar-color:#9aa4b8 transparent !important;overflow-x:auto !important}
+.tabbar::-webkit-scrollbar,.tabs::-webkit-scrollbar,.tab-bar::-webkit-scrollbar,.book-list::-webkit-scrollbar,.books::-webkit-scrollbar,.modules::-webkit-scrollbar,.module-list::-webkit-scrollbar,.mode-tabs::-webkit-scrollbar,[role="tablist"]::-webkit-scrollbar{display:block !important;height:8px !important}
+.tabbar::-webkit-scrollbar-thumb,.tabs::-webkit-scrollbar-thumb,.tab-bar::-webkit-scrollbar-thumb,.book-list::-webkit-scrollbar-thumb,.books::-webkit-scrollbar-thumb,.modules::-webkit-scrollbar-thumb,.module-list::-webkit-scrollbar-thumb,.mode-tabs::-webkit-scrollbar-thumb,[role="tablist"]::-webkit-scrollbar-thumb{background:#cbd2e0 !important;border-radius:8px}
+.tabbar::-webkit-scrollbar-track,.tabs::-webkit-scrollbar-track,.tab-bar::-webkit-scrollbar-track,.book-list::-webkit-scrollbar-track,.books::-webkit-scrollbar-track,.modules::-webkit-scrollbar-track,.module-list::-webkit-scrollbar-track,.mode-tabs::-webkit-scrollbar-track,[role="tablist"]::-webkit-scrollbar-track{background:transparent}
+</style>
+<style>/* CareerBuddy: uniform nav pill (v3) */
+.tab,.tab-btn,.mode-btn,.mode-tab{border-radius:8px !important;border-bottom:none !important;padding:9px 16px !important;font-weight:700 !important;font-size:13.5px !important;cursor:pointer;transition:background .15s,color .15s !important;box-shadow:none !important}
+.tab:not(.active):not(.on),.tab-btn:not(.active):not(.on),.mode-btn:not(.active):not(.on),.mode-tab:not(.active):not(.on){color:#4a5568 !important;background:transparent !important;border-color:transparent !important}
+.tab:not(.active):not(.on):hover,.tab-btn:not(.active):not(.on):hover,.mode-btn:not(.active):not(.on):hover,.mode-tab:not(.active):not(.on):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active,.tab.on,.tab-btn.active,.tab-btn.on,.mode-btn.active,.mode-btn.on,.mode-tab.active,.mode-tab.on,.tabbar .active,.tabs .active,.tab-bar .active,[role="tab"][aria-selected="true"]{background:#14213D !important;color:#fff !important;border-radius:8px !important;border-color:transparent !important;font-weight:700 !important}
+.tab.active:hover,.tab.on:hover,.tab-btn.active:hover,.tab-btn.on:hover,.mode-btn.active:hover,.mode-btn.on:hover,.mode-tab.active:hover,.mode-tab.on:hover{background:#0b1526 !important}
+.tab.active::after,.tab.on::after,.tab-btn.active::after,.tab-btn.on::after,.mode-tab.active::after,.mode-tab.on::after{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-icon,.tab-btn .tab-icon,.tab .ico,.tab .icon,.tab .emoji{display:none !important}
+</style>
+<style>/* CareerBuddy: nav bar bg effect (v1) */
+.tabbar,.tabs,.tab-bar,.nav-tabs,.mode-tabs,.mode-bar,nav.tabs,[role="tablist"]{
+ background:#ffffff !important;
+ border-top:none !important;
+ border-bottom:1px solid #e2e8f0 !important;
+ box-shadow:0 2px 6px rgba(20,33,61,.05) !important;
+}
+</style>
+<style>/* CareerBuddy: nav 2px gap (v1) */
+.tabs,.tabbar,.tab-bar,.nav-tabs,.mode-tabs,.mode-bar,nav.tabs,[role="tablist"]{gap:2px !important;column-gap:2px !important}
+.tab,.tab-btn,.mode-btn,.mode-tab{margin:0 !important;border-left:none !important;border-right:none !important}
+.tab::before,.tab::after,.tab-btn::before,.tab-btn::after,.mode-tab::before,.mode-tab::after{display:none !important}
+.tabs .tab+.tab,.tabbar .tab+.tab,.tab-bar .tab+.tab{border-left:none !important}
+</style>
+<style>/* CareerBuddy: cbx nav scrollbar (v1) */
+.cbx-tabbar{scrollbar-width:thin !important;scrollbar-color:#9aa4b8 transparent !important;overflow-x:auto !important;padding-bottom:2px !important}
+.cbx-tabbar::-webkit-scrollbar{display:block !important;height:8px !important}
+.cbx-tabbar::-webkit-scrollbar-thumb{background:#cbd2e0 !important;border-radius:8px}
+.cbx-tabbar::-webkit-scrollbar-track{background:transparent !important}
+</style>
+<!-- CareerBuddy: font preconnect (v1) -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style id="site-font-outfit">
+body{font-family:'Outfit',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif !important}
+</style>
+<style id="nav-gap-fix">
+.tabbar,.tabs,.tabstrip,.topic-nav,.topnav,.topnav-links,.tab-bar{gap:5px !important}
+.tabbar,.tabs,.tabstrip,.topic-nav,.topnav,.tab-bar{padding-bottom:10px !important}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="sticky-nav">
+<div class="top-section">
+<div class="top-header">
+  <div class="top-title">📚 CEFR B1–C1 — Vocabulary Builder</div>
+  <div class="cefr-badge" id="cefrBadge">🎓 B1 · B2 · C1</div>
+  <div class="header-right">
+    <div class="mode-toggle">
+      <button type="button" class="mode-btn active" id="tabFlash">📖 Learn</button>
+      <button type="button" class="mode-btn" id="tabQuiz">📝 Assessment</button>
+    </div>
+    <div class="include-badge" id="includeBadge">17 Topics · 324 Words</div>
+  </div>
+</div>
+<div class="filter-row" id="filterRow">
+  <span class="filter-label">Level:</span>
+  <button class="level-chip active" data-lvl="B1">B1 Intermediate</button>
+  <button class="level-chip active" data-lvl="B2">B2 Upper-Int</button>
+  <button class="level-chip active" data-lvl="C1">C1 Advanced</button>
+</div>
+<div class="book-list" id="bookList"></div>
+</div>
+
+</div>
+<div class="bottom-section" id="bottomSection">
+
+<div id="flashView" style="display:contents">
+<div class="card-display">
+<div class="book-title" id="bookTitle">Education & Studies</div><div class="learning-path"><span class="learning-step">1. Learn</span><span class="learning-step">2. See Example</span><span class="learning-step">3. Review</span><span class="learning-step">4. Assess</span></div>
+<div class="level-pill B1" id="levelPill">B1</div>
+<button class="pronounce-btn" id="pronounceBtn">🔊</button>
+<div class="flip-card" id="flipCard">
+<div class="flip-face flip-front" id="flipFront">
+<div class="big-emoji" id="bigEmoji">🎓</div>
+<div class="word-display" id="wordDisplay">Word</div>
+<div class="word-pron" id="wordPron">/wɜːrd/</div>
+<div class="word-pos-front" id="wordPos">noun</div>
+</div>
+<div class="flip-face flip-back">
+<div class="back-label">Definition</div>
+<div class="back-meaning" id="backMeaning"></div>
+<div class="back-example" id="backExample"></div>
+</div>
+</div>
+<div class="word-nav"><button class="nav-btn" id="prevBtn">‹</button><div class="word-counter" id="wordCounter">1 / 8</div><button class="nav-btn" id="nextBtn">›</button></div>
+</div>
+
+<div class="details-panel">
+<div class="details-header">
+<div class="details-word-wrap">
+<div class="details-word" id="detailsWord">Word</div>
+<div class="details-pron" id="detailsPron">/wɜːrd/</div>
+</div>
+<div><span class="pos-badge" id="posBadge">noun</span><span class="register-badge" id="regBadge">B1</span></div>
+</div>
+<div class="detail-section"><div class="detail-label">📖 Definition</div><div class="def-box" id="defBox"></div></div>
+<div class="detail-section"><div class="detail-label">💬 In Context</div><div id="exampleBox"></div></div>
+<div class="detail-section"><div class="detail-label">🔗 Common Collocations</div><div class="collocation-list" id="collocBox"></div></div>
+<div class="detail-section"><div class="detail-label">🔄 Synonyms</div><div class="syn-list" id="synBox"></div></div>
+<div class="detail-section"><div class="detail-label">📚 Other Words in This Topic</div><div class="tag-list" id="familyDisplay"></div></div>
+</div>
+</div>
+
+<div id="quizView" style="display:none;height:100%">
+<div class="quiz-panel" id="quizPanel"></div>
+</div>
+
+</div>
+</div>
+
+<script>
+// ============== DATA ==============
+const books = [{"name": "Education & Studies", "em": "🎓", "c": ["#14213D", "#0b1526"], "w": [["lecture", "/ˈlɛktʃər/", "noun", "A formal talk given to a group of students", "I have a two-hour lecture on economics tomorrow.", ["talk", "class", "seminar"], ["attend a lecture", "give a lecture", "skip a lecture"], "B1"], ["assignment", "/əˈsaɪnmənt/", "noun", "A piece of work given to students", "I need to finish my history assignment by Friday.", ["task", "homework", "project"], ["hand in an assignment", "complete an assignment"], "B1"], ["deadline", "/ˈdɛdlaɪn/", "noun", "The latest time something must be done", "The deadline for applications is next Monday.", ["due date", "cut-off"], ["meet a deadline", "miss the deadline", "tight deadline"], "B1"], ["semester", "/sɪˈmɛstər/", "noun", "A half of the academic year", "I'm taking five courses this semester.", ["term"], ["spring semester", "fall semester"], "B1"], ["scholarship", "/ˈskɒlərʃɪp/", "noun", "Money given to a student for study", "She earned a full scholarship to the university.", ["grant", "funding", "award"], ["win a scholarship", "apply for a scholarship"], "B1"], ["graduate", "/ˈɡrædʒueɪt/", "verb", "To finish a course of study", "She graduated from Oxford last year.", ["complete", "finish"], ["graduate from", "graduate with honors"], "B1"], ["thesis", "/ˈθiːsɪs/", "noun", "A long piece of writing for a degree", "His thesis is on climate change in Asia.", ["dissertation", "paper"], ["write a thesis", "defend a thesis"], "B1"], ["plagiarism", "/ˈpleɪdʒərɪzəm/", "noun", "Copying someone's work without credit", "The professor warned us against plagiarism.", ["copying", "cheating"], ["commit plagiarism", "accuse of plagiarism"], "B1"], ["curriculum", "/kəˈrɪkjələm/", "noun", "The subjects included in a course of study", "The university updated its curriculum to include AI courses.", ["syllabus", "course content"], ["academic curriculum", "core curriculum", "design a curriculum"], "B2"], ["academic", "/ˌækəˈdɛmɪk/", "adj", "Relating to education and scholarship", "She has a strong academic background in physics.", ["scholarly", "educational"], ["academic year", "academic achievement", "academic career"], "B2"], ["tuition", "/tuˈɪʃən/", "noun", "Money paid for teaching, especially at university", "Tuition fees have risen sharply this year.", ["fees", "instruction"], ["pay tuition", "tuition fees", "tuition assistance"], "B2"], ["rigorous", "/ˈrɪɡərəs/", "adj", "Thorough, careful, and demanding", "The course has a rigorous admissions process.", ["strict", "demanding", "thorough"], ["rigorous training", "rigorous standards"], "C1"], ["credential", "/krɪˈdɛnʃəl/", "noun", "A qualification that proves your ability", "Her credentials include a PhD in chemistry.", ["qualification", "certificate"], ["academic credentials", "professional credentials"], "C1"], ["undergraduate", "/ˌʌndərˈɡrædʒuɪt/", "noun", "A student studying for a first degree", "He's an undergraduate at Cambridge studying law.", ["student", "fresher"], ["undergraduate degree", "undergraduate studies"], "B2"]]}, {"name": "Work & Career", "em": "💼", "c": ["#0891b2", "#155e75"], "w": [["colleague", "/ˈkɒliːɡ/", "noun", "Someone you work with", "My colleagues organized a surprise party for me.", ["coworker", "associate"], ["close colleague", "former colleague"], "B1"], ["salary", "/ˈsæləri/", "noun", "Regular pay for a job", "She negotiated a higher salary for the new role.", ["pay", "wages", "income"], ["annual salary", "base salary", "raise the salary"], "B1"], ["promotion", "/prəˈmoʊʃən/", "noun", "A move to a higher position", "He got a promotion after working hard for years.", ["advancement", "upgrade"], ["earn a promotion", "get a promotion"], "B1"], ["interview", "/ˈɪntərvjuː/", "noun", "A formal meeting to assess a candidate", "The interview lasted nearly an hour.", ["meeting", "Q&A"], ["prepare for an interview", "ace an interview"], "B1"], ["resign", "/rɪˈzaɪn/", "verb", "To leave a job formally", "He resigned after the company restructured.", ["quit", "step down", "leave"], ["resign from a position", "officially resign"], "B1"], ["overtime", "/ˈoʊvərtaɪm/", "noun", "Extra time worked beyond normal hours", "I worked overtime three days this week.", ["extra hours"], ["work overtime", "paid overtime"], "B1"], ["freelance", "/ˈfriːlæns/", "adj", "Working independently for different clients", "She works as a freelance designer.", ["self-employed", "independent"], ["freelance writer", "go freelance"], "B1"], ["resume", "/ˈrɛzʊmeɪ/", "noun", "A summary of your skills and experience", "I updated my resume before the job search.", ["CV", "profile"], ["polish your resume", "submit a resume"], "B1"], ["negotiate", "/nɪˈɡoʊʃieɪt/", "verb", "To discuss something to reach an agreement", "We negotiated a better salary before signing.", ["bargain", "discuss terms"], ["negotiate a deal", "negotiate a contract"], "B2"], ["redundant", "/rɪˈdʌndənt/", "adj", "No longer needed in a job; laid off", "Two hundred workers were made redundant last year.", ["laid off", "surplus"], ["made redundant", "redundant staff"], "B2"], ["appraisal", "/əˈpreɪzəl/", "noun", "A formal assessment of someone's work", "My annual appraisal is scheduled for next week.", ["evaluation", "review"], ["performance appraisal", "annual appraisal"], "B2"], ["delegate", "/ˈdɛlɪɡeɪt/", "verb", "To give a task or responsibility to someone else", "A good manager knows how to delegate tasks.", ["assign", "hand over", "entrust"], ["delegate authority", "delegate a task"], "B2"], ["entrepreneur", "/ˌɒntrəprəˈnɜːr/", "noun", "A person who starts and runs a business", "She became an entrepreneur straight out of college.", ["founder", "business owner"], ["young entrepreneur", "aspiring entrepreneur"], "B2"], ["proficient", "/prəˈfɪʃənt/", "adj", "Skilled and competent at something", "He's proficient in three programming languages.", ["skilled", "competent", "adept"], ["highly proficient", "proficient in"], "C1"]]}, {"name": "Daily Routines", "em": "⏰", "c": ["#7c3aed", "#5b21b6"], "w": [["commute", "/kəˈmjuːt/", "noun", "Regular travel between home and work", "My commute takes about 45 minutes by train.", ["journey", "trip"], ["daily commute", "long commute", "commute to work"], "B1"], ["errand", "/ˈɛrənd/", "noun", "A short trip to do a small task", "I have a few errands to run after lunch.", ["task", "chore"], ["run errands", "do an errand"], "B1"], ["chore", "/tʃɔːr/", "noun", "A regular household task", "Doing the dishes is my least favorite chore.", ["task", "duty", "housework"], ["household chores", "do the chores"], "B1"], ["schedule", "/ˈʃɛdjuːl/", "noun", "A plan of activities and times", "My schedule is packed with meetings tomorrow.", ["timetable", "plan", "agenda"], ["busy schedule", "tight schedule", "keep to a schedule"], "B1"], ["nap", "/næp/", "noun", "A short period of sleep during the day", "I usually take a quick nap after lunch.", ["snooze", "rest", "doze"], ["take a nap", "power nap", "afternoon nap"], "B1"], ["routine", "/ruːˈtiːn/", "noun", "A regular sequence of activities", "Exercise is part of my morning routine.", ["habit", "pattern"], ["morning routine", "stick to a routine", "daily routine"], "B1"], ["leftovers", "/ˈlɛftˌoʊvərz/", "noun", "Food remaining from a previous meal", "We had leftovers for dinner last night.", ["scraps", "remains"], ["eat leftovers", "store leftovers"], "B1"], ["procrastinate", "/proʊˈkræstɪneɪt/", "verb", "To delay doing something that should be done", "I always procrastinate before big deadlines.", ["delay", "put off", "stall"], ["tend to procrastinate", "stop procrastinating"], "B2"], ["multitask", "/ˈmʌltiˌtæsk/", "verb", "To do more than one thing at the same time", "It's hard to multitask when you're tired.", ["juggle tasks", "do several things at once"], ["learn to multitask", "multitask effectively"], "B2"], ["meticulous", "/məˈtɪkjələs/", "adj", "Very careful and precise about details", "She's meticulous about keeping her desk organized.", ["thorough", "precise", "careful"], ["meticulous planning", "meticulous attention to detail"], "C1"], ["unwind", "/ʌnˈwaɪnd/", "verb", "To relax after work or stress", "I like to unwind with a book in the evening.", ["relax", "de-stress", "chill out"], ["unwind after work", "time to unwind"], "B2"], ["streamline", "/ˈstriːmˌlaɪn/", "verb", "To make a process simpler and more efficient", "We streamlined our morning routine to save time.", ["simplify", "optimize"], ["streamline a process", "streamline operations"], "C1"]]}, {"name": "Technology & Internet", "em": "💻", "c": ["#dc2626", "#991b1b"], "w": [["browse", "/braʊz/", "verb", "To look casually through websites", "I was browsing online when I found this article.", ["surf", "scroll", "explore"], ["browse the web", "browse online", "browse a website"], "B1"], ["download", "/ˈdaʊnˌloʊd/", "verb", "To copy data from internet to your device", "Can you download the app on your phone?", ["save", "get", "install"], ["download a file", "download an app", "download speed"], "B1"], ["upload", "/ˈʌpˌloʊd/", "verb", "To send data from your device to internet", "Please upload your photo to the website.", ["post", "send", "share"], ["upload a video", "upload an image"], "B1"], ["account", "/əˈkaʊnt/", "noun", "Your registered profile on a service", "I created a new account on Spotify.", ["profile", "login"], ["create an account", "delete an account", "online account"], "B1"], ["password", "/ˈpæsˌwɜːrd/", "noun", "A secret word used to log in", "Don't share your password with anyone.", ["passcode", "PIN"], ["strong password", "reset a password", "forget a password"], "B1"], ["streaming", "/ˈstriːmɪŋ/", "noun", "Watching or listening to media online", "Streaming music is more popular than buying CDs.", ["live", "online viewing"], ["streaming service", "live streaming"], "B1"], ["notification", "/ˌnoʊtəfɪˈkeɪʃən/", "noun", "An alert message from an app", "I get too many notifications on my phone.", ["alert", "message", "ping"], ["push notification", "silence notifications"], "B1"], ["update", "/ˈʌpˌdeɪt/", "noun", "A new version of software", "My phone needs a software update.", ["upgrade", "patch"], ["install an update", "latest update", "software update"], "B1"], ["glitch", "/ɡlɪtʃ/", "noun", "A small, temporary technical fault", "There was a glitch in the app during checkout.", ["bug", "malfunction", "fault"], ["technical glitch", "fix a glitch"], "B2"], ["algorithm", "/ˈælɡəˌrɪðəm/", "noun", "A set of rules a computer follows to solve a problem", "The app's algorithm recommends songs based on your taste.", ["formula", "process"], ["search algorithm", "complex algorithm"], "B2"], ["cybersecurity", "/ˌsaɪbərsɪˈkjʊrəti/", "noun", "The protection of computer systems from digital attacks", "The company invested heavily in cybersecurity.", ["data security", "online security"], ["cybersecurity threat", "cybersecurity measures"], "B2"], ["encrypt", "/ɪnˈkrɪpt/", "verb", "To convert data into a secure code", "All messages on the app are encrypted.", ["encode", "secure"], ["encrypt data", "fully encrypted"], "C1"], ["bandwidth", "/ˈbændˌwɪdθ/", "noun", "The amount of data that can be transferred at once", "Video calls use a lot of bandwidth.", ["data capacity", "network speed"], ["limited bandwidth", "high bandwidth"], "B2"], ["obsolete", "/ˌɒbsəˈliːt/", "adj", "No longer used because something newer exists", "That software became obsolete years ago.", ["outdated", "out of date", "antiquated"], ["quickly obsolete", "render obsolete"], "C1"]]}, {"name": "Travel & Tourism", "em": "✈️", "c": ["#0d9488", "#115e59"], "w": [["booking", "/ˈbʊkɪŋ/", "noun", "An arrangement made in advance", "I made a booking at the hotel for two nights.", ["reservation"], ["hotel booking", "online booking", "cancel a booking"], "B1"], ["accommodation", "/əˌkɒməˈdeɪʃən/", "noun", "A place to stay", "We need to find accommodation in Rome.", ["lodging", "housing", "stay"], ["affordable accommodation", "find accommodation"], "B1"], ["itinerary", "/aɪˈtɪnəˌrɛri/", "noun", "A plan of a journey", "Our travel itinerary includes Paris and Berlin.", ["schedule", "plan", "route"], ["travel itinerary", "detailed itinerary"], "B1"], ["sightseeing", "/ˈsaɪtˌsiːɪŋ/", "noun", "Visiting interesting places as a tourist", "We spent the day sightseeing in Tokyo.", ["touring", "exploring"], ["go sightseeing", "sightseeing tour"], "B1"], ["jet lag", "/ˈdʒɛt læɡ/", "noun", "Tiredness from long flights across time zones", "I had bad jet lag after flying from Australia.", ["travel fatigue"], ["suffer from jet lag", "get over jet lag"], "B1"], ["luggage", "/ˈlʌɡɪdʒ/", "noun", "Bags taken on a journey", "Don't bring too much luggage; we're flying low-cost.", ["baggage", "bags", "suitcases"], ["pack luggage", "heavy luggage", "carry-on luggage"], "B1"], ["souvenir", "/ˌsuːvəˈnɪr/", "noun", "An object kept as a memory of a place", "I bought a small souvenir from Paris.", ["keepsake", "memento"], ["buy a souvenir", "souvenir shop"], "B1"], ["destination", "/ˌdɛstəˈneɪʃən/", "noun", "The place you are travelling to", "Bali is a popular destination for honeymoons.", ["place", "spot"], ["travel destination", "tourist destination", "final destination"], "B1"], ["excursion", "/ɪkˈskɜːrʒən/", "noun", "A short trip, often organized for a group", "We booked a boat excursion to the nearby islands.", ["outing", "day trip"], ["day excursion", "guided excursion"], "B2"], ["layover", "/ˈleɪˌoʊvər/", "noun", "A short stop between flights", "We had a six-hour layover in Dubai.", ["stopover", "connection"], ["long layover", "overnight layover"], "B2"], ["hospitality", "/ˌhɒspɪˈtæləti/", "noun", "Friendly treatment of guests and visitors", "We were amazed by the local hospitality.", ["welcome", "warmth"], ["warm hospitality", "hospitality industry"], "B2"], ["remote", "/rɪˈmoʊt/", "adj", "Far away from towns and other places", "We stayed in a remote village in the mountains.", ["isolated", "far-flung", "secluded"], ["remote location", "remote area"], "B2"], ["off the beaten track", "/ɒf ðə ˈbiːtən træk/", "idiom", "In a place few tourists visit; unusual and remote", "We prefer destinations off the beaten track.", ["out of the way", "unexplored"], ["go off the beaten track", "stay off the beaten track"], "C1"]]}, {"name": "Environment & Nature", "em": "🌍", "c": ["#16a34a", "#14532d"], "w": [["pollution", "/pəˈluːʃən/", "noun", "Harmful substances in the environment", "Air pollution is a serious problem in many cities.", ["contamination"], ["air pollution", "reduce pollution", "fight pollution"], "B1"], ["recycle", "/riˈsaɪkəl/", "verb", "To use materials again instead of throwing away", "We recycle paper and plastic every week.", ["reuse", "reprocess"], ["recycle plastic", "recycle waste"], "B1"], ["wildlife", "/ˈwaɪldˌlaɪf/", "noun", "Wild animals and plants", "The national park protects local wildlife.", ["fauna", "creatures"], ["protect wildlife", "wildlife reserve"], "B1"], ["climate", "/ˈklaɪmət/", "noun", "The usual weather of a place", "The climate here is warm year-round.", ["weather"], ["climate change", "tropical climate", "mild climate"], "B1"], ["sustainable", "/səˈsteɪnəbəl/", "adj", "Able to continue without harming the environment", "We should switch to sustainable energy sources.", ["green", "eco-friendly"], ["sustainable development", "sustainable growth"], "B1"], ["endangered", "/ɪnˈdeɪndʒərd/", "adj", "At risk of disappearing", "Pandas were once an endangered species.", ["threatened", "at risk"], ["endangered species", "critically endangered"], "B1"], ["renewable", "/rɪˈnuːəbəl/", "adj", "Naturally replenished, like solar or wind power", "Renewable energy is the future of power.", ["sustainable"], ["renewable energy", "renewable resources"], "B1"], ["ecosystem", "/ˈiːkoʊˌsɪstəm/", "noun", "A community of living things in an environment", "The forest ecosystem is very fragile.", ["habitat", "biome"], ["fragile ecosystem", "marine ecosystem"], "B1"], ["deforestation", "/diːˌfɒrɪˈsteɪʃən/", "noun", "The clearing of forests on a large scale", "Deforestation is destroying habitats in the Amazon.", ["forest clearance", "logging"], ["rampant deforestation", "stop deforestation"], "B2"], ["biodiversity", "/ˌbaɪoʊdaɪˈvɜːrsəti/", "noun", "The variety of plant and animal life in an area", "Coral reefs support incredible biodiversity.", ["ecological variety", "species diversity"], ["rich biodiversity", "protect biodiversity"], "B2"], ["carbon footprint", "/ˈkɑːrbən ˈfʊtprɪnt/", "noun", "The amount of carbon dioxide a person or activity produces", "Flying less reduces your carbon footprint.", ["emissions", "environmental impact"], ["reduce your carbon footprint", "large carbon footprint"], "B2"], ["mitigate", "/ˈmɪtɪɡeɪt/", "verb", "To make something less severe or serious", "New policies aim to mitigate climate change.", ["lessen", "reduce", "alleviate"], ["mitigate risk", "mitigate the effects"], "C1"], ["depletion", "/dɪˈpliːʃən/", "noun", "The reduction of a resource to a very low level", "Ozone depletion was a major concern in the 1990s.", ["exhaustion", "reduction"], ["resource depletion", "ozone depletion"], "C1"]]}, {"name": "Health & Wellness", "em": "💪", "c": ["#e11d48", "#9f1239"], "w": [["workout", "/ˈwɜːrkˌaʊt/", "noun", "A session of physical exercise", "I do a 30-minute workout every morning.", ["exercise", "training"], ["intense workout", "do a workout", "gym workout"], "B1"], ["nutrition", "/nuːˈtrɪʃən/", "noun", "The food substances needed for health", "Good nutrition is essential for athletes.", ["diet", "nourishment"], ["good nutrition", "balanced nutrition"], "B1"], ["stress", "/strɛs/", "noun", "Mental or emotional pressure", "Yoga helps me manage stress.", ["pressure", "tension", "anxiety"], ["under stress", "cope with stress", "reduce stress"], "B1"], ["immune", "/ɪˈmjuːn/", "adj", "Protected against a disease", "Vitamin C may boost the immune system.", ["resistant", "protected"], ["immune system", "immune response"], "B1"], ["fatigue", "/fəˈtiːɡ/", "noun", "Extreme tiredness", "I felt fatigue after the long hike.", ["exhaustion", "tiredness"], ["chronic fatigue", "mental fatigue"], "B1"], ["wellbeing", "/ˌwɛlˈbiːɪŋ/", "noun", "The state of being healthy and happy", "Mental wellbeing is just as important as physical health.", ["wellness", "health"], ["physical wellbeing", "emotional wellbeing"], "B1"], ["symptom", "/ˈsɪmptəm/", "noun", "A sign that you are ill", "Headache is a common symptom of dehydration.", ["sign", "indication"], ["show symptoms", "mild symptoms", "flu symptoms"], "B1"], ["recover", "/rɪˈkʌvər/", "verb", "To get well after being ill", "She is slowly recovering from the surgery.", ["heal", "get better", "recuperate"], ["recover from", "fully recover", "recover quickly"], "B1"], ["ailment", "/ˈeɪlmənt/", "noun", "A minor illness", "Herbal tea can help with minor ailments.", ["illness", "complaint"], ["common ailment", "minor ailment"], "B2"], ["holistic", "/hoʊˈlɪstɪk/", "adj", "Considering the whole person, not just symptoms", "She prefers a holistic approach to healthcare.", ["whole-person", "comprehensive"], ["holistic approach", "holistic treatment"], "C1"], ["chronic", "/ˈkrɒnɪk/", "adj", "Continuing for a long time; persistent", "He suffers from chronic back pain.", ["persistent", "long-lasting"], ["chronic illness", "chronic condition"], "B2"], ["rehabilitation", "/ˌriːəˌbɪlɪˈteɪʃən/", "noun", "The process of helping someone recover ability or health", "He underwent months of rehabilitation after the injury.", ["recovery", "therapy"], ["physical rehabilitation", "rehabilitation program"], "C1"], ["deficiency", "/dɪˈfɪʃənsi/", "noun", "A lack of something necessary, especially a nutrient", "Iron deficiency can cause tiredness.", ["shortage", "lack"], ["vitamin deficiency", "nutrient deficiency"], "B2"]]}, {"name": "Money & Finance", "em": "💰", "c": ["#ca8a04", "#854d0e"], "w": [["budget", "/ˈbʌdʒɪt/", "noun", "A plan for spending money", "I have a tight budget this month.", ["plan", "allowance"], ["stick to a budget", "tight budget", "monthly budget"], "B1"], ["savings", "/ˈseɪvɪŋz/", "noun", "Money kept for future use", "She put her savings into a new business.", ["reserves", "nest egg"], ["personal savings", "build up savings"], "B1"], ["expense", "/ɪkˈspɛns/", "noun", "Money spent on something", "Rent is my biggest monthly expense.", ["cost", "outlay"], ["living expenses", "cover expenses", "cut expenses"], "B1"], ["invest", "/ɪnˈvɛst/", "verb", "To put money into something to earn more", "He invested his bonus in stocks.", ["fund", "back", "put money in"], ["invest in", "wisely invest"], "B1"], ["afford", "/əˈfɔːrd/", "verb", "To have enough money to buy", "I can't afford a new car right now.", ["manage to pay", "cover"], ["can't afford", "barely afford"], "B1"], ["loan", "/loʊn/", "noun", "Money borrowed that must be repaid", "She took out a loan to pay for university.", ["credit", "borrowing"], ["take out a loan", "repay a loan", "student loan"], "B1"], ["debt", "/dɛt/", "noun", "Money that you owe", "He's trying to pay off his credit card debt.", ["liability", "arrears"], ["go into debt", "pay off debt", "clear debt"], "B1"], ["currency", "/ˈkɜːrənsi/", "noun", "Money used in a country", "The euro is the currency of most EU countries.", ["money", "cash"], ["foreign currency", "strong currency", "exchange currency"], "B1"], ["inflation", "/ɪnˈfleɪʃən/", "noun", "A general rise in prices over time", "Inflation has made groceries more expensive.", ["price increase"], ["rising inflation", "high inflation"], "B2"], ["asset", "/ˈæsɛt/", "noun", "Something valuable that a person or company owns", "Property is her most valuable asset.", ["property", "resource"], ["valuable asset", "fixed assets"], "B2"], ["revenue", "/ˈrɛvənjuː/", "noun", "Income generated from business activity", "The company's revenue grew by 20% this year.", ["income", "earnings"], ["annual revenue", "generate revenue"], "B2"], ["subsidy", "/ˈsʌbsədi/", "noun", "Money given by a government to support something", "Farmers receive a subsidy for growing crops.", ["grant", "funding"], ["government subsidy", "subsidy program"], "C1"], ["diversify", "/daɪˈvɜːrsəfaɪ/", "verb", "To spread investment across different areas to reduce risk", "Financial advisors recommend diversifying your portfolio.", ["spread risk", "vary"], ["diversify investments", "diversify a portfolio"], "C1"]]}, {"name": "Phrasal Verbs: GET", "em": "🔄", "c": ["#9333ea", "#6b21a8"], "w": [["get up", "/ɡɛt ʌp/", "verb", "To rise from bed", "I usually get up at 7 am on weekdays.", ["wake up", "rise", "arise"], ["get up early", "get up late"], "B1"], ["get along", "/ɡɛt əˈlɒŋ/", "verb", "To have a friendly relationship with", "I get along really well with my flatmates.", ["bond", "be friends with"], ["get along well", "get along nicely"], "B1"], ["get over", "/ɡɛt ˈoʊvər/", "verb", "To recover from something difficult", "It took her months to get over the breakup.", ["recover from", "move past"], ["get over an illness", "get over a loss"], "B1"], ["get through", "/ɡɛt θruː/", "verb", "To finish or survive a difficult time", "I don't know how I got through the exam week.", ["finish", "endure", "survive"], ["get through a book", "get through a tough time"], "B1"], ["get in", "/ɡɛt ɪn/", "verb", "To enter a place or vehicle", "Get in the car; we're late!", ["enter", "board"], ["get in the cab", "get in the building"], "B1"], ["get back", "/ɡɛt bæk/", "verb", "To return", "When did you get back from your trip?", ["return", "come back"], ["get back home", "get back safely"], "B1"], ["get on", "/ɡɛt ɒn/", "verb", "To board a vehicle / make progress", "Hurry, get on the bus!", ["board", "manage", "cope"], ["get on the train", "get on with work"], "B1"], ["get away", "/ɡɛt əˈweɪ/", "verb", "To escape or take a vacation", "We need to get away from the city for a weekend.", ["escape", "flee", "leave"], ["get away from", "get away with it"], "B1"], ["get across", "/ɡɛt əˈkrɒs/", "verb", "To succeed in communicating an idea", "She struggled to get her point across.", ["communicate", "convey"], ["get a message across", "get your point across"], "B2"], ["get by", "/ɡɛt baɪ/", "verb", "To manage with limited resources", "We get by on a modest income.", ["cope", "manage", "survive"], ["get by on", "just get by"], "B2"], ["get down to", "/ɡɛt daʊn tuː/", "verb", "To start focusing seriously on something", "Let's get down to business.", ["focus on", "start seriously"], ["get down to work", "get down to business"], "B2"]]}, {"name": "Phrasal Verbs: TAKE", "em": "✋", "c": ["#0891b2", "#0e7490"], "w": [["take off", "/teɪk ɒf/", "verb", "To leave the ground (plane) / remove", "The plane takes off at 9 am.", ["depart", "remove", "launch"], ["take off your coat", "plane takes off"], "B1"], ["take on", "/teɪk ɒn/", "verb", "To accept work or responsibility", "She took on a new project this month.", ["accept", "undertake", "assume"], ["take on a job", "take on responsibility"], "B1"], ["take over", "/teɪk ˈoʊvər/", "verb", "To gain control of something", "A new manager took over the team last week.", ["assume control", "run", "head"], ["take over a company", "take over a role"], "B1"], ["take after", "/teɪk ˈæftər/", "verb", "To resemble a family member", "She really takes after her mother.", ["resemble", "look like"], ["take after one's father"], "B1"], ["take up", "/teɪk ʌp/", "verb", "To start a new hobby or activity", "He recently took up photography.", ["begin", "start", "pursue"], ["take up running", "take up a hobby"], "B1"], ["take back", "/teɪk bæk/", "verb", "To return / withdraw a statement", "I want to take back what I said earlier.", ["return", "withdraw", "retract"], ["take it back", "take back words"], "B1"], ["take care of", "/teɪk kɛər ɒv/", "verb", "To look after someone or something", "Can you take care of my plants while I'm away?", ["look after", "mind", "tend to"], ["take care of children", "take care of business"], "B1"], ["take down", "/teɪk daʊn/", "verb", "To remove from a wall / write notes", "The teacher took down the names of late students.", ["remove", "note", "record"], ["take down notes", "take down a poster"], "B1"], ["take in", "/teɪk ɪn/", "verb", "To fully understand or absorb information", "There was too much information to take in at once.", ["absorb", "understand", "grasp"], ["take in information", "hard to take in"], "B2"], ["take for granted", "/teɪk fɔːr ˈɡræntɪd/", "verb", "To fail to value something because it's always there", "We often take our health for granted.", ["undervalue", "not appreciate"], ["take someone for granted", "take it for granted"], "B2"], ["take issue with", "/teɪk ˈɪʃuː wɪð/", "verb", "To disagree strongly with something", "I take issue with how the decision was made.", ["object to", "disagree with"], ["take issue with a claim"], "C1"]]}, {"name": "Common Collocations", "em": "🔗", "c": ["#ea580c", "#9a3412"], "w": [["make a decision", "/meɪk ə dɪˈsɪʒən/", "verb", "To decide on something", "It's hard to make a decision under pressure.", ["decide", "resolve"], ["quick decision", "tough decision", "right decision"], "B1"], ["take a break", "/teɪk ə breɪk/", "verb", "To stop briefly to rest", "Let's take a break for ten minutes.", ["pause", "rest"], ["short break", "well-deserved break", "need a break"], "B1"], ["do homework", "/duː ˈhoʊmˌwɜːrk/", "verb", "To complete school assignments", "I have a lot of homework to do tonight.", ["study", "complete tasks"], ["finish homework", "help with homework"], "B1"], ["pay attention", "/peɪ əˈtɛnʃən/", "verb", "To listen or watch carefully", "Please pay attention to the instructions.", ["focus", "concentrate"], ["pay close attention", "pay full attention"], "B1"], ["catch a cold", "/kætʃ ə koʊld/", "verb", "To become sick with a cold", "I caught a bad cold last week.", ["get sick", "fall ill"], ["catch a chill", "catch the flu"], "B1"], ["save time", "/seɪv taɪm/", "verb", "To use less time", "Online shopping saves a lot of time.", ["spare time", "be efficient"], ["save valuable time", "save precious time"], "B1"], ["have fun", "/hæv fʌn/", "verb", "To enjoy yourself", "We had so much fun at the beach.", ["enjoy", "have a good time"], ["have fun together", "have fun doing"], "B1"], ["miss the bus", "/mɪs ðə bʌs/", "verb", "To fail to catch a bus", "I missed the bus and had to walk.", ["fail to catch", "be late for"], ["nearly miss", "just miss"], "B1"], ["reach a consensus", "/riːtʃ ə kənˈsɛnsəs/", "verb", "To come to a general agreement", "The committee finally reached a consensus.", ["come to an agreement", "agree"], ["struggle to reach consensus", "broad consensus"], "C1"], ["draw a conclusion", "/drɔː ə kənˈkluːʒən/", "verb", "To decide something based on evidence", "It's too early to draw a conclusion.", ["conclude", "infer"], ["jump to a conclusion", "draw the wrong conclusion"], "B2"], ["strike a balance", "/straɪk ə ˈbæləns/", "verb", "To find a compromise between two things", "It's important to strike a balance between work and rest.", ["find a middle ground", "balance"], ["strike the right balance"], "C1"]]}, {"name": "Feelings & Emotions", "em": "💭", "c": ["#be185d", "#9d174d"], "w": [["anxious", "/ˈæŋkʃəs/", "adj", "Feeling worried or nervous", "I'm anxious about my driving test tomorrow.", ["nervous", "worried", "uneasy"], ["feel anxious", "anxious thoughts"], "B1"], ["excited", "/ɪkˈsaɪtɪd/", "adj", "Feeling very enthusiastic", "She's excited about her new job.", ["thrilled", "eager", "enthusiastic"], ["really excited", "excited about"], "B1"], ["frustrated", "/ˈfrʌsˌtreɪtɪd/", "adj", "Annoyed and unable to change something", "I'm frustrated with the slow internet.", ["irritated", "annoyed"], ["get frustrated", "feel frustrated"], "B1"], ["content", "/kənˈtɛnt/", "adj", "Quietly happy and satisfied", "She seems content with her simple life.", ["satisfied", "pleased", "happy"], ["perfectly content", "feel content"], "B1"], ["overwhelmed", "/ˌoʊvərˈwɛlmd/", "adj", "Feeling too much to handle", "I'm overwhelmed by all the work this week.", ["swamped", "buried", "stressed"], ["feel overwhelmed", "completely overwhelmed"], "B1"], ["disappointed", "/ˌdɪsəˈpɔɪntɪd/", "adj", "Sad because something didn't happen", "He was disappointed by the test result.", ["let down", "saddened"], ["deeply disappointed", "slightly disappointed"], "B1"], ["relieved", "/rɪˈliːvd/", "adj", "Glad that a problem is over", "I felt relieved after sending the email.", ["glad", "reassured", "unburdened"], ["feel relieved", "greatly relieved"], "B1"], ["confused", "/kənˈfjuːzd/", "adj", "Unable to understand something", "I'm confused by the complicated rules.", ["puzzled", "bewildered", "perplexed"], ["completely confused", "get confused"], "B1"], ["apprehensive", "/ˌæprɪˈhɛnsɪv/", "adj", "Anxious about something that might happen", "She felt apprehensive before the interview.", ["nervous", "worried", "uneasy"], ["apprehensive about", "slightly apprehensive"], "C1"], ["euphoric", "/juːˈfɒrɪk/", "adj", "Extremely happy and excited", "The team felt euphoric after winning the final.", ["elated", "ecstatic", "overjoyed"], ["euphoric mood", "feel euphoric"], "C1"], ["indifferent", "/ɪnˈdɪfərənt/", "adj", "Not interested or concerned", "He seemed indifferent to the news.", ["unconcerned", "apathetic"], ["completely indifferent", "indifferent to"], "B2"], ["resentful", "/rɪˈzɛntfəl/", "adj", "Feeling bitter about being treated unfairly", "She felt resentful after being passed over for promotion.", ["bitter", "aggrieved"], ["deeply resentful", "resentful of"], "C1"]]}, {"name": "Opinions & Discussion", "em": "💬", "c": ["#1d4ed8", "#1e3a8a"], "w": [["agree", "/əˈɡriː/", "verb", "To have the same opinion", "I totally agree with your point.", ["concur", "accept", "go along with"], ["fully agree", "strongly agree", "agree to disagree"], "B1"], ["disagree", "/ˌdɪsəˈɡriː/", "verb", "To have a different opinion", "I disagree with your conclusion.", ["differ", "object", "oppose"], ["respectfully disagree", "strongly disagree"], "B1"], ["argue", "/ˈɑːrɡjuː/", "verb", "To give reasons or quarrel", "Don't argue with me about this.", ["debate", "quarrel", "contend"], ["argue a point", "argue with someone"], "B1"], ["suggest", "/səɡˈdʒɛst/", "verb", "To propose an idea", "I suggest we meet tomorrow.", ["propose", "recommend", "advise"], ["strongly suggest", "suggest a plan"], "B1"], ["recommend", "/ˌrɛkəˈmɛnd/", "verb", "To suggest as a good choice", "I recommend reading this book.", ["suggest", "advise", "endorse"], ["highly recommend", "strongly recommend"], "B1"], ["claim", "/kleɪm/", "verb", "To say that something is true", "He claims to have won an award.", ["assert", "state", "maintain"], ["claim responsibility", "claim a prize"], "B1"], ["assume", "/əˈsuːm/", "verb", "To accept as true without proof", "Don't assume he knows the answer.", ["suppose", "presume", "guess"], ["wrongly assume", "safely assume"], "B1"], ["convince", "/kənˈvɪns/", "verb", "To make someone believe", "Try to convince him to come.", ["persuade", "sway", "reassure"], ["fully convince", "convince someone of"], "B1"], ["elaborate", "/ɪˈlæbəreɪt/", "verb", "To give more detail about something", "Could you elaborate on your last point?", ["expand on", "explain further"], ["elaborate on a point", "please elaborate"], "B2"], ["contend", "/kənˈtɛnd/", "verb", "To argue firmly that something is true", "She contends that the policy is flawed.", ["argue", "assert", "maintain"], ["contend that", "strongly contend"], "C1"], ["concede", "/kənˈsiːd/", "verb", "To admit that something is true, though reluctantly", "He conceded that he had made a mistake.", ["admit", "acknowledge"], ["reluctantly concede", "concede a point"], "C1"], ["substantiate", "/səbˈstænʃieɪt/", "verb", "To provide evidence to support a claim", "She couldn't substantiate her accusations.", ["prove", "back up", "support"], ["substantiate a claim", "fail to substantiate"], "C1"]]}, {"name": "Describing People", "em": "👥", "c": ["#7e22ce", "#581c87"], "w": [["reliable", "/rɪˈlaɪəbəl/", "adj", "Able to be trusted", "She's a reliable colleague who always meets deadlines.", ["dependable", "trustworthy"], ["reliable source", "reliable friend"], "B1"], ["ambitious", "/æmˈbɪʃəs/", "adj", "Wanting success and achievement", "He's ambitious and wants to start his own company.", ["driven", "goal-oriented"], ["highly ambitious", "ambitious plans"], "B1"], ["generous", "/ˈdʒɛnərəs/", "adj", "Willing to give more than expected", "She's a generous host who always cooks too much.", ["giving", "big-hearted"], ["very generous", "generous offer"], "B1"], ["stubborn", "/ˈstʌbərn/", "adj", "Refusing to change one's mind", "Don't be stubborn — listen to advice.", ["obstinate", "headstrong", "inflexible"], ["stubborn as a mule", "stubbornly refuse"], "B1"], ["witty", "/ˈwɪti/", "adj", "Showing quick clever humor", "His witty remarks made everyone laugh.", ["clever", "funny", "sharp"], ["witty comment", "witty remark"], "B1"], ["sincere", "/sɪnˈsɪər/", "adj", "Genuine and honest", "Her apology felt sincere.", ["genuine", "honest", "truthful"], ["deeply sincere", "sincere apology"], "B1"], ["confident", "/ˈkɒnfɪdənt/", "adj", "Sure of oneself", "She's confident about her exam.", ["self-assured", "certain"], ["highly confident", "confident speaker"], "B1"], ["modest", "/ˈmɒdɪst/", "adj", "Not boasting about achievements", "Despite his fame, he remains modest.", ["humble", "unassuming"], ["genuinely modest", "modest about"], "B1"], ["resourceful", "/rɪˈsɔːrsfəl/", "adj", "Good at finding quick solutions to problems", "He's very resourceful in a crisis.", ["inventive", "enterprising"], ["remarkably resourceful", "resourceful person"], "B2"], ["tactful", "/ˈtæktfəl/", "adj", "Careful not to upset or offend others", "She gave tactful feedback on his work.", ["diplomatic", "considerate"], ["tactful approach", "remain tactful"], "B2"], ["arrogant", "/ˈærəɡənt/", "adj", "Having an exaggerated sense of importance", "His arrogant attitude annoyed his coworkers.", ["conceited", "self-important"], ["come across as arrogant"], "B2"], ["versatile", "/ˈvɜːrsətaɪl/", "adj", "Able to adapt to many different tasks", "She's a versatile actress who can play any role.", ["adaptable", "flexible"], ["versatile skills", "versatile performer"], "C1"]]}, {"name": "Time & Frequency", "em": "⏳", "c": ["#0f766e", "#134e4a"], "w": [["occasionally", "/əˈkeɪʒənəli/", "adv", "From time to time, not often", "I occasionally eat fast food.", ["sometimes", "now and then"], ["only occasionally", "occasionally visit"], "B1"], ["frequently", "/ˈfriːkwəntli/", "adv", "Often, many times", "She frequently travels for work.", ["often", "regularly"], ["frequently asked", "frequently used"], "B1"], ["rarely", "/ˈrɛərli/", "adv", "Almost never", "He rarely watches TV these days.", ["seldom", "hardly ever"], ["rarely seen", "very rarely"], "B1"], ["recently", "/ˈriːsəntli/", "adv", "Not long ago", "I recently moved to a new apartment.", ["lately", "just now"], ["recently launched", "recently announced"], "B1"], ["eventually", "/ɪˈvɛntʃuəli/", "adv", "In the end, after a long time", "She eventually agreed to come.", ["finally", "ultimately", "at last"], ["eventually realize", "eventually find"], "B1"], ["immediately", "/ɪˈmiːdiətli/", "adv", "Right now, without delay", "Please reply immediately.", ["instantly", "right away", "at once"], ["respond immediately", "leave immediately"], "B1"], ["meanwhile", "/ˈmiːnˌwaɪl/", "adv", "At the same time", "I cooked dinner; meanwhile, he set the table.", ["at the same time", "in the meantime"], ["meanwhile in", "meanwhile back"], "B1"], ["nowadays", "/ˈnaʊədeɪz/", "adv", "In the present time", "Nowadays, most people use smartphones.", ["these days", "currently"], ["nowadays people", "nowadays it's"], "B1"], ["periodically", "/ˌpɪəriˈɒdɪkli/", "adv", "At regular intervals; from time to time", "We review the policy periodically.", ["regularly", "from time to time"], ["periodically check", "reviewed periodically"], "B2"], ["intermittently", "/ˌɪntərˈmɪtəntli/", "adv", "Occurring at irregular intervals; stopping and starting", "It rained intermittently throughout the afternoon.", ["on and off", "sporadically"], ["work intermittently", "rain intermittently"], "C1"], ["simultaneously", "/ˌsaɪməlˈteɪniəsli/", "adv", "Happening at the same time", "The two events happened simultaneously.", ["at the same time", "concurrently"], ["occur simultaneously", "launch simultaneously"], "B2"]]}, {"name": "Business & Negotiation", "em": "🤝", "c": ["#334155", "#0f172a"], "w": [["stakeholder", "/ˈsteɪkˌhoʊldər/", "noun", "A person with an interest in a business or project", "We need buy-in from all key stakeholders.", ["interested party", "investor"], ["key stakeholder", "stakeholder meeting"], "B2"], ["leverage", "/ˈlɛvərɪdʒ/", "verb", "To use something to maximum advantage", "The company leveraged its brand to enter new markets.", ["exploit", "capitalize on"], ["leverage resources", "competitive leverage"], "C1"], ["synergy", "/ˈsɪnərdʒi/", "noun", "The combined effect greater than the sum of parts", "The merger created strong synergy between the two teams.", ["combined effect", "cooperation"], ["create synergy", "operational synergy"], "C1"], ["compromise", "/ˈkɒmprəmaɪz/", "noun", "An agreement reached by each side giving something up", "They reached a compromise after hours of talks.", ["middle ground", "concession"], ["reach a compromise", "willing to compromise"], "B2"], ["deadlock", "/ˈdɛdlɒk/", "noun", "A situation where no agreement can be reached", "Talks ended in a deadlock over pricing.", ["stalemate", "impasse"], ["break a deadlock", "reach a deadlock"], "C1"], ["counteroffer", "/ˈkaʊntərˌɒfər/", "noun", "An offer made in response to a rejected one", "She made a counteroffer of $500 less.", ["counterproposal"], ["make a counteroffer", "reject a counteroffer"], "B2"], ["viable", "/ˈvaɪəbəl/", "adj", "Capable of working successfully; practical", "Is this business model financially viable?", ["feasible", "workable", "practical"], ["commercially viable", "viable option"], "B2"], ["merger", "/ˈmɜːrdʒər/", "noun", "The joining of two companies into one", "The two banks announced a merger last month.", ["consolidation", "union"], ["corporate merger", "merger deal"], "B2"], ["outsource", "/ˈaʊtˌsɔːrs/", "verb", "To pay another company to do work for you", "We outsource our customer support to a call centre abroad.", ["contract out", "subcontract"], ["outsource production", "outsource jobs"], "B2"], ["incentive", "/ɪnˈsɛntɪv/", "noun", "Something that motivates or encourages action", "Bonuses are a strong incentive to perform well.", ["motivation", "inducement"], ["financial incentive", "offer an incentive"], "B2"]]}, {"name": "Academic & Formal Writing", "em": "📝", "c": ["#4338ca", "#312e81"], "w": [["hypothesis", "/haɪˈpɒθəsɪs/", "noun", "An idea suggested as an explanation, to be tested", "The researchers tested their hypothesis in a lab study.", ["theory", "proposition"], ["test a hypothesis", "form a hypothesis"], "B2"], ["methodology", "/ˌmɛθəˈdɒlədʒi/", "noun", "The system of methods used in research", "The study's methodology was clearly explained.", ["approach", "method"], ["research methodology", "sound methodology"], "C1"], ["ambiguous", "/æmˈbɪɡjuəs/", "adj", "Open to more than one interpretation; unclear", "The instructions were ambiguous and confused the students.", ["unclear", "vague"], ["deliberately ambiguous", "ambiguous wording"], "C1"], ["coherent", "/koʊˈhɪərənt/", "adj", "Logical and well organized", "Her essay presented a coherent argument.", ["logical", "consistent", "well-structured"], ["coherent argument", "coherent structure"], "C1"], ["empirical", "/ɪmˈpɪrɪkəl/", "adj", "Based on observation or experiment, not theory", "The claim lacks empirical evidence.", ["evidence-based", "observed"], ["empirical evidence", "empirical research"], "C1"], ["paradigm", "/ˈpærədaɪm/", "noun", "A typical example or pattern of something", "The internet caused a paradigm shift in communication.", ["model", "framework"], ["paradigm shift", "dominant paradigm"], "C1"], ["corroborate", "/kəˈrɒbəreɪt/", "verb", "To confirm or support a statement with evidence", "New data corroborates the earlier findings.", ["confirm", "support", "back up"], ["corroborate a claim", "further corroborate"], "C1"], ["synthesis", "/ˈsɪnθəsɪs/", "noun", "The combination of ideas to form a theory or system", "Her essay is a synthesis of several theories.", ["combination", "fusion"], ["synthesis of ideas", "literature synthesis"], "C1"], ["cite", "/saɪt/", "verb", "To refer to a source as evidence", "Always cite your sources in academic writing.", ["reference", "quote"], ["cite a source", "properly cited"], "B2"], ["objective", "/əbˈdʒɛktɪv/", "adj", "Based on facts, not influenced by feelings", "Try to remain objective when reviewing the data.", ["unbiased", "impartial", "neutral"], ["objective analysis", "stay objective"], "B2"]]}];
+
+// ============== SHARED STATE ==============
+let selectedLevels = new Set(['B1','B2','C1']);
+let bookIdx=0, wordIdx=0;
+
+function currentWords(bi){ return books[bi].w.filter(w=>selectedLevels.has(w[7])); }
+
+function updateHeaderCounts(){
+  const totalWords = books.reduce((s,b)=>s+b.w.filter(w=>selectedLevels.has(w[7])).length,0);
+  document.getElementById('includeBadge').textContent = `${books.length} Topics · ${totalWords} Words`;
+}
+
+// ============== FLASHCARD VIEW ==============
+function buildBookList(){
+  const L=document.getElementById('bookList');L.innerHTML='';
+  books.forEach((b,i)=>{
+    const words=currentWords(i);
+    const c=document.createElement('div');
+    c.className='mini-book'+(i===bookIdx?' active':'')+(words.length===0?' empty':'');
+    c.style.setProperty('--accent',b.c[0]);
+    c.innerHTML=`<div class="b-emoji">${b.em}</div><div class="b-name">${b.name}</div><div class="b-count">${words.length} words</div>`;
+    if(words.length>0) c.onclick=()=>selectBook(i);
+    L.appendChild(c);
+  });
+  updateHeaderCounts();
+}
+function selectBook(i){
+  if(currentWords(i).length===0) return;
+  bookIdx=i;wordIdx=0;
+  document.querySelectorAll('.mini-book').forEach((c,x)=>c.classList.toggle('active',x===i));
+  document.getElementById('flipCard').classList.remove('flipped');
+  updateDisplay();
+  const a=document.querySelectorAll('.mini-book')[i];if(a)a.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+}
+function selectWord(j){wordIdx=j;document.getElementById('flipCard').classList.remove('flipped');updateDisplay()}
+
+const LEVEL_COLORS={B1:'#38bdf8',B2:'#fb923c',C1:'#f43f5e'};
+
+function updateDisplay(){
+  const b=books[bookIdx], words=currentWords(bookIdx);
+  if(words.length===0){ return; }
+  if(wordIdx>=words.length) wordIdx=0;
+  const w=words[wordIdx],[word,pron,pos,def,ex,syns,collocs,level]=w;
+  document.getElementById('bookTitle').textContent=b.name;
+  document.getElementById('bigEmoji').textContent=b.em;
+  document.getElementById('wordDisplay').textContent=word;
+  document.getElementById('wordPron').textContent=pron;
+  document.getElementById('wordPos').textContent=pos;
+  document.getElementById('backMeaning').textContent=def;
+  document.getElementById('backExample').textContent=`"${ex}"`;
+  document.getElementById('wordCounter').textContent=`${wordIdx+1} / ${words.length}`;
+  document.getElementById('prevBtn').disabled=wordIdx===0;
+  document.getElementById('nextBtn').disabled=wordIdx===words.length-1;
+  document.getElementById('detailsWord').textContent=word;
+  document.getElementById('detailsPron').textContent=pron;
+  document.getElementById('posBadge').textContent=pos;
+  document.getElementById('defBox').textContent=def;
+  document.getElementById('exampleBox').innerHTML=`<div class="example-item">${ex}</div>`;
+  document.getElementById('collocBox').innerHTML=collocs.map(c=>`<div class="colloc">${c}</div>`).join('');
+  document.getElementById('synBox').innerHTML=syns.map(s=>`<div class="syn">${s}</div>`).join('');
+  document.getElementById('familyDisplay').innerHTML=words.map((o,x)=>`<div class="tag${x===wordIdx?' active':''}" onclick="selectWord(${x})">${o[0]}</div>`).join('');
+  const pill=document.getElementById('levelPill');pill.textContent=level;pill.className='level-pill '+level;
+  const reg=document.getElementById('regBadge');reg.textContent=level;reg.style.background='var(--gold-soft)';reg.style.color='var(--gold-ink)';
+}
+document.getElementById('flipCard').addEventListener('click',function(){this.classList.toggle('flipped')});
+document.getElementById('pronounceBtn').addEventListener('click',e=>{e.stopPropagation();const words=currentWords(bookIdx);const u=new SpeechSynthesisUtterance(words[wordIdx][0]);u.rate=.9;speechSynthesis.speak(u)});
+document.getElementById('prevBtn').addEventListener('click',e=>{e.stopPropagation();if(wordIdx>0)selectWord(wordIdx-1)});
+document.getElementById('nextBtn').addEventListener('click',e=>{e.stopPropagation();const words=currentWords(bookIdx);if(wordIdx<words.length-1)selectWord(wordIdx+1)});
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('quizView').style.display!=='none') return;
+  const words=currentWords(bookIdx);
+  if(e.key==='ArrowLeft'&&wordIdx>0)selectWord(wordIdx-1);
+  if(e.key==='ArrowRight'&&wordIdx<words.length-1)selectWord(wordIdx+1);
+  if(e.key===' '){e.preventDefault();document.getElementById('flipCard').classList.toggle('flipped')}
+});
+
+document.querySelectorAll('.level-chip').forEach(chip=>{
+  chip.addEventListener('click',()=>{
+    const lvl=chip.dataset.lvl;
+    if(selectedLevels.has(lvl)){
+      if(selectedLevels.size>1) selectedLevels.delete(lvl); else return; // keep at least one level active
+    } else selectedLevels.add(lvl);
+    chip.classList.toggle('active',selectedLevels.has(lvl));
+    if(currentWords(bookIdx).length===0){
+      const firstOk=books.findIndex((b,i)=>currentWords(i).length>0);
+      bookIdx = firstOk===-1?0:firstOk;
+      wordIdx=0;
+    }
+    buildBookList();
+    updateDisplay();
+  });
+});
+
+// ============== TABS ==============
+document.getElementById('tabFlash').addEventListener('click',()=>switchTab('flash'));
+document.getElementById('tabQuiz').addEventListener('click',()=>switchTab('quiz'));
+
+function switchTab(tab){
+  document.getElementById('tabFlash').classList.toggle('active',tab==='flash');
+  document.getElementById('tabQuiz').classList.toggle('active',tab==='quiz');
+  const quizView=document.getElementById('quizView');
+  document.getElementById('flashView').style.display = tab==='flash' ? 'contents' : 'none';
+  quizView.style.display = tab==='quiz' ? 'block' : 'none';
+  // Keep the assessment setup inside the normal page.
+  // Full-screen mode is activated only after Start Assessment.
+  quizView.classList.remove('assess-fullscreen');
+  quizView.classList.toggle('assessment-started', tab==='quiz' && quizState.started);
+  document.body.classList.toggle('assessment-active', tab==='quiz' && quizState.started);
+  document.getElementById('bottomSection').classList.toggle('quiz-mode', tab==='quiz');
+  document.getElementById('filterRow').style.visibility = 'hidden';
+  document.getElementById('bookList').style.visibility = tab==='flash' ? 'visible' : 'hidden';
+  if(tab==='quiz' && !quizState.started) renderQuizSetup();
+}
+
+// ============== ASSESSMENT / QUIZ ENGINE ==============
+let quizState = {
+  started:false, questions:[], idx:0, score:0, answers:[],
+  settings:{topic:'All Topics', levels:new Set(['B1','B2','C1']), mode:'mixed', count:10}
+};
+
+function allWordsFlat(){
+  const out=[];
+  books.forEach(b=>b.w.forEach(w=>out.push({
+    book:b.name, word:w[0], ipa:w[1], pos:w[2], def:w[3],
+    ex:w[4], syns:w[5], collocs:w[6], level:w[7]
+  })));
+  return out;
+}
+
+function shuffle(arr){ return [...arr].sort(()=>Math.random()-0.5); }
+
+function pickDistractors(pool,item,n=3){
+  return shuffle(pool.filter(x=>x.word!==item.word)).slice(0,n);
+}
+
+function buildQuestion(item,pool,mode){
+  const span = item.ex.match(new RegExp('\\b'+item.word.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i'));
+
+  let kind = mode;
+  if(mode==='mixed') kind = Math.random()<0.5 ? 'mcq' : 'type';
+
+  if(kind==='type'){
+    let sentence = item.ex;
+    if(span) sentence = sentence.replace(span[0], '_____');
+    return {
+      kind:'type', book:item.book,
+      prompt:'Type the vocabulary word that best completes the sentence:',
+      sentence, answer:item.word, def:item.def, word:item.word
+    };
+  }
+
+  const distractors = pickDistractors(pool,item,3).map(d=>d.word);
+  const options = shuffle([item.word,...distractors]);
+
+  if(span && Math.random()<0.5){
+    return {
+      kind:'mcq', book:item.book,
+      prompt:'Choose the word that best completes the sentence:',
+      sentence:item.ex.replace(span[0], '_____'),
+      options, answer:item.word, def:item.def, word:item.word
+    };
+  }
+
+  return {
+    kind:'mcq', book:item.book,
+    prompt:'Which word matches this definition?',
+    sentence:`"${item.def}"`,
+    options, answer:item.word, def:item.def, word:item.word
+  };
+}
+
+function renderQuizSetup(){
+  const panel=document.getElementById('quizPanel');
+  const s=quizState.settings;
+
+  if(!s.topic) s.topic='All Topics';
+  if(!s.levels || !(s.levels instanceof Set)) s.levels=new Set(['B1','B2','C1']);
+  if(!s.mode) s.mode='mixed';
+  if(!s.count) s.count=10;
+
+  const topicOptions=['All Topics',...books.map(b=>b.name)];
+
+  panel.innerHTML=`
+    <div class="quiz-setup">
+      <h2>Vocabulary Assessment</h2>
+      <p class="sub">Test your vocabulary with multiple-choice and typed sentence questions from B1 to C1.</p>
+      <div class="assessment-note">
+        <strong>How it works:</strong> Select your topic, level, question type and number of questions,
+        then click <strong>Start Assessment</strong> below.
+      </div>
+
+      <div class="setup-group">
+        <div class="setup-group-label">Topic</div>
+        <div class="chip-row" id="setupTopics">
+          ${topicOptions.map(t=>`<div class="setup-chip${t===s.topic?' active':''}" data-topic="${t}">${t}</div>`).join('')}
+        </div>
+      </div>
+
+      <div class="setup-group">
+        <div class="setup-group-label">Level</div>
+        <div class="chip-row" id="setupLevels">
+          ${['B1','B2','C1'].map(l=>`<div class="setup-chip${s.levels.has(l)?' active':''}" data-lvl="${l}">${l}</div>`).join('')}
+        </div>
+      </div>
+
+      <div class="setup-group">
+        <div class="setup-group-label">Question Type</div>
+        <div class="chip-row" id="setupMode">
+          ${[['mcq','Choose the Correct Answer'],['type','Type the Answer'],['mixed','Mixed (Both)']].map(([v,l])=>`<div class="setup-chip${s.mode===v?' active':''}" data-mode="${v}">${l}</div>`).join('')}
+        </div>
+      </div>
+
+      <div class="setup-group">
+        <div class="setup-group-label">Number of Questions</div>
+        <div class="chip-row" id="setupCount">
+          ${[5,10,15,20].map(n=>`<div class="setup-chip${s.count===n?' active':''}" data-count="${n}">${n}</div>`).join('')}
+        </div>
+      </div>
+
+      <button type="button" class="start-btn" id="startQuizBtn">▶ Start Assessment</button>
+    </div>`;
+
+  panel.querySelectorAll('#setupTopics .setup-chip').forEach(c=>{
+    c.onclick=()=>{s.topic=c.dataset.topic;renderQuizSetup();}
+  });
+
+  panel.querySelectorAll('#setupLevels .setup-chip').forEach(c=>{
+    c.onclick=()=>{
+      const l=c.dataset.lvl;
+      if(s.levels.has(l)){
+        if(s.levels.size>1) s.levels.delete(l);
+      }else{
+        s.levels.add(l);
+      }
+      renderQuizSetup();
+    }
+  });
+
+  panel.querySelectorAll('#setupMode .setup-chip').forEach(c=>{
+    c.onclick=()=>{s.mode=c.dataset.mode;renderQuizSetup();}
+  });
+
+  panel.querySelectorAll('#setupCount .setup-chip').forEach(c=>{
+    c.onclick=()=>{s.count=parseInt(c.dataset.count,10);renderQuizSetup();}
+  });
+
+  const startBtn=document.getElementById('startQuizBtn');
+  if(startBtn){
+    startBtn.onclick=(e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      startQuiz();
+    };
+  }
+}
+
+function startQuiz(){
+  const s=quizState.settings;
+  const selectedLevels = s.levels && s.levels.size ? s.levels : new Set(['B1','B2','C1']);
+
+  let pool=allWordsFlat().filter(w=>selectedLevels.has(w.level));
+  if(s.topic!=='All Topics') pool=pool.filter(w=>w.book===s.topic);
+
+  // If a narrow topic/level selection has fewer than the requested number,
+  // use every available word in that selection rather than showing an error.
+  if(pool.length===0){
+    pool=allWordsFlat().filter(w=>selectedLevels.has(w.level));
+  }
+  if(pool.length===0){
+    pool=allWordsFlat();
+  }
+
+  const count=Math.min(Math.max(parseInt(s.count,10)||10,1),pool.length);
+  const chosen=shuffle(pool).slice(0,count);
+  const distractorPool=pool.length>=4 ? pool : allWordsFlat();
+
+  quizState={
+    started:true,
+    questions:chosen.map(item=>buildQuestion(item,distractorPool,s.mode)),
+    idx:0,
+    score:0,
+    answers:[],
+    settings:{
+      topic:s.topic,
+      levels:new Set(selectedLevels),
+      mode:s.mode,
+      count:count
+    }
+  };
+
+  // Once the assessment actually starts, take over the entire viewport.
+  document.getElementById('quizView').classList.add('assess-fullscreen');
+  document.getElementById('quizView').classList.add('assessment-started');
+  document.body.classList.add('assessment-active');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const panel=document.getElementById('quizPanel');
+  const total=quizState.questions.length;
+  const q=quizState.questions[quizState.idx];
+  const pct=Math.round((quizState.idx/total)*100);
+
+  panel.innerHTML=`
+    <div class="quiz-top">
+      <button type="button" class="quiz-exit" id="quizExitBtn">✕ Exit</button>
+      <div class="quiz-progress-wrap"><div class="quiz-progress-bar" style="width:${pct}%"></div></div>
+      <div class="quiz-score">${quizState.score} / ${quizState.idx} correct</div>
+    </div>
+    <div class="quiz-question-box" id="qBox">
+      <div class="q-topic-tag">${q.book} · Question ${quizState.idx+1} of ${total}</div>
+      <div class="q-prompt">${q.prompt}<br>
+        <span style="font-weight:500;font-size:16px;color:#334155">
+          ${q.sentence.replace('_____','<span class="blank">_____</span>')}
+        </span>
+      </div>
+      <div id="qBody"></div>
+    </div>`;
+
+  document.getElementById('quizExitBtn').onclick=()=>{
+    if(confirm('Exit this assessment? Your progress will be lost.')){
+      quizState.started=false;
+      document.body.classList.remove('assessment-active');
+      document.getElementById('quizView').classList.remove('assess-fullscreen','assessment-started');
+      switchTab('flash');
+      renderQuizSetup();
+    }
+  };
+
+  const body=document.getElementById('qBody');
+
+  if(q.kind==='mcq'){
+    body.innerHTML=`
+      <div class="q-options">
+        ${q.options.map(o=>`<button type="button" class="q-option" data-opt="${o}">${o}</button>`).join('')}
+      </div>
+      <div id="qFeedback"></div>
+      <div class="q-actions">
+        <button type="button" class="q-btn primary" id="qNextBtn" disabled>Next</button>
+      </div>`;
+
+    body.querySelectorAll('.q-option').forEach(btn=>{
+      btn.onclick=()=>{
+        if(btn.disabled) return;
+        const given=btn.dataset.opt;
+        const correct=given.toLowerCase()===q.answer.toLowerCase();
+
+        quizState.answers.push({q,given,correct});
+        if(correct) quizState.score++;
+
+        body.querySelectorAll('.q-option').forEach(b=>b.disabled=true);
+        btn.classList.add(correct?'correct':'incorrect');
+
+        if(!correct){
+          body.querySelectorAll('.q-option').forEach(b=>{
+            if(b.dataset.opt.toLowerCase()===q.answer.toLowerCase()) b.classList.add('correct');
+          });
+        }
+
+        document.getElementById('qFeedback').innerHTML=
+          `<div class="q-feedback ${correct?'correct':'incorrect'}">
+            ${correct?'Correct!':'Not quite. The correct answer is "'+q.answer+'".'} ${q.def}
+          </div>`;
+
+        document.getElementById('qNextBtn').disabled=false;
+      };
+    });
+  }else{
+    body.innerHTML=`
+      <div class="type-answer-wrap">
+        <input id="typeAnswer" class="type-answer" autocomplete="off" placeholder="Type your answer here">
+        <div id="qFeedback"></div>
+        <div class="q-actions">
+          <button type="button" class="q-btn primary" id="qCheckBtn">Check Answer</button>
+          <button type="button" class="q-btn primary" id="qNextBtn" disabled>Next</button>
+        </div>
+      </div>`;
+
+    const inp=document.getElementById('typeAnswer');
+
+    function normalize(v){
+      return v.trim().toLowerCase().replace(/[.,!?;:]/g,'').replace(/\s+/g,' ');
+    }
+
+    function check(){
+      if(document.getElementById('qCheckBtn').disabled) return;
+      const given=inp.value.trim();
+      const correct=normalize(given)===normalize(q.answer);
+
+      quizState.answers.push({q,given,correct});
+      if(correct) quizState.score++;
+
+      inp.disabled=true;
+      document.getElementById('qCheckBtn').disabled=true;
+      document.getElementById('qNextBtn').disabled=false;
+
+      document.getElementById('qFeedback').innerHTML=
+        `<div class="q-feedback ${correct?'correct':'incorrect'}">
+          ${correct?'Correct!':'The correct answer is "'+q.answer+'".'} ${q.def}
+        </div>`;
+    }
+
+    document.getElementById('qCheckBtn').onclick=check;
+    inp.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        check();
+      }
+    });
+    inp.focus();
+  }
+
+  document.getElementById('qNextBtn').onclick=()=>{
+    if(quizState.idx<total-1){
+      quizState.idx++;
+      renderQuestion();
+    }else{
+      renderResults();
+    }
+  };
+}
+
+function renderResults(){
+  const panel=document.getElementById('quizPanel');
+  const total=quizState.questions.length;
+  const score=quizState.score;
+  const pct=Math.round((score/total)*100);
+
+  let grade='Keep practicing — review the words below and try again.';
+  if(pct>=90) grade='Outstanding! You have a strong command of these words.';
+  else if(pct>=75) grade='Great work! You are close to mastering this set.';
+  else if(pct>=50) grade='Good progress — a bit more review will help.';
+
+  panel.innerHTML=`
+    <div class="results-box">
+      <div class="results-score"><span class="big-num">${score}</span><span class="of"> / ${total}</span></div>
+      <div style="text-align:center;font-size:13px;color:#64748b;margin-bottom:6px">
+        ${pct}% correct · ${quizState.settings.topic} · ${Array.from(quizState.settings.levels).join(' / ')}
+      </div>
+      <div class="results-grade">${grade}</div>
+      <div class="assessment-note">
+        <strong>How to improve:</strong> Review every wrong answer, say the correct word aloud,
+        and create one new sentence using the vocabulary.
+      </div>
+      <div class="review-list">
+        ${quizState.answers.map(a=>`
+          <div class="review-item ${a.correct?'':'wrong'}">
+            <span class="rw">${a.q.word}</span> —
+            ${a.correct?'✓ correct':'✗ you answered "'+(a.given||'(blank)')+'"'}
+            <br><span class="ra">${a.q.def}</span>
+          </div>`).join('')}
+      </div>
+      <div class="results-actions">
+        <button type="button" class="q-btn secondary" id="retryBtn">Try Again</button>
+        <button type="button" class="q-btn primary" id="newQuizBtn">New Assessment</button>
+      </div>
+    </div>`;
+
+  document.getElementById('retryBtn').onclick=()=>startQuiz();
+  document.getElementById('newQuizBtn').onclick=()=>{
+    quizState.started=false;
+    document.body.classList.remove('assessment-active');
+    document.getElementById('quizView').classList.remove('assess-fullscreen','assessment-started');
+    renderQuizSetup();
+  };
+}
+
+buildBookList();updateDisplay();
+</script></body></html>

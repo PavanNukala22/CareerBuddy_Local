@@ -1,0 +1,518 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'GD_app/css/style.css' %}">
+<link rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+<style>
+  /* ── Page Shell ── */
+  .gd-page {
+    padding-top: 80px;
+    background: #f8fafc;
+    min-height: 100vh;
+  }
+
+  /* ── Hero Banner ── */
+  .gd-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    padding: 3rem 0 3.5rem;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .gd-hero::after {
+    content: 'groups';
+    font-family: 'Material Symbols Outlined';
+    font-size: 320px;
+    position: absolute;
+    right: -40px;
+    bottom: -80px;
+    opacity: .05;
+    color: #fff;
+    pointer-events: none;
+  }
+
+  .gd-hero h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: .4rem;
+    color: #f59e0b;
+  }
+
+  .gd-hero p {
+    opacity: .75;
+    font-size: 1.05rem;
+    max-width: 520px;
+  }
+
+  .gd-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 50rem;
+    padding: .25rem .9rem;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    margin-bottom: .8rem;
+    color: #f59e0b;
+  }
+
+  /* ── Topic Entry Card ── */
+  .panel-card {
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, .04);
+    border: 1px solid #e2e8f0;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .topic-form-group {
+    display: flex;
+    gap: .5rem;
+    background: #f8fafc;
+    border-radius: 16px;
+    border: 2px solid #e2e8f0;
+    padding: .4rem .4rem .4rem 1rem;
+    transition: all .2s;
+  }
+
+  .topic-form-group:focus-within {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+  }
+
+  .topic-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: .95rem;
+    color: #0f172a;
+  }
+
+  .topic-input::placeholder {
+    color: #94a3b8;
+  }
+
+  .btn-start-gd {
+    background: linear-gradient(135deg, #0369a1, #4f46e5);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: .6rem 1.4rem;
+    font-weight: 700;
+    font-size: .9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    transition: opacity .15s, transform .1s;
+  }
+
+  .btn-start-gd:hover:not(:disabled) {
+    opacity: .92;
+    transform: translateY(-1px);
+  }
+
+  .btn-start-gd:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ── Topic char counter & error ── */
+  .topic-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: .35rem;
+    font-size: .78rem;
+    min-height: 1.2rem;
+  }
+
+  .topic-char-count {
+    color: #94a3b8;
+    font-weight: 500;
+    transition: color .15s;
+  }
+
+  .topic-char-count.danger {
+    color: #ef4444;
+    font-weight: 700;
+  }
+
+  .topic-error {
+    display: none;
+    align-items: center;
+    gap: .35rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: .45rem .8rem;
+    font-size: .82rem;
+    color: #b91c1c;
+    font-weight: 600;
+    margin-bottom: .5rem;
+  }
+
+  .topic-error.show {
+    display: flex;
+  }
+
+  .topic-form-group.over-limit {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+  }
+
+  /* ── Chip Suggestions ── */
+  .topic-chip {
+    display: inline-block;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    border-radius: 50rem;
+    padding: .3rem .8rem;
+    font-size: .78rem;
+    cursor: pointer;
+    transition: background .15s;
+    font-weight: 500;
+  }
+
+  .topic-chip:hover {
+    background: #dbeafe;
+  }
+
+  /* ── Agent Cards ── */
+  .agent-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .05);
+    transition: box-shadow .2s, transform .2s;
+  }
+
+  .agent-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
+    transform: translateY(-2px);
+  }
+
+  .agent-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: .3rem;
+  }
+
+  .agent-name {
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #1e293b;
+  }
+
+  .agent-role {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .agent-desc {
+    font-size: .85rem;
+    color: #64748b;
+    line-height: 1.5;
+  }
+
+  /* ── History ── */
+  .history-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #fafafa;
+    margin-bottom: .6rem;
+    transition: background .15s, box-shadow .15s;
+  }
+
+  .history-row:hover {
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .06);
+  }
+
+  .history-topic {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: .95rem;
+  }
+
+  .history-date {
+    font-size: .75rem;
+    color: #94a3b8;
+    margin-top: .1rem;
+  }
+
+  .history-score {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #0369a1;
+  }
+
+  /* ── Section headings ── */
+  .section-heading {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+
+  /* ── Mobile Responsiveness ── */
+  @media (max-width: 768px) {
+    .gd-hero h1 {
+      font-size: 1.8rem;
+    }
+
+    .gd-hero::after {
+      font-size: 200px;
+      right: -20px;
+      bottom: -40px;
+    }
+
+    .topic-form-group {
+      flex-direction: column;
+      padding: .8rem;
+    }
+
+    .topic-input {
+      padding-bottom: .8rem;
+      font-size: 1rem;
+    }
+
+    .btn-start-gd {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class=" gd-page">
+
+  <!-- Hero -->
+  <div class="gd-hero" style="position: relative;">
+    {% include 'includes/language_dropdown.html' %}
+    <div class="container">
+      <div class="gd-badge live-translate">
+        <span class="material-symbols-outlined" style="font-size:14px;">groups</span>
+        Interactive Workshop — Group Discussion
+      </div>
+      <h1 class="live-translate">🎯 GD Arena</h1>
+      <p class="live-translate">Join AI-powered group discussions. Sharpen your logic, practice argumentation, and get
+        instant performance feedback.</p>
+    </div>
+  </div>
+
+  <div class="container py-4">
+    <div class="row g-4">
+
+      <!-- LEFT: Topic Entry -->
+      <div class="col-lg-8">
+
+        <!-- Topic Entry -->
+        <div class="panel-card" style="border-left: 4px solid #3b82f6;">
+          <h5 class="live-translate fw-bold mb-1" style="color:#1e293b;">
+            <i class="fas fa-comment-dots me-2 text-primary"></i>Start a New Discussion
+          </h5>
+          <p class="live-translate text-muted small mb-3">Enter any business or social topic and dive into a real-time
+            AI
+            group discussion.</p>
+          <form action="{% url 'GD_app:create_session' %}" method="POST">
+            {% csrf_token %}
+            <div id="topic-form-group" class="topic-form-group">
+              <input id="topic-input" name="topic" type="text" class="topic-input"
+                placeholder="E.g. AI will replace human jobs..." required maxlength="499">
+              <button id="btn-start-gd" type="submit" class="btn-start-gd">
+                <span class="material-symbols-outlined" style="font-size:18px;">play_circle</span>
+                Start GD
+              </button>
+            </div>
+            <div class="topic-meta mb-2">
+              <div id="topic-error" class="topic-error" role="alert">
+                <span class="material-symbols-outlined" style="font-size:16px;">error</span>
+                Text is too long! Please keep it under 500 characters.
+              </div>
+              <span id="topic-char-count" class="topic-char-count ms-auto">0 / 499</span>
+            </div>
+            <!-- Suggested Topics -->
+            <div class="d-flex flex-wrap gap-2">
+              {% for topic in suggested_topics %}
+              <button type="button" class="topic-chip"
+                onclick="document.getElementById('topic-input').value=this.textContent.trim()">
+                {{ topic }}
+              </button>
+              {% endfor %}
+            </div>
+          </form>
+        </div>
+
+        <!-- Recent Sessions -->
+        {% if recent_sessions %}
+        <div class="panel-card">
+          <div class="section-heading live-translate">
+            <i class="fas fa-history text-secondary"></i>Recent Sessions
+          </div>
+          {% for s in recent_sessions %}
+          <div class="history-row">
+            <div>
+              <div class="history-topic">{{ s.topic|truncatechars:60 }}</div>
+              <div class="history-date">{{ s.created_at|date:"M d, Y · H:i" }}</div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+              {% if not s.is_active and s.performance_report %}
+              <div class="text-end">
+                <div class="history-score">{{ s.performance_report.overall_score }}</div>
+                <div style="font-size:.7rem;color:#94a3b8;">/100</div>
+              </div>
+              <a href="{% url 'GD_app:session_report' s.id %}" class="btn btn-sm btn-outline-primary rounded-pill">
+                <i class="fas fa-chart-bar me-1"></i>Report
+              </a>
+              {% else %}
+              <span class="badge bg-success-subtle text-success rounded-pill px-3" style="font-size:.72rem;">
+                <i class="fas fa-circle me-1" style="font-size:.5rem;"></i>Active
+              </span>
+              <a href="{% url 'GD_app:gd_room' s.id %}" class="btn btn-sm btn-primary rounded-pill">
+                Open
+              </a>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- RIGHT: Agents -->
+      <div class="col-lg-4">
+        <div class="section-heading live-translate">
+          <i class="fas fa-users text-primary"></i>Your Discussion Partners
+        </div>
+
+        <!-- Alex -->
+        <div class="agent-card mb-3">
+          <div class="agent-icon" style="background:#eff6ff;">🔵</div>
+          <div class="agent-name">Alex</div>
+          <div class="agent-role live-translate" style="color:#3b82f6;">Analytical Thinker</div>
+          <div class="agent-desc live-translate">Breaks down problems with data, logic and structured reasoning. Will
+            push
+            you for evidence.</div>
+        </div>
+
+        <!-- Maya -->
+        <div class="agent-card mb-3">
+          <div class="agent-icon" style="background:#f5f3ff;">🟣</div>
+          <div class="agent-name">Maya</div>
+          <div class="agent-role live-translate" style="color:#7c3aed;">Creative Thinker</div>
+          <div class="agent-desc live-translate">Brings bold ideas and vivid metaphors. Loves reframing the discussion
+            from new angles.</div>
+        </div>
+
+        <!-- Rishi -->
+        <div class="agent-card mb-3">
+          <div class="agent-icon" style="background:#f0fdf4;">🟢</div>
+          <div class="agent-name">Rishi</div>
+          <div class="agent-role live-translate" style="color:#16a34a;">Moderator</div>
+          <div class="agent-desc live-translate">Keeps discussion balanced and inclusive. Ensures every voice is heard
+            and
+            respected.</div>
+        </div>
+
+        <!-- Tips -->
+        <div class="panel-card" style="background:#eff6ff; border:1px solid #bfdbfe;">
+          <h6 class="live-translate fw-bold mb-2" style="color:#1d4ed8;">
+            <i class="fas fa-lightbulb me-2"></i>GD Tips
+          </h6>
+          <ul class="list-unstyled mb-0 small" style="color:#1e40af;">
+            <li class="live-translate mb-1">• Start with a clear stance on the topic</li>
+            <li class="live-translate mb-1">• Build on what others say</li>
+            <li class="live-translate mb-1">• Use data or examples to support points</li>
+            <li class="live-translate">• Stay on topic and be concise</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/live-translate.js' %}"></script>
+<script>
+  // Same live-translation mechanism as the activity sub-activity page
+  // (templates/activities/sub_activity.html): Google Translate, called
+  // client-side, bilingual "translated (English)" rendering. .topic-chip is
+  // deliberately excluded — its exact text is copied into the topic input on
+  // click, so translating it would submit non-English text as the GD topic.
+  document.addEventListener('DOMContentLoaded', function () {
+    LiveTranslate.init({ dynamicSelectors: ['.live-translate'] });
+  });
+
+  // ── GD Topic character limit (max 499 chars) ─────────────────────────────
+  (function () {
+    const MAX = 499;
+    const input = document.getElementById('topic-input');
+    const counter = document.getElementById('topic-char-count');
+    const errorBox = document.getElementById('topic-error');
+    const formGroup = document.getElementById('topic-form-group');
+    const submitBtn = document.getElementById('btn-start-gd');
+
+    function updateCounter() {
+      const len = input.value.length;
+      const over = len >= MAX;   // show error at exactly 499 chars reached
+
+      counter.textContent = len + ' / 499';
+      counter.classList.toggle('danger', over);
+      errorBox.classList.toggle('show', over);
+      formGroup.classList.toggle('over-limit', over);
+      submitBtn.disabled = over;
+    }
+
+    input.addEventListener('input', updateCounter);
+
+    // Guard: block form submit if at/over limit (e.g. programmatic paste)
+    input.closest('form').addEventListener('submit', function (e) {
+      if (input.value.length >= MAX) {
+        e.preventDefault();
+        updateCounter();
+        input.focus();
+      }
+    });
+
+    // Update counter when a suggestion chip is clicked
+    document.querySelectorAll('.topic-chip').forEach(function (chip) {
+      chip.addEventListener('click', updateCounter);
+    });
+  })();
+</script>
+{% endblock %}

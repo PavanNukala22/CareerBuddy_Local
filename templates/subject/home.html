@@ -1,0 +1,397 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root {
+    --bg:       #ffffff;
+    --surface:  #ffffff;
+    --text:     #080808;
+    --muted:    #5a5a5a;
+    --border:   #d8d8d8;
+    --accent:   #185adb;
+    --success:  #10b981;
+    --radius:   20px;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px; line-height: 1.5;
+  }
+  h1, h2, h3, .font-serif { font-family: 'Newsreader', serif; }
+
+  /* Ambient blobs */
+  .blob { position: fixed; border-radius: 50%; filter: blur(90px); opacity: 0.12; z-index: 0; pointer-events: none; animation: blobmove 12s ease-in-out infinite; }
+  .blob-1 { width: 520px; height: 520px; background: #bae6fd; top: -120px; left: -120px; }
+  .blob-2 { width: 400px; height: 400px; background: #7dd3fc; bottom: -100px; right: -100px; animation-delay: 3s; }
+  @keyframes blobmove { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(24px,-36px) scale(1.06)} }
+
+  /* Layout */
+  .page-shell { position: relative; z-index: 1; display: flex; max-width: 1440px; margin: 0 auto; padding-top: 0; }
+
+  /* Content */
+  .page-content { flex: 1; padding: 25px 40px 80px; overflow-y: auto; }
+
+  /* Page header */
+  .page-header { margin-bottom: 48px; }
+  .page-header .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: color-mix(in srgb, var(--accent) 10%, white);
+    color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 20%, white);
+    padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    margin-bottom: 16px; letter-spacing: 0.3px;
+  }
+  .page-header h1 {
+    font-size: clamp(32px, 4vw, 52px); font-weight: 600; line-height: 1.1;
+    letter-spacing: -1px; color: var(--text); margin: 0 0 12px;
+  }
+  .page-header p { font-size: 17px; color: var(--muted); margin: 0; max-width: 520px; line-height: 1.6; }
+
+  /* Topic Grid */
+  .topic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+  }
+
+  /* Topic Card — Premium redesign */
+  .topic-card {
+    background: #ffffff;
+    border: 1px solid #e8edf2;
+    border-radius: 20px;
+    padding: 0;
+    text-decoration: none;
+    color: var(--text);
+    display: flex; flex-direction: column;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    transition: box-shadow 220ms ease, transform 220ms ease;
+    cursor: pointer;
+    position: relative; overflow: hidden;
+  }
+  /* Coloured top accent bar */
+  .topic-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 5px;
+    background: var(--card-accent, var(--accent));
+    border-radius: 20px 20px 0 0;
+    pointer-events: none;
+  }
+  .topic-card:hover {
+    box-shadow: 0 16px 40px color-mix(in srgb, var(--card-accent, var(--accent)) 20%, transparent);
+    transform: translateY(-5px);
+    border-color: color-mix(in srgb, var(--card-accent, var(--accent)) 30%, #e8edf2);
+  }
+
+  /* Card inner padding wrapper */
+  .card-inner {
+    padding: 28px 26px 24px;
+    display: flex; flex-direction: column; gap: 14px; flex: 1;
+  }
+
+  /* Badge icon */
+  .topic-card .card-badge {
+    /* Sizes to its content: a fixed 56px square could not hold the emoji next
+       to a four-character label like "Conj", so both spilled outside it. */
+    min-width: 56px; height: 56px; border-radius: 16px; padding: 0 11px;
+    align-self: flex-start; box-sizing: border-box;
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    font-size: 26px; font-weight: 800; line-height: 1; white-space: nowrap;
+    background: color-mix(in srgb, var(--card-accent, var(--accent)) 12%, white);
+    color: var(--card-accent, var(--accent));
+    flex-shrink: 0;
+    border: 1.5px solid color-mix(in srgb, var(--card-accent, var(--accent)) 20%, transparent);
+    transition: transform 220ms ease;
+  }
+  .topic-card:hover .card-badge {
+    transform: scale(1.08) rotate(-3deg);
+  }
+  /* Topic emoji sits with the letter badge (FR-GRM-01) */
+  .topic-card .card-badge .card-emoji {
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  .topic-card h3 {
+    font-size: 1.15rem; font-weight: 700; line-height: 1.3;
+    margin: 0; color: #0f172a;
+    letter-spacing: -0.3px;
+  }
+  .topic-card p {
+    font-size: 0.875rem; color: #64748b; margin: 0; line-height: 1.65; flex: 1;
+  }
+
+  /* CTA link row */
+  .card-footer-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 26px;
+    border-top: 1px solid #f1f5f9;
+    background: #fafbfc;
+  }
+  .topic-card .cta {
+    font-size: 0.82rem; font-weight: 700;
+    color: var(--card-accent, var(--accent));
+    display: flex; align-items: center; gap: 5px;
+    transition: gap 150ms ease, letter-spacing 150ms ease;
+    letter-spacing: 0;
+  }
+  .topic-card:hover .cta {
+    gap: 9px;
+    letter-spacing: 0.01em;
+  }
+  .cta-arrow {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: color-mix(in srgb, var(--card-accent, var(--accent)) 12%, white);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 200ms ease;
+  }
+  .topic-card:hover .cta-arrow {
+    background: var(--card-accent, var(--accent));
+    color: white;
+  }
+
+  /* Card colour accents */
+  .card-blue   { --card-accent: #0ea5e9; }
+  .card-pink   { --card-accent: #ec4899; }
+  .card-mint   { --card-accent: #10b981; }
+  .card-peach  { --card-accent: #f97316; }
+  .card-cream  { --card-accent: #d97706; }
+  .card-lilac  { --card-accent: #8b5cf6; }
+  .card-cyan   { --card-accent: #06b6d4; }
+  .card-rose   { --card-accent: #f43f5e; }
+  .card-violet { --card-accent: #7c3aed; }
+  .card-indigo { --card-accent: #4f46e5; }
+
+  /* Features strip */
+  .features-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 56px;
+    padding: 32px;
+    background: color-mix(in srgb, var(--accent) 4%, white);
+    border: 1px solid color-mix(in srgb, var(--accent) 12%, var(--border));
+    border-radius: var(--radius);
+  }
+  .feature-item { display: flex; align-items: flex-start; gap: 14px; }
+  .feature-item .fnum {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    background: var(--accent); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px;
+  }
+  .feature-item h4 { font-size: 15px; font-weight: 600; margin: 0 0 4px; color: var(--text); }
+  .feature-item p  { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.55; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .page-content { padding: 25px 20px 60px; }
+    .topic-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 480px) {
+    .topic-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Back link */
+  .back-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500;
+    margin-bottom: 32px; transition: color 150ms ease;
+  }
+  .back-link:hover { color: var(--accent); }
+  .back-link svg { width: 16px; height: 16px; }
+
+  /* Page fade-in */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+  .fade-up { animation: fadeUp 0.4s ease both; }
+  .fade-up-1 { animation-delay: 0.05s; }
+  .fade-up-2 { animation-delay: 0.12s; }
+  .fade-up-3 { animation-delay: 0.2s; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Ambient blobs -->
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<!-- Layout -->
+<div class="page-shell">
+  <div class="page-content">
+
+{# Language selector: the shared dropdown (same as the Activities pages), opens directly below its button. #}
+{% include 'includes/language_dropdown.html' %}
+
+    <!-- Back to Activities -->
+    <a href="{% url 'activity_list' %}" class="back-link fade-up">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Back to Activities
+    </a>
+
+    <!-- Page Header -->
+    <header class="page-header fade-up">
+      <div class="eyebrow">
+        <span class="material-symbols-outlined" style="font-size:16px;">auto_stories</span>
+        <span id="headingGrammarLib">Grammar Library</span>
+      </div>
+      <h1 id="headingChooseTopic" style="background: linear-gradient(135deg, #0f172a 0%, #185adb 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Choose a Topic to Begin</h1>
+      <p>Master English grammar step-by-step. Each topic has slides, a video lesson, an audio recap, rules, examples and practice.</p>
+    </header>
+
+    <!-- Topic Grid -->
+    <section class="topic-grid fade-up fade-up-1" aria-label="Grammar topics">
+      {% for topic in topics %}
+      <a class="topic-card {{ topic.card_class }}" href="{{ topic.href }}" aria-label="Learn about {{ topic.title }}">
+        <div class="card-inner">
+          <div class="card-badge"><span class="card-emoji" aria-hidden="true">{{ topic.emoji }}</span>{{ topic.badge }}</div>
+          <h3 class="grammar-topic-name">{{ topic.title }}</h3>
+          <p>{{ topic.description }}</p>
+        </div>
+        <div class="card-footer-row">
+          <span class="cta">
+            Explore lesson
+            <span class="cta-arrow">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </span>
+          </span>
+        </div>
+      </a>
+      {% endfor %}
+    </section>
+
+    <!-- How it works strip -->
+    <div class="features-strip fade-up fade-up-2">
+      <div class="feature-item">
+        <div class="fnum">1</div>
+        <div>
+          <h4 id="headingFeature1">Consistent Structure</h4>
+          <p>Every topic follows the same pattern so you always know how to move through each lesson.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="fnum" style="background:#8b5cf6;">2</div>
+        <div>
+          <h4 id="headingFeature2">Rules &amp; Examples</h4>
+          <p>Clear explanations, quick rules and sentence examples to build real understanding.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="fnum" style="background:#10b981;">3</div>
+        <div>
+          <h4 id="headingFeature3">Smooth Navigation</h4>
+          <p>Jump between grammar subjects without losing your place in the module.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  if (window.lucide) lucide.createIcons();
+
+  // Page-exit fade
+  document.querySelectorAll('.topic-card').forEach(card => {
+    card.addEventListener('click', e => {
+      e.preventDefault();
+      document.body.style.opacity = '0';
+      document.body.style.transition = 'opacity 0.25s ease';
+      setTimeout(() => { window.location.href = card.getAttribute('href'); }, 260);
+    });
+  });
+
+  // Reset opacity when navigating back/forward (bfcache) or refreshing
+  window.addEventListener('pageshow', (event) => {
+    document.body.style.opacity = '1';
+  });
+
+  // Language dropdown: restore preference and translate headings
+  (function() {
+    const sel = document.getElementById('languageSelect');
+    if (!sel) return;
+
+    const headingMap = {
+      headingGrammarLib:  { en: 'Grammar Library',        vn: 'Thư viện Ngữ pháp',           ar: 'مكتبة القواعد', ru: 'Библиотека грамматики' },
+      headingChooseTopic: { en: 'Choose a Topic to Begin', vn: 'Chọn một Chủ đề để Bắt đầu', ar: 'اختر موضوعاً للبدء', ru: 'Выберите тему, чтобы начать' },
+      headingFeature1:    { en: 'Consistent Structure',   vn: 'Cấu trúc Nhất quán',           ar: 'هيكل متسق', ru: 'Последовательная структура' },
+      headingFeature2:    { en: 'Rules & Examples',       vn: 'Quy tắc & Ví dụ',              ar: 'القواعد والأمثلة', ru: 'Правила и примеры' },
+      headingFeature3:    { en: 'Smooth Navigation',      vn: 'Điều hướng Mượt mà',           ar: 'تنقل سلس', ru: 'Плавная навигация' }
+    };
+
+    const topicNameMapVN = {
+      'Nouns': 'Danh từ', 'Pronouns': 'Đại từ', 'Verbs': 'Động từ',
+      'Adjectives': 'Tính từ', 'Adverbs': 'Trạng từ', 'Conjunctions': 'Liên từ',
+      'Tenses': 'Thì', 'Sentence Structure': 'Cấu trúc Câu', 'Types of Sentences': 'Các loại Câu'
+    };
+
+    const topicNameMapAR = {
+      'Nouns': 'الأسماء', 'Pronouns': 'الضمائر', 'Verbs': 'الأفعال',
+      'Adjectives': 'الصفات', 'Adverbs': 'الظروف', 'Conjunctions': 'حروف العطف',
+      'Tenses': 'الأزمنة', 'Sentence Structure': 'بنية الجملة', 'Types of Sentences': 'أنواع الجمل'
+    };
+
+    const topicNameMapRU = {
+      'Nouns': 'Существительные', 'Pronouns': 'Местоимения', 'Verbs': 'Глаголы',
+      'Adjectives': 'Прилагательные', 'Adverbs': 'Наречия', 'Conjunctions': 'Союзы',
+      'Tenses': 'Времена', 'Sentence Structure': 'Структура предложения', 'Types of Sentences': 'Типы предложений'
+    };
+
+    function updateGrammarLang() {
+      const lang = sel.value; // 'english', 'vietnam', 'arabic', or 'russian'
+      const isVN = lang === 'vietnam';
+      const isAR = lang === 'arabic';
+      const isRU = lang === 'russian';
+
+      // Static headings
+      for (const [id, data] of Object.entries(headingMap)) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        if (isVN) {
+          el.innerHTML = '<strong>' + data.vn + '</strong> <span style="font-weight:400;color:#94a3b8;">(' + data.en + ')</span>';
+        } else if (isAR) {
+          el.innerHTML = '<strong>' + data.ar + '</strong> <span style="font-weight:400;color:#94a3b8;">(' + data.en + ')</span>';
+          el.style.direction = 'rtl';
+        } else if (isRU) {
+          el.innerHTML = '<strong>' + data.ru + '</strong> <span style="font-weight:400;color:#94a3b8;">(' + data.en + ')</span>';
+          el.style.direction = '';
+        } else {
+          el.textContent = data.en;
+          el.style.direction = '';
+        }
+      }
+
+      // Topic card names
+      document.querySelectorAll('.grammar-topic-name').forEach(el => {
+        if (!el.dataset.origText) el.dataset.origText = el.textContent.trim();
+        const orig = el.dataset.origText;
+        if (isVN && topicNameMapVN[orig]) {
+          el.innerHTML = '<strong>' + topicNameMapVN[orig] + '</strong> <span style="font-weight:400;color:#94a3b8;">(' + orig + ')</span>';
+        } else if (isAR && topicNameMapAR[orig]) {
+          el.innerHTML = '<strong>' + topicNameMapAR[orig] + '</strong> <span style="font-weight:400;color:#94a3b8;">(' + orig + ')</span>';
+        } else if (isRU && topicNameMapRU[orig]) {
+          el.innerHTML = '<strong>' + topicNameMapRU[orig] + '</strong> <span style="font-weight:400;color:#94a3b8;">(' + orig + ')</span>';
+        } else {
+          el.textContent = orig;
+        }
+      });
+    }
+
+    sel.value = 'english';
+    updateGrammarLang();
+    sel.addEventListener('change', function() {
+      updateGrammarLang();
+    });
+  })();
+</script>
+{% endblock %}

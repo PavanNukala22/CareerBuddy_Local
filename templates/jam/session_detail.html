@@ -1,0 +1,217 @@
+{% extends 'jam/base.html' %}
+{% load static %}
+
+
+{% block jam_content %}
+<div class="max-w-4xl mx-auto space-y-10 pb-20">
+    <!-- Header Navigation -->
+    <header class="flex items-center justify-between">
+        <a href="{% url 'jam:dashboard' %}" class="inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-colors group">
+            <span class="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+            <span class="text-sm font-serif font-bold">Back to Dashboard</span>
+        </a>
+        <div class="flex gap-3">
+            {% if assessment %}
+            <span class="px-4 py-1.5 bg-slate-900 text-amber-400 rounded-full text-[10px] font-bold uppercase tracking-widest border border-slate-800">
+                Assessment Stage
+            </span>
+            {% endif %}
+            <span class="px-4 py-1.5 bg-white text-slate-400 rounded-full text-[10px] font-bold uppercase tracking-widest border border-slate-100">
+                {{ session.created_at|date:"M d Y h:i A" }}
+            </span>
+        </div>
+    </header>
+
+    <!-- Main Result Card -->
+    <div id="resultCard" class="bg-white rounded-[48px] p-8 md:p-12 shadow-sm border border-slate-100 relative overflow-hidden">
+        <!-- Topic Section -->
+        <div class="relative z-10 mb-12">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="w-8 h-[1px] bg-coral/40"></span>
+                <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-coral">JAM Session Result</span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900 font-serif mb-4 leading-tight">{{ session.topic.title }}</h1>
+            <div class="flex flex-wrap gap-4 items-center">
+                <span class="px-4 py-1 bg-slate-50 text-slate-500 rounded-full text-xs font-bold font-serif border border-slate-100 capitalize">
+                    {{ session.topic.difficulty }} Difficulty
+                </span>
+                <span class="px-4 py-1 bg-slate-50 text-slate-500 rounded-full text-xs font-bold font-serif border border-slate-100">
+                    {{ session.duration_display }} spoken
+                </span>
+            </div>
+        </div>
+
+        <!-- Scores Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 relative z-10">
+            <!-- Left Side: Radar/Category Scores -->
+            <div class="space-y-8">
+                <h3 class="font-serif text-xl font-bold text-slate-900 flex items-center gap-3">
+                    <span class="w-2 h-2 rounded-full bg-coral"></span>
+                    Performance Breakdown
+                </h3>
+                
+                <div class="space-y-6">
+                    {% with scores=session %}
+                    <!-- Confidence -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-end">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Confidence</span>
+                            <span class="text-sm font-bold font-serif text-slate-900">{{ session.confidence_score|default:"0" }}/5</span>
+                        </div>
+                        <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden" style="--bar-width: {% widthratio session.confidence_score|default:0 5 100 %}%;">
+                            <div class="h-full bg-coral rounded-full transition-all duration-1000" style="width: var(--bar-width);"></div>
+                        </div>
+                    </div>
+                    <!-- Fluency -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-end">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Fluency</span>
+                            <span class="text-sm font-bold font-serif text-slate-900">{{ session.fluency_score|default:"0" }}/5</span>
+                        </div>
+                        <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden" style="--bar-width: {% widthratio session.fluency_score|default:0 5 100 %}%;">
+                            <div class="h-full bg-amber-400 rounded-full transition-all duration-1000" style="width: var(--bar-width);"></div>
+                        </div>
+                    </div>
+                    <!-- Language -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-end">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Language</span>
+                            <span class="text-sm font-bold font-serif text-slate-900">{{ session.language_score|default:"0" }}/5</span>
+                        </div>
+                        <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden" style="--bar-width: {% widthratio session.language_score|default:0 5 100 %}%;">
+                            <div class="h-full bg-blue-400 rounded-full transition-all duration-1000" style="width: var(--bar-width);"></div>
+                        </div>
+                    </div>
+                    <!-- Pronunciation -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-end">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Pronunciation</span>
+                            <span class="text-sm font-bold font-serif text-slate-900">{{ session.pronunciation_score|default:"0" }}/5</span>
+                        </div>
+                        <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden" style="--bar-width: {% widthratio session.pronunciation_score|default:0 5 100 %}%;">
+                            <div class="h-full bg-emerald-400 rounded-full transition-all duration-1000" style="width: var(--bar-width);"></div>
+                        </div>
+                    </div>
+                    <!-- Time -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-end">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Time Management</span>
+                            <span class="text-sm font-bold font-serif text-slate-900">{{ session.time_management_score|default:"0" }}/5</span>
+                        </div>
+                        <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden" style="--bar-width: {% widthratio session.time_management_score|default:0 5 100 %}%;">
+                            <div class="h-full bg-slate-900 rounded-full transition-all duration-1000" style="width: var(--bar-width);"></div>
+                        </div>
+                    </div>
+                    {% endwith %}
+                </div>
+            </div>
+
+            <!-- Right Side: Overall Score Circle -->
+            <div class="flex flex-col items-center justify-center border-l border-slate-100 pl-0 md:pl-12">
+                <div class="relative w-48 h-48 flex items-center justify-center">
+                    <svg class="absolute inset-0 w-full h-full -rotate-90" style="--score-px: {% widthratio session.overall_score_display|default:0 25 553 %}px;">
+                        <circle cx="96" cy="96" r="88" stroke="currentColor" stroke-width="12" fill="transparent" class="text-slate-50" />
+                        <circle cx="96" cy="96" r="88" stroke="currentColor" stroke-width="12" fill="transparent" stroke-dasharray="553" class="text-coral transition-all duration-1000" stroke-linecap="round" style="stroke-dashoffset: calc(553px - var(--score-px));" />
+                    </svg>
+                    <div class="text-center relative z-10">
+                        <span class="text-5xl font-bold font-serif text-slate-900 block">{{ session.overall_score_display|default:"0" }}</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Overall / 25</span>
+                    </div>
+                </div>
+                <p class="mt-8 text-center text-sm font-serif text-slate-500 italic max-w-[240px]">
+                    "Fluency is the result of habit, not just knowledge."
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Section -->
+    <div id="ai-feedback" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- AI Transcript & Feedback -->
+        <div class="md:col-span-2 space-y-6">
+            <div class="bg-white rounded-[40px] p-10 shadow-sm border border-slate-100 h-full">
+                <h3 class="font-serif text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3">
+                    <span class="material-symbols-outlined text-coral">auto_awesome</span>
+                    Detailed Feedback
+                </h3>
+                
+                <div class="prose prose-slate max-w-none font-serif text-slate-700 leading-relaxed jam-feedback-content">
+                    {{ session.ai_feedback|safe|linebreaks }}
+                </div>
+
+                <div class="mt-10 pt-8 border-t border-slate-50">
+                    <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4">Speech Transcript</h4>
+                    <div class="bg-slate-50/50 rounded-3xl p-6 border border-slate-100 text-sm font-serif text-slate-600 leading-relaxed">
+                        {% if session.transcript %}
+                            {{ session.transcript }}
+                        {% else %}
+                            <span class="italic text-slate-400">No transcript recorded for this session.</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Improvement Roadmap -->
+        <div class="space-y-6">
+            <div class="bg-slate-900 rounded-[40px] p-8 text-white h-full shadow-xl shadow-slate-900/10">
+                <h3 class="font-serif text-xl font-bold mb-6 flex items-center gap-3">
+                    <span class="material-symbols-outlined text-amber-400">rocket_launch</span>
+                    Growth Roadmap
+                </h3>
+                
+                <div class="space-y-6">
+                    {% if session.improvement_tips %}
+                        <div class="jam-roadmap-content text-sm font-serif text-slate-300 leading-relaxed">
+                            {{ session.improvement_tips|safe|linebreaks }}
+                        </div>
+                    {% else %}
+                        <p class="text-sm font-serif text-slate-400 italic">Complete more sessions to build a personalized roadmap.</p>
+                    {% endif %}
+                </div>
+
+                <div class="mt-12 pt-8 border-t border-slate-800 flex flex-col gap-4">
+                    <a href="{% url 'jam:jam_session' %}" class="w-full bg-white text-slate-900 py-4 rounded-2xl font-serif font-bold text-center hover:bg-slate-100 transition-all flex items-center justify-center gap-2">
+                        Next Session
+                        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                    </a>
+                    {% if session.audio_file %}
+                    <a href="{{ session.audio_file.url }}" target="_blank" class="w-full bg-slate-800 text-slate-400 py-3 rounded-2xl font-serif font-bold text-center hover:text-white transition-all text-sm">
+                        Listen to Recording
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.jam-feedback-content .feedback-highlight {
+    color: #ff4d6d;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+.jam-feedback-content b { color: #0f172a; }
+
+.jam-roadmap-content .feedback-highlight {
+    color: #fbbf24;
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.95rem;
+}
+.jam-roadmap-content b { color: #fff; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.addEventListener('load', () => {
+    const resultCard = document.getElementById('resultCard');
+    if (resultCard) {
+        resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+});
+</script>
+{% endblock %}

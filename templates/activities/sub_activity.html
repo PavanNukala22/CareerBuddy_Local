@@ -1,0 +1,478 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block content %}
+<div class="sub-activity-page pt-5">
+
+    <!-- Header Band -->
+    <div class="sub-activity-hero bg-{{ activity.color_class }}" style="position: relative;">
+        <!-- Language Dropdown (top-right, fixed) - Customized with Images -->
+        <div class="dropdown custom-lang-dropdown" style="position: fixed; top: 85px; right: 1.5rem; z-index: 1050;">
+            <button class="btn btn-sm dropdown-toggle d-flex align-items-center justify-content-between" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width:auto; min-width:140px; border-radius: 8px; background-color: #fff; color: #333; font-weight: 600; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.12);">
+                <span class="currentLangDisplay d-flex align-items-center"><img src="https://flagcdn.com/w20/gb.png" class="me-2" style="width:20px; border-radius:2px;"> English</span>
+            </button>
+            <ul class="dropdown-menu shadow-sm" style="border-radius: 8px; border: 1px solid #e2e8f0; min-width: 140px; padding: 0.5rem 0;">
+                <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#" data-val="english"><img src="https://flagcdn.com/w20/gb.png" class="me-2" style="width:20px; border-radius:2px;"> English</a></li>
+                <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#" data-val="vietnam"><img src="https://flagcdn.com/w20/vn.png" class="me-2" style="width:20px; border-radius:2px;"> Vietnamese</a></li>
+                <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#" data-val="arabic"><img src="https://flagcdn.com/w20/sa.png" class="me-2" style="width:20px; border-radius:2px;"> Arabic</a></li>
+                <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#" data-val="russian"><img src="https://flagcdn.com/w20/ru.png" class="me-2" style="width:20px; border-radius:2px;"> Russian</a></li>
+            </ul>
+            <select id="languageSelect" class="d-none">
+                <option value="english" selected>English</option>
+                <option value="vietnam">Vietnamese</option>
+                <option value="arabic">Arabic</option>
+                <option value="russian">Russian</option>
+            </select>
+        </div>
+        
+        <script>
+        (function(){
+            setTimeout(() => {
+                const dropdownWrapper = document.querySelector('.custom-lang-dropdown');
+                if (!dropdownWrapper) return;
+                
+                const langOptions = dropdownWrapper.querySelectorAll('.lang-option');
+                const display = dropdownWrapper.querySelector('.currentLangDisplay');
+                const selectElement = document.getElementById('languageSelect');
+                
+                langOptions.forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const val = this.getAttribute('data-val');
+                        display.innerHTML = this.innerHTML;
+                        
+                        if (selectElement) {
+                            selectElement.value = val;
+                            selectElement.dispatchEvent(new Event('change'));
+                        }
+                    });
+                });
+                
+                if (selectElement) {
+                    selectElement.addEventListener('change', (e) => {
+                        const opt = Array.from(langOptions).find(o => o.getAttribute('data-val') === e.target.value);
+                        if (opt) display.innerHTML = opt.innerHTML;
+                    });
+                }
+            }, 100);
+        })();
+        </script>
+        <div class="container py-4">
+            <nav aria-label="breadcrumb" class="mb-2">
+                <ol class="breadcrumb breadcrumb-light mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'activity_list' %}">Activities</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'activity_detail' activity.pk %}">{{ activity.title|truncatechars:30 }}</a></li>
+                    <li class="breadcrumb-item active">{{ sub.title|truncatechars:30 }}</li>
+                </ol>
+            </nav>
+            <div class="d-flex align-items-center gap-3 mt-2">
+                <div class="sub-hero-icon"><i class="{{ activity.icon_class }}"></i></div>
+                <div>
+                    <div class="text-white-50 small">Sub-Activity {{ sub.order }} of {{ activity.subactivities.count }}</div>
+                    <h2 class="text-white mb-0">{{ sub.title }}</h2>
+                </div>
+                <div class="ms-auto">
+                    <span class="badge {% if sub_progress.status == 'completed' %}bg-success{% elif sub_progress.status == 'in_progress' %}bg-warning text-dark{% else %}bg-secondary{% endif %} px-3 py-2">
+                        {% if sub_progress.status == 'completed' %}<i class="fas fa-check me-1"></i>Completed
+                        {% elif sub_progress.status == 'in_progress' %}<i class="fas fa-spinner me-1"></i>In Progress
+                        {% else %}Not Started{% endif %}
+                    </span>
+                    {% if sub_progress.attempted %}
+                    <span class="badge bg-{{ sub_progress.band }} px-3 py-2 ms-1" title="Average score across this sub-activity's exercises">
+                        Score {{ sub_progress.percent }}%
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-5">
+        <div class="row g-4">
+
+            <!-- Main Content -->
+            <div class="col-lg-8">
+
+                <!-- Description -->
+                <div class="content-card mb-4">
+                    <div class="content-card-header">
+                        <i class="fas fa-info-circle me-2 text-primary"></i><span id="headingOverview">Overview</span>
+                    </div>
+                    <div class="content-card-body">
+                        <p class="mb-0"><span id="descOverview">{{ sub.description }}</span></p>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="content-card mb-4">
+                    <div class="content-card-header">
+                        <i class="fas fa-list-ol me-2 text-primary"></i><span id="headingInstructions">Instructions</span>
+                    </div>
+                    <div class="content-card-body">
+                        <div class="instructions-text" id="instructionsBox">{{ sub.instructions|linebreaks }}</div>
+                    </div>
+                </div>
+
+                <!-- Exercises -->
+                {% if exercises %}
+                <h5 class="fw-bold mb-3"><i class="fas fa-gamepad me-2 text-primary"></i><span id="headingExercises">Interactive Exercises</span></h5>
+                <div class="exercises-grid">
+                    {% for exercise in exercises %}
+                    <div class="exercise-card">
+                        <div class="exercise-card-left">
+                            <div class="exercise-type-icon exercise-{{ exercise.exercise_type }}">
+                                {% if exercise.exercise_type == 'mcq' %}<i class="fas fa-list-ul"></i>
+                                {% elif exercise.exercise_type == 'fill_blank' %}<i class="fas fa-pen-to-square"></i>
+                                {% elif exercise.exercise_type == 'matching' %}<i class="fas fa-link"></i>
+                                {% elif exercise.exercise_type == 'ordering' %}<i class="fas fa-sort"></i>
+                                {% elif exercise.exercise_type == 'bingo' %}<i class="fas fa-th"></i>
+                                {% elif exercise.exercise_type == 'writing' %}<i class="fas fa-file-alt"></i>
+                                {% elif exercise.exercise_type == 'timer' %}<i class="fas fa-stopwatch"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="exercise-card-body">
+                            <div class="exercise-type-label">{{ exercise.get_exercise_type_display }}</div>
+                            <h6 class="exercise-title">{{ exercise.title }}</h6>
+                            <p class="exercise-instructions text-muted small mb-2">{{ exercise.instructions|truncatechars:80 }}</p>
+                            {% for ex_id, r in results_map.items %}
+                            {% if ex_id == exercise.id and r %}
+                            <div class="exercise-last-score">
+                                <i class="fas fa-trophy text-warning me-1"></i>
+                                Last score: <strong>{{ r.score }}/{{ r.max_score }}</strong>
+                                <span class="ms-2 badge {% if r.percentage >= 80 %}bg-success{% elif r.percentage >= 50 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                    {{ r.percentage }}%
+                                </span>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        <div class="exercise-card-action">
+                            <a href="{% url 'exercise_detail' exercise.pk %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-play me-1"></i>Start
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Performance summary (progress is score-based) -->
+                {% if exercises %}
+                <div class="mark-complete-card mt-4">
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <i class="fas fa-chart-line fa-2x text-{{ sub_progress.band }}"></i>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Your progress in this sub-activity:
+                                <span class="text-{{ sub_progress.band }}">{{ sub_progress.percent }}%</span></h6>
+                            <div class="progress progress-sm mb-1" role="progressbar" aria-label="Sub-activity performance"
+                                aria-valuenow="{{ sub_progress.percent }}" aria-valuemin="0" aria-valuemax="100" style="max-width:420px">
+                                <div class="progress-bar bg-{{ sub_progress.band }}" style="width: {{ sub_progress.percent }}%"></div>
+                            </div>
+                            <p class="text-muted mb-0 small">
+                                Based on your scores: {{ sub_progress.attempted }}/{{ sub_progress.total }} exercise{{ sub_progress.total|pluralize }} attempted.
+                                {% if sub_progress.status != 'completed' %}Exercises you haven't tried count as 0%.
+                                {% elif sub_progress.percent < 100 %}Retry an exercise to raise your score.
+                                {% else %}Perfect score!{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Navigation -->
+                <div class="activity-nav mt-4">
+                    {% if prev_sub %}
+                    <a href="{% url 'sub_activity_detail' activity.pk prev_sub.pk %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>{{ prev_sub.title|truncatechars:20 }}
+                    </a>
+                    {% else %}
+                    <a href="{% url 'activity_detail' activity.pk %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Activity
+                    </a>
+                    {% endif %}
+                    {% if next_sub %}
+                    <a href="{% url 'sub_activity_detail' activity.pk next_sub.pk %}" class="btn btn-outline-primary">
+                        {{ next_sub.title|truncatechars:20 }}<i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                    {% else %}
+                    <a href="{% url 'activity_detail' activity.pk %}" class="btn btn-success">
+                        <i class="fas fa-flag-checkered me-2"></i>Finish Activity
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Progress in this activity -->
+                <div class="info-card mb-4">
+                    <div class="info-card-header"><i class="fas fa-map me-2"></i><span id="headingProgress">Activity Progress</span></div>
+                    <div class="info-card-body p-0">
+                        {% for s in activity.subactivities.all %}
+                        <a href="{% url 'sub_activity_detail' activity.pk s.pk %}"
+                           class="sub-nav-item {% if s.pk == sub.pk %}sub-nav-active{% endif %}">
+                            <span class="sub-nav-num">{{ s.order }}</span>
+                            <span class="sub-nav-title">{{ s.title|truncatechars:30 }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Tips -->
+                <div class="info-card tips-card">
+                    <div class="info-card-header"><i class="fas fa-lightbulb me-2"></i><span id="headingTips">Learning Tips</span></div>
+                    <div class="info-card-body">
+                        <ul class="tips-list">
+                            <li class="tip-item">Read the instructions carefully before starting.</li>
+                            <li class="tip-item">Complete exercises to reinforce what you learn.</li>
+                            <li class="tip-item">Retry exercises to improve your score.</li>
+                            <li class="tip-item">Mark complete when you feel confident.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const languageSelect = document.getElementById('languageSelect');
+    if (!languageSelect) return;
+
+    const headings = {
+        headingOverview:      { en: "Overview",              vn: "Tổng quan",          ar: "نظرة عامة",        ru: "Обзор" },
+        headingInstructions:  { en: "Instructions",          vn: "Hướng dẫn",          ar: "التعليمات",         ru: "Инструкции" },
+        headingExercises:     { en: "Interactive Exercises", vn: "Bài tập tương tác",  ar: "تمارين تفاعلية",    ru: "Интерактивные упражнения" },
+        headingProgress:      { en: "Activity Progress",     vn: "Tiến độ hoạt động", ar: "تقدم النشاط",       ru: "Прогресс занятия" },
+        headingTips:          { en: "Learning Tips",         vn: "Mẹo học tập",        ar: "نصائح للتعلم",      ru: "Советы по обучению" }
+    };
+
+    // ── Generic Google Translate helper ───────────────────────────────────────
+    const translationCache = {};
+    async function translateTo(text, langCode) {
+        if (!text || !text.trim()) return text;
+        const key = text.trim() + '|' + langCode;
+        if (translationCache[key]) return translationCache[key];
+        try {
+            const res = await fetch(
+                'https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=' +
+                encodeURIComponent(langCode) + '&dt=t&q=' +
+                encodeURIComponent(text.trim())
+            );
+            const data = await res.json();
+            if (data && data[0]) {
+                const translated = data[0].map(x => x[0]).join('').trim();
+                translationCache[key] = translated;
+                return translated;
+            }
+        } catch (e) { /* silent */ }
+        return text.trim();
+    }
+
+    // ── Collect bold elements (headings & titles only – NOT descriptions) ──
+    const boldSelectors = [
+        'h2.text-white',
+        '#descOverview',
+        'h5.fw-bold',
+        'h6.exercise-title',
+        '.exercise-instructions',
+        'h6.mb-1',
+        '.sub-nav-title',
+        '.tip-item',
+    ];
+
+    const dynamicTargets = [];
+    boldSelectors.forEach(selector => {
+        document.querySelectorAll(selector).forEach(el => {
+            const textNode = [...el.childNodes].find(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
+            if (textNode) {
+                dynamicTargets.push({ el, textNode, original: textNode.textContent.trim() });
+            } else {
+                dynamicTargets.push({ el, textNode: null, original: el.textContent.trim() });
+            }
+        });
+    });
+
+    let currentLang = 'en';
+
+    async function applyDynamicTranslation(langCode) {
+        currentLang = langCode;
+        // Fire all translation requests in parallel
+        const translations = await Promise.all(
+            dynamicTargets.map(t => translateTo(t.original, langCode))
+        );
+        if (currentLang !== langCode) return; // abort if language changed
+        translations.forEach((translated, i) => {
+            const t = dynamicTargets[i];
+            if (t.textNode) {
+                t.textNode.textContent = translated + ' (' + t.original + ') ';
+            } else {
+                t.el.textContent = translated + ' (' + t.original + ')';
+            }
+        });
+    }
+
+    function restoreEnglish() {
+        currentLang = 'en';
+        for (const t of dynamicTargets) {
+            if (t.textNode) {
+                t.textNode.textContent = t.original + ' ';
+            } else {
+                t.el.textContent = t.original;
+            }
+        }
+        // Restore instructions box
+        const instrBox = document.getElementById('instructionsBox');
+        if (instrBox && instrBox.dataset.origLines) {
+            const lines = JSON.parse(instrBox.dataset.origLines);
+            instrBox.innerHTML = lines.map(l => `<p style="margin-bottom:6px;">${l}</p>`).join('');
+        }
+    }
+
+    // ── Translate instructions box line by line (innerText approach) ────────────
+    async function translateInstructionsBox(langCode) {
+        const instrBox = document.getElementById('instructionsBox');
+        if (!instrBox) return;
+
+        // Save original lines from innerText once
+        if (!instrBox.dataset.origLines) {
+            const lines = instrBox.innerText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            instrBox.dataset.origLines = JSON.stringify(lines);
+        }
+
+        const origLines = JSON.parse(instrBox.dataset.origLines);
+        if (!origLines.length) return;
+
+        // Fire all line translations in parallel
+        const translations = await Promise.all(
+            origLines.map(line => translateTo(line, langCode))
+        );
+        if (currentLang !== langCode) return; // abort if language changed
+
+        instrBox.innerHTML = translations.map((translated, i) =>
+            `<p style="margin-bottom:6px;"><strong>${translated}</strong> <span style="font-weight:400;color:#94a3b8;">(${origLines[i]})</span></p>`
+        ).join('');
+    }
+
+    // ── Static heading translations ────────────────────────────────────────
+    function updateLanguage() {
+        const lang = languageSelect.value;
+        const isVietnam = lang === 'vietnam';
+        const isArabic  = lang === 'arabic';
+        const isRussian = lang === 'russian';
+
+        for (const [id, data] of Object.entries(headings)) {
+            const el = document.getElementById(id);
+            if (el) {
+                if (isVietnam) {
+                    el.innerHTML = `<span class="font-bold">${data.vn}</span> <span class="text-slate-400 font-normal">(${data.en})</span>`;
+                    el.style.direction = '';
+                } else if (isArabic) {
+                    el.innerHTML = `<span class="font-bold">${data.ar}</span> <span class="text-slate-400 font-normal">(${data.en})</span>`;
+                    el.style.direction = 'rtl';
+                } else if (isRussian) {
+                    el.innerHTML = `<span class="font-bold">${data.ru}</span> <span class="text-slate-400 font-normal">(${data.en})</span>`;
+                    el.style.direction = '';
+                } else {
+                    el.textContent = data.en;
+                    el.style.direction = '';
+                }
+            }
+        }
+
+        // Dynamic bold elements
+        if (isVietnam) {
+            applyDynamicTranslation('vi');
+            translateInstructionsBox('vi');
+        } else if (isRussian) {
+            applyDynamicTranslation('ru');
+            translateInstructionsBox('ru');
+        } else if (isArabic) {
+            applyDynamicTranslation('ar');
+            translateInstructionsBox('ar');
+        } else {
+            restoreEnglish();
+        }
+    }
+
+    // ── Persisted language (shared across every activity page) ──────────────
+    const LANGUAGE_PREF_KEY = 'careerbuddy_selected_language';
+
+    function syncDropdownDisplay(val) {
+        const wrapper = document.querySelector('.custom-lang-dropdown');
+        if (!wrapper) return;
+        const display = wrapper.querySelector('.currentLangDisplay');
+        const opt = wrapper.querySelector('.lang-option[data-val="' + val + '"]');
+        if (display && opt) display.innerHTML = opt.innerHTML;
+    }
+
+    languageSelect.addEventListener('change', function() {
+        updateLanguage();
+    });
+
+    // Always English on load — the selection is applied to the current view only
+    // and is not persisted, so every refresh resets the page to English.
+    languageSelect.value = 'english';
+    updateLanguage();
+
+    // ── Pre-warm translation cache in background ──────────────────────────
+    // Silently fetch ALL translations for every language after page loads
+    // so when the user selects a language it appears instantly (cache hit).
+    function prewarmCache() {
+        const langCodes = ['vi', 'ar', 'ru'];
+
+        // Collect all unique strings that need translation
+        const textsToPrewarm = new Set();
+
+        // From dynamic heading targets
+        dynamicTargets.forEach(t => textsToPrewarm.add(t.original));
+
+        // From instructions box
+        const instrBox = document.getElementById('instructionsBox');
+        if (instrBox) {
+            const lines = instrBox.innerText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            lines.forEach(l => textsToPrewarm.add(l));
+            // Also save origLines while we're at it
+            if (!instrBox.dataset.origLines) {
+                instrBox.dataset.origLines = JSON.stringify(lines);
+            }
+        }
+
+        const texts = [...textsToPrewarm].filter(t => t.length > 0);
+
+        // Fire all in background — no await, no blocking
+        langCodes.forEach(lang => {
+            texts.forEach(text => {
+                const key = text + '|' + lang;
+                if (!translationCache[key]) {
+                    fetch(
+                        'https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=' +
+                        encodeURIComponent(lang) + '&dt=t&q=' + encodeURIComponent(text)
+                    )
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data[0]) {
+                            translationCache[key] = data[0].map(x => x[0]).join('').trim();
+                        }
+                    })
+                    .catch(() => {});
+                }
+            });
+        });
+    }
+
+    // Use idle time or a small delay so page rendering isn't blocked
+    if (typeof requestIdleCallback !== 'undefined') {
+        requestIdleCallback(() => prewarmCache(), { timeout: 2000 });
+    } else {
+        setTimeout(prewarmCache, 800);
+    }
+})();
+</script>
+{% endblock %}
+

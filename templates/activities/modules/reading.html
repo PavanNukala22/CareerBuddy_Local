@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+<style>.hidden { display: none !important; }</style>
+<style>
+  .module-page { padding-top: 60px; min-height: 100vh; background: #f8fafc; }
+  .module-hero {
+    background:linear-gradient(135deg,#713f12 0%,#d97706 100%);
+    padding:2.5rem 0 3rem; color:#fff;
+  }
+  .module-hero h1 { font-size:1.9rem; font-weight:800; margin-bottom:.4rem; }
+  .module-badge {
+    display:inline-flex; align-items:center; gap:.4rem;
+    background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3);
+    border-radius:50rem; padding:.25rem .8rem; font-size:.8rem; margin-bottom:.8rem;
+  }
+  .panel-card {
+    background:#fff; border-radius:20px;
+    box-shadow:0 4px 20px rgba(0,0,0,.08); border:1px solid #e2e8f0;
+    padding:2rem; margin-bottom:1.5rem;
+    position: relative; overflow: hidden;
+  }
+  .passage-box {
+    background:#fffbeb; border:1px solid #fde68a; border-radius:16px;
+    padding:1.5rem; line-height:2; font-size:1.1rem; color:#1c1917;
+    position: relative; z-index: 1;
+  }
+  .passage-line { display:inline; }
+  .word { display:inline; cursor:default; }
+
+  /* Premium Mic UI */
+  .mic-container {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 3rem 1.5rem;
+  }
+  .mic-wrap { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
+  .rr1, .rr2 { 
+    position: absolute; 
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    border: 2px solid #d97706; border-radius: 50%; opacity: 0; pointer-events: none; 
+  }
+  .rr1.on { animation: ripple 2s infinite ease-out; }
+  .rr2.on { animation: ripple 2s 1s infinite ease-out; }
+  @keyframes ripple { 
+    from { width: 40px; height: 40px; opacity: 0.6; transform: translate(-50%, -50%); } 
+    to { width: 140px; height: 140px; opacity: 0; transform: translate(-50%, -50%); } 
+  }
+  
+  #micBtn {
+    width:72px; height:72px; background:#d97706; color:#fff;
+    border:none; border-radius:50%; display: flex; align-items: center; justify-content: center;
+    box-shadow:0 10px 15px -3px rgba(217,119,6,0.3);
+    transition:transform .15s, background .15s;
+    position:relative; z-index:10;
+  }
+  #micBtn:hover { transform:scale(1.05); }
+  #micBtn.rec { background:#dc2626; box-shadow:0 10px 15px -3px rgba(220,38,38,0.3); }
+
+  .transcript-box {
+    background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px;
+    padding:1.5rem; min-height:100px; font-size:1.05rem; line-height:1.7; color:#334155;
+  }
+  .stat-chip { background:#f1f5f9; border-radius:50rem; padding:.25rem .75rem; font-size:.82rem; color:#475569; font-weight:600; }
+  
+  .btn-primary-solid {
+    background:#d97706; color:#fff; border:none; border-radius:50rem;
+    padding:.75rem 2.5rem; font-weight:700; font-size:1rem; cursor:pointer;
+    transition:background .15s, transform .1s; box-shadow: 0 4px 6px -1px rgba(217,119,6,0.2);
+  }
+  .btn-primary-solid:hover { background:#b45309; transform:translateY(-1px); }
+  
+  .tips-card { background:#fffbeb; border:1px solid #fde68a; border-radius:16px; padding:1.25rem; }
+  .tips-card li { font-size:.9rem; color:#78350f; margin-bottom:.5rem; }
+  .feedback-row { display:flex; justify-content:space-between; align-items:center; padding:1rem 0; border-bottom:1px solid #f1f5f9; }
+  .score-display { font-size:3rem; font-weight:900; color:#d97706; line-height:1; }
+  .btn-outline-solid {
+    background:transparent; border:1.5px solid #d97706; color:#92400e;
+    border-radius:50rem; padding:.45rem 1.2rem; font-weight:600;
+    font-size:.85rem; cursor:pointer; transition:background .15s;
+  }
+  .btn-outline-solid:hover { background:#fef3c7; }
+  .lvl-btn {
+    background:transparent; border:1.5px solid #e2e8f0; color:#64748b;
+    border-radius:50rem; padding:.35rem 1rem; font-size:.82rem; font-weight:600; cursor:pointer;
+    transition:all .15s;
+  }
+  .lvl-btn.active { background:#d97706; border-color:#d97706; color:#fff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="module-page">
+
+  <div class="module-hero" style="position: relative;">
+    {% include 'includes/language_dropdown.html' %}
+    <div class="container">
+      <div id="labelModuleHeader" class="module-badge"><i class="fas fa-book-open me-1"></i>Reading Module</div>
+      <h1 id="activityTitle">{{ activity.title }}</h1>
+      <p id="activityObjective">{{ activity.objective }}</p>
+      <nav aria-label="breadcrumb" class="mt-2">
+        <ol class="breadcrumb" style="font-size:.82rem;">
+          <li class="breadcrumb-item"><a href="{% url 'activity_list' %}" class="text-yellow-100">Activities</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'activity_detail' activity.pk %}" class="text-yellow-100" id="breadcrumbActivityTitle">{{ activity.title }}</a></li>
+          <li class="breadcrumb-item active text-white" id="breadcrumbPractice">Practice</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <div class="container py-4">
+    <div class="row g-4">
+
+      <!-- Left -->
+      <div class="col-lg-8">
+
+        <!-- Passage controls -->
+        <div class="panel-card" style="border-left:4px solid #d97706;">
+          <div>
+            <p id="labelReadingPassage" class="text-uppercase fw-bold mb-1" style="font-size:.75rem;letter-spacing:.08em;color:#d97706;">Reading Passage</p>
+            <h2 id="passTitle" class="h5 fw-bold text-dark mb-1">My Classroom Day</h2>
+            <div class="d-flex gap-2 align-items-center mb-3">
+              <span id="passLevel" class="small text-muted">Level 1</span>
+              <span id="diffBadge" class="badge bg-warning text-dark">Beginner</span>
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+              <div class="d-flex gap-1">
+                <button class="lvl-btn lvl active" data-level="1">Level 1</button>
+                <button class="lvl-btn lvl" data-level="2">Level 2</button>
+                <button class="lvl-btn lvl" data-level="3">Level 3</button>
+              </div>
+              <button class="btn-new btn-outline-solid btn-sm py-1 px-3" style="border-radius:50rem; font-size:.85rem;">
+                <i class="fas fa-sync-alt me-1"></i>New
+              </button>
+            </div>
+          </div>
+
+          <!-- Passage text -->
+          <div class="passage-box" id="passBox">Loading passage...</div>
+        </div>
+
+        <!-- Recording panel -->
+        <div class="panel-card text-center">
+          <div class="mic-wrap mb-3" id="micWrap">
+            <div class="rr1" id="rr1"></div>
+            <div class="rr2" id="rr2"></div>
+            <button id="micBtn" aria-label="Start recording">
+              <span class="material-symbols-outlined" style="font-size:2rem;">mic</span>
+            </button>
+          </div>
+          <p class="fw-bold mb-2" id="micLbl">Tap to Start Recording</p>
+          <div class="d-flex justify-content-center gap-2 flex-wrap mb-3">
+            <span class="stat-chip"><i class="fas fa-clock me-1"></i><span id="timeTxt">0s</span></span>
+            <span class="stat-chip" id="statusTxt">Idle</span>
+            <span class="stat-chip"><span id="labelPausesCount">Pauses:</span> <b id="pauseTxt">0</b></span>
+          </div>
+          <button id="pauseBtn" class="btn-outline-solid hidden mb-2">Pause</button>
+          <div id="pauseAlert" class="alert alert-danger hidden py-2 small"></div>
+
+          <!-- Recorded audio -->
+          <div id="recordedWrap" class="hidden mt-3">
+            <div class="d-flex align-items-center gap-3 p-3 rounded-3" style="background:#f8fafc;border:1px solid #e2e8f0;">
+              <div class="d-flex align-items-center justify-content-center rounded-circle bg-warning bg-opacity-10" style="width:40px;height:40px;">
+                <span class="material-symbols-outlined text-warning">headphones</span>
+              </div>
+              <audio id="recordedAudio" controls class="flex-grow-1" style="height:36px;"></audio>
+            </div>
+          </div>
+
+          <button id="analyzeBtn" class="btn-primary-solid mt-3">
+            <i class="fas fa-brain me-2"></i>Submit for Analysis
+          </button>
+          <p id="analyzeNote" class="text-muted small mt-2">Click to generate pronunciation feedback and score.</p>
+        </div>
+
+        <!-- Evaluation Card -->
+        <div id="fbCard" class="panel-card hidden">
+          <h5 class="fw-bold mb-4" id="headingEvaluation">
+            <i class="fas fa-chart-bar me-2 text-warning"></i>Evaluation
+          </h5>
+          
+          <div class="feedback-row">
+            <span class="text-muted" id="labelScore">Reading Score</span>
+            <span id="lessonScore" class="h3 fw-black mb-0" style="color:#d97706;">0/25</span>
+          </div>
+
+          <div class="mt-4">
+            <p class="fw-bold text-uppercase small text-muted mb-2 d-flex align-items-center gap-2">
+              <i class="fas fa-search text-warning"></i>
+              <span id="headingMistakes">Mistakes Review</span>
+            </p>
+            <div id="reviewText" class="transcript-box">Record and click Analyze to see highlighted mistakes in your reading transcript.</div>
+          </div>
+
+          <div class="mt-4">
+            <p class="fw-bold text-uppercase small text-muted mb-2 d-flex align-items-center gap-2">
+              <span class="material-symbols-outlined text-warning" style="font-size:18px;">star</span>
+              <span id="labelImproved">Improved Version</span>
+            </p>
+            <div id="improvedText" class="transcript-box">Your improved reading text will appear after analysis.</div>
+          </div>
+
+          <div class="mt-4">
+            <p class="fw-bold text-uppercase small text-muted mb-2 d-flex align-items-center gap-2">
+              <span class="material-symbols-outlined text-success" style="font-size:18px;">comment_dots</span>
+              <span id="labelFeedback">Overall Feedback</span>
+            </p>
+            <p id="fbText" class="transcript-box mb-0">Great reading. You are improving with good pace and clarity.</p>
+          </div>
+
+          <div class="text-center">
+            <button id="tryAgainBtn" class="btn-primary-solid">
+              <i class="fas fa-redo me-2"></i><span id="labelTryAgain">Try Again</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mark complete -->
+        <div class="panel-card text-center" style="background:#fffbeb; border:1px solid #fde68a;">
+          <form method="post" action="{% url 'mark_sub_complete' sub.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-primary-solid">
+              <i class="fas fa-check-circle me-2"></i>Mark Sub-Activity Complete
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Right: tips -->
+      <div class="col-lg-4">
+        <div class="panel-card">
+          <h6 class="fw-bold mb-3"><i class="fas fa-lightbulb text-warning me-2"></i><span id="labelReadingTip">Reading Tip</span></h6>
+          <div class="tips-card">
+            <ul class="list-unstyled mb-2">
+              <li id="tipStatic1">• Read each line clearly and at a steady pace.</li>
+              <li id="tipStatic2">• Pause naturally at commas and full stops.</li>
+              <li id="tipStatic3">• Don't rush — accuracy matters most.</li>
+            </ul>
+          </div>
+          <p class="small text-muted mt-2 mb-0" id="tipReadingContent">
+            Read slowly and clearly. Pause at full stops and keep a steady rhythm.
+          </p>
+          <hr>
+          <p class="fw-bold text-uppercase small text-muted mb-1"><span id="labelQuickTip">Quick Tip</span></p>
+          <p class="small text-muted mb-0" id="quickTipText">Quick tips will appear here.</p>
+        </div>
+        {% if previous_result %}
+        <div class="panel-card" id="prevScoreCard">
+          <h6 class="fw-bold mb-2"><i class="fas fa-history text-secondary me-2"></i>Previous Score</h6>
+          <div class="score-display"><span id="prevScoreVal">{{ previous_result.score }}</span><span class="fs-5">/25</span></div>
+          <div class="small text-muted" id="prevScoreDate">{{ previous_result.completed_at|date:"M d, Y" }}</div>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="reading-config">
+{
+  "analyzeEndpoint": "{% url 'analyze_reading' exercise.pk %}",
+  "lessonsPath": "{{ request.path }}"
+}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'activities/js/linguavoice-common.js' %}?v=i18n-persist-3"></script>
+<script src="{% static 'activities/js/reading.js' %}?v=i18n-persist-3"></script>
+<script src="{% static 'activities/js/activity-hero-i18n.js' %}?v=i18n-persist-3"></script>
+{% endblock %}

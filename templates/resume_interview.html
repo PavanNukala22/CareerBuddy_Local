@@ -1,0 +1,1896 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+<style>
+    .interview-page { padding-top: 2rem; padding-bottom: 4rem; }
+
+    /* Hero Banner */
+    .interview-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0ea5e9 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 2rem 2.5rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .interview-hero::before {
+        content: '';
+        position: absolute;
+        top: -40px; right: -40px;
+        width: 180px; height: 180px;
+        background: rgba(14,165,233,0.15);
+        border-radius: 50%;
+    }
+
+    /* Chat Area */
+    .chat-card {
+        background: #fff;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 20px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        min-height: 520px;
+    }
+    .chat-header {
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .ai-avatar {
+        width: 40px; height: 40px;
+        background: linear-gradient(135deg, #0ea5e9, #0284c7);
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        color: white; font-size: 1rem;
+        flex-shrink: 0;
+    }
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        min-height: 360px;
+        max-height: 420px;
+    }
+    .msg-bot, .msg-user {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+    }
+    .msg-user { flex-direction: row-reverse; }
+    .msg-avatar {
+        width: 34px; height: 34px;
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+    .msg-avatar.bot { background: #f1f5f9; color: #64748b; }
+    .msg-avatar.user { background: #dbeafe; color: #1d4ed8; }
+    .msg-bubble {
+        max-width: 78%;
+        padding: 0.85rem 1.1rem;
+        border-radius: 14px;
+        font-size: 0.92rem;
+        line-height: 1.65;
+    }
+    .msg-bubble.bot {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-top-left-radius: 4px;
+    color: #334155;
+
+    /* Prevent selecting interview questions */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+}
+    .msg-bubble.user {
+        background: linear-gradient(135deg, #0ea5e9, #0284c7);
+        color: white;
+        border-top-right-radius: 4px;
+    }
+    .msg-time {
+        font-size: 0.72rem;
+        color: #94a3b8;
+        margin-top: 0.3rem;
+        padding: 0 0.2rem;
+    }
+    .msg-user .msg-time { text-align: right; }
+
+    /* Input */
+    .chat-input-wrap {
+        border-top: 1.5px solid #e2e8f0;
+        padding: 1rem 1.25rem;
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-end;
+        background: #fff;
+    }
+    .chat-textarea {
+        flex: 1;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.7rem 1rem;
+        font-size: 0.9rem;
+        resize: none;
+        transition: border-color 0.2s;
+        font-family: inherit;
+    }
+    .chat-textarea:focus {
+        outline: none;
+        border-color: #0ea5e9;
+        box-shadow: 0 0 0 3px rgba(14,165,233,0.1);
+    }
+    .send-btn {
+        width: 44px; height: 44px;
+        background: linear-gradient(135deg, #0ea5e9, #0284c7);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+    .send-btn:hover { transform: scale(1.05); box-shadow: 0 4px 14px rgba(14,165,233,0.35); }
+    .send-btn:disabled { opacity: 0.55; transform: none; cursor: not-allowed; }
+
+    /* Side Panel */
+    .side-card {
+        background: white;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.4rem;
+    }
+    .side-card + .side-card { margin-top: 1rem; }
+    .progress-ring-wrap { position: relative; width: 90px; height: 90px; }
+    .progress-ring-wrap svg { transform: rotate(-90deg); }
+    .progress-ring-center {
+        position: absolute; inset: 0;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        font-size: 1.2rem; font-weight: 800;
+        color: #0f172a;
+    }
+
+    /* Progress bar */
+    .q-progress-bar {
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 50px;
+        overflow: hidden;
+    }
+    .q-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #0ea5e9, #0284c7);
+        border-radius: 50px;
+        transition: width 0.4s ease;
+    }
+
+    /* Score badge */
+    .score-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.7rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+    .score-high { background: #dcfce7; color: #15803d; }
+    .score-mid  { background: #fef9c3; color: #a16207; }
+    .score-low  { background: #fee2e2; color: #dc2626; }
+
+    /* Typing dots */
+    .typing-dots span {
+        display: inline-block;
+        width: 7px; height: 7px;
+        border-radius: 50%;
+        background: #94a3b8;
+        animation: bounce 1.1s infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: 0.18s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.36s; }
+    /* Typing dots */
+    .typing-dots span {
+        display: inline-block;
+        width: 7px; height: 7px;
+        border-radius: 50%;
+        background: #94a3b8;
+        animation: bounce 1.1s infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: 0.18s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.36s; }
+    @keyframes bounce {
+        0%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-6px); }
+    }
+
+    /* ── Voice Recording Button ─────────────────────────────────────── */
+    .record-btn {
+        width: 64px; height: 64px;
+        border-radius: 50%;
+        border: 3px solid #0ea5e9;
+        background: white;
+        color: #0ea5e9;
+        font-size: 1.6rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        position: relative;
+        box-shadow: 0 2px 12px rgba(14,165,233,0.15);
+    }
+    .record-btn:hover {
+        background: #f0f9ff;
+        transform: scale(1.05);
+        box-shadow: 0 4px 20px rgba(14,165,233,0.25);
+    }
+    .record-btn:active {
+        transform: scale(0.95);
+    }
+    .record-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    .record-btn.recording {
+        background: #ef4444;
+        border-color: #ef4444;
+        color: white;
+        animation: recording-pulse 1.2s infinite;
+        box-shadow: 0 0 0 0 rgba(239,68,68,0.5);
+    }
+    @keyframes recording-pulse {
+        0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+        70% { box-shadow: 0 0 0 16px rgba(239,68,68,0); }
+        100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+    }
+
+    /* Recording Wave Animation */
+    .recording-wave {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        height: 24px;
+        margin-top: 4px;
+    }
+    .recording-wave span {
+        display: inline-block;
+        width: 4px;
+        height: 100%;
+        border-radius: 4px;
+        background: #ef4444;
+        animation: wave 0.9s infinite ease-in-out;
+    }
+    .recording-wave span:nth-child(1) { animation-delay: 0s; height: 40%; }
+    .recording-wave span:nth-child(2) { animation-delay: 0.1s; height: 70%; }
+    .recording-wave span:nth-child(3) { animation-delay: 0.2s; height: 100%; }
+    .recording-wave span:nth-child(4) { animation-delay: 0.3s; height: 70%; }
+    .recording-wave span:nth-child(5) { animation-delay: 0.4s; height: 40%; }
+    @keyframes wave {
+        0%, 100% { transform: scaleY(0.5); }
+        50% { transform: scaleY(1); }
+    }
+
+    /* Transcribed text area */
+    #transcribed-text {
+        min-height: 44px;
+        font-size: 0.92rem;
+    }
+    #transcribed-text:focus {
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 3px rgba(16,185,129,0.1) !important;
+    }
+    /* Mandatory Camera Access Gate */
+    .camera-gate-screen, .camera-lost-overlay {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 60vh;
+        padding: 2rem 1rem;
+    }
+    .camera-lost-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15,23,42,0.72);
+        z-index: 1050;
+        min-height: 100vh;
+    }
+    .camera-gate-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 2.25rem 2.5rem;
+        max-width: 520px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 12px 40px rgba(15,23,42,0.12);
+    }
+    .camera-gate-icon {
+        width: 60px; height: 60px; margin: 0 auto 1rem;
+        background: #eff6ff; color: #185adb; border-radius: 16px;
+        display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+    }
+    .camera-gate-icon-danger { background: #fef2f2; color: #dc2626; }
+    .camera-gate-title { font-family:'Outfit',sans-serif; font-weight:700; font-size:1.35rem; color:#0f172a; margin-bottom:0.5rem; }
+    .camera-gate-desc { color:#64748b; font-size:0.92rem; margin-bottom:1.25rem; }
+    .camera-preview-wrap {
+        width: 100%; max-width: 360px; margin: 0 auto 1rem;
+        background:#0f172a; border-radius: 14px; overflow: hidden;
+        aspect-ratio: 4/3;
+    }
+    .camera-preview-wrap video { width: 100%; height: 100%; object-fit: cover; display:block; transform: scaleX(-1); }
+    .camera-gate-status { font-size:0.85rem; color:#64748b; margin-bottom:1.25rem; min-height:1.2em; }
+    .camera-gate-status.success { color:#16a34a; font-weight:600; }
+    .camera-gate-status.error { color:#dc2626; font-weight:600; }
+    .camera-gate-actions { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; }
+
+    /* Per-question 30s answer timer */
+    #answer-timer-badge { transition: background 0.3s, color 0.3s; }
+    #answer-timer-badge.timer-calm { background: #e0f2fe; color: #0284c7; }
+    #answer-timer-badge.timer-warn { background: #fef9c3; color: #a16207; }
+    #answer-timer-badge.timer-danger { background: #fee2e2; color: #dc2626; animation: pulse 1s infinite; }
+
+    /* Anti-malpractice warning toast — deliberately non-blocking (no
+       backdrop, pointer-events left on for the interview underneath) so it
+       never prevents answering while it's shown; only the escalated
+       "terminated" state takes over the whole screen. */
+    .malpractice-toast {
+        position: fixed;
+        top: 1.25rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1800;
+        max-width: 480px;
+        width: calc(100% - 2rem);
+        background: #fff;
+        border: 1.5px solid #fca5a5;
+        border-left: 6px solid #dc2626;
+        border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(15,23,42,0.18);
+        padding: 0.9rem 1.1rem;
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+    }
+    .malpractice-toast.severity-flagged { border-color: #fdba74; border-left-color: #ea580c; }
+    .malpractice-toast-icon { font-size: 1.3rem; line-height: 1; flex-shrink: 0; }
+    .malpractice-toast-title { font-weight: 700; font-size: 0.92rem; color: #0f172a; margin-bottom: 0.15rem; }
+    .malpractice-toast-msg { font-size: 0.85rem; color: #475569; line-height: 1.4; }
+    .malpractice-toast-close {
+        margin-left: auto; background: none; border: none; color: #94a3b8;
+        font-size: 1rem; cursor: pointer; line-height: 1; padding: 0.15rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="interview-page">
+<div class="container">
+
+    <!-- Hero -->
+    <div class="interview-hero mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-7">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <div style="width:48px;height:48px;background:rgba(255,255,255,0.15);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <span class="badge" style="background:rgba(14,165,233,0.3);color:#bae6fd;font-size:0.75rem;padding:0.35rem 0.75rem;border-radius:50px;">Live Simulation</span>
+                </div>
+                <h1 class="fw-bold mb-1" style="font-family:'Outfit',sans-serif;font-size:1.85rem;">AI Mock Interview</h1>
+                <p class="mb-0" style="color:rgba(255,255,255,0.72);font-size:0.95rem;">Answer 5 skill-based questions. Get real-time scores and feedback after each answer.</p>
+            </div>
+            <div class="col-md-5 d-none d-md-flex justify-content-end align-items-center gap-3">
+                <div style="background:rgba(255,255,255,0.1);border-radius:14px;padding:1rem 1.4rem;text-align:center;">
+                    <div id="hero-topic" class="fw-bold" style="font-size:1.4rem;color:#38bdf8;">—</div>
+                    <div style="font-size:0.72rem;color:rgba(255,255,255,0.6);">Current Topic</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.1);border-radius:14px;padding:1rem 1.4rem;text-align:center;">
+                    <div id="hero-progress" class="fw-bold" style="font-size:1.4rem;color:#34d399;">1/20</div>
+                    <div style="font-size:0.72rem;color:rgba(255,255,255,0.6);">Question</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mandatory Camera Access Gate -->
+    <div id="camera-gate-screen" class="camera-gate-screen">
+        <div class="camera-gate-card">
+            <div class="camera-gate-icon"><i class="fas fa-video"></i></div>
+            <h2 class="camera-gate-title">Camera Access Required</h2>
+            <p class="camera-gate-desc">This AI Mock Interview requires your camera to stay on for the entire session. Grant camera access and confirm your preview below before starting.</p>
+
+            <div class="camera-preview-wrap">
+                <video id="camera-preview" autoplay playsinline muted></video>
+            </div>
+
+            <p id="camera-gate-status" class="camera-gate-status">Camera access has not been granted yet.</p>
+
+            <div class="camera-gate-actions">
+                <button id="enable-camera-btn" type="button" class="btn btn-primary rounded-3 px-4">
+                    <i class="fas fa-video me-2"></i>Enable Camera
+                </button>
+                <button id="start-interview-btn" type="button" class="btn btn-success rounded-3 px-4" disabled>
+                    <i class="fas fa-play me-2"></i>Start Interview
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera-lost overlay: shown mid-interview if the feed drops -->
+    <div id="camera-lost-overlay" class="camera-lost-overlay" style="display:none;">
+        <div class="camera-gate-card">
+            <div class="camera-gate-icon camera-gate-icon-danger"><i class="fas fa-video-slash"></i></div>
+            <h2 class="camera-gate-title">Camera Disconnected</h2>
+            <p class="camera-gate-desc">Your camera feed was lost. The interview is paused — camera access is required to attend the interview. Please reconnect your camera to continue.</p>
+            <p id="camera-lost-status" class="camera-gate-status"></p>
+            <div class="camera-gate-actions">
+                <button id="reconnect-camera-btn" type="button" class="btn btn-primary rounded-3 px-4" onclick="reconnectCamera()">
+                    <i class="fas fa-redo me-2"></i>Reconnect Camera
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anti-malpractice: non-blocking warning toast for ordinary violations -->
+    <div id="malpractice-toast" class="malpractice-toast" style="display:none;">
+        <div class="malpractice-toast-icon">⚠️</div>
+        <div>
+            <div id="malpractice-toast-title" class="malpractice-toast-title"></div>
+            <div id="malpractice-toast-msg" class="malpractice-toast-msg"></div>
+        </div>
+        <button type="button" class="malpractice-toast-close" onclick="document.getElementById('malpractice-toast').style.display='none'">✕</button>
+    </div>
+
+    <div id="malpractice-terminated-overlay" class="camera-lost-overlay" style="display:none; z-index: 2100;">
+        <div class="camera-gate-card">
+            <div class="camera-gate-icon camera-gate-icon-danger"><i class="fas fa-exclamation-triangle"></i></div>
+            <h2 class="camera-gate-title">Interview Terminated</h2>
+            <p class="camera-gate-desc">This interview has been ended due to repeated malpractice violations (tab switching, camera loss, or face-visibility issues). Your answers so far have been saved and scored.</p>
+            <p class="camera-gate-status" style="margin-bottom:0;"><i class="fas fa-spinner fa-spin me-2"></i>Saving your recording and redirecting…</p>
+        </div>
+    </div>
+
+    <!-- Anti-malpractice: blocking, centered acknowledgment popup. Every
+         detected violation shows this (not just the auto-hiding toast above)
+         and the candidate must explicitly click through before the
+         interview becomes interactive again — the toast/overlay pattern
+         already used for camera-lost/terminated states is reused here for
+         visual consistency. -->
+    <div id="malpractice-warning-overlay" class="camera-lost-overlay" style="display:none; z-index: 2050;">
+        <div class="camera-gate-card">
+            <div class="camera-gate-icon camera-gate-icon-danger"><i class="fas fa-exclamation-triangle"></i></div>
+            <h2 id="malpractice-warning-title" class="camera-gate-title">Suspicious Activity Detected</h2>
+            <p id="malpractice-warning-msg" class="camera-gate-desc"></p>
+            <p id="malpractice-warning-count" class="camera-gate-status"></p>
+            <div class="camera-gate-actions">
+                <button id="malpractice-ack-btn" type="button" class="btn btn-primary rounded-3 px-4">
+                    <i class="fas fa-check me-2"></i>I Understand, Continue
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Main Grid -->
+    <div id="interview-main-ui" style="display:none;">
+    <div class="row g-4">
+
+        <!-- Chat Column -->
+        <div class="col-lg-8">
+            <div class="chat-card">
+                <!-- Chat Header -->
+                <div class="chat-header">
+                    <div class="ai-avatar"><i class="fas fa-robot"></i></div>
+                    <div>
+                        <div class="fw-bold" style="font-size:0.9rem;color:#0f172a;">AI Interviewer</div>
+                        <div class="d-flex align-items-center gap-1" style="font-size:0.78rem;color:#22c55e;">
+                            <span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block;animation:pulse 2s infinite;"></span>
+                            Analyzing your answers in real-time
+                        </div>
+                    </div>
+                    <div class="ms-auto d-flex align-items-center gap-2">
+                        <span id="answer-timer-badge" class="badge rounded-pill timer-calm" style="font-size:0.78rem;">
+                            <i class="fas fa-clock"></i> <span id="answer-timer-text">30s</span>
+                        </span>
+                        <span id="progress-badge" class="badge bg-primary bg-opacity-10 text-primary rounded-pill" style="font-size:0.78rem;">Question 1/20</span>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div class="chat-messages" id="chat-container"></div>
+
+                <!-- Input: Speak → live transcript → Submit -->
+                <div class="chat-input-wrap">
+                    <div id="voice-input-area" class="w-100">
+                        <!-- Live captions (read-only; filled by speech as the candidate talks) -->
+                        <div id="speech-preview" class="speech-preview" style="display:none;">
+                            <div id="speech-preview-text" class="speech-preview-text placeholder">Your words will appear here as you speak…</div>
+                        </div>
+                        
+
+
+                        <!-- Coding Answer -->
+<div id="coding-answer-area" style="display:none;">
+
+    <textarea
+        id="coding-answer"
+        class="chat-textarea"
+        rows="8"
+        placeholder="Write your SQL query / code here..."></textarea>
+
+    <div class="d-flex justify-content-end mt-2">
+        <button
+            id="submit-code-btn"
+            class="btn btn-primary"
+            onclick="submitCodingAnswer()">
+            Submit Answer
+        </button>
+    </div>
+
+</div>
+
+                        <div class="d-flex flex-column align-items-center gap-2">
+                            <button id="speak-btn" class="record-btn" onclick="toggleSpeak()" title="Tap and speak your answer">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <div id="record-wave" class="recording-wave" style="display:none;">
+                                <span></span><span></span><span></span><span></span><span></span>
+                            </div>
+                            <span id="speak-status-text" class="mt-1" style="font-size:0.82rem;color:#64748b;">Tap <b>Speak</b> and answer aloud</span>
+
+                            <!-- Actions shown after the user stops speaking -->
+                            <div id="answer-actions" class="d-flex gap-2 mt-1" style="display:none;">
+                                <button id="rerecord-btn" class="btn btn-outline-secondary btn-sm rounded-3" onclick="clearSpeech()">
+                                    <i class="fas fa-redo me-1"></i> Re-record
+                                </button>
+                                <button id="submit-answer-btn" class="btn btn-primary btn-sm rounded-3 px-3" onclick="submitSpokenAnswer()">
+                                    <i class="fas fa-paper-plane me-1"></i> Submit Answer
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Side Panel -->
+        <div class="col-lg-4">
+
+            <!-- Progress Card -->
+            <div class="side-card mb-3">
+                <h6 class="fw-bold mb-3" style="font-family:'Outfit',sans-serif;font-size:0.95rem;">
+                    <i class="fas fa-tasks text-primary me-2"></i>Interview Progress
+                </h6>
+                <div class="q-progress-bar mb-2">
+                    <div class="q-progress-fill" id="progress-fill" style="width:5%;"></div>
+                </div>
+                <div class="d-flex justify-content-between" style="font-size:0.8rem;color:#64748b;">
+                    <span id="progress-label">Question 1 of 20</span>
+                    <span id="progress-pct">5%</span>
+                </div>
+            </div>
+
+            <!-- Current Topic -->
+            <div class="side-card mb-3">
+                <h6 class="fw-bold mb-2" style="font-family:'Outfit',sans-serif;font-size:0.95rem;">
+                    <i class="fas fa-tag text-info me-2"></i>Current Topic
+                </h6>
+                <span id="topic-badge-side" class="badge bg-primary bg-opacity-10 text-primary" style="font-size:0.85rem;padding:0.45rem 0.85rem;border-radius:8px;">General</span>
+            </div>
+
+            <!-- Score Track -->
+            <div class="side-card">
+                <h6 class="fw-bold mb-3" style="font-family:'Outfit',sans-serif;font-size:0.95rem;">
+                    <i class="fas fa-chart-line text-success me-2"></i>Score Tracker
+                </h6>
+                <div id="score-list" style="display:flex;flex-direction:column;gap:0.5rem;">
+                    <div class="text-muted" style="font-size:0.83rem;font-style:italic;">Scores will appear after each answer...</div>
+                </div>
+                <div class="mt-3 pt-3 border-top d-flex align-items-center justify-content-between">
+                    <span style="font-size:0.8rem;color:#64748b;">Running Avg</span>
+                    <span id="avg-score" class="fw-bold" style="font-size:1.1rem;color:#0ea5e9;">—</span>
+                </div>
+            </div>
+
+            <!-- Tips Card -->
+            <div class="side-card mt-3" style="background:linear-gradient(135deg,#0f172a,#1e3a5f);color:white;border:none;">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="fas fa-lightbulb" style="color:#fbbf24;"></i>
+                    <span class="fw-bold" style="font-size:0.9rem;">Interview Tips</span>
+                </div>
+                <ul style="font-size:0.82rem;color:rgba(255,255,255,0.72);line-height:1.7;padding-left:1.1rem;margin:0;">
+                    <li>Be concise but complete in your answers</li>
+                    <li>Use real examples from your experience</li>
+                    <li>Mention relevant technologies by name</li>
+                    <li>Tap the mic 🎤 and speak your answer naturally</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    </div><!-- /#interview-main-ui -->
+
+</div>
+</div>
+
+{% csrf_token %}
+{% block extra_js %}
+<!-- Anti-malpractice face monitoring: tiny-face-detector model, loaded once
+     up front so it's ready by the time the interview actually starts. If
+     this fails to load (offline/blocked), faceApiReady stays false and face
+     monitoring is simply skipped — tab/window/camera checks are unaffected. -->
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script>
+    // ── Voice (Speak → live bubble → Submit) State ─────────────────────
+    let activeSession = null;       // the current answer attempt (see createRecognition)
+    let isSpeaking = false;
+    let requestingPermission = false; // added to prevent visibilitychange auto-stop during prompt
+    const NO_ANSWER_TEXT = '(No answer submitted — time expired)';
+    let currentQuestionId = null;
+    let questionCount = 0;
+    let totalScore = 0;
+    let answeredCount = 0;
+    const scores = [];
+
+    // ── Per-question 30s answer timer ──────────────────────────────────
+    let questionTimerInterval = null;
+    let questionTimeRemaining = 0;
+    let currentIsCoding = false;
+    const ANSWER_TIME_LIMIT = 30; // fallback only — the server's time_remaining is authoritative
+
+    // ── Mandatory Camera Access (webcam presence-verification) ─────────
+    // A separate, video-only device stream from the per-answer microphone
+    // capture in createRecorder() — requested independently so it never
+    // interferes with that call, and kept live for the whole interview
+    // rather than per-question.
+    let cameraStream = null;
+    let cameraTrack = null;
+    let videoRecorder = null;
+    let videoChunks = [];
+    let cameraMonitorInterval = null;
+
+    document.addEventListener('DOMContentLoaded', () => { initCameraGate(); });
+
+    function initCameraGate() {
+        const enableBtn = document.getElementById('enable-camera-btn');
+        const startBtn = document.getElementById('start-interview-btn');
+        if (enableBtn) enableBtn.addEventListener('click', requestCameraAccess);
+        if (startBtn) startBtn.addEventListener('click', beginInterviewAfterCameraGate);
+    }
+
+    async function requestCameraAccess() {
+        const statusEl = document.getElementById('camera-gate-status');
+        const enableBtn = document.getElementById('enable-camera-btn');
+        const startBtn = document.getElementById('start-interview-btn');
+        const previewVideo = document.getElementById('camera-preview');
+        if (startBtn) startBtn.disabled = true;
+        if (enableBtn) enableBtn.disabled = true;
+        if (statusEl) { statusEl.textContent = 'Requesting camera access…'; statusEl.className = 'camera-gate-status'; }
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            if (statusEl) {
+                statusEl.textContent = 'Camera access is required to attend the interview. Please connect or enable a working camera to continue.';
+                statusEl.className = 'camera-gate-status error';
+            }
+            if (enableBtn) enableBtn.disabled = false;
+            return;
+        }
+
+        try {
+            // Requested together with video (not just the separate per-answer
+            // mic capture in createRecorder(), which is transcribed and
+            // discarded) so the interview_video recording actually has an
+            // audio track — a video-only cameraStream produces a silent
+            // recording no matter what MediaRecorder does with it.
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 15, max: 15 } }, audio: true });
+            cameraStream = stream;
+            cameraTrack = stream.getVideoTracks()[0];
+
+            if (previewVideo) {
+                previewVideo.srcObject = stream;
+                await previewVideo.play().catch(() => {});
+            }
+
+            // Confirm a live frame is actually flowing, not just that the
+            // permission prompt was accepted.
+            const verified = await verifyCameraStream(previewVideo);
+            if (!verified) throw new Error('no-video-frame');
+
+            if (statusEl) {
+                statusEl.textContent = 'Camera connected. You can now start the interview.';
+                statusEl.className = 'camera-gate-status success';
+            }
+            if (enableBtn) enableBtn.style.display = 'none';
+            if (startBtn) startBtn.disabled = false;
+            attachCameraTrackWatchers();
+        } catch (err) {
+            if (cameraStream) { try { cameraStream.getTracks().forEach(t => t.stop()); } catch (e) {} }
+            cameraStream = null;
+            cameraTrack = null;
+            const denied = err && (err.name === 'NotAllowedError' || err.name === 'SecurityError');
+            if (statusEl) {
+                statusEl.textContent = denied
+                    ? 'Camera access is required to attend the interview. Please allow camera access and try again.'
+                    : 'Camera access is required to attend the interview. Please connect or enable a working camera to continue.';
+                statusEl.className = 'camera-gate-status error';
+            }
+            if (enableBtn) { enableBtn.disabled = false; enableBtn.textContent = 'Try Again'; }
+            if (startBtn) startBtn.disabled = true;
+        }
+    }
+
+    function verifyCameraStream(previewVideo) {
+        return new Promise((resolve) => {
+            if (!cameraTrack || cameraTrack.readyState !== 'live') { resolve(false); return; }
+            if (previewVideo && previewVideo.videoWidth > 0 && previewVideo.videoHeight > 0) { resolve(true); return; }
+            if (!previewVideo) { resolve(cameraTrack.readyState === 'live'); return; }
+            const onLoaded = () => {
+                previewVideo.removeEventListener('loadedmetadata', onLoaded);
+                resolve(cameraTrack.readyState === 'live' && previewVideo.videoWidth > 0);
+            };
+            previewVideo.addEventListener('loadedmetadata', onLoaded);
+            setTimeout(() => {
+                previewVideo.removeEventListener('loadedmetadata', onLoaded);
+                resolve(cameraTrack.readyState === 'live');
+            }, 4000);
+        });
+    }
+
+    async function beginInterviewAfterCameraGate() {
+        // Defense in depth — the Start button is disabled unless this is
+        // true, but the interview must never begin without a verified,
+        // currently-live camera track.
+        if (!cameraStream || !cameraTrack || cameraTrack.readyState !== 'live') return;
+
+        const startBtn = document.getElementById('start-interview-btn');
+        if (startBtn) { startBtn.disabled = true; startBtn.textContent = 'Starting…'; }
+
+        try {
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
+            const fd = new FormData();
+            if (csrfToken) fd.append('csrfmiddlewaretoken', csrfToken);
+            // Records server-side that this session's camera was verified —
+            // the /get-question/ and /submit-answer/ endpoints independently
+            // require this flag, so the interview cannot proceed if this
+            // call is skipped or forged from the client alone.
+            await fetch("{% url 'resume_camera_verified' %}", { method: 'POST', body: fd });
+        } catch (e) { /* handled server-side per-request regardless */ }
+
+        document.getElementById('camera-gate-screen').style.display = 'none';
+        document.getElementById('interview-main-ui').style.display = '';
+
+        startVideoRecording();
+        startMalpracticeMonitoring();
+        loadNextQuestion();
+    }
+
+    function startVideoRecording() {
+        if (!cameraStream || typeof MediaRecorder === 'undefined') return;
+        // Explicit opus audio codec so the recorder doesn't fall back to a
+        // video-only profile now that cameraStream carries a mic track too.
+        const types = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm;codecs=opus', 'video/webm'];
+        const supported = types.find(t => MediaRecorder.isTypeSupported(t));
+        // Without an explicit cap, browsers pick a fairly high default bitrate
+        // (~2.5 Mbps was observed at 640x480) — a talking-head interview
+        // review recording looks the same at a fraction of that. 400 kbps
+        // video / 32 kbps opus (opus is efficient for speech) cuts file size
+        // by roughly 6-7x with no visible quality loss for this use case.
+        const recorderOptions = {
+            videoBitsPerSecond: 400000,
+            audioBitsPerSecond: 32000,
+        };
+        if (supported) recorderOptions.mimeType = supported;
+        try {
+            videoRecorder = new MediaRecorder(cameraStream, recorderOptions);
+            videoRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) videoChunks.push(e.data); };
+            videoRecorder.start(1000);
+        } catch (e) {
+            videoRecorder = null;
+        }
+    }
+
+    function attachCameraTrackWatchers() {
+        if (!cameraTrack) return;
+        cameraTrack.onended = () => handleCameraLost();
+        cameraTrack.onmute = () => handleCameraLost();
+        cameraTrack.onunmute = () => {
+            const overlay = document.getElementById('camera-lost-overlay');
+            if (overlay && overlay.style.display !== 'none' && cameraTrack.readyState === 'live') {
+                hideCameraLostOverlay();
+            }
+        };
+        if (cameraMonitorInterval) clearInterval(cameraMonitorInterval);
+        cameraMonitorInterval = setInterval(() => {
+            if (!cameraTrack || cameraTrack.readyState !== 'live') handleCameraLost();
+        }, 2000);
+    }
+
+    function handleCameraLost() {
+        const overlay = document.getElementById('camera-lost-overlay');
+        const gateScreen = document.getElementById('camera-gate-screen');
+        // Only pause a running interview — not while the initial gate
+        // screen itself is still up (that has its own status messaging).
+        if (!overlay || gateScreen.style.display !== 'none' || overlay.style.display !== 'none') return;
+        if (isSpeaking) { try { stopSpeaking(); } catch (e) {} }
+        setInputsDisabled(true);
+        overlay.style.display = 'flex';
+    }
+
+    function hideCameraLostOverlay() {
+        const overlay = document.getElementById('camera-lost-overlay');
+        if (overlay) overlay.style.display = 'none';
+        setInputsDisabled(false);
+    }
+
+    async function reconnectCamera() {
+        const statusEl = document.getElementById('camera-lost-status');
+        const retryBtn = document.getElementById('reconnect-camera-btn');
+        if (retryBtn) retryBtn.disabled = true;
+        if (statusEl) statusEl.textContent = 'Reconnecting…';
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 15, max: 15 } }, audio: true });
+            if (cameraStream) { try { cameraStream.getTracks().forEach(t => t.stop()); } catch (e) {} }
+            cameraStream = stream;
+            cameraTrack = stream.getVideoTracks()[0];
+            const previewVideo = document.getElementById('camera-preview');
+            if (previewVideo) { previewVideo.srcObject = stream; await previewVideo.play().catch(() => {}); }
+            const verified = await verifyCameraStream(previewVideo);
+            if (!verified) throw new Error('no-video-frame');
+            attachCameraTrackWatchers();
+            // Start a fresh recording segment on the reconnected stream; its
+            // chunks join the same array and are uploaded as one file at
+            // the end, so no footage from either segment is discarded.
+            startVideoRecording();
+            hideCameraLostOverlay();
+        } catch (e) {
+            if (statusEl) statusEl.textContent = 'Camera access is required to attend the interview. Please connect or enable a working camera to continue.';
+        } finally {
+            if (retryBtn) retryBtn.disabled = false;
+        }
+    }
+
+    async function finishVideoRecording() {
+        if (cameraMonitorInterval) { clearInterval(cameraMonitorInterval); cameraMonitorInterval = null; }
+        if (videoRecorder && videoRecorder.state !== 'inactive') {
+            await new Promise((resolve) => {
+                videoRecorder.onstop = resolve;
+                try { videoRecorder.stop(); } catch (e) { resolve(); }
+            });
+        }
+        if (cameraStream) { try { cameraStream.getTracks().forEach(t => t.stop()); } catch (e) {} }
+
+        if (videoChunks.length === 0) return;
+        const blob = new Blob(videoChunks, { type: (videoRecorder && videoRecorder.mimeType) || 'video/webm' });
+        videoChunks = [];
+
+        // One retry on a transient network failure — a dropped connection
+        // here is otherwise indistinguishable from "score was below 70" and
+        // silently discards a recording that qualified to be kept.
+        for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
+                const fd = new FormData();
+                fd.append('video', blob, 'interview.webm');
+                if (csrfToken) fd.append('csrfmiddlewaretoken', csrfToken);
+                const resp = await fetch("{% url 'resume_upload_interview_video' %}", { method: 'POST', body: fd });
+                if (resp.ok) return;
+            } catch (e) {
+                // fall through to retry / give up below
+            }
+        }
+    }
+
+    // ── Voice answer sessions ─────────────────────────────────────────
+    // Every answer attempt gets its OWN recogniser and audio recorder.
+    // Browsers keep delivering speech results and recorded audio for a moment
+    // after stop(); with one shared recogniser those late results landed after
+    // the reset and leaked the previous answer into the next question. Every
+    // handler checks its session is still the active one, so anything arriving
+    // from a finalized or discarded session is dropped.
+    function sessionText(s) {
+        return (s.committed + ' ' + s.interim).replace(/\s+/g, ' ').trim();
+    }
+
+    // Live captions in the grey bar above the mic, updated as the candidate speaks.
+    function renderLivePreview(s) {
+        const box = document.getElementById('speech-preview');
+        const el = document.getElementById('speech-preview-text');
+        if (!box || !el) return;
+        const text = s ? sessionText(s) : '';
+        box.style.display = s ? 'block' : 'none';
+        el.textContent = text || 'Your words will appear here as you speak…';
+        el.classList.toggle('placeholder', !text);
+        el.scrollTop = el.scrollHeight;
+    }
+
+    function createRecognition(s) {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const rec = new SR();
+        rec.continuous = true;
+        rec.interimResults = true;
+        rec.lang = 'en-IN';
+        rec.onresult = (event) => {
+            if (s !== activeSession || s.closed) return;
+            let interim = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const t = event.results[i][0].transcript;
+                if (event.results[i].isFinal) s.committed += t + ' ';
+                else interim += t;
+            }
+            s.interim = interim;
+            renderLivePreview(s);
+        };
+        rec.onend = () => {
+            // Keep a phrase that never got a final result instead of losing it.
+            if (s.interim) { s.committed += s.interim + ' '; s.interim = ''; }
+            s.recEnded = true;
+            if (s.onRecEnd) s.onRecEnd();
+            // Browsers auto-stop after a pause; keep listening while the mic is on.
+            if (s === activeSession && !s.closed && s.listening) {
+                s.recEnded = false;
+                try { rec.start(); } catch (e) {}
+            }
+        };
+        rec.onerror = () => {};   // transient no-speech/aborted errors
+        return rec;
+    }
+
+    function releaseStream(s) {
+        // Only stop tracks this session opened itself — never the camera's own mic track.
+        if (s.stream && s.ownsStream) s.stream.getTracks().forEach(t => t.stop());
+        s.stream = null;
+    }
+
+    // Audio for the accurate server-side transcript, recorded alongside the
+    // live captions. Reuses the mic track the camera stream already holds, so
+    // the mic starts instantly on the first tap instead of waiting on a fresh
+    // getUserMedia call (the delay that made candidates tap twice).
+    async function createRecorder(s) {
+        if (!window.MediaRecorder) return;
+        const camAudio = (cameraStream && cameraStream.getAudioTracks().filter(t => t.readyState === 'live')) || [];
+        if (camAudio.length) {
+            s.stream = new MediaStream(camAudio);
+            s.ownsStream = false;
+        } else {
+            if (!navigator.mediaDevices) return;
+            try {
+                requestingPermission = true;
+                s.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                s.ownsStream = true;
+            } catch (e) {
+                console.warn('Audio capture unavailable:', e);
+                return;
+            } finally {
+                requestingPermission = false;
+            }
+            if (s !== activeSession || s.closed) { releaseStream(s); return; }
+        }
+        const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
+        const supported = types.find(t => MediaRecorder.isTypeSupported(t));
+        const recorder = supported
+            ? new MediaRecorder(s.stream, { mimeType: supported })
+            : new MediaRecorder(s.stream);
+        const mime = recorder.mimeType || 'audio/webm';
+        recorder.ondataavailable = (e) => { if (e.data.size > 0) s.chunks.push(e.data); };
+        recorder.onstop = () => {
+            s.blob = s.chunks.length ? new Blob(s.chunks, { type: mime }) : null;
+            releaseStream(s);
+            if (s.onRecorderStop) s.onRecorderStop();
+        };
+        s.recorder = recorder;
+    }
+
+    // ── Speak / Stop ──────────────────────────────────────────────────
+    // Speak starts an answer (or continues it after Stop); Stop only pauses,
+    // so a candidate can gather their thoughts and keep adding to the answer.
+    let speakStarting = false;   // ignores extra taps while the mic is starting
+    async function toggleSpeak() {
+        if (speakStarting) return;
+        if (isSpeaking) { stopSpeaking(); return; }
+        if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) {
+            document.getElementById('speak-status-text').innerHTML =
+                '⚠️ Live voice input needs <b>Chrome</b> or <b>Edge</b>. Please switch browser.';
+            return;
+        }
+        speakStarting = true;
+        try {
+            let s = activeSession;
+            if (!s) {
+                s = {
+                    committed: '', interim: '', chunks: [], blob: null, recorder: null, stream: null,
+                    ownsStream: false, rec: null, closed: false, listening: false, recEnded: true,
+                    onRecEnd: null, onRecorderStop: null,
+                };
+                activeSession = s;
+                s.rec = createRecognition(s);
+                setSpeakingUI(true);
+                renderLivePreview(s);
+                await createRecorder(s);
+                if (s !== activeSession) return;   // discarded while the mic was starting
+                if (s.recorder) { try { s.recorder.start(); } catch (e) {} }
+            } else if (s.recorder && s.recorder.state === 'paused') {
+                try { s.recorder.resume(); } catch (e) {}
+            }
+            isSpeaking = true;
+            s.listening = true;
+            document.getElementById('answer-actions').style.display = 'none';
+            setSpeakingUI(true);
+            renderLivePreview(s);
+            s.recEnded = false;
+            try { s.rec.start(); } catch (e) { /* still ending — onend restarts it */ }
+        } finally {
+            speakStarting = false;
+        }
+    }
+
+    function stopSpeaking() {
+        isSpeaking = false;
+        setSpeakingUI(false);
+        const s = activeSession;
+        if (!s) return;
+        s.listening = false;
+        try { s.rec.stop(); } catch (e) {}
+        if (s.recorder && s.recorder.state === 'recording') { try { s.recorder.pause(); } catch (e) {} }
+        document.getElementById('answer-actions').style.display = 'flex';
+        document.getElementById('speak-status-text').textContent = 'Tap the mic to continue, or Submit your answer.';
+    }
+
+    // Ends the session and waits (bounded) for the last recognised words and the
+    // recorded audio, then closes it so nothing late can reach another question.
+    function finalizeSession(s, timeoutMs = 1500) {
+        return new Promise((resolve) => {
+            isSpeaking = false;
+            s.listening = false;
+            setSpeakingUI(false);
+            let recDone = s.recEnded;
+            let audioDone = !s.recorder || s.recorder.state === 'inactive';
+            let finished = false;
+            const finish = () => {
+                if (finished) return;
+                finished = true;
+                if (s.interim) { s.committed += s.interim + ' '; s.interim = ''; }
+                s.closed = true;
+                if (activeSession === s) activeSession = null;
+                try { s.rec.abort(); } catch (e) {}
+                releaseStream(s);
+                renderLivePreview(null);
+                resolve({ text: sessionText(s), blob: s.blob });
+            };
+            const check = () => { if (recDone && audioDone) finish(); };
+            s.onRecEnd = () => { recDone = true; check(); };
+            s.onRecorderStop = () => { audioDone = true; check(); };
+            if (!recDone) { try { s.rec.stop(); } catch (e) { recDone = true; } }
+            if (!audioDone) { try { s.recorder.stop(); } catch (e) { audioDone = true; } }
+            check();
+            setTimeout(finish, timeoutMs);
+        });
+    }
+
+    // Throws an unsubmitted answer away entirely (Re-record, next question, leaving).
+    function discardSession() {
+        const s = activeSession;
+        activeSession = null;
+        isSpeaking = false;
+        renderLivePreview(null);
+        if (!s) return;
+        s.closed = true;
+        s.listening = false;
+        s.onRecorderStop = null;
+        try { s.rec.abort(); } catch (e) {}
+        if (s.recorder && s.recorder.state !== 'inactive') { try { s.recorder.stop(); } catch (e) {} }
+        releaseStream(s);
+    }
+
+    function setSpeakingUI(active) {
+        const btn = document.getElementById('speak-btn');
+        const wave = document.getElementById('record-wave');
+        const status = document.getElementById('speak-status-text');
+        if (active) {
+            btn.classList.add('recording');
+            btn.innerHTML = '<i class="fas fa-stop"></i>';
+            wave.style.display = 'inline-flex';
+            status.textContent = 'Listening… tap to pause';
+        } else {
+            btn.classList.remove('recording');
+            btn.innerHTML = '<i class="fas fa-microphone"></i>';
+            wave.style.display = 'none';
+        }
+    }
+
+    function clearSpeech() {
+        discardSession();
+        setSpeakingUI(false);
+        const actions = document.getElementById('answer-actions');
+        if (actions) actions.style.display = 'none';
+        const statusText = document.getElementById('speak-status-text');
+        if (statusText) statusText.innerHTML = 'Tap <b>Speak</b> and answer aloud';
+    }
+
+    function showShortAnswerWarning() {
+        const msg = "Your answer is too short. Please provide an answer of at least 15 words.";
+        if (window.CareerBuddyValidation) window.CareerBuddyValidation.showShortAnswerWarning(msg);
+        else alert(msg);
+    }
+
+    async function submitSpokenAnswer() {
+        const s = activeSession;
+        if (!s || !currentQuestionId) return;
+        // Checked before finalizing, so a short answer stays open and the
+        // candidate can tap the mic and keep adding to it.
+        if (sessionText(s).split(/\s+/).filter(Boolean).length < 15) {
+            showShortAnswerWarning();
+            return;
+        }
+        stopQuestionTimer(); // manual submit in flight — the timeout path must not also fire
+        setInputsDisabled(true);
+        document.getElementById('answer-actions').style.display = 'none';
+        document.getElementById('speak-status-text').textContent = 'Analyzing your answer…';
+
+        const { text, blob } = await finalizeSession(s);
+        const bubble = appendMessage('user', text);
+        const typingId = showTyping();
+        await scoreAnswer(text, typingId, bubble, blob);
+        document.getElementById('speak-status-text').innerHTML = 'Tap <b>Speak</b> and answer aloud';
+    }
+
+    // Timer-driven forced submit: never aborts or alerts — whatever was said
+    // (even nothing) is saved, and only AFTER the last words have arrived, so
+    // an answer is never shown or scored as empty while the candidate's words
+    // are still on their way.
+    async function forceSubmitSpokenAnswer() {
+        document.getElementById('answer-actions').style.display = 'none';
+        document.getElementById('speak-status-text').textContent = "Time's up — submitting your answer…";
+
+        let text = '', blob = null;
+        const s = activeSession;
+        if (s) ({ text, blob } = await finalizeSession(s));
+        else setSpeakingUI(false);
+        // With a recording but no live captions yet, the server transcript is
+        // still coming — show a placeholder, not "no answer".
+        const bubble = appendMessage('user', text || (blob ? '…' : NO_ANSWER_TEXT));
+        const typingId = showTyping();
+        await scoreAnswer(text, typingId, bubble, blob);
+        document.getElementById('speak-status-text').innerHTML = 'Tap <b>Speak</b> and answer aloud';
+    }
+
+    async function submitCodingAnswer() {
+
+    // Get the text typed by the user
+    const answer = document.getElementById("coding-answer").value.trim();
+
+    // Don't allow empty answers
+    if (!answer) {
+        alert("Please write your answer.");
+        return;
+    }
+
+    const wordCount = window.CareerBuddyValidation ? window.CareerBuddyValidation.validateWordCount(answer) : answer.trim().split(/\s+/).length;
+    if (wordCount < 15) {
+        if (window.CareerBuddyValidation) {
+            window.CareerBuddyValidation.showShortAnswerWarning("Your answer is too short. Please provide an answer of at least 15 words.", "coding-answer");
+        } else {
+            alert("Your answer is too short. Please provide an answer of at least 15 words.");
+        }
+        return;
+    }
+
+    stopQuestionTimer(); // manual submit in flight — the timeout path must not also fire
+
+    // Show the AI typing animation
+    const typingId = showTyping();
+
+    // Clear the textbox for the next question
+    document.getElementById("coding-answer").value = "";
+
+    // Send the typed answer to the existing scoring function
+    await scoreAnswer(answer, typingId);
+}
+
+    function getCookie(name) {
+        const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+        return match ? decodeURIComponent(match[2]) : '';
+    }
+
+    // ── Original Chat Functions ───────────────────────────────────────
+
+    function appendMessage(role, content, isHtml = false) {
+        const container = document.getElementById('chat-container');
+        const isBot = role === 'bot';
+        const wrapper = document.createElement('div');
+        wrapper.className = isBot ? 'msg-bot' : 'msg-user';
+
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = `msg-avatar ${isBot ? 'bot' : 'user'}`;
+        avatarDiv.innerHTML = `<i class="fas fa-${isBot ? 'robot' : 'user'}"></i>`;
+
+        const textWrap = document.createElement('div');
+        textWrap.style.maxWidth = '78%';
+
+        const bubble = document.createElement('div');
+        bubble.className = `msg-bubble ${isBot ? 'bot protected-question' : 'user'}`;
+        if (isHtml) bubble.innerHTML = content;
+        else bubble.textContent = content;
+
+        const timeEl = document.createElement('div');
+        timeEl.className = 'msg-time';
+        timeEl.textContent = `${isBot ? 'Interviewer' : 'You'} • ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+
+        textWrap.appendChild(bubble);
+        textWrap.appendChild(timeEl);
+        wrapper.appendChild(avatarDiv);
+        wrapper.appendChild(textWrap);
+        container.appendChild(wrapper);
+        container.scrollTop = container.scrollHeight;
+        return bubble;
+    }
+
+    function showTyping() {
+        const container = document.getElementById('chat-container');
+        const id = 'typing-' + Date.now();
+        const div = document.createElement('div');
+        div.className = 'msg-bot';
+        div.id = id;
+        div.innerHTML = `
+            <div class="msg-avatar bot"><i class="fas fa-robot"></i></div>
+            <div class="msg-bubble bot d-flex align-items-center" style="padding:0.85rem 1.1rem;">
+                <span class="typing-dots">
+                    <span></span><span></span><span></span>
+                </span>
+            </div>`;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+        return id;
+    }
+
+    function updateProgress(current, total) {
+        const pct = Math.round((current / total) * 100);
+        document.getElementById('progress-fill').style.width = pct + '%';
+        document.getElementById('progress-label').textContent = `Question ${current} of ${total}`;
+        document.getElementById('progress-pct').textContent = pct + '%';
+        document.getElementById('hero-progress').textContent = `${current}/${total}`;
+        document.getElementById('progress-badge').textContent = `Question ${current}/${total}`;
+    }
+
+    function addScoreEntry(topic, score) {
+        const list = document.getElementById('score-list');
+        if (list.querySelector('.text-muted')) list.innerHTML = '';
+        const cls = score >= 4 ? 'score-high' : score >= 2 ? 'score-mid' : 'score-low';
+        const entry = document.createElement('div');
+        entry.className = 'd-flex align-items-center justify-content-between';
+        entry.innerHTML = `
+            <span style="font-size:0.82rem;color:#475569;" class="text-truncate me-2">${topic}</span>
+            <span class="score-badge ${cls}"><i class="fas fa-star" style="font-size:0.65rem;"></i>${score}/5</span>`;
+        list.appendChild(entry);
+        scores.push(score);
+        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+        document.getElementById('avg-score').textContent = avg.toFixed(1) + '/5';
+    }
+
+    async function loadNextQuestion(isNext = false) {
+        stopQuestionTimer();
+        clearSpeech();
+        setSpeakingUI(false);
+        setInputsDisabled(true);
+        const typingId = showTyping();
+
+        let url = "{% url 'resume_get_next_question' %}";
+        if (isNext) url += '?next=true';
+
+        try {
+            const resp = await fetch(url);
+            const data = await resp.json();
+
+            document.getElementById(typingId)?.remove();
+
+            if (data.error === 'malpractice_terminated') {
+                await handleMalpracticeTermination();
+                return;
+            }
+
+            if (data.status === 'completed') {
+                stopQuestionTimer();
+                stopMalpracticeMonitoring();
+                setInputsDisabled(true);
+                document.getElementById('speak-btn').disabled = true;
+                document.getElementById('progress-fill').style.width = '100%';
+
+                // Show a "saving" state with no way to navigate away yet — the
+                // "Analyze My Performance" link only appears once the recording
+                // upload has actually finished. Previously this fired the upload
+                // and returned immediately, so leaving the tab (e.g. clicking
+                // straight through to analytics) could abort the upload
+                // mid-flight and silently lose a recording that had already
+                // qualified (score >= 70) to be kept.
+                const savingBubble = appendMessage('bot',
+                    `<div>
+                        <p class="fw-bold mb-1" style="color:#0f172a;font-size:1rem;">🎉 Interview Completed!</p>
+                        <p style="color:#475569;font-size:0.9rem;margin-bottom:0;"><i class="fas fa-spinner fa-spin me-2"></i>Saving your interview recording…</p>
+                    </div>`, true);
+
+                await finishVideoRecording();
+
+                if (savingBubble) {
+                    savingBubble.innerHTML = `
+                        <p class="fw-bold mb-1" style="color:#0f172a;font-size:1rem;">🎉 Interview Completed!</p>
+                        <p style="color:#475569;font-size:0.9rem;margin-bottom:1rem;">Great job! Your answers have been evaluated. Click below to see your detailed analysis.</p>
+                        <a href="{% url 'resume_analytics' %}" class="btn btn-primary d-inline-flex align-items-center gap-2 rounded-3">
+                            <i class="fas fa-chart-bar"></i> Analyze My Performance
+                        </a>`;
+                }
+                return;
+            }
+
+            currentQuestionId = data.id;
+            currentIsCoding = !!data.is_coding;
+            const parts = (data.progress || '1/20').split('/');
+            const current = parseInt(parts[0]);
+            const total = parseInt(parts[1] || '5');
+            questionCount = total;
+
+            updateProgress(current, total);
+            document.getElementById('topic-badge-side').textContent = data.topic || 'General';
+            document.getElementById('hero-topic').textContent = data.topic || 'General';
+
+            appendMessage('bot', data.text);
+            const voiceArea = document.getElementById("voice-input-area");
+const codingArea = document.getElementById("coding-answer-area");
+
+if (data.is_coding) {
+
+    codingArea.style.display = "block";
+
+    document.getElementById("speak-btn").style.display = "none";
+    document.getElementById("record-wave").style.display = "none";
+    document.getElementById("answer-actions").style.display = "none";
+    document.getElementById("speak-status-text").style.display = "none";
+
+} else {
+
+    codingArea.style.display = "none";
+
+    document.getElementById("speak-btn").style.display = "flex";
+    document.getElementById("record-wave").style.display = "none";
+    document.getElementById("answer-actions").style.display = "none";
+    document.getElementById("speak-status-text").style.display = "block";
+
+}
+            clearSpeech();
+            setInputsDisabled(false);
+            startQuestionTimer(typeof data.time_remaining === 'number' ? data.time_remaining : ANSWER_TIME_LIMIT);
+        } catch (e) {
+            document.getElementById(typingId)?.remove();
+            setInputsDisabled(false);
+        }
+    }
+
+    // ── Per-question 30s answer timer ──────────────────────────────────
+    function startQuestionTimer(seconds) {
+        stopQuestionTimer();
+        questionTimeRemaining = seconds;
+        updateTimerDisplay();
+        if (questionTimeRemaining <= 0) { onQuestionTimeout(); return; }
+        questionTimerInterval = setInterval(() => {
+            // Frozen while the camera-pause overlay is up — that time
+            // shouldn't count against the candidate's answer window.
+            const cameraLostOverlay = document.getElementById('camera-lost-overlay');
+            if (cameraLostOverlay && cameraLostOverlay.style.display !== 'none') return;
+            questionTimeRemaining -= 1;
+            updateTimerDisplay();
+            if (questionTimeRemaining <= 0) {
+                stopQuestionTimer();
+                onQuestionTimeout();
+            }
+        }, 1000);
+    }
+
+    function stopQuestionTimer() {
+        if (questionTimerInterval) { clearInterval(questionTimerInterval); questionTimerInterval = null; }
+    }
+
+    function updateTimerDisplay() {
+        const el = document.getElementById('answer-timer-text');
+        const badge = document.getElementById('answer-timer-badge');
+        if (!el || !badge) return;
+        el.textContent = questionTimeRemaining + 's';
+        badge.classList.remove('timer-calm', 'timer-warn', 'timer-danger');
+        badge.classList.add(questionTimeRemaining <= 5 ? 'timer-danger' : questionTimeRemaining <= 10 ? 'timer-warn' : 'timer-calm');
+    }
+
+    async function onQuestionTimeout() {
+        if (!currentQuestionId) return;
+        setInputsDisabled(true);
+        const speakBtn = document.getElementById('speak-btn');
+        if (speakBtn) speakBtn.disabled = true;
+
+        if (currentIsCoding) {
+            const box = document.getElementById('coding-answer');
+            const answer = ((box && box.value) || '').trim();
+            if (box) box.value = '';
+            const typingId = showTyping();
+            appendMessage('user', answer || '(No answer submitted — time expired)');
+            await scoreAnswer(answer, typingId);
+        } else {
+            await forceSubmitSpokenAnswer();
+        }
+    }
+
+    // `answerBubble` is passed for spoken answers: the server transcribes the
+    // recording, works out what the candidate meant (see evaluate_answer) and
+    // the bubble is updated to show that version — the one that was scored.
+    async function scoreAnswer(text, typingId, answerBubble = null, audioBlob = null) {
+        stopQuestionTimer(); // every submit path (manual or timeout) funnels through here — stop it once, before any await
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
+        const fd = new FormData();
+        fd.append('question_id', currentQuestionId);
+        fd.append('answer_text', text);
+        if (answerBubble) fd.append('spoken', '1');
+        // The recording is transcribed server-side AFTER the deadline check, so
+        // transcription time can never make an answer count as late.
+        if (audioBlob) fd.append('audio', audioBlob, 'recording.webm');
+        if (csrfToken) fd.append('csrfmiddlewaretoken', csrfToken);
+
+        // Keep trying until the server answers: a dropped connection or a server
+        // hiccup must never leave the candidate on an unscored question. The
+        // server returns the stored result if an earlier attempt already got
+        // through, so a retry is never scored twice or counted as late.
+        let result = null;
+        for (let attempt = 0; !result; attempt++) {
+            if (malpracticeStatus === 'terminated') return;
+            try {
+                const res = await fetch("{% url 'resume_submit_answer' %}", { method: 'POST', body: fd });
+                if (res.status < 500) result = await res.json();
+            } catch (e) { /* network error — retry below */ }
+            if (!result) await new Promise(r => setTimeout(r, Math.min(1000 * 2 ** attempt, 5000)));
+        }
+
+        try {
+            document.getElementById(typingId)?.remove();
+
+            if (result.error === 'malpractice_terminated') {
+                await handleMalpracticeTermination();
+                return;
+            }
+            if (answerBubble) {
+                if (result.display_text) answerBubble.textContent = result.display_text;
+                else if (answerBubble.textContent === '…') answerBubble.textContent = NO_ANSWER_TEXT;
+            }
+
+            const scoreCls = result.score >= 4 ? 'score-high' : result.score >= 2 ? 'score-mid' : 'score-low';
+            setTimeout(() => {
+                appendMessage('bot',
+                    `<div>
+                        <span class="score-badge ${scoreCls} mb-2" style="display:inline-flex;">
+                            <i class="fas fa-star" style="font-size:0.65rem;"></i> Score: ${result.score}/5
+                        </span>
+                        <p style="color:#475569;font-size:0.88rem;border-left:3px solid #14213D;padding-left:0.6rem;margin:0.5rem 0;">"${escapeHtml(result.feedback)}"</p>
+                        <p style="color:#334155;font-size:0.88rem;margin-top:0.5rem;margin-bottom:0;">Let's move to the next question.</p>
+                    </div>`, true);
+                addScoreEntry(document.getElementById('topic-badge-side').textContent, result.score);
+                setInputsDisabled(false);
+                loadNextQuestion(true);
+            }, 400);
+        } catch (e) {
+            document.getElementById(typingId)?.remove();
+            setInputsDisabled(false);
+        }
+    }
+
+    // Feedback is AI-written text; it must render as text, not markup.
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, c => (
+            { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function setInputsDisabled(disabled) {
+        const speakBtn = document.getElementById('speak-btn');
+        const submitBtn = document.getElementById('submit-answer-btn');
+        const rerecordBtn = document.getElementById('rerecord-btn');
+        const submitCodeBtn = document.getElementById('submit-code-btn');
+        if (speakBtn) speakBtn.disabled = disabled;
+        if (submitBtn) submitBtn.disabled = disabled;
+        if (rerecordBtn) rerecordBtn.disabled = disabled;
+        if (submitCodeBtn) submitCodeBtn.disabled = disabled;
+    }
+
+    // Stop speech recognition + release mic on page leave
+    window.addEventListener('beforeunload', () => {
+        stopQuestionTimer();
+        discardSession();
+        if (cameraStream) { try { cameraStream.getTracks().forEach(t => t.stop()); } catch (e) {} }
+    });
+    // Disable right-click only on AI interview questions
+document.getElementById("chat-container").addEventListener("contextmenu", function(e) {
+
+    if (e.target.closest(".msg-bubble.bot")) {
+        e.preventDefault();
+    }
+
+});
+// Disable Ctrl+C, Ctrl+A and Ctrl+X on AI interview questions
+document.addEventListener("keydown", function (e) {
+
+    if (!(e.ctrlKey || e.metaKey)) return;
+
+    const active = document.activeElement;
+
+    // Don't block shortcuts while typing in input fields
+    if (
+        active &&
+        (active.tagName === "TEXTAREA" ||
+         active.tagName === "INPUT" ||
+         active.isContentEditable)
+    ) {
+        return;
+    }
+
+    const selection = window.getSelection();
+
+    if (
+        selection &&
+        selection.anchorNode &&
+        selection.anchorNode.parentElement &&
+        selection.anchorNode.parentElement.closest(".msg-bubble.bot")
+    ) {
+        const key = e.key.toLowerCase();
+
+        if (key === "c" || key === "a" || key === "x") {
+            e.preventDefault();
+        }
+    }
+
+});
+
+// ── Anti-Malpractice: Face Monitoring, Tab/Window Detection, Violation Log ──
+// Built on top of the existing mandatory-camera feature above (cameraStream,
+// the camera-gate flow, handleCameraLost/hideCameraLostOverlay) without
+// changing how any of that works — this only adds monitoring + a
+// server-persisted violation counter on top of it.
+let malpracticeViolationCount = 0;
+let malpracticeStatus = 'clean';
+
+const MALPRACTICE_TOAST_AUTOHIDE_MS = 6000;
+let malpracticeToastHideTimer = null;
+
+function interviewIsActive() {
+    const ui = document.getElementById('interview-main-ui');
+    if (!ui || ui.style.display === 'none') return false;
+    const chatContainer = document.getElementById('chat-container');
+    if (chatContainer && chatContainer.innerText.includes('Interview Completed!')) return false;
+    return malpracticeStatus !== 'terminated';
+}
+
+function showMalpracticeToast(title, message, severity) {
+    const toast = document.getElementById('malpractice-toast');
+    const titleEl = document.getElementById('malpractice-toast-title');
+    const msgEl = document.getElementById('malpractice-toast-msg');
+    if (!toast || !titleEl || !msgEl) return;
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+    toast.classList.toggle('severity-flagged', severity === 'flagged');
+    toast.style.display = 'flex';
+    if (malpracticeToastHideTimer) clearTimeout(malpracticeToastHideTimer);
+    malpracticeToastHideTimer = setTimeout(() => { toast.style.display = 'none'; }, MALPRACTICE_TOAST_AUTOHIDE_MS);
+}
+
+const MALPRACTICE_MESSAGES = {
+    FACE_NOT_DETECTED: 'Your face is not clearly visible. Please remain in front of the camera.',
+    MULTIPLE_FACES: 'Multiple faces detected. Please ensure that only the candidate is present during the interview — getting help from another person during the interview is not permitted.',
+    TAB_SWITCH: 'Switching to another tab or window is not permitted during the interview. This includes looking up answers on Google, ChatGPT, or any other external source, or using another device for assistance.',
+    WINDOW_BLUR: 'Please keep this window focused during the interview. Leaving the interview screen repeatedly may end your interview.',
+    CAMERA_INTERRUPTED: 'Camera access has been interrupted. Please enable your camera to continue the interview.',
+    FULLSCREEN_EXIT: 'Please stay in fullscreen mode for the remainder of the interview.',
+    COPY_PASTE: 'Copying or pasting interview questions or answers is not permitted.',
+    SCREENSHOT_ATTEMPT: 'Taking a screenshot of the interview is not permitted.',
+};
+
+// ── Blocking, centered acknowledgment popup ─────────────────────────────
+// Unlike the auto-hiding toast above, this covers the screen (same overlay
+// pattern as camera-lost/terminated) and disables interview inputs until the
+// candidate explicitly clicks through — every violation type uses this, not
+// just the toast, so a warning can never be missed or silently timed out.
+function showMalpracticeWarningModal(title, message, countText) {
+    const overlay = document.getElementById('malpractice-warning-overlay');
+    const titleEl = document.getElementById('malpractice-warning-title');
+    const msgEl = document.getElementById('malpractice-warning-msg');
+    const countEl = document.getElementById('malpractice-warning-count');
+    const ackBtn = document.getElementById('malpractice-ack-btn');
+    if (!overlay || !titleEl || !msgEl || !ackBtn) return;
+
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+    if (countEl) countEl.textContent = countText || '';
+
+    if (typeof setInputsDisabled === 'function') setInputsDisabled(true);
+    overlay.style.display = 'flex';
+
+    // Fresh listener each time (not addEventListener accumulating) so a
+    // second violation while the first popup is still up can't double-fire
+    // the old handler's cleanup on top of the new one.
+    ackBtn.onclick = () => {
+        overlay.style.display = 'none';
+        if (malpracticeStatus !== 'terminated' && typeof setInputsDisabled === 'function') {
+            setInputsDisabled(false);
+        }
+    };
+}
+
+// The single entry point every detector below calls — always trusts the
+// server's returned count/status rather than incrementing a local variable,
+// so a page refresh, a second tab, or a client-side race can never disagree
+// with what's actually stored for this session.
+// One action often fires several browser events (switching tabs fires blur
+// and then visibilitychange; a screenshot key fires keydown and keyup), so the
+// same kind of violation within a few seconds counts once. Anything else is
+// queued rather than dropped: a violation that happened while the previous one
+// was still being sent used to be silently lost, so the next warning never came.
+const MALPRACTICE_DEDUPE_MS = 3000;
+const malpracticeLastAt = {};
+let malpracticeQueue = Promise.resolve();
+
+function recordMalpracticeViolation(type, durationSeconds) {
+    if (!interviewIsActive()) return;
+    const group = (type === 'TAB_SWITCH' || type === 'WINDOW_BLUR') ? 'FOCUS' : type;
+    const now = Date.now();
+    if (malpracticeLastAt[group] && now - malpracticeLastAt[group] < MALPRACTICE_DEDUPE_MS) return;
+    malpracticeLastAt[group] = now;
+    malpracticeQueue = malpracticeQueue.then(() => sendMalpracticeViolation(type, durationSeconds));
+}
+
+async function sendMalpracticeViolation(type, durationSeconds) {
+    if (!interviewIsActive()) return;
+    try {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
+        const fd = new FormData();
+        fd.append('type', type);
+        if (typeof durationSeconds === 'number') fd.append('duration_seconds', String(durationSeconds));
+        if (csrfToken) fd.append('csrfmiddlewaretoken', csrfToken);
+        const resp = await fetch("{% url 'resume_record_violation' %}", { method: 'POST', body: fd });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        malpracticeViolationCount = data.count;
+        malpracticeStatus = data.status;
+
+        const baseMsg = MALPRACTICE_MESSAGES[type] || 'Malpractice activity detected.';
+        
+        const isTabSwitch = (type === 'TAB_SWITCH' || type === 'WINDOW_BLUR');
+        if (isTabSwitch && data.type_occurrence_number > 3) {
+            await handleMalpracticeTermination();
+            return;
+        }
+
+        if (data.action === 'terminated') {
+            await handleMalpracticeTermination();
+        } else if (data.action === 'flagged') {
+            showMalpracticeWarningModal(
+                'Suspicious Activity Detected — Flagged for Review',
+                baseMsg + ' This interview has been flagged for review due to repeated violations.',
+                `Warning ${malpracticeViolationCount}/3`
+            );
+        } else {
+            showMalpracticeWarningModal(
+                'Suspicious Activity Detected',
+                baseMsg,
+                `Warning ${malpracticeViolationCount}/3`
+            );
+        }
+    } catch (e) {
+        // Best-effort — a transient network failure logging a violation
+        // must never itself interrupt the interview.
+    }
+}
+
+async function handleMalpracticeTermination() {
+    malpracticeStatus = 'terminated';
+    stopMalpracticeMonitoring();
+    if (typeof isSpeaking !== 'undefined' && isSpeaking) { try { stopSpeaking(); } catch (e) {} }
+    if (typeof stopQuestionTimer === 'function') stopQuestionTimer();
+    if (typeof setInputsDisabled === 'function') setInputsDisabled(true);
+    const speakBtn = document.getElementById('speak-btn');
+    if (speakBtn) speakBtn.disabled = true;
+    const progressFill = document.getElementById('progress-fill');
+    if (progressFill) progressFill.style.width = '100%';
+    document.getElementById('malpractice-toast').style.display = 'none';
+    document.getElementById('malpractice-terminated-overlay').style.display = 'flex';
+
+    // Same as a normal completion: save whatever recording exists (the
+    // server already applied the usual score-gated keep/discard rule when
+    // it finalized the session), then take the candidate to their results.
+    if (typeof finishVideoRecording === 'function') { try { await finishVideoRecording(); } catch (e) {} }
+    window.location.href = "{% url 'resume_analytics' %}";
+}
+
+async function syncMalpracticeState() {
+    try {
+        const resp = await fetch("{% url 'resume_violation_state' %}");
+        if (!resp.ok) return;
+        const data = await resp.json();
+        malpracticeViolationCount = data.count;
+        malpracticeStatus = data.status;
+        if (malpracticeStatus === 'terminated') {
+            await handleMalpracticeTermination();
+        }
+    } catch (e) { /* fall back to defaults (0 / clean) */ }
+}
+
+// ── Tab switch / window focus detection ─────────────────────────────────
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden && interviewIsActive() && !requestingPermission) {
+        if (typeof isSpeaking !== 'undefined' && isSpeaking) { try { stopSpeaking(); } catch (e) {} }
+        recordMalpracticeViolation('TAB_SWITCH');
+    }
+});
+window.addEventListener('blur', () => {
+    // Skip when the tab itself just went hidden — visibilitychange above
+    // already records that as TAB_SWITCH; this only catches focus moving
+    // elsewhere (another app/window) while this tab is still the visible one.
+    // A mic permission prompt can take focus — that is not the candidate leaving.
+    if (!document.hidden && interviewIsActive() && !requestingPermission) {
+        recordMalpracticeViolation('WINDOW_BLUR');
+    }
+});
+
+// ── Copy / cut / paste detection ────────────────────────────────────────
+// The existing right-click/Ctrl+C block above only prevents copying the
+// question text itself; it never recorded anything as a violation, and did
+// nothing about paste (pasting an externally-sourced answer into the
+// answer box) or cut. These three events cover the interview's whole
+// content area (questions + answer input) and log every one as a
+// COPY_PASTE violation, independent of whether the copy itself succeeded.
+['copy', 'cut', 'paste'].forEach((evt) => {
+    document.addEventListener(evt, () => {
+        if (interviewIsActive()) recordMalpracticeViolation('COPY_PASTE');
+    });
+});
+
+// ── Screenshot-attempt detection (best effort) ──────────────────────────
+// Browsers have no real "a screenshot was taken" event — this can only
+// catch the keyboard shortcuts used to trigger one (PrintScreen on
+// Windows/Linux, Cmd+Shift+3/4/5 on macOS). It cannot detect a screenshot
+// taken via a phone camera pointed at the screen, an OS screenshot button
+// with no keyboard shortcut, or a screen-recording tool — those are outside
+// what any browser-side script can observe.
+function onScreenshotKey(e) {
+    if (!interviewIsActive()) return;
+    const isPrintScreen = e.key === 'PrintScreen' || e.code === 'PrintScreen';
+    const isMacScreenshot = (e.metaKey && e.shiftKey && ['3', '4', '5'].includes(e.key));
+    const isWindowsSnip = (e.metaKey && e.shiftKey && (e.key || '').toLowerCase() === 's');
+    if (isPrintScreen || isMacScreenshot || isWindowsSnip) {
+        recordMalpracticeViolation('SCREENSHOT_ATTEMPT');
+    }
+}
+// keydown AND keyup: Windows often delivers PrintScreen only on keyup.
+document.addEventListener('keydown', onScreenshotKey);
+document.addEventListener('keyup', onScreenshotKey);
+
+// ── Face monitoring (tiny face-api.js model running against the same
+// cameraStream already captured for the mandatory-camera feature — no
+// second getUserMedia call, no change to that flow) ─────────────────────
+let faceApiReady = false;
+let faceMonitorInterval = null;
+let noFaceStreak = 0;
+let multiFaceStreak = 0;
+const FACE_CHECK_INTERVAL_MS = 1500;
+// Require several consecutive misses (~4.5-6s of sustained absence) before
+// treating it as a real violation, so a blink, a head turn, or a brief
+// reach off-camera never triggers a false warning.
+const NO_FACE_STREAK_THRESHOLD = 3;
+const MULTI_FACE_STREAK_THRESHOLD = 2;
+
+async function loadFaceApiModel() {
+    try {
+        if (typeof faceapi === 'undefined') return false;
+        await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models');
+        return true;
+    } catch (e) {
+        console.warn('Face-detection model failed to load — face monitoring disabled for this session.', e);
+        return false;
+    }
+}
+
+async function runFaceCheck() {
+    const video = document.getElementById('camera-preview');
+    if (!faceApiReady || !video || video.readyState < 2 || !interviewIsActive()) return;
+    const warningOverlay = document.getElementById('malpractice-warning-overlay');
+    if (warningOverlay && warningOverlay.style.display === 'flex') {
+        noFaceStreak = 0;
+        multiFaceStreak = 0;
+        return;
+    }
+    try {
+        const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }));
+        const count = detections.length;
+        if (count === 0) {
+            multiFaceStreak = 0;
+            noFaceStreak++;
+            if (noFaceStreak >= NO_FACE_STREAK_THRESHOLD) {
+                noFaceStreak = 0;
+                recordMalpracticeViolation('FACE_NOT_DETECTED', (NO_FACE_STREAK_THRESHOLD * FACE_CHECK_INTERVAL_MS) / 1000);
+            }
+        } else if (count > 1) {
+            noFaceStreak = 0;
+            multiFaceStreak++;
+            if (multiFaceStreak >= MULTI_FACE_STREAK_THRESHOLD) {
+                multiFaceStreak = 0;
+                recordMalpracticeViolation('MULTIPLE_FACES', (MULTI_FACE_STREAK_THRESHOLD * FACE_CHECK_INTERVAL_MS) / 1000);
+            }
+        } else {
+            noFaceStreak = 0;
+            multiFaceStreak = 0;
+        }
+    } catch (e) { /* transient detection error — ignore this tick */ }
+}
+
+async function startMalpracticeMonitoring() {
+    await syncMalpracticeState();
+    if (malpracticeStatus === 'terminated') return;
+    faceApiReady = await loadFaceApiModel();
+    if (faceApiReady) {
+        if (faceMonitorInterval) clearInterval(faceMonitorInterval);
+        faceMonitorInterval = setInterval(runFaceCheck, FACE_CHECK_INTERVAL_MS);
+    }
+}
+
+function stopMalpracticeMonitoring() {
+    if (faceMonitorInterval) { clearInterval(faceMonitorInterval); faceMonitorInterval = null; }
+}
+
+// Record camera loss as a malpractice violation too — this hooks the
+// existing handleCameraLost()/hideCameraLostOverlay() functions defined
+// above without changing how camera loss is detected or how that overlay
+// behaves; it only adds the audit-log + counter side effect the spec asks for.
+const _originalHandleCameraLost = handleCameraLost;
+handleCameraLost = function () {
+    const overlay = document.getElementById('camera-lost-overlay');
+    const wasAlreadyShown = overlay && overlay.style.display !== 'none';
+    _originalHandleCameraLost();
+    // Only count a genuinely new loss episode, not repeated polling ticks
+    // while the overlay is already up for the same ongoing loss.
+    if (!wasAlreadyShown && overlay && overlay.style.display !== 'none') {
+        recordMalpracticeViolation('CAMERA_INTERRUPTED');
+    }
+};
+</script>
+<style>
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+.speech-preview {
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto 0.85rem;
+    background: #f1f5f9;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 0.85rem 1.05rem;
+}
+.speech-preview-text {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #0f172a;
+    max-height: 160px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    -webkit-user-select: none;  /* discourage copy from the preview */
+    user-select: none;
+}
+.speech-preview-text.placeholder { color: #475569; font-style: italic; }
+</style>
+{% endblock %}
+{% endblock %}

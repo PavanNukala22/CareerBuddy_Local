@@ -1,0 +1,2308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script src="/static/js/content-protection.js?v=2" data-cb-protect></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CrewAI — Intermediate to Advanced Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* CareerBuddy Module UI Standard (v1) tokens */
+  --navy:#14213D;--navy-2:#0b1526;--gold:#FCA311;--gold-soft:#fdeecb;--gold-ink:#7a5c00;
+  --page-bg:#ffffff;--bg-soft:#f1f3ff;--teal-50:#e6ebf3;
+  --ink:#161c27;--body:#4a5568;--muted:#718096;--line:#e2e8f0;--line-2:#dde2f3;
+  --success:#38a169;--success-bg:#e9f7ef;--danger:#e53e3e;--danger-bg:#fdecec;
+  --tok-radius:8px;--tok-radius-lg:14px;
+  --tok-shadow-sm:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.06);
+  --tok-shadow:0 8px 24px -12px rgba(16,24,40,.18);
+
+  /* Original component variables, remapped onto the tokens above.
+     Left in place (rather than rewritten site-wide) so every rule below
+     keeps working unchanged. Decorative colour families (blue/green/
+     purple/orange/accent) are flattened to navy or gold per the remap
+     rule; --success/--danger are new and used ONLY for the assessment
+     right/wrong states so that feedback stays green/red. */
+  --bg:#ffffff;--bg-sidebar:#ffffff;--bg-card:var(--bg-soft);--bg-code:var(--teal-50);
+  --text:var(--ink);--text-muted:var(--body);--text-light:var(--muted);
+  --accent:var(--gold);--accent-glow:var(--gold-soft);
+  --blue:var(--navy);--blue-glow:rgba(20,33,61,.08);
+  --green:var(--navy);--green-glow:rgba(20,33,61,.08);
+  --purple:var(--navy);--purple-glow:rgba(20,33,61,.08);
+  --orange:var(--gold);--orange-glow:var(--gold-soft);
+  --border:var(--line);--border-strong:var(--line-2);
+  --radius:var(--tok-radius);--radius-lg:var(--tok-radius-lg);
+  --header-h:56px;--tabs-h:44px;--sidebar-w:250px;
+  --font-body:'Outfit',sans-serif;
+  --font-display:'Outfit',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --shadow-sm:var(--tok-shadow-sm);
+  --shadow-md:var(--tok-shadow);
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:var(--font-body);color:var(--text);background:var(--page-bg);line-height:1.72;-webkit-font-smoothing:antialiased}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ── STICKY HEADER ── */
+.site-header{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  height:var(--header-h);background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 24px;gap:16px;
+}
+.brand{font-family:var(--font-display);font-size:1.25rem;color:var(--text);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.brand svg{width:22px;height:22px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--green-glow);color:var(--green);
+  padding:3px 12px 3px 8px;border-radius:100px;font-size:.72rem;
+  font-weight:600;text-transform:uppercase;letter-spacing:.5px;
+  flex-shrink:0;
+}
+.progress-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.header-spacer{flex:1}
+.header-btn{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:6px;
+  padding:6px 14px;font-size:.8rem;font-weight:500;cursor:pointer;
+  color:var(--text);font-family:var(--font-body);transition:.15s;
+}
+.header-btn:hover{background:var(--border);border-color:var(--border-strong)}
+.header-btn.primary{background:var(--accent);color:var(--gold-ink);border-color:var(--accent)}
+.header-btn.primary:hover{opacity:.9}
+
+/* ── TAB BAR ── */
+.tab-bar{
+  position:fixed;top:var(--header-h);left:0;right:0;z-index:99;
+  height:var(--tabs-h);background:rgba(255,255,255,.96);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--border);
+  display:flex;align-items:stretch;padding:0 24px;gap:0;
+  overflow-x:auto;scrollbar-width:none;
+}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab-btn{
+  position:relative;padding:0 16px;font-size:.82rem;font-weight:500;
+  color:var(--text-muted);background:none;border:none;cursor:pointer;
+  white-space:nowrap;font-family:var(--font-body);transition:.15s;
+}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--text);font-weight:600}
+.tab-btn.active::after{
+  content:'';position:absolute;bottom:0;left:12px;right:12px;
+  height:2.5px;background:var(--accent);border-radius:2px 2px 0 0;
+}
+.tab-btn.exam{color:var(--accent)}
+.tab-btn.exam.active{color:var(--accent)}
+
+/* ── LAYOUT ── */
+.layout{
+  display:flex;margin-top:calc(var(--header-h) + var(--tabs-h));
+  min-height:calc(100vh - var(--header-h) - var(--tabs-h));
+}
+
+/* ── LEFT TOC ── */
+.sidebar{
+  position:fixed;top:calc(var(--header-h) + var(--tabs-h));left:0;
+  width:var(--sidebar-w);height:calc(100vh - var(--header-h) - var(--tabs-h));
+  overflow-y:auto;background:var(--bg-sidebar);border-right:1px solid var(--border);
+  padding:20px 16px;scrollbar-width:thin;z-index:50;
+}
+.toc-title{
+  font-size:.65rem;text-transform:uppercase;letter-spacing:1.2px;
+  color:var(--text-light);font-weight:600;margin-bottom:12px;
+}
+.toc-list{list-style:none}
+.toc-list li{margin-bottom:2px}
+.toc-link{
+  display:block;padding:5px 10px;border-radius:5px;
+  font-size:.8rem;color:var(--text-muted);transition:.15s;
+  line-height:1.4;
+}
+.toc-link:hover{background:var(--bg-card);color:var(--text);text-decoration:none}
+.toc-link.active{background:var(--navy);color:#fff;font-weight:700;border-radius:8px}
+
+/* ── MAIN CONTENT ── */
+.main{margin-left:var(--sidebar-w);flex:1;max-width:840px;padding:40px 48px 100px}
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── TYPOGRAPHY ── */
+.section-anchor{scroll-margin-top:calc(var(--header-h) + var(--tabs-h) + 20px)}
+h1{font-family:var(--font-display);font-size:2.6rem;line-height:1.15;margin-bottom:8px;color:var(--text)}
+h2{font-family:var(--font-display);font-size:1.85rem;line-height:1.25;margin:48px 0 16px;color:var(--text);position:relative}
+h3{font-size:1.1rem;font-weight:600;margin:32px 0 10px;color:var(--text)}
+h4{font-size:.95rem;font-weight:600;margin:20px 0 8px;color:var(--text)}
+p{margin-bottom:16px;color:var(--text)}
+ul,ol{margin:0 0 16px 22px}
+li{margin-bottom:7px}
+.subtitle{font-size:1.1rem;color:var(--text-muted);margin-bottom:32px;font-style:italic;font-family:var(--font-display)}
+
+/* ── LEVEL BADGES ── */
+.level-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+.level{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;
+  font-size:.68rem;font-weight:600;letter-spacing:.3px;
+}
+.level::before{content:'';width:6px;height:6px;border-radius:50%}
+.level.fresher{background:var(--green-glow);color:var(--green)}
+.level.fresher::before{background:var(--green)}
+.level.inter{background:var(--blue-glow);color:var(--blue)}
+.level.inter::before{background:var(--blue)}
+.level.adv{background:var(--purple-glow);color:var(--purple)}
+.level.adv::before{background:var(--purple)}
+
+/* ── CALLOUT BOXES ── */
+.callout{
+  display:flex;gap:12px;padding:16px 18px;border-radius:var(--radius);
+  margin:20px 0;border-left:3px solid;
+}
+.callout.info{background:var(--blue-glow);border-color:var(--blue)}
+.callout.tip{background:var(--green-glow);border-color:var(--green)}
+.callout.warn{background:var(--orange-glow);border-color:var(--orange)}
+.callout.concept{background:var(--purple-glow);border-color:var(--purple)}
+.callout-icon{font-size:1.2rem;flex-shrink:0;margin-top:1px}
+.callout-body{font-size:.88rem;line-height:1.65}
+.callout-body strong{font-weight:600}
+
+/* ── CODE BLOCKS ── */
+pre{
+  background:var(--bg-code);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px 20px;overflow-x:auto;
+  font-family:var(--font-mono);font-size:.8rem;line-height:1.7;
+  margin:16px 0;
+}
+code{font-family:var(--font-mono);font-size:.85em;background:var(--bg-code);padding:2px 5px;border-radius:3px}
+pre code{background:none;padding:0;font-size:1em}
+.code-label{
+  font-size:.68rem;text-transform:uppercase;letter-spacing:.8px;font-weight:600;
+  color:var(--text-light);margin:20px 0 -8px;display:flex;align-items:center;gap:8px;
+}
+.code-label::before{content:'▸';color:var(--accent)}
+
+/* ── SVG DIAGRAMS ── */
+.diagram-container{
+  margin:28px 0;border-radius:var(--radius-lg);overflow:hidden;
+  border:1px solid var(--border);background:var(--bg-card);
+}
+.diagram-label{
+  padding:8px 16px;font-size:.7rem;text-transform:uppercase;
+  letter-spacing:.8px;font-weight:600;color:var(--text-light);
+  border-bottom:1px solid var(--border);background:var(--bg);
+}
+.diagram-container svg{display:block;width:100%;height:auto}
+
+/* ── CARDS GRID ── */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:20px 0}
+.card{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;transition:.2s;position:relative;overflow:hidden;
+}
+.card:hover{border-color:var(--border-strong);box-shadow:var(--shadow-md)}
+.card-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;font-size:1.1rem}
+.card-icon.red{background:var(--accent-glow);color:var(--accent)}
+.card-icon.blue{background:var(--blue-glow);color:var(--blue)}
+.card-icon.green{background:var(--green-glow);color:var(--green)}
+.card-icon.purple{background:var(--purple-glow);color:var(--purple)}
+.card-icon.orange{background:var(--orange-glow);color:var(--orange)}
+.card h4{margin:0 0 6px;font-size:.92rem}
+.card p{font-size:.82rem;color:var(--text-muted);margin:0;line-height:1.55}
+
+/* ── COMPARISON TABLE ── */
+.compare-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:.85rem}
+.compare-table th{
+  text-align:left;padding:10px 14px;background:var(--bg-card);
+  border:1px solid var(--border);font-weight:600;font-size:.78rem;
+  text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);
+}
+.compare-table td{padding:10px 14px;border:1px solid var(--border);vertical-align:top}
+.compare-table tr:hover td{background:var(--bg-sidebar)}
+.compare-table td code{font-size:.82em}
+
+/* ── TAG / BADGE ── */
+.tag{
+  display:inline-block;padding:2px 8px;border-radius:4px;
+  font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.3px;
+}
+.tag.red{background:var(--accent-glow);color:var(--accent)}
+.tag.blue{background:var(--blue-glow);color:var(--blue)}
+.tag.green{background:var(--green-glow);color:var(--green)}
+.tag.purple{background:var(--purple-glow);color:var(--purple)}
+.tag.orange{background:var(--orange-glow);color:var(--orange)}
+
+/* ── KEY-TERM DEFINITION LIST ── */
+.deflist{margin:18px 0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.deflist .row{display:grid;grid-template-columns:170px 1fr;gap:0;border-bottom:1px solid var(--border)}
+.deflist .row:last-child{border-bottom:none}
+.deflist .row:hover{background:var(--bg-sidebar)}
+.deflist .k{padding:11px 14px;background:var(--bg-card);font-family:var(--font-mono);font-size:.78rem;color:var(--accent);font-weight:500;border-right:1px solid var(--border)}
+.deflist .v{padding:11px 16px;font-size:.85rem;line-height:1.6}
+@media(max-width:620px){.deflist .row{grid-template-columns:1fr}.deflist .k{border-right:none;border-bottom:1px solid var(--border)}}
+
+/* ── PILL ROW (mini legend) ── */
+.pill-row{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 20px}
+.pill{padding:5px 12px;border-radius:100px;font-size:.76rem;font-weight:500;border:1px solid var(--border);background:var(--bg-card);color:var(--text-muted)}
+
+/* ══════════ ASSESSMENT ENGINE ══════════ */
+.exam-intro{
+  background:linear-gradient(180deg,var(--accent-glow),transparent);
+  border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:24px 26px;margin:24px 0 8px;
+}
+.exam-picker{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:24px 0}
+.exam-card{
+  border:1px solid var(--border);border-top:3px solid var(--accent);border-radius:var(--radius-lg);padding:22px 20px;
+  cursor:pointer;transition:.18s;background:var(--bg);position:relative;box-shadow:var(--shadow-sm);
+}
+.exam-card:hover{border-color:var(--accent);border-top-color:var(--accent);box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.exam-card .num{font-family:var(--font-display);font-size:2rem;color:var(--accent);line-height:1}
+.exam-card h4{margin:8px 0 6px;font-size:1rem}
+.exam-card p{font-size:.8rem;color:var(--text-muted);margin:0 0 12px}
+.exam-card .meta{font-size:.72rem;color:var(--text-light);display:flex;gap:12px;flex-wrap:wrap}
+.exam-card .done-badge{
+  position:absolute;top:14px;right:14px;font-size:.68rem;font-weight:600;
+  padding:3px 9px;border-radius:100px;background:var(--green-glow);color:var(--green);display:none;
+}
+.exam-card.done .done-badge{display:inline-block}
+
+.exam-body{display:none}
+.exam-body.active{
+  display:block;position:fixed;inset:0;z-index:1000;background:var(--bg);
+  overflow-y:auto;padding:28px 20px 80px;animation:fadeIn .3s ease;
+}
+.exam-body.active>*{max-width:760px;margin-left:auto;margin-right:auto}
+.exam-topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 24px}
+.exam-back{background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:6px 13px;font-size:.78rem;cursor:pointer;font-family:var(--font-body);color:var(--text)}
+.exam-back:hover{background:var(--border)}
+.exam-progress{flex:1;min-width:120px;height:8px;background:var(--bg-code);border-radius:100px;overflow:hidden}
+.exam-progress span{display:block;height:100%;width:0;background:var(--accent);transition:width .4s ease}
+.exam-count{font-size:.76rem;color:var(--text-muted);font-weight:500}
+
+.q{border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px 24px;margin:18px 0;background:var(--bg)}
+.q-head{display:flex;gap:10px;align-items:baseline;margin-bottom:14px}
+.q-num{font-family:var(--font-mono);font-size:.75rem;font-weight:600;color:var(--accent);background:var(--accent-glow);padding:3px 8px;border-radius:5px;flex-shrink:0}
+.q-type{font-size:.66rem;text-transform:uppercase;letter-spacing:.6px;font-weight:600;color:var(--text-light);margin-left:auto;flex-shrink:0}
+.q-prompt{font-size:.98rem;font-weight:500;line-height:1.55}
+.q-prompt code{font-size:.85em}
+
+.options{display:flex;flex-direction:column;gap:9px;margin-top:6px}
+.opt{
+  display:flex;gap:11px;align-items:flex-start;padding:12px 15px;border:1px solid var(--border);
+  border-radius:var(--radius);cursor:pointer;transition:.14s;font-size:.88rem;line-height:1.5;background:var(--bg);
+}
+.opt:hover{border-color:var(--border-strong);background:var(--bg-sidebar)}
+.opt .marker{
+  width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border-strong);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:.72rem;font-weight:600;color:var(--text-muted);transition:.14s;
+}
+.opt.selected{border-color:var(--blue);background:var(--blue-glow)}
+.opt.selected .marker{border-color:var(--blue);background:var(--blue);color:#fff}
+.opt.correct{border-color:var(--success);background:var(--success-bg)}
+.opt.correct .marker{border-color:var(--success);background:var(--success);color:#fff}
+.opt.wrong{border-color:var(--danger);background:var(--danger-bg)}
+.opt.wrong .marker{border-color:var(--danger);background:var(--danger);color:#fff}
+.opt.locked{cursor:default;pointer-events:none}
+.opt.locked:hover{background:var(--bg)}
+.opt.correct.locked:hover{background:var(--success-bg)}
+.opt.wrong.locked:hover{background:var(--danger-bg)}
+
+.explain{
+  margin-top:12px;padding:12px 15px;border-radius:var(--radius);font-size:.83rem;line-height:1.6;
+  background:var(--bg-card);border-left:3px solid var(--text-light);display:none;
+}
+.explain.show{display:block;animation:fadeIn .25s ease}
+.explain.right{border-color:var(--success);background:var(--success-bg)}
+.explain.miss{border-color:var(--danger);background:var(--danger-bg)}
+.explain b{font-weight:600}
+
+.sa-input{
+  width:100%;min-height:96px;resize:vertical;border:1px solid var(--border);border-radius:var(--radius);
+  padding:12px 14px;font-family:var(--font-body);font-size:.88rem;line-height:1.6;color:var(--text);
+  background:var(--bg-sidebar);margin-top:4px;
+}
+.sa-input:focus{outline:none;border-color:var(--blue);background:var(--bg)}
+.sa-actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.btn-reveal{background:var(--accent);color:var(--gold-ink);border:none;border-radius:6px;padding:8px 16px;font-size:.8rem;font-weight:600;cursor:pointer;font-family:var(--font-body)}
+.btn-reveal:hover{opacity:.9}
+.btn-ghost{background:var(--bg-card);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 16px;font-size:.8rem;font-weight:500;cursor:pointer;font-family:var(--font-body)}
+.btn-ghost:hover{background:var(--border)}
+.model-answer{
+  margin-top:14px;padding:16px 18px;border-radius:var(--radius);background:var(--purple-glow);
+  border-left:3px solid var(--purple);font-size:.85rem;line-height:1.65;display:none;
+}
+.model-answer.show{display:block;animation:fadeIn .25s ease}
+.model-answer h5{font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;color:var(--purple);margin-bottom:8px;font-weight:700}
+.model-answer ul{margin:8px 0 0 20px}
+.model-answer li{margin-bottom:5px}
+.self-check{display:flex;gap:8px;margin-top:14px;align-items:center;flex-wrap:wrap}
+.self-check .lbl{font-size:.78rem;color:var(--text-muted);font-weight:500}
+.sc-btn{border:1px solid var(--border);background:var(--bg);border-radius:6px;padding:5px 13px;font-size:.78rem;cursor:pointer;font-family:var(--font-body);color:var(--text)}
+.sc-btn.got{border-color:var(--success);color:var(--success)}
+.sc-btn.got.on{background:var(--success);color:#fff}
+.sc-btn.miss{border-color:var(--danger);color:var(--danger)}
+.sc-btn.miss.on{background:var(--danger);color:#fff}
+
+.exam-footer{margin:28px 0 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.btn-submit{background:var(--gold);color:var(--gold-ink);border:none;border-radius:7px;padding:11px 24px;font-size:.9rem;font-weight:600;cursor:pointer;font-family:var(--font-body)}
+.btn-submit:hover{opacity:.92}
+.btn-submit:disabled{opacity:.45;cursor:not-allowed}
+
+/* ── ONE-QUESTION STEPPER ── */
+.exam-body.stepper .q{display:none}
+.exam-body.stepper .q.step-active{display:block;animation:fadeIn .28s ease}
+.exam-nav{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:24px;flex-wrap:wrap}
+.exam-nav .step-count{font-family:var(--font-mono);font-size:.78rem;font-weight:600;color:var(--text-muted);letter-spacing:.3px}
+.nav-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:11px 22px;font-size:.9rem;font-weight:600;cursor:pointer;font-family:var(--font-body);color:var(--text);transition:border-color .15s,background .15s}
+.nav-btn:hover:not(:disabled){border-color:var(--accent)}
+.nav-btn:disabled{opacity:.35;cursor:not-allowed}
+.nav-btn.primary{background:var(--accent);color:var(--gold-ink);border-color:var(--accent)}
+.nav-btn.primary:hover:not(:disabled){opacity:.92}
+.nav-hint{font-size:.76rem;color:var(--accent);width:100%;text-align:center;margin-top:2px;min-height:1em}
+.exam-body.stepper .exam-footer{display:none}
+.exam-body.stepper .exam-footer.on-last{display:flex}
+
+.result-card{
+  margin:24px 0;border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;
+  text-align:center;background:var(--bg-card);display:none;
+}
+.result-card.show{display:block;animation:fadeIn .3s ease}
+.result-score{font-family:var(--font-display);font-size:3.4rem;line-height:1;color:var(--accent)}
+.result-label{font-size:.95rem;color:var(--text-muted);margin-top:6px}
+.result-msg{margin-top:14px;font-size:.9rem}
+.result-bd{display:flex;gap:22px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+.result-bd div{font-size:.78rem;color:var(--text-muted)}
+.result-bd b{display:block;font-size:1.3rem;color:var(--text);font-weight:600}
+
+/* ══════════ FULL-COURSE ASSESSMENT (single 50-question bank) ══════════ */
+.assess-summary{border:1px solid var(--border);background:var(--bg);border-radius:var(--radius-lg);padding:20px 22px;margin:20px 0;box-shadow:var(--shadow-sm)}
+.assess-summary .row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.assess-summary .stat{font-size:.82rem;color:var(--text-muted)}
+.assess-summary .stat b{color:var(--text)}
+.assess-overlay{position:fixed;inset:0;z-index:1000;background:var(--page-bg);overflow-y:auto;display:none}
+.assess-overlay.show{display:block;animation:fadeIn .25s ease}
+.assess-inner{max-width:820px;margin:0 auto;padding:28px 22px 80px}
+.assess-top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}
+.assess-progress-label{font-family:var(--font-mono);font-size:.78rem;color:var(--text-muted);letter-spacing:.04em}
+.assess-exit{font-family:var(--font-body);font-size:.82rem;font-weight:600;color:var(--text-muted);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 14px;cursor:pointer}
+.assess-exit:hover{background:var(--bg-sidebar);color:var(--text)}
+.assess-bar{height:6px;border-radius:100px;background:var(--bg-code);overflow:hidden;margin-bottom:22px}
+.assess-bar-fill{height:100%;background:var(--accent);border-radius:100px;transition:width .25s ease}
+.assess-nav-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:24px}
+.assess-nav-row .spacer{flex:1}
+.assess-final{text-align:center;padding:40px 16px}
+.assess-final .big{font-family:var(--font-display);font-size:2.8rem;font-weight:600;color:var(--accent);margin:6px 0}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .sidebar{display:none}
+  .main{margin-left:0;padding:28px 20px 60px}
+  .tab-bar{padding:0 12px}
+}
+</style>
+<!-- ── Global theme overlay (DESIGN-CBuddy.md) ── -->
+<link rel="stylesheet" href="/theme-cbuddy.css">
+<style>
+/* CareerBuddy: sticky sidebar visible scrollbar */
+.toc,.sidebar,.sidenav{scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc::-webkit-scrollbar,.sidebar::-webkit-scrollbar,.sidenav::-webkit-scrollbar{width:9px;height:9px}
+.toc::-webkit-scrollbar-thumb,.sidebar::-webkit-scrollbar-thumb,.sidenav::-webkit-scrollbar-thumb{background:#cbd2e0;border-radius:8px}
+.toc::-webkit-scrollbar-thumb:hover,.sidebar::-webkit-scrollbar-thumb:hover,.sidenav::-webkit-scrollbar-thumb:hover{background:#9aa4b8}
+.toc::-webkit-scrollbar-track,.sidebar::-webkit-scrollbar-track,.sidenav::-webkit-scrollbar-track{background:transparent}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap">
+<style>
+/* -- Unify typography: Outfit everywhere (CareerBuddy) -- */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,dl,dt,dd,td,th,div,section,article,header,footer,nav,aside,main,label,button,input,select,textarea,blockquote,figcaption,small,strong,b,em,i{font-family:'Outfit',system-ui,-apple-system,'Segoe UI',sans-serif !important}
+.material-symbols-outlined,.material-icons{font-family:'Material Symbols Outlined','Material Icons' !important}
+code,pre,kbd,samp,tt,.mono,[class*="mono"],[class*="Mono"],[class*="code"],[class*="Code"],[class*="tok"],[class*="hljs"]{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+<style id="assess-btn-color">
+#startAssessBtn,#startReferenceAssessment,.assessment-cta,.assess-start-btn,button[onclick*="__mockExamStart"]:not(.tab){background:#14213D !important;color:#fff !important;border:1px solid #14213D !important}
+#startAssessBtn:hover,#startReferenceAssessment:hover,.assessment-cta:hover,.assess-start-btn:hover,button[onclick*="__mockExamStart"]:not(.tab):hover{background:#0b1526 !important;color:#fff !important}
+</style>
+<style>
+/* sidebar-unify — navy active items + no rainbow bar (match course UI) */
+.toc-progress, .side-progress, .rail-progress { background:#14213D !important; background-image:none !important; }
+.nav-item.active, .sidebar-nav .active, .sidebar .active, .toc .active,
+[class*="toc"] a.active, aside a.active, .side-nav .active, .nav-sub .active {
+  background:#14213D !important; color:#fff !important; border-radius:8px !important;
+}
+.nav-item.active *, .sidebar .active *, .toc .active *, .sidebar-nav .active * { color:#fff !important; }
+.nav-item.active .nav-dot, .sidebar .active .nav-dot { background:#FCA311 !important; }
+</style>
+<style>/* CareerBuddy: nav bar scrollbar visible */
+.tabbar,.tabs,.tab-bar,.tab-nav,[role="tablist"]{scrollbar-width:thin !important;scrollbar-color:#9aa4b8 transparent !important;overflow-x:auto !important}
+.tabbar::-webkit-scrollbar,.tabs::-webkit-scrollbar,.tab-bar::-webkit-scrollbar,.tab-nav::-webkit-scrollbar,[role="tablist"]::-webkit-scrollbar{display:block !important;height:8px !important}
+.tabbar::-webkit-scrollbar-thumb,.tabs::-webkit-scrollbar-thumb,.tab-bar::-webkit-scrollbar-thumb,.tab-nav::-webkit-scrollbar-thumb,[role="tablist"]::-webkit-scrollbar-thumb{background:#cbd2e0 !important;border-radius:8px}
+.tabbar::-webkit-scrollbar-thumb:hover,.tabs::-webkit-scrollbar-thumb:hover,.tab-bar::-webkit-scrollbar-thumb:hover{background:#9aa4b8 !important}
+.tabbar::-webkit-scrollbar-track,.tabs::-webkit-scrollbar-track,.tab-bar::-webkit-scrollbar-track,.tab-nav::-webkit-scrollbar-track,[role="tablist"]::-webkit-scrollbar-track{background:transparent}
+</style>
+<style>/* CareerBuddy: nav bar bg effect (v1) */
+.tabbar,.tabs,.tab-bar,.nav-tabs,.mode-tabs,.mode-bar,nav.tabs,[role="tablist"]{
+ background:#ffffff !important;
+ border-top:none !important;
+ border-bottom:1px solid #e2e8f0 !important;
+ box-shadow:0 2px 6px rgba(20,33,61,.05) !important;
+}
+</style>
+<style id="nav-scroll-navy">
+.tabbar,.tabs,.tab-bar,.tab-nav{overflow-x:auto !important;scrollbar-width:thin !important;scrollbar-color:#14213D #eef1f7 !important}
+.tabbar::-webkit-scrollbar,.tabs::-webkit-scrollbar,.tab-bar::-webkit-scrollbar,.tab-nav::-webkit-scrollbar{height:9px !important;display:block !important}
+.tabbar::-webkit-scrollbar-thumb,.tabs::-webkit-scrollbar-thumb,.tab-bar::-webkit-scrollbar-thumb,.tab-nav::-webkit-scrollbar-thumb{background:#14213D !important;border-radius:8px !important}
+.tabbar::-webkit-scrollbar-track,.tabs::-webkit-scrollbar-track,.tab-bar::-webkit-scrollbar-track,.tab-nav::-webkit-scrollbar-track{background:#eef1f7 !important}
+</style>
+
+<style id="sidebar-scroll-navy">
+.toc,.sidebar,.sidenav,.book-list{scrollbar-color:#14213D #eef1f7 !important}
+.toc::-webkit-scrollbar-thumb,.sidebar::-webkit-scrollbar-thumb,.sidenav::-webkit-scrollbar-thumb,.book-list::-webkit-scrollbar-thumb{background:#14213D !important;border-radius:8px !important}
+.toc::-webkit-scrollbar-thumb:hover,.sidebar::-webkit-scrollbar-thumb:hover,.sidenav::-webkit-scrollbar-thumb:hover,.book-list::-webkit-scrollbar-thumb:hover{background:#0b1526 !important}
+.toc::-webkit-scrollbar-track,.sidebar::-webkit-scrollbar-track,.sidenav::-webkit-scrollbar-track,.book-list::-webkit-scrollbar-track{background:#eef1f7 !important}
+</style>
+
+<style id="all-scroll-navy">
+*{scrollbar-color:#14213D #eef1f7 !important}
+::-webkit-scrollbar-thumb{background:#14213D !important;border-radius:8px !important}
+::-webkit-scrollbar-thumb:hover{background:#0b1526 !important}
+::-webkit-scrollbar-track{background:#eef1f7 !important}
+</style>
+<style id="site-font-outfit">
+body{font-family:'Outfit',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif !important}
+</style>
+<style id="nav-gap-fix">
+.tabbar,.tabs,.tabstrip,.topic-nav,.topnav,.topnav-links,.tab-bar{gap:5px !important}
+.tabbar,.tabs,.tabstrip,.topic-nav,.topnav,.tab-bar{padding-bottom:10px !important}
+</style>
+</head>
+<body>
+<!-- ════════════ HEADER ════════════ -->
+<header class="site-header">
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+    CrewAI Study Guide
+  </div>
+  <span class="progress-pill"><span class="dot"></span>Intermediate → Advanced</span>
+  <div class="header-spacer"></div>
+  <button class="header-btn" onclick="resetProgress()">↻ Reset</button>
+</header>
+
+<!-- ════════════ TAB BAR ════════════ -->
+<nav class="tab-bar" id="tabBar">
+  <button class="tab-btn active" data-tab="overview">Overview</button>
+  <button class="tab-btn" data-tab="architecture">Architecture</button>
+  <button class="tab-btn" data-tab="components">Core Components</button>
+  <button class="tab-btn" data-tab="memory">Memory &amp; Knowledge</button>
+  <button class="tab-btn" data-tab="flows">Flows</button>
+  <button class="tab-btn" data-tab="production">Use Cases &amp; Production</button>
+  <button class="tab-btn" data-tab="comparison">Comparisons</button>
+  <button class="tab-btn exam" data-tab="assessments">Assessments</button>
+</nav>
+
+<!-- ════════════ LAYOUT ════════════ -->
+<div class="layout">
+
+  <!-- ── SIDEBAR TOC ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="toc-title">On this page</div>
+    <ul class="toc-list" id="tocList"></ul>
+  </aside>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="main" id="mainContent">
+
+    <!-- ╔══════════════════════════════════════╗ -->
+    <!-- ║           TAB 1: OVERVIEW            ║ -->
+    <!-- ╚══════════════════════════════════════╝ -->
+    <section class="tab-panel active" id="panel-overview" data-title="Overview">
+
+      <h1>CrewAI</h1>
+      <p class="subtitle">An open-source framework for orchestrating role-playing, autonomous AI agents into collaborative crews — and event-driven flows.</p>
+
+      <div class="callout tip">
+        <span class="callout-icon">🧭</span>
+        <div class="callout-body">
+          <strong>How to read this guide.</strong> Every section is tagged by level so you can pace yourself. New to agents? Follow the
+          <span class="level fresher">Fresher</span> notes first. Already shipping LLM apps? Jump to
+          <span class="level inter">Intermediate</span> and <span class="level adv">Advanced</span> blocks and the <b>Flows</b>, <b>Memory &amp; Knowledge</b>, and <b>Production</b> tabs. Finish with the three <b>Assessments</b>.
+        </div>
+      </div>
+
+      <h2 class="section-anchor" id="ov-what">What is CrewAI?</h2>
+      <div class="level-row"><span class="level fresher">Fresher</span></div>
+      <p>CrewAI is an open-source multi-agent orchestration framework created by João Moura. This Python framework leverages AI collaboration by orchestrating role-playing autonomous AI agents that work together as a cohesive assembly — a <em>"crew"</em> — to complete tasks. It is standalone (not built on LangChain) and is engineered for both rapid prototyping and production deployment.</p>
+
+      <p>Think of it like assembling a project team at work: each member has a distinct role, unique skills, and defined responsibilities. But instead of humans, your team members are AI agents powered by large language models (LLMs).</p>
+
+      <div class="callout concept">
+        <span class="callout-icon">💡</span>
+        <div class="callout-body">
+          <strong>Key Concept — "Crew"</strong><br>
+          A <b>crew</b> is a team of AI agents that autonomously delegate work and ask questions among themselves, coordinated by a <b>process</b> (the execution strategy), to reach a shared goal.
+        </div>
+      </div>
+
+      <!-- SVG: What is CrewAI overview -->
+      <div class="diagram-container">
+        <div class="diagram-label">Figure — CrewAI at a Glance</div>
+        <svg viewBox="0 0 720 320" xmlns="http://www.w3.org/2000/svg" style="background:#f1f3ff">
+          <defs>
+            <filter id="ds" x="-4%" y="-4%" width="108%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity=".06"/></filter>
+            <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#718096"/></marker>
+          </defs>
+          <circle cx="360" cy="160" r="58" fill="#fff" stroke="#FCA311" stroke-width="2.5" filter="url(#ds)"/>
+          <text x="360" y="148" text-anchor="middle" font-family="Outfit,sans-serif" font-size="18" fill="#161c27">Crew</text>
+          <text x="360" y="172" text-anchor="middle" font-family="Outfit,sans-serif" font-size="11" fill="#718096">Orchestrator</text>
+          <g transform="translate(100,80)">
+            <rect x="0" y="0" width="110" height="60" rx="10" fill="#fff" stroke="#14213D" stroke-width="1.5" filter="url(#ds)"/>
+            <text x="55" y="24" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="600" font-size="12" fill="#14213D">Agent 1</text>
+            <text x="55" y="42" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">Researcher</text>
+          </g>
+          <g transform="translate(100,200)">
+            <rect x="0" y="0" width="110" height="60" rx="10" fill="#fff" stroke="#14213D" stroke-width="1.5" filter="url(#ds)"/>
+            <text x="55" y="24" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="600" font-size="12" fill="#14213D">Agent 2</text>
+            <text x="55" y="42" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">Writer</text>
+          </g>
+          <g transform="translate(510,80)">
+            <rect x="0" y="0" width="110" height="60" rx="10" fill="#fff" stroke="#14213D" stroke-width="1.5" filter="url(#ds)"/>
+            <text x="55" y="24" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="600" font-size="12" fill="#14213D">Agent 3</text>
+            <text x="55" y="42" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">Analyst</text>
+          </g>
+          <g transform="translate(510,200)">
+            <rect x="0" y="0" width="110" height="60" rx="10" fill="#fff" stroke="#FCA311" stroke-width="1.5" filter="url(#ds)"/>
+            <text x="55" y="24" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="600" font-size="12" fill="#FCA311">Agent 4</text>
+            <text x="55" y="42" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">Reviewer</text>
+          </g>
+          <line x1="210" y1="110" x2="298" y2="145" stroke="#718096" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <line x1="210" y1="230" x2="298" y2="185" stroke="#718096" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <line x1="510" y1="110" x2="422" y2="145" stroke="#718096" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <line x1="510" y1="230" x2="422" y2="185" stroke="#718096" stroke-width="1.3" marker-end="url(#arrow)"/>
+          <text x="360" y="298" text-anchor="middle" font-family="Outfit,sans-serif" font-size="11" fill="#718096">Agents collaborate autonomously under a shared goal</text>
+        </svg>
+      </div>
+
+      <h2 class="section-anchor" id="ov-crews-flows">Crews vs Flows — the two mental models</h2>
+      <div class="level-row"><span class="level inter">Intermediate</span></div>
+      <p>Modern CrewAI ships with <b>two complementary building blocks</b>. Understanding when to reach for each is the single most important idea for going beyond toy examples.</p>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon red">👥</div>
+          <h4>Crews — autonomy</h4>
+          <p>A team of agents that <b>reason and delegate on their own</b>. You describe roles and goals; the crew figures out the "how". Best when you want emergent, exploratory problem-solving.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon blue">🔀</div>
+          <h4>Flows — control</h4>
+          <p>An <b>event-driven, stateful</b> orchestration layer using <code>@start</code>, <code>@listen</code>, and <code>@router</code>. You get deterministic sequencing, branching, and persisted state. Best for production pipelines that must be auditable.</p>
+        </div>
+      </div>
+      <div class="callout info">
+        <span class="callout-icon">📘</span>
+        <div class="callout-body"><strong>Rule of thumb:</strong> use a <b>Crew</b> when you want agents to <em>decide</em>, a <b>Flow</b> when you need to <em>control</em> exactly what happens and when — and combine them by running crews as steps <em>inside</em> a flow. Flows are covered in depth in their own tab.</div>
+      </div>
+
+      <h2 class="section-anchor" id="ov-why">Why CrewAI matters</h2>
+      <div class="level-row"><span class="level fresher">Fresher</span></div>
+      <p>The next generation of AI applications uses <b>agentic architecture</b> — autonomous, tool-using systems that plan and act end-to-end. Rather than fine-tuning an LLM for every custom decision (resource-intensive and prone to hurting generalization), you wrap the model in an agent with memory, planning, and tools. CrewAI sits at the forefront of this shift by making multi-agent teams simple to design.</p>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon blue">🤝</div>
+          <h4>Agent Collaboration</h4>
+          <p>Agents communicate, delegate, and ask questions among themselves to solve problems cooperatively.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon green">⚡</div>
+          <h4>Autonomous Workflows</h4>
+          <p>Crews operate end-to-end using built-in planning, reflection, and (optionally) a manager agent.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon purple">📈</div>
+          <h4>Scalability</h4>
+          <p>Add agents, diversify roles, or increase data volume — with memory, knowledge, and observability baked in.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon orange">🔌</div>
+          <h4>Any LLM</h4>
+          <p>Connect to OpenAI, Anthropic, Ollama, IBM Granite, Azure, or any provider via a single <code>LLM</code> wrapper.</p>
+        </div>
+      </div>
+
+      <h2 class="section-anchor" id="ov-install">Installation &amp; project setup</h2>
+      <div class="level-row"><span class="level fresher">Fresher</span><span class="level inter">Intermediate</span></div>
+      <p>CrewAI standardises on <b>uv</b> for dependency management and ships a CLI that scaffolds a production-shaped project for you.</p>
+      <div class="code-label">shell — install &amp; scaffold</div>
+<pre><code>pip install crewai crewai-tools     # or: uv add crewai crewai-tools
+crewai create crew my_project       # scaffolds a full project
+cd my_project
+crewai install                      # sync dependencies
+crewai run                          # run the crew</code></pre>
+
+      <p>The generated layout separates <em>configuration</em> (YAML) from <em>wiring</em> (Python), which keeps crews readable as they grow:</p>
+      <div class="code-label">project structure</div>
+<pre><code>my_project/
+├── .env                      # API keys (OPENAI_API_KEY, ...)
+├── pyproject.toml
+├── knowledge/                # files agents can retrieve from
+└── src/my_project/
+    ├── main.py               # entry point (kickoff)
+    ├── crew.py               # @CrewBase: agents, tasks, crew
+    ├── tools/                # custom tools
+    └── config/
+        ├── agents.yaml       # roles, goals, backstories
+        └── tasks.yaml        # descriptions, expected outputs</code></pre>
+
+      <div class="callout tip">
+        <span class="callout-icon">✅</span>
+        <div class="callout-body"><strong>Why YAML matters:</strong> keeping roles/goals/tasks in YAML means non-engineers can tune agent behaviour without touching Python, and prompts live in version control as data. You will see the <code>@CrewBase</code> pattern that binds it together in the <b>Core Components</b> tab.</div>
+      </div>
+
+      <h2 class="section-anchor" id="ov-agentic">The agentic AI landscape</h2>
+      <div class="level-row"><span class="level inter">Intermediate</span></div>
+      <p>Agentic frameworks are AI architectures that use tool calling and orchestration to complete tasks end-to-end. They rely on planning, iterative refinement, and reflection to fully leverage a model's built-in reasoning rather than retraining it. CrewAI's distinctive bet is <b>role-play + process</b>: give each agent a persona and let a defined process (sequential, hierarchical, or a flow) govern how they cooperate — a lighter, more controllable path than hand-coding every interaction.</p>
+
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗ -->
+    <!-- ║        TAB 2: ARCHITECTURE           ║ -->
+    <!-- ╚══════════════════════════════════════╝ -->
+    <section class="tab-panel" id="panel-architecture" data-title="Architecture">
+
+      <h1>System Architecture</h1>
+      <p class="subtitle">How single-agent and multi-agent architectures differ, where CrewAI fits, and what actually happens when an agent runs.</p>
+
+      <h2 class="section-anchor" id="ar-single">Single-Agent Systems</h2>
+      <div class="level-row"><span class="level fresher">Fresher</span></div>
+      <p>Single-agent frameworks rely on one language model to run a diverse range of tasks and responsibilities. The agent is supplied with a system prompt and the tools it needs. They work best for well-scoped, narrowly defined problems.</p>
+
+      <div class="callout warn">
+        <span class="callout-icon">⚠️</span>
+        <div class="callout-body"><strong>Limitation:</strong> in single-agent systems there is no feedback mechanism from other agents. Options for <em>human</em> feedback are recommended to improve accuracy over time — but that reintroduces a human bottleneck.</div>
+      </div>
+
+      <h2 class="section-anchor" id="ar-multi">Multi-Agent Systems (MAS)</h2>
+      <div class="level-row"><span class="level fresher">Fresher</span><span class="level inter">Intermediate</span></div>
+      <p>Rather than encompassing all capabilities in a single model, multi-agent systems divide tasks among several specialised agents. Each agent can use the same or a different LLM, and they share an environment to model each other's goals, memory, and plans. This division mirrors how human teams outperform any single generalist on complex work.</p>
+
+      <!-- SVG: Single vs Multi-Agent -->
+      <div class="diagram-container">
+        <div class="diagram-label">Figure — Single-Agent vs Multi-Agent Architecture</div>
+        <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" style="background:#f1f3ff">
+          <defs><filter id="ds2" x="-4%" y="-4%" width="108%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity=".06"/></filter></defs>
+          <text x="180" y="30" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="700" font-size="13" fill="#161c27">Single-Agent</text>
+          <rect x="110" y="50" width="140" height="70" rx="12" fill="#fff" stroke="#14213D" stroke-width="2" filter="url(#ds2)"/>
+          <text x="180" y="80" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="600" font-size="12" fill="#14213D">One Agent</text>
+          <text x="180" y="100" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">All tasks + tools</text>
+          <rect x="80" y="155" width="60" height="32" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#ds2)"/>
+          <text x="110" y="175" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#718096">Tool A</text>
+          <rect x="155" y="155" width="60" height="32" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#ds2)"/>
+          <text x="185" y="175" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#718096">Tool B</text>
+          <rect x="230" y="155" width="60" height="32" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1" filter="url(#ds2)"/>
+          <text x="260" y="175" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#718096">Tool C</text>
+          <line x1="180" y1="120" x2="110" y2="155" stroke="#a0aec0" stroke-width="1"/>
+          <line x1="180" y1="120" x2="185" y2="155" stroke="#a0aec0" stroke-width="1"/>
+          <line x1="180" y1="120" x2="260" y2="155" stroke="#a0aec0" stroke-width="1"/>
+          <rect x="130" y="220" width="100" height="34" rx="6" fill="#FCA311" fill-opacity=".12" stroke="#FCA311" stroke-width="1"/>
+          <text x="180" y="242" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#FCA311" font-weight="600">Human Feedback</text>
+          <line x1="180" y1="187" x2="180" y2="220" stroke="#FCA311" stroke-width="1" stroke-dasharray="4"/>
+          <line x1="360" y1="20" x2="360" y2="280" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="6"/>
+          <text x="540" y="30" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="700" font-size="13" fill="#161c27">Multi-Agent (CrewAI)</text>
+          <rect x="430" y="50" width="90" height="50" rx="8" fill="#fff" stroke="#14213D" stroke-width="1.5" filter="url(#ds2)"/>
+          <text x="475" y="72" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#14213D" font-weight="600">Researcher</text>
+          <text x="475" y="87" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="#718096">+ search tools</text>
+          <rect x="540" y="50" width="90" height="50" rx="8" fill="#fff" stroke="#14213D" stroke-width="1.5" filter="url(#ds2)"/>
+          <text x="585" y="72" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#14213D" font-weight="600">Writer</text>
+          <text x="585" y="87" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="#718096">+ file tools</text>
+          <rect x="650" y="50" width="90" height="50" rx="8" fill="#fff" stroke="#14213D" stroke-width="1.5" filter="url(#ds2)"/>
+          <text x="695" y="72" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#14213D" font-weight="600">Analyst</text>
+          <text x="695" y="87" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="#718096">+ data tools</text>
+          <rect x="460" y="130" width="160" height="50" rx="10" fill="#fff" stroke="#FCA311" stroke-width="2" filter="url(#ds2)"/>
+          <text x="540" y="152" text-anchor="middle" font-family="Outfit,sans-serif" font-size="15" fill="#FCA311">Crew</text>
+          <text x="540" y="170" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#718096">Process Orchestration</text>
+          <line x1="475" y1="100" x2="510" y2="130" stroke="#a0aec0" stroke-width="1"/>
+          <line x1="585" y1="100" x2="540" y2="130" stroke="#a0aec0" stroke-width="1"/>
+          <line x1="695" y1="100" x2="575" y2="130" stroke="#a0aec0" stroke-width="1"/>
+          <rect x="490" y="215" width="100" height="34" rx="6" fill="#14213D" fill-opacity=".12" stroke="#14213D" stroke-width="1"/>
+          <text x="540" y="237" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#14213D" font-weight="600">Final Output</text>
+          <line x1="540" y1="180" x2="540" y2="215" stroke="#14213D" stroke-width="1" stroke-dasharray="4"/>
+        </svg>
+      </div>
+
+      <h2 class="section-anchor" id="ar-benefits">Key advantages of MAS</h2>
+      <div class="level-row"><span class="level fresher">Fresher</span></div>
+      <p>Research suggests multi-agent systems offer enhanced speed and reliability and tolerate uncertain data and knowledge better than a single monolithic prompt.</p>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon red">🧩</div>
+          <h4>Specialization</h4>
+          <p>Each agent focuses on what it does best, rather than one model trying to do everything.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon blue">🔄</div>
+          <h4>Feedback Loops</h4>
+          <p>Agents review and refine each other's work through inter-agent discussion and delegation.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon green">🛡️</div>
+          <h4>Fault Tolerance</h4>
+          <p>If one agent's output is poor, others can compensate — reducing single points of failure.</p>
+        </div>
+      </div>
+
+      <h2 class="section-anchor" id="ar-exec">The agent execution loop</h2>
+      <div class="level-row"><span class="level inter">Intermediate</span><span class="level adv">Advanced</span></div>
+      <p>To debug and tune CrewAI you must know what happens <em>inside</em> a single task. Each CrewAI agent runs a <b>reason → act → observe</b> loop (a ReAct-style pattern). The agent thinks about the goal, optionally calls a tool, reads the observation, and repeats — up to <code>max_iter</code> iterations — until it produces a <b>Final Answer</b>.</p>
+
+      <div class="diagram-container">
+        <div class="diagram-label">Figure — What Happens Inside One Task</div>
+        <svg viewBox="0 0 720 250" xmlns="http://www.w3.org/2000/svg" style="background:#f1f3ff">
+          <defs>
+            <filter id="dsx" x="-4%" y="-4%" width="108%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity=".06"/></filter>
+            <marker id="arx" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#718096"/></marker>
+          </defs>
+          <rect x="40" y="100" width="120" height="52" rx="10" fill="#fff" stroke="#14213D" stroke-width="1.6" filter="url(#dsx)"/>
+          <text x="100" y="123" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="600" font-size="12" fill="#14213D">Reason</text>
+          <text x="100" y="140" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#718096">plan next step</text>
+          <rect x="210" y="100" width="120" height="52" rx="10" fill="#fff" stroke="#14213D" stroke-width="1.6" filter="url(#dsx)"/>
+          <text x="270" y="123" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="600" font-size="12" fill="#14213D">Act</text>
+          <text x="270" y="140" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#718096">call a tool</text>
+          <rect x="380" y="100" width="120" height="52" rx="10" fill="#fff" stroke="#FCA311" stroke-width="1.6" filter="url(#dsx)"/>
+          <text x="440" y="123" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="600" font-size="12" fill="#FCA311">Observe</text>
+          <text x="440" y="140" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#718096">read result</text>
+          <rect x="560" y="100" width="120" height="52" rx="10" fill="#fff" stroke="#14213D" stroke-width="1.6" filter="url(#dsx)"/>
+          <text x="620" y="123" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="600" font-size="12" fill="#14213D">Final Answer</text>
+          <text x="620" y="140" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#718096">expected_output</text>
+          <line x1="160" y1="126" x2="205" y2="126" stroke="#718096" stroke-width="1.3" marker-end="url(#arx)"/>
+          <line x1="330" y1="126" x2="375" y2="126" stroke="#718096" stroke-width="1.3" marker-end="url(#arx)"/>
+          <line x1="500" y1="126" x2="555" y2="126" stroke="#718096" stroke-width="1.3" marker-end="url(#arx)"/>
+          <path d="M440 100 C 440 50, 270 50, 270 98" fill="none" stroke="#718096" stroke-width="1.3" stroke-dasharray="5" marker-end="url(#arx)"/>
+          <text x="355" y="42" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">loop until confident or max_iter reached</text>
+          <text x="360" y="210" text-anchor="middle" font-family="Outfit,sans-serif" font-size="11" fill="#718096">Memory, knowledge, and guardrails hook into this loop at every turn</text>
+        </svg>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">🔧</span>
+        <div class="callout-body"><strong>Tuning levers:</strong> <code>max_iter</code> caps reasoning turns, <code>max_rpm</code> throttles LLM requests per minute, <code>max_execution_time</code> bounds wall-clock time, and <code>cache=True</code> reuses identical tool results. If an agent loops forever or burns tokens, these are the first knobs to reach for.</div>
+      </div>
+
+      <h2 class="section-anchor" id="ar-collab">Agent collaboration</h2>
+      <div class="level-row"><span class="level inter">Intermediate</span></div>
+      <p>Each agent is assigned a persona (role + goal + backstory) that shapes its behaviour. When <code>allow_delegation=True</code>, an agent can hand a sub-question to a better-suited teammate or ask a clarifying question — a built-in collaboration mechanism unique to multi-agent frameworks. Delegation is powerful but adds LLM calls, so enable it deliberately.</p>
+
+      <h2 class="section-anchor" id="ar-auto">Autonomous behavior</h2>
+      <div class="level-row"><span class="level inter">Intermediate</span><span class="level adv">Advanced</span></div>
+      <p>Autonomous agents can complete complex tasks undirected. CrewAI achieves this two ways: through the <b>hierarchical process</b>, where an auto-generated manager agent plans, allocates, and reviews work; and through <b>Flows</b>, where you script the control graph explicitly while still delegating the "thinking" to crews. Choosing the right level of autonomy — and increasing it gradually as the system earns trust — is the core skill of production agent engineering.</p>
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗ -->
+    <!-- ║       TAB 3: CORE COMPONENTS         ║ -->
+    <!-- ╚══════════════════════════════════════╝ -->
+    <section class="tab-panel" id="panel-components" data-title="Core Components">
+
+      <h1>Core Components</h1>
+      <p class="subtitle">The building blocks of every CrewAI application: Agents, Tools, Tasks, Processes, and Crews — from required basics to the attributes that matter in production.</p>
+
+      <div class="diagram-container">
+        <div class="diagram-label">Figure — CrewAI Component Hierarchy</div>
+        <svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" style="background:#f1f3ff">
+          <defs>
+            <filter id="ds3" x="-4%" y="-4%" width="108%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity=".06"/></filter>
+            <marker id="arr3" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0, 7 2.5, 0 5" fill="#a0aec0"/></marker>
+          </defs>
+          <rect x="260" y="20" width="200" height="56" rx="12" fill="#fff" stroke="#FCA311" stroke-width="2.5" filter="url(#ds3)"/>
+          <text x="360" y="44" text-anchor="middle" font-family="Outfit,sans-serif" font-size="18" fill="#FCA311">Crew</text>
+          <text x="360" y="63" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">Orchestrates everything</text>
+          <rect x="490" y="20" width="140" height="56" rx="10" fill="#fff" stroke="#FCA311" stroke-width="1.5" filter="url(#ds3)"/>
+          <text x="560" y="44" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="600" font-size="13" fill="#FCA311">Process</text>
+          <text x="560" y="63" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">Execution strategy</text>
+          <line x1="460" y1="48" x2="490" y2="48" stroke="#a0aec0" stroke-width="1.3" marker-end="url(#arr3)"/>
+          <rect x="80" y="130" width="160" height="56" rx="10" fill="#fff" stroke="#14213D" stroke-width="1.5" filter="url(#ds3)"/>
+          <text x="160" y="154" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="600" font-size="13" fill="#14213D">Agents</text>
+          <text x="160" y="173" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">role · goal · backstory</text>
+          <rect x="280" y="130" width="160" height="56" rx="10" fill="#fff" stroke="#14213D" stroke-width="1.5" filter="url(#ds3)"/>
+          <text x="360" y="154" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="600" font-size="13" fill="#14213D">Tasks</text>
+          <text x="360" y="173" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">description · output</text>
+          <rect x="480" y="130" width="160" height="56" rx="10" fill="#fff" stroke="#14213D" stroke-width="1.5" filter="url(#ds3)"/>
+          <text x="560" y="154" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="600" font-size="13" fill="#14213D">Tools</text>
+          <text x="560" y="173" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">skills &amp; functions</text>
+          <line x1="310" y1="76" x2="160" y2="130" stroke="#a0aec0" stroke-width="1.3" marker-end="url(#arr3)"/>
+          <line x1="360" y1="76" x2="360" y2="130" stroke="#a0aec0" stroke-width="1.3" marker-end="url(#arr3)"/>
+          <line x1="410" y1="76" x2="560" y2="130" stroke="#a0aec0" stroke-width="1.3" marker-end="url(#arr3)"/>
+          <rect x="40" y="240" width="80" height="30" rx="5" fill="#14213D" fill-opacity=".08" stroke="#14213D" stroke-width="1"/>
+          <text x="80" y="260" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#14213D">role</text>
+          <rect x="130" y="240" width="80" height="30" rx="5" fill="#14213D" fill-opacity=".08" stroke="#14213D" stroke-width="1"/>
+          <text x="170" y="260" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#14213D">goal</text>
+          <rect x="220" y="240" width="80" height="30" rx="5" fill="#14213D" fill-opacity=".08" stroke="#14213D" stroke-width="1"/>
+          <text x="260" y="260" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#14213D">backstory</text>
+          <line x1="160" y1="186" x2="80" y2="240" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4"/>
+          <line x1="160" y1="186" x2="170" y2="240" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4"/>
+          <line x1="160" y1="186" x2="260" y2="240" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4"/>
+          <rect x="420" y="240" width="100" height="36" rx="6" fill="#14213D" fill-opacity=".08" stroke="#14213D" stroke-width="1"/>
+          <text x="470" y="263" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#14213D">CrewAI Kit</text>
+          <rect x="535" y="240" width="100" height="36" rx="6" fill="#14213D" fill-opacity=".08" stroke="#14213D" stroke-width="1"/>
+          <text x="585" y="263" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#14213D">LangChain</text>
+          <rect x="650" y="240" width="60" height="36" rx="6" fill="#14213D" fill-opacity=".08" stroke="#14213D" stroke-width="1"/>
+          <text x="680" y="263" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#14213D">Custom</text>
+          <line x1="560" y1="186" x2="470" y2="240" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4"/>
+          <line x1="560" y1="186" x2="585" y2="240" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4"/>
+          <line x1="560" y1="186" x2="680" y2="240" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4"/>
+          <text x="360" y="340" text-anchor="middle" font-family="Outfit,sans-serif" font-size="11" fill="#718096">Every crew combines agents with tasks and tools under a chosen process</text>
+        </svg>
+      </div>
+
+      <h2 class="section-anchor" id="cp-agents">1 — Agents</h2>
+      <div class="level-row"><span class="level fresher">Fresher</span><span class="level inter">Intermediate</span></div>
+      <p>Agents are autonomous units with a role, contributing to the crew's overall goal. Every agent is defined by three required attributes — but production agents use many more.</p>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon blue">🎭</div>
+          <h4><code>role</code></h4>
+          <p>The persona — e.g. "Senior Data Scientist", "SEO Researcher". Be specific; vague roles produce vague work.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon green">🎯</div>
+          <h4><code>goal</code></h4>
+          <p>What the agent is trying to achieve. Written as an outcome, it steers every reasoning turn.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon purple">📖</div>
+          <h4><code>backstory</code></h4>
+          <p>Context and personality that shapes tone, priorities, and how the agent reasons and communicates.</p>
+        </div>
+      </div>
+
+      <h3>Advanced agent attributes</h3>
+      <div class="level-row"><span class="level inter">Intermediate</span><span class="level adv">Advanced</span></div>
+      <div class="deflist">
+        <div class="row"><div class="k">llm</div><div class="v">The model powering this agent. Use the <code>LLM</code> wrapper to set provider, model, temperature, and base URL. Different agents can run different models.</div></div>
+        <div class="row"><div class="k">tools</div><div class="v">List of tools the agent may call (search, scraping, custom functions). Scope tools tightly to the agent's role.</div></div>
+        <div class="row"><div class="k">allow_delegation</div><div class="v"><code>True</code> lets the agent hand sub-tasks to teammates or ask them questions. Off by default — enable when collaboration adds value.</div></div>
+        <div class="row"><div class="k">memory</div><div class="v"><code>True</code> gives the agent recall of prior context (see Memory tab).</div></div>
+        <div class="row"><div class="k">max_iter</div><div class="v">Maximum reason→act loops before the agent must give a final answer. Guards against runaway loops.</div></div>
+        <div class="row"><div class="k">max_rpm</div><div class="v">Rate-limit on LLM requests per minute — protects your API budget and avoids provider throttling.</div></div>
+        <div class="row"><div class="k">reasoning</div><div class="v">When enabled, the agent produces an explicit plan before acting, improving reliability on complex tasks.</div></div>
+        <div class="row"><div class="k">cache</div><div class="v">Reuse identical tool-call results within a run to cut latency and cost.</div></div>
+        <div class="row"><div class="k">verbose</div><div class="v">Print the agent's step-by-step reasoning — essential when debugging.</div></div>
+      </div>
+
+      <div class="code-label">python — a production-shaped agent</div>
+<pre><code>from crewai import Agent, LLM
+
+researcher = Agent(
+    role="Senior Market Researcher",
+    goal="Uncover accurate, up-to-date insights on {topic}",
+    backstory="A veteran analyst known for rigor and always citing sources.",
+    llm=LLM(model="gpt-4o", temperature=0.2),
+    tools=[search_tool, scrape_tool],
+    memory=True,
+    allow_delegation=False,
+    max_iter=15,
+    max_rpm=30,
+    verbose=True,
+)</code></pre>
+
+      <h2 class="section-anchor" id="cp-tools">2 — Tools</h2>
+      <div class="level-row"><span class="level fresher">Fresher</span><span class="level inter">Intermediate</span></div>
+      <p>Tools are the skills or functions agents use to act on the world — searching, scraping, querying databases, calling APIs. CrewAI supports three sources.</p>
+
+      <table class="compare-table">
+        <thead><tr><th>Source</th><th>Examples</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag purple">CrewAI Kit</span></td><td><code>SerperDevTool</code>, <code>ScrapeWebsiteTool</code>, <code>FileReadTool</code>, <code>PDFSearchTool</code></td><td>Batteries-included, RAG + web tools from <code>crewai-tools</code></td></tr>
+          <tr><td><span class="tag blue">LangChain</span></td><td>Shell, Python REPL, document comparison</td><td>Drop-in via wrappers</td></tr>
+          <tr><td><span class="tag green">Custom</span></td><td>Any user-defined function</td><td>Define a description; add caching &amp; a schema</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Writing a custom tool</h3>
+      <div class="level-row"><span class="level inter">Intermediate</span><span class="level adv">Advanced</span></div>
+      <p>The quick way is the <code>@tool</code> decorator. The tool's <b>docstring is the description the LLM reads</b>, so write it for the model, not for humans.</p>
+      <div class="code-label">python — @tool decorator (quick)</div>
+<pre><code>from crewai.tools import tool
+
+@tool("Currency Converter")
+def convert(amount: float, currency: str) -> str:
+    """Convert an amount in USD to the given ISO currency code."""
+    rate = fetch_rate(currency)
+    return f"{amount} USD = {amount * rate:.2f} {currency}"</code></pre>
+
+      <p>For validated inputs, caching control, or stateful tools, subclass <code>BaseTool</code> and declare an <code>args_schema</code> so the LLM is forced to supply well-typed arguments.</p>
+      <div class="code-label">python — BaseTool (typed &amp; robust)</div>
+<pre><code>from crewai.tools import BaseTool
+from pydantic import BaseModel, Field
+
+class SearchInput(BaseModel):
+    query: str = Field(..., description="The search query to run")
+
+class WebSearchTool(BaseTool):
+    name: str = "web_search"
+    description: str = "Search the web and return the top results."
+    args_schema: type[BaseModel] = SearchInput
+
+    def _run(self, query: str) -> str:
+        return run_search(query)</code></pre>
+
+      <div class="callout tip">
+        <span class="callout-icon">✅</span>
+        <div class="callout-body"><strong>Tool design rules:</strong> one clear job per tool, a description written for the model, typed inputs via <code>args_schema</code>, and caching for expensive deterministic calls. Give each agent only the tools its role needs — extra tools enlarge the decision space and cause misfires.</div>
+      </div>
+
+      <h2 class="section-anchor" id="cp-tasks">3 — Tasks</h2>
+      <div class="level-row"><span class="level fresher">Fresher</span><span class="level inter">Intermediate</span></div>
+      <p>Tasks are specific assignments completed by agents. Each task needs a <code>description</code>, an assigned <code>agent</code>, and an <code>expected_output</code>. The expected output is a contract — the more precisely you state it, the more consistent the result.</p>
+
+      <div class="code-label">python — a task with structured output</div>
+<pre><code>from crewai import Task
+from pydantic import BaseModel
+
+class Report(BaseModel):
+    title: str
+    summary: str
+    sources: list[str]
+
+research_task = Task(
+    description="Research {topic} and produce a structured report.",
+    expected_output="A Report with a title, a 200-word summary, and 3+ sources.",
+    agent=researcher,
+    output_pydantic=Report,       # validated, typed result
+    context=[data_collection_task] # depends on an earlier task's output
+)</code></pre>
+
+      <h3>Advanced task attributes</h3>
+      <div class="level-row"><span class="level inter">Intermediate</span><span class="level adv">Advanced</span></div>
+      <div class="deflist">
+        <div class="row"><div class="k">context</div><div class="v">A list of earlier tasks whose outputs are injected as context. This is how you chain a research task into a writing task.</div></div>
+        <div class="row"><div class="k">output_pydantic</div><div class="v">Validate and parse the result into a Pydantic model — type-safe outputs your code can rely on.</div></div>
+        <div class="row"><div class="k">output_json</div><div class="v">Force a JSON-shaped result when you don't need a full model.</div></div>
+        <div class="row"><div class="k">output_file</div><div class="v">Write the result to disk (e.g. <code>report.md</code>) automatically.</div></div>
+        <div class="row"><div class="k">async_execution</div><div class="v">Run the task concurrently; downstream tasks that list it in <code>context</code> will wait for it.</div></div>
+        <div class="row"><div class="k">human_input</div><div class="v">Pause for a human to review or edit the output before continuing — human-in-the-loop.</div></div>
+        <div class="row"><div class="k">guardrail</div><div class="v">A validation function (or LLM check) that must pass; on failure the task retries. See the Memory &amp; Knowledge tab.</div></div>
+        <div class="row"><div class="k">callback</div><div class="v">A function fired when the task finishes — log it, notify Slack, or trigger side effects.</div></div>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">🔗</span>
+        <div class="callout-body"><strong>Task chaining:</strong> a task's output becomes input context for later tasks via <code>context=[...]</code>. This is the backbone of the sequential process — research → analysis → writing, each step building on the last.</div>
+      </div>
+
+      <h2 class="section-anchor" id="cp-process">4 — Processes</h2>
+      <div class="level-row"><span class="level inter">Intermediate</span></div>
+      <p>The <b>process</b> defines how a crew executes its tasks. It is the difference between an assembly line and a managed team.</p>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon blue">➡️</div>
+          <h4>Sequential</h4>
+          <p>Tasks run in list order; each output feeds the next. Predictable and cheap — the right default for linear pipelines.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon red">🏛️</div>
+          <h4>Hierarchical</h4>
+          <p>An auto-generated <b>manager agent</b> plans, delegates, and reviews. Requires <code>manager_llm</code>. Best for dynamic allocation and quality control.</p>
+        </div>
+      </div>
+      <div class="callout info">
+        <span class="callout-icon">📘</span>
+        <div class="callout-body"><strong>Planning:</strong> set <code>planning=True</code> on the crew and, before execution, a planning step drafts a step-by-step plan that is added to each task's context — often a large quality boost on multi-step work.</div>
+      </div>
+
+      <h2 class="section-anchor" id="cp-crews">5 — Crews</h2>
+      <div class="level-row"><span class="level fresher">Fresher</span><span class="level inter">Intermediate</span></div>
+      <p>A crew binds agents, tasks, and a process into one runnable unit, then executes with <code>kickoff()</code>. Inputs are interpolated into the <code>{placeholders}</code> in your roles and descriptions.</p>
+
+      <div class="code-label">python — assembling and running a crew</div>
+<pre><code>from crewai import Crew, Process
+
+crew = Crew(
+    agents=[researcher, writer],
+    tasks=[research_task, writing_task],
+    process=Process.hierarchical,
+    manager_llm=LLM(model="gpt-4o"),
+    memory=True,
+    planning=True,
+    verbose=True,
+)
+
+result = crew.kickoff(inputs={"topic": "AI in healthcare"})
+print(result.raw)          # or result.pydantic for a typed output
+
+# Run the same crew across many inputs:
+crew.kickoff_for_each(inputs=[{"topic": t} for t in topics])</code></pre>
+
+      <h2 class="section-anchor" id="cp-crewbase">Putting it together — the @CrewBase pattern</h2>
+      <div class="level-row"><span class="level inter">Intermediate</span><span class="level adv">Advanced</span></div>
+      <p>Production CrewAI projects rarely define everything inline. The <code>@CrewBase</code> class pairs Python wiring with YAML configuration, so prompts live as editable data. Decorators <code>@agent</code>, <code>@task</code>, and <code>@crew</code> auto-collect their objects.</p>
+
+      <div class="code-label">config/agents.yaml</div>
+<pre><code>researcher:
+  role: &gt;
+    Senior Market Researcher
+  goal: &gt;
+    Uncover accurate insights on {topic}
+  backstory: &gt;
+    A veteran analyst known for rigor and citing sources.</code></pre>
+
+      <div class="code-label">crew.py — binding YAML to code</div>
+<pre><code>from crewai import Agent, Task, Crew, Process
+from crewai.project import CrewBase, agent, task, crew
+
+@CrewBase
+class ResearchCrew:
+    agents_config = "config/agents.yaml"
+    tasks_config = "config/tasks.yaml"
+
+    @agent
+    def researcher(self) -> Agent:
+        return Agent(config=self.agents_config["researcher"], verbose=True)
+
+    @task
+    def research_task(self) -> Task:
+        return Task(config=self.tasks_config["research_task"])
+
+    @crew
+    def crew(self) -> Crew:
+        return Crew(agents=self.agents, tasks=self.tasks,
+                    process=Process.sequential, verbose=True)</code></pre>
+
+      <div class="callout concept">
+        <span class="callout-icon">🎓</span>
+        <div class="callout-body"><strong>Why this is the "real" way:</strong> configuration and logic are separated, prompts are diff-able in version control, and the same crew can be reused, tested, and deployed. Master this pattern and you have graduated from notebooks to production.</div>
+      </div>
+
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗ -->
+    <!-- ║     TAB 4: MEMORY & KNOWLEDGE        ║ -->
+    <!-- ╚══════════════════════════════════════╝ -->
+    <section class="tab-panel" id="panel-memory" data-title="Memory &amp; Knowledge">
+
+      <h1>Memory, Knowledge &amp; Structured Output</h1>
+      <p class="subtitle">The features that turn a demo into a dependable system: recall across steps, grounded retrieval, and outputs your code can trust.</p>
+
+      <h2 class="section-anchor" id="mk-memory">Memory — recall across steps and sessions</h2>
+      <div class="level-row"><span class="level inter">Intermediate</span><span class="level adv">Advanced</span></div>
+      <p>Without memory, every agent starts from scratch and loses context between tasks. Setting <code>memory=True</code> on a crew (or agent) switches on three cooperating memory systems.</p>
+
+      <div class="diagram-container">
+        <div class="diagram-label">Figure — The Three Memory Systems</div>
+        <svg viewBox="0 0 720 230" xmlns="http://www.w3.org/2000/svg" style="background:#f1f3ff">
+          <defs><filter id="dsm" x="-4%" y="-4%" width="108%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity=".06"/></filter></defs>
+          <rect x="40" y="50" width="190" height="120" rx="12" fill="#fff" stroke="#14213D" stroke-width="1.6" filter="url(#dsm)"/>
+          <text x="135" y="80" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="700" font-size="13" fill="#14213D">Short-Term</text>
+          <text x="135" y="104" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">Current run context</text>
+          <text x="135" y="124" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">ChromaDB + RAG</text>
+          <text x="135" y="148" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#718096">vector search</text>
+          <rect x="265" y="50" width="190" height="120" rx="12" fill="#fff" stroke="#14213D" stroke-width="1.6" filter="url(#dsm)"/>
+          <text x="360" y="80" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="700" font-size="13" fill="#14213D">Long-Term</text>
+          <text x="360" y="104" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">Persists across runs</text>
+          <text x="360" y="124" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">SQLite database</text>
+          <text x="360" y="148" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#718096">task results</text>
+          <rect x="490" y="50" width="190" height="120" rx="12" fill="#fff" stroke="#14213D" stroke-width="1.6" filter="url(#dsm)"/>
+          <text x="585" y="80" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="700" font-size="13" fill="#14213D">Entity</text>
+          <text x="585" y="104" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">People, places, concepts</text>
+          <text x="585" y="124" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">RAG-based</text>
+          <text x="585" y="148" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#718096">structured recall</text>
+          <text x="360" y="205" text-anchor="middle" font-family="Outfit,sans-serif" font-size="11" fill="#718096">memory=True switches on all three together</text>
+        </svg>
+      </div>
+
+      <div class="deflist">
+        <div class="row"><div class="k">Short-term</div><div class="v">Uses ChromaDB with retrieval-augmented generation to give agents the current session's relevant context. Cleared each run.</div></div>
+        <div class="row"><div class="k">Long-term</div><div class="v">Stores task results in a SQLite database so knowledge accumulates across sessions — agents improve over repeated runs.</div></div>
+        <div class="row"><div class="k">Entity</div><div class="v">Captures and recalls details about specific entities (people, places, concepts) via RAG for consistent references.</div></div>
+        <div class="row"><div class="k">Storage dir</div><div class="v">Files live in a platform-specific app directory; override it with the <code>CREWAI_STORAGE_DIR</code> environment variable.</div></div>
+      </div>
+
+      <div class="code-label">python — enabling memory with a custom embedder</div>
+<pre><code>crew = Crew(
+    agents=[...],
+    tasks=[...],
+    memory=True,
+    embedder={
+        "provider": "openai",
+        "config": {"model": "text-embedding-3-small"},
+    },
+)</code></pre>
+
+      <div class="callout warn">
+        <span class="callout-icon">⚠️</span>
+        <div class="callout-body"><strong>Cost &amp; privacy note:</strong> memory adds embedding calls and stores task data on disk. In production, choose your embedder deliberately, set <code>CREWAI_STORAGE_DIR</code> to a controlled location, and reset long-term memory when the domain changes so stale facts don't leak into new runs.</div>
+      </div>
+
+      <h2 class="section-anchor" id="mk-knowledge">Knowledge — grounding agents in your data</h2>
+      <div class="level-row"><span class="level inter">Intermediate</span><span class="level adv">Advanced</span></div>
+      <p><b>Knowledge</b> is distinct from memory. Memory is what the crew <em>learns during runs</em>; knowledge is reference material <em>you supply up front</em> — policies, product docs, a style guide — that agents retrieve from via RAG. This is how you stop agents from hallucinating domain facts.</p>
+
+      <div class="code-label">python — attaching a knowledge source</div>
+<pre><code>from crewai import Agent
+from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSource
+
+policy = StringKnowledgeSource(
+    content="Refunds are allowed within 30 days with a receipt."
+)
+
+support_agent = Agent(
+    role="Customer Support Specialist",
+    goal="Answer questions strictly using company policy",
+    backstory="You never invent policy; you cite it.",
+    knowledge_sources=[policy],
+)</code></pre>
+
+      <div class="pill-row">
+        <span class="pill">StringKnowledgeSource</span>
+        <span class="pill">TextFileKnowledgeSource</span>
+        <span class="pill">PDFKnowledgeSource</span>
+        <span class="pill">CSVKnowledgeSource</span>
+        <span class="pill">Custom sources</span>
+      </div>
+
+      <div class="callout concept">
+        <span class="callout-icon">🧠</span>
+        <div class="callout-body"><strong>Memory vs Knowledge in one line:</strong> <b>Knowledge</b> = "here are the facts you must ground yourself in." <b>Memory</b> = "remember what we did and learned." Most real systems use both.</div>
+      </div>
+
+      <h2 class="section-anchor" id="mk-structured">Structured outputs with Pydantic</h2>
+      <div class="level-row"><span class="level inter">Intermediate</span><span class="level adv">Advanced</span></div>
+      <p>Free-text output is hard to program against. Attaching <code>output_pydantic</code> (or <code>output_json</code>) forces the task result into a validated schema you can index, store, or pass to another system with confidence.</p>
+      <div class="code-label">python — typed, validated output</div>
+<pre><code>from pydantic import BaseModel, Field
+
+class Lead(BaseModel):
+    company: str
+    contact_email: str
+    score: int = Field(ge=0, le=100)
+
+qualify = Task(
+    description="Qualify the inbound lead in {payload}.",
+    expected_output="A Lead object with a 0-100 fit score.",
+    agent=sdr_agent,
+    output_pydantic=Lead,
+)
+
+result = crew.kickoff(inputs={"payload": raw_lead})
+lead: Lead = result.pydantic     # fully typed — result.pydantic.score</code></pre>
+
+      <h2 class="section-anchor" id="mk-guardrails">Guardrails — validating agent output</h2>
+      <div class="level-row"><span class="level adv">Advanced</span></div>
+      <p>LLMs are non-deterministic, so the first answer should not automatically be the final answer. A <b>guardrail</b> evaluates a task's output against your constraints and, on failure, feeds the reason back so the agent retries — a self-correcting loop.</p>
+
+      <div class="code-label">python — a function guardrail</div>
+<pre><code>def validate_sources(result):
+    report = result.pydantic
+    if len(report.sources) &lt; 3:
+        # (False, feedback) -&gt; task retries with this hint
+        return (False, "Provide at least 3 credible sources.")
+    return (True, result)          # (True, value) -&gt; accepted
+
+research_task = Task(
+    description="Research {topic}.",
+    expected_output="A Report with 3+ sources.",
+    agent=researcher,
+    output_pydantic=Report,
+    guardrail=validate_sources,
+    max_retries=2,
+)</code></pre>
+
+      <div class="diagram-container">
+        <div class="diagram-label">Figure — The Guardrail Retry Loop</div>
+        <svg viewBox="0 0 720 190" xmlns="http://www.w3.org/2000/svg" style="background:#f1f3ff">
+          <defs>
+            <filter id="dsg" x="-4%" y="-4%" width="108%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity=".06"/></filter>
+            <marker id="arg" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#718096"/></marker>
+          </defs>
+          <rect x="50" y="70" width="130" height="52" rx="10" fill="#fff" stroke="#14213D" stroke-width="1.6" filter="url(#dsg)"/>
+          <text x="115" y="100" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="600" font-size="12" fill="#14213D">Agent output</text>
+          <rect x="290" y="70" width="130" height="52" rx="10" fill="#fff" stroke="#FCA311" stroke-width="1.6" filter="url(#dsg)"/>
+          <text x="355" y="94" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="600" font-size="12" fill="#FCA311">Guardrail</text>
+          <text x="355" y="110" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#718096">check constraints</text>
+          <rect x="540" y="70" width="130" height="52" rx="10" fill="#fff" stroke="#14213D" stroke-width="1.6" filter="url(#dsg)"/>
+          <text x="605" y="100" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="600" font-size="12" fill="#14213D">Accepted ✓</text>
+          <line x1="180" y1="96" x2="285" y2="96" stroke="#718096" stroke-width="1.3" marker-end="url(#arg)"/>
+          <line x1="420" y1="96" x2="535" y2="96" stroke="#14213D" stroke-width="1.3" marker-end="url(#arg)"/>
+          <text x="478" y="86" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#14213D">pass</text>
+          <path d="M355 122 C 355 165, 115 165, 115 124" fill="none" stroke="#FCA311" stroke-width="1.3" stroke-dasharray="5" marker-end="url(#arg)"/>
+          <text x="235" y="160" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#FCA311">fail → retry with feedback</text>
+        </svg>
+      </div>
+
+      <div class="callout tip">
+        <span class="callout-icon">✅</span>
+        <div class="callout-body"><strong>Where guardrails pay off:</strong> enforcing schemas, redacting PII, blocking unsafe content, and requiring citations. Combine a Pydantic schema (structural validity) with a guardrail (semantic validity) for outputs you can safely automate on.</div>
+      </div>
+
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗ -->
+    <!-- ║           TAB 5: FLOWS               ║ -->
+    <!-- ╚══════════════════════════════════════╝ -->
+    <section class="tab-panel" id="panel-flows" data-title="Flows">
+
+      <h1>Flows</h1>
+      <p class="subtitle">Event-driven, stateful orchestration — the production architecture that wraps crews in deterministic control.</p>
+
+      <h2 class="section-anchor" id="fl-why">Why Flows exist</h2>
+      <div class="level-row"><span class="level inter">Intermediate</span><span class="level adv">Advanced</span></div>
+      <p>Crews are great at <em>autonomy</em> but weak at <em>control</em>: you can't easily branch, loop back on quality gates, persist progress, or audit exactly what happened. <b>Flows</b> add an orchestration layer that a plain crew doesn't have — quality gates that can loop back, state that persists across every step, clear entry and exit points, and a clean audit trail. When something goes wrong in production, a flow tells you exactly where.</p>
+
+      <div class="callout concept">
+        <span class="callout-icon">🔀</span>
+        <div class="callout-body"><strong>Mental model:</strong> a Flow is a graph of Python methods wired by decorators. <b>Crews do the thinking; the Flow decides the order.</b> You can call crews, plain <code>LLM.call()</code>s, and ordinary Python from inside a flow.</div>
+      </div>
+
+      <h2 class="section-anchor" id="fl-decorators">The three decorators</h2>
+      <div class="level-row"><span class="level inter">Intermediate</span><span class="level adv">Advanced</span></div>
+      <div class="deflist">
+        <div class="row"><div class="k">@start()</div><div class="v">Marks a flow's entry point. Runs first when you call <code>kickoff()</code>. A flow can have several starts.</div></div>
+        <div class="row"><div class="k">@listen(x)</div><div class="v">Runs a method after method <code>x</code> completes, receiving its output. This is how steps chain.</div></div>
+        <div class="row"><div class="k">@router(x)</div><div class="v">Runs after <code>x</code> and <b>returns a string label</b> that decides which branch fires next — conditional routing.</div></div>
+      </div>
+      <p>Listeners can also combine triggers with <code>or_(a, b)</code> (fire when either finishes) and <code>and_(a, b)</code> (wait for both) for fan-in and fan-out.</p>
+
+      <div class="diagram-container">
+        <div class="diagram-label">Figure — A Content Flow with a Quality Gate</div>
+        <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" style="background:#f1f3ff">
+          <defs>
+            <filter id="dsf" x="-4%" y="-4%" width="108%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity=".06"/></filter>
+            <marker id="arf" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#718096"/></marker>
+          </defs>
+          <rect x="40" y="120" width="120" height="52" rx="10" fill="#14213D" fill-opacity=".12" stroke="#14213D" stroke-width="1.6" filter="url(#dsf)"/>
+          <text x="100" y="143" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#14213D" font-weight="600">@start</text>
+          <text x="100" y="160" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#718096">research()</text>
+          <rect x="210" y="120" width="120" height="52" rx="10" fill="#14213D" fill-opacity=".1" stroke="#14213D" stroke-width="1.6" filter="url(#dsf)"/>
+          <text x="270" y="143" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#14213D" font-weight="600">@listen</text>
+          <text x="270" y="160" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#718096">write()</text>
+          <path d="M380 146 l-30 -18 v12 h-40 v12 h40 v12 z" fill="#FCA311" fill-opacity=".14" stroke="#FCA311" stroke-width="1.4"/>
+          <rect x="380" y="118" width="120" height="56" rx="10" fill="#FCA311" fill-opacity=".1" stroke="#FCA311" stroke-width="1.6" filter="url(#dsf)"/>
+          <text x="440" y="141" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#FCA311" font-weight="600">@router</text>
+          <text x="440" y="158" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#718096">review()</text>
+          <rect x="560" y="60" width="120" height="52" rx="10" fill="#14213D" fill-opacity=".1" stroke="#14213D" stroke-width="1.6" filter="url(#dsf)"/>
+          <text x="620" y="83" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#14213D" font-weight="600">publish()</text>
+          <text x="620" y="99" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#718096">"approved"</text>
+          <line x1="160" y1="146" x2="205" y2="146" stroke="#718096" stroke-width="1.3" marker-end="url(#arf)"/>
+          <line x1="330" y1="146" x2="375" y2="146" stroke="#718096" stroke-width="1.3" marker-end="url(#arf)"/>
+          <line x1="500" y1="120" x2="558" y2="90" stroke="#718096" stroke-width="1.3" marker-end="url(#arf)"/>
+          <path d="M440 174 C 440 245, 270 245, 270 174" fill="none" stroke="#FCA311" stroke-width="1.3" stroke-dasharray="5" marker-end="url(#arf)"/>
+          <text x="355" y="240" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#FCA311">"revise" → loop back to write()</text>
+          <text x="360" y="285" text-anchor="middle" font-family="Outfit,sans-serif" font-size="11" fill="#718096">self.state persists across every hop</text>
+        </svg>
+      </div>
+
+      <h2 class="section-anchor" id="fl-state">State — unstructured vs structured</h2>
+      <div class="level-row"><span class="level adv">Advanced</span></div>
+      <p>Flows carry state across steps via <code>self.state</code>. There are two modes. <b>Unstructured</b> state is a plain dictionary — quick but silent about typos (<code>self.state['reserach']</code> passes until something breaks downstream). <b>Structured</b> state uses a Pydantic <code>BaseModel</code>, catching type errors at the boundary and making persistence and debugging far simpler. Prefer structured state for anything real.</p>
+
+      <div class="code-label">python — a structured, event-driven flow</div>
+<pre><code>from crewai.flow.flow import Flow, start, listen, router
+from pydantic import BaseModel
+
+class ContentState(BaseModel):
+    topic: str = ""
+    draft: str = ""
+    approved: bool = False
+
+class ContentFlow(Flow[ContentState]):
+
+    @start()
+    def research(self):
+        self.state.topic = "AI agents in production"
+        # research_crew.kickoff(inputs={"topic": self.state.topic})
+        return "researched"
+
+    @listen(research)
+    def write(self, _):
+        self.state.draft = writer_crew.kickoff(
+            inputs={"topic": self.state.topic}
+        ).raw
+
+    @router(write)
+    def review(self):
+        self.state.approved = quality_check(self.state.draft)
+        return "publish" if self.state.approved else "revise"
+
+    @listen("publish")
+    def publish(self):
+        return self.state.draft
+
+    @listen("revise")
+    def revise(self):
+        # loop back into writing with feedback
+        self.write(None)
+
+flow = ContentFlow()
+flow.kickoff()
+flow.plot()          # renders an interactive flow diagram</code></pre>
+
+      <h2 class="section-anchor" id="fl-persist">Persistence &amp; resumability</h2>
+      <div class="level-row"><span class="level adv">Advanced</span></div>
+      <p>Long-running flows can <b>persist their state</b> and resume later — critical when a step waits on a human, a slow API, or an overnight job. Because every hop writes to <code>self.state</code>, you get an audit trail for free and can inspect or replay a run. This is what makes flows suitable for scheduled automations and human-in-the-loop pipelines rather than one-shot scripts.</p>
+
+      <div class="callout tip">
+        <span class="callout-icon">📈</span>
+        <div class="callout-body"><strong>The gradual-autonomy pattern:</strong> start a new flow with a human reviewing every step (a <code>@router</code> that always pauses), then reduce oversight as the system proves itself — swap manual gates for automated guardrails once metrics are trustworthy. Teams that do this ship; teams that hand full autonomy on day one get shut down after a week.</div>
+      </div>
+
+      <h2 class="section-anchor" id="fl-choose">Crew, Flow, or a single LLM call?</h2>
+      <div class="level-row"><span class="level inter">Intermediate</span></div>
+      <table class="compare-table">
+        <thead><tr><th>Reach for…</th><th>When</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag blue">LLM.call()</span></td><td>One deterministic transformation, no tools or collaboration</td><td>Classify a support ticket's urgency</td></tr>
+          <tr><td><span class="tag red">Crew</span></td><td>A goal that benefits from specialised roles reasoning together</td><td>Research → analyse → write a report</td></tr>
+          <tr><td><span class="tag purple">Flow</span></td><td>Multi-step pipeline needing branching, state, retries, or human gates</td><td>Intake → route → draft → review → send, resumable</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout concept">
+        <span class="callout-icon">🎓</span>
+        <div class="callout-body"><strong>Production shape:</strong> most serious CrewAI systems are a <b>Flow of Crews</b> — the flow provides the deterministic skeleton and state, and each crew supplies the autonomous problem-solving inside a step.</div>
+      </div>
+
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗ -->
+    <!-- ║   TAB 6: USE CASES & PRODUCTION      ║ -->
+    <!-- ╚══════════════════════════════════════╝ -->
+    <section class="tab-panel" id="panel-production" data-title="Use Cases &amp; Production">
+
+      <h1>Use Cases &amp; Production</h1>
+      <p class="subtitle">From content creation to stock analysis — plus what it takes to run crews reliably: LLM configuration, observability, testing, and deployment.</p>
+
+      <h2 class="section-anchor" id="pr-overview">Where CrewAI shines</h2>
+      <div class="level-row"><span class="level fresher">Fresher</span></div>
+      <p>Agent frameworks like CrewAI are foundational tools for building intelligent systems across domains — from agentic chatbots to complex multi-agent pipelines. The pattern that repeats: split a hard problem into specialised roles, let them collaborate, and wrap the result in a flow.</p>
+
+      <div class="diagram-container">
+        <div class="diagram-label">Figure — CrewAI Application Domains</div>
+        <svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" style="background:#f1f3ff">
+          <defs><filter id="ds5" x="-4%" y="-4%" width="108%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity=".06"/></filter></defs>
+          <circle cx="360" cy="180" r="45" fill="#fff" stroke="#FCA311" stroke-width="2" filter="url(#ds5)"/>
+          <text x="360" y="176" text-anchor="middle" font-family="Outfit,sans-serif" font-size="15" fill="#FCA311">CrewAI</text>
+          <text x="360" y="194" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#718096">Use Cases</text>
+          <g>
+            <rect x="80" y="50" width="130" height="48" rx="8" fill="#fff" stroke="#14213D" stroke-width="1.3" filter="url(#ds5)"/>
+            <text x="145" y="70" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#14213D" font-weight="600">✍️ Content</text>
+            <text x="145" y="85" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="#718096">Planning &amp; Creation</text>
+            <line x1="210" y1="74" x2="316" y2="165" stroke="#a0aec0" stroke-width="1"/>
+          </g>
+          <g>
+            <rect x="80" y="150" width="130" height="48" rx="8" fill="#fff" stroke="#14213D" stroke-width="1.3" filter="url(#ds5)"/>
+            <text x="145" y="170" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#14213D" font-weight="600">📧 Email</text>
+            <text x="145" y="185" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="#718096">Auto-draft &amp; triage</text>
+            <line x1="210" y1="174" x2="315" y2="178" stroke="#a0aec0" stroke-width="1"/>
+          </g>
+          <g>
+            <rect x="80" y="255" width="130" height="48" rx="8" fill="#fff" stroke="#14213D" stroke-width="1.3" filter="url(#ds5)"/>
+            <text x="145" y="275" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#14213D" font-weight="600">📊 Stock Analysis</text>
+            <text x="145" y="290" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="#718096">Research &amp; recommend</text>
+            <line x1="210" y1="279" x2="316" y2="195" stroke="#a0aec0" stroke-width="1"/>
+          </g>
+          <g>
+            <rect x="510" y="50" width="130" height="48" rx="8" fill="#fff" stroke="#FCA311" stroke-width="1.3" filter="url(#ds5)"/>
+            <text x="575" y="70" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#FCA311" font-weight="600">📱 Social Media</text>
+            <text x="575" y="85" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="#718096">Presence boosting</text>
+            <line x1="510" y1="74" x2="404" y2="165" stroke="#a0aec0" stroke-width="1"/>
+          </g>
+          <g>
+            <rect x="510" y="150" width="130" height="48" rx="8" fill="#fff" stroke="#FCA311" stroke-width="1.3" filter="url(#ds5)"/>
+            <text x="575" y="170" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#FCA311" font-weight="600">🌐 Landing Pages</text>
+            <text x="575" y="185" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="#718096">Interactive builds</text>
+            <line x1="510" y1="174" x2="405" y2="178" stroke="#a0aec0" stroke-width="1"/>
+          </g>
+          <g>
+            <rect x="510" y="255" width="130" height="48" rx="8" fill="#fff" stroke="#14213D" stroke-width="1.3" filter="url(#ds5)"/>
+            <text x="575" y="275" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#14213D" font-weight="600">🤖 Chatbots</text>
+            <text x="575" y="290" text-anchor="middle" font-family="Outfit,sans-serif" font-size="8" fill="#718096">Agentic conversations</text>
+            <line x1="510" y1="279" x2="404" y2="195" stroke="#a0aec0" stroke-width="1"/>
+          </g>
+        </svg>
+      </div>
+
+      <h2 class="section-anchor" id="pr-content">Content planning &amp; creation</h2>
+      <div class="level-row"><span class="level fresher">Fresher</span><span class="level inter">Intermediate</span></div>
+      <p>A classic crew pairs a "Researcher" agent that gathers sources with a "Writer" agent that crafts the article — fully automated. Add an "Editor" agent with a guardrail requiring citations, and you have a self-checking content pipeline. Wrap it in a flow to add a human approval gate before publishing.</p>
+
+      <h2 class="section-anchor" id="pr-email">Email automation</h2>
+      <div class="level-row"><span class="level inter">Intermediate</span></div>
+      <p>A crew analyses and filters incoming email, pulls full threads, researches context, and drafts replies. On CrewAI's platform this can be triggered directly by inbox events (Gmail, Outlook) so the crew runs when mail arrives — a real event-driven automation rather than a manual script.</p>
+
+      <h2 class="section-anchor" id="pr-stock">Stock analysis</h2>
+      <div class="level-row"><span class="level inter">Intermediate</span></div>
+      <p>Agents with specific roles — data gatherer, financial analyst, report writer — collaborate to produce a full analysis and recommendation. This demonstrates why role specialisation beats a single prompt: each agent brings focused tools and reasoning, and their combined output is richer and more reviewable.</p>
+
+      <h2 class="section-anchor" id="pr-llm">Connecting any LLM</h2>
+      <div class="level-row"><span class="level inter">Intermediate</span><span class="level adv">Advanced</span></div>
+      <p>CrewAI connects to any provider through the unified <code>LLM</code> wrapper. Run frontier models for a manager agent and cheaper or local models for high-volume workers — mixing models per agent is a key cost lever.</p>
+      <div class="code-label">python — mixing providers</div>
+<pre><code>from crewai import LLM
+
+gpt   = LLM(model="gpt-4o", temperature=0.2)
+claude = LLM(model="anthropic/claude-sonnet-4-5")
+local = LLM(model="ollama/llama3", base_url="http://localhost:11434")
+
+manager = Agent(role="Manager",  llm=gpt,    ...)
+worker  = Agent(role="Summariser", llm=local, ...)   # cheap, high-volume</code></pre>
+
+      <h2 class="section-anchor" id="pr-observability">Observability &amp; debugging</h2>
+      <div class="level-row"><span class="level adv">Advanced</span></div>
+      <p>You cannot fix what you cannot see. Start with <code>verbose=True</code> to stream each agent's reasoning and tool calls. For production, CrewAI integrates with observability platforms (such as AgentOps and OpenTelemetry-based tracers) to capture token usage, latency, tool errors, and full traces per run — so you can spot the agent that loops, the tool that fails, or the step that blows the budget.</p>
+      <div class="pill-row">
+        <span class="pill">verbose logs</span>
+        <span class="pill">token &amp; cost tracking</span>
+        <span class="pill">run traces</span>
+        <span class="pill">tool-error alerts</span>
+        <span class="pill">latency per step</span>
+      </div>
+
+      <h2 class="section-anchor" id="pr-testing">Testing crews</h2>
+      <div class="level-row"><span class="level adv">Advanced</span></div>
+      <p>Treat agents, tasks, and tools as units. Test tools in isolation, mock the LLM for deterministic assertions, and run end-to-end integration tests on realistic inputs — including verifying that memory persists across runs. The CLI also offers <code>crewai test</code> to evaluate a crew's output quality over multiple iterations.</p>
+      <div class="callout tip">
+        <span class="callout-icon">🧪</span>
+        <div class="callout-body"><strong>Practical tip:</strong> pin a low <code>temperature</code> and mock external tools in tests so results are reproducible. Keep prompts in YAML so a prompt change shows up as a reviewable diff, not a hidden regression.</div>
+      </div>
+
+      <h2 class="section-anchor" id="pr-deploy">Deployment</h2>
+      <div class="level-row"><span class="level adv">Advanced</span></div>
+      <p>A crew or flow is ordinary Python, so it deploys like any service — a container behind an API, a scheduled job, or a queue worker. CrewAI's Enterprise platform adds managed deployment, environment management, live-run monitoring, RBAC, and triggers that pass event payloads (Gmail, Slack, Salesforce, and more) straight into your crews and flows.</p>
+      <div class="callout warn">
+        <span class="callout-icon">⚠️</span>
+        <div class="callout-body"><strong>Before you ship:</strong> set rate limits (<code>max_rpm</code>), bound execution (<code>max_execution_time</code>), add guardrails on every externally-visible output, keep a human gate on irreversible actions, and never commit API keys — load them from environment variables.</div>
+      </div>
+
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗ -->
+    <!-- ║        TAB 7: COMPARISONS            ║ -->
+    <!-- ╚══════════════════════════════════════╝ -->
+    <section class="tab-panel" id="panel-comparison" data-title="Comparisons">
+
+      <h1>Framework Comparisons</h1>
+      <p class="subtitle">How CrewAI stacks up against AutoGen, ChatDev, and LangGraph — and when to pick each.</p>
+
+      <h2 class="section-anchor" id="cm-overview">Competitive landscape</h2>
+      <div class="level-row"><span class="level fresher">Fresher</span><span class="level inter">Intermediate</span></div>
+      <p>CrewAI's pitch is a combination of what other frameworks do well individually: the flexibility of AutoGen's conversational agents plus the structured, role-based processes of ChatDev — with easy orchestration on top.</p>
+
+      <div class="diagram-container">
+        <div class="diagram-label">Figure — CrewAI = AutoGen's Flexibility + ChatDev's Structure</div>
+        <svg viewBox="0 0 720 280" xmlns="http://www.w3.org/2000/svg" style="background:#f1f3ff">
+          <defs><filter id="ds6" x="-4%" y="-4%" width="108%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity=".05"/></filter></defs>
+          <circle cx="250" cy="140" r="100" fill="#14213D" fill-opacity=".07" stroke="#14213D" stroke-width="1.5" filter="url(#ds6)"/>
+          <text x="200" y="110" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="700" font-size="14" fill="#14213D">AutoGen</text>
+          <text x="195" y="130" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">Flexible conversations</text>
+          <text x="195" y="148" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">Code execution</text>
+          <text x="195" y="166" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">Research-oriented</text>
+          <circle cx="470" cy="140" r="100" fill="#14213D" fill-opacity=".07" stroke="#14213D" stroke-width="1.5" filter="url(#ds6)"/>
+          <text x="520" y="110" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="700" font-size="14" fill="#14213D">ChatDev</text>
+          <text x="525" y="130" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">Structured processes</text>
+          <text x="525" y="148" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">Role-playing agents</text>
+          <text x="525" y="166" text-anchor="middle" font-family="Outfit,sans-serif" font-size="10" fill="#718096">Fixed pipeline</text>
+          <text x="360" y="125" text-anchor="middle" font-family="Outfit,sans-serif" font-size="18" fill="#FCA311" font-weight="700">CrewAI</text>
+          <text x="360" y="145" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#FCA311">Best of both</text>
+          <text x="360" y="162" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#718096">+ Custom tools</text>
+          <text x="360" y="178" text-anchor="middle" font-family="Outfit,sans-serif" font-size="9" fill="#718096">+ Any LLM</text>
+        </svg>
+      </div>
+
+      <h2 class="section-anchor" id="cm-autogen">CrewAI vs AutoGen</h2>
+      <div class="level-row"><span class="level inter">Intermediate</span></div>
+      <p>Both are flexible systems with customisable, collaborating agents. CrewAI provides a simpler way to orchestrate interactions through declarative attributes (roles, processes), whereas AutoGen exposes lower-level conversational primitives and generally requires more programming to structure a workflow. AutoGen shines in open-ended, research-style agent conversations; CrewAI shines when you want structured, repeatable pipelines fast.</p>
+
+      <h2 class="section-anchor" id="cm-chatdev">CrewAI vs ChatDev</h2>
+      <div class="level-row"><span class="level inter">Intermediate</span></div>
+      <p>ChatDev pioneered role-based, software-company-style agents, but its process is rigid, limiting customisation and hindering scalability for production. CrewAI keeps the role-play idea but makes workflows dynamic and adaptable, with third-party integrations and multiple process types.</p>
+
+      <h2 class="section-anchor" id="cm-langgraph">CrewAI vs LangGraph</h2>
+      <div class="level-row"><span class="level adv">Advanced</span></div>
+      <p>This is the comparison that matters most for advanced orchestration. <b>LangGraph</b> models workflows as an explicit graph of nodes and edges — maximum control, but verbose. CrewAI <b>Flows</b> target the same event-driven, stateful territory with a lighter decorator API (<code>@start</code>/<code>@listen</code>/<code>@router</code>) and generate dramatically less boilerplate for equivalent workflows, while still letting you drop to raw code when needed. Choose LangGraph when you want fine-grained graph control and are comfortable with the ceremony; choose CrewAI Flows when you want production orchestration with far less code and crews as first-class steps.</p>
+
+      <h2 class="section-anchor" id="cm-table">Side-by-side comparison</h2>
+      <table class="compare-table">
+        <thead><tr><th>Feature</th><th>CrewAI</th><th>AutoGen</th><th>ChatDev</th><th>LangGraph</th></tr></thead>
+        <tbody>
+          <tr><td>Core model</td><td>Crews + Flows</td><td>Conversations</td><td>Fixed role pipeline</td><td>Explicit graph</td></tr>
+          <tr><td>Orchestration</td><td>Sequential, hierarchical, flows</td><td>Manual coding</td><td>Rigid waterfall</td><td>Nodes &amp; edges</td></tr>
+          <tr><td>Structure vs control</td><td>Both (crew ↔ flow)</td><td>Flexible, low structure</td><td>Structured, low flexibility</td><td>High control, high verbosity</td></tr>
+          <tr><td>Tools</td><td>Kit + LangChain + custom</td><td>Built-in code exec</td><td>Limited</td><td>Custom</td></tr>
+          <tr><td>LLM flexibility</td><td>Any provider</td><td>Broad</td><td>OpenAI-focused</td><td>Any provider</td></tr>
+          <tr><td>State &amp; persistence</td><td>Flow state (dict/Pydantic)</td><td>Manual</td><td>Limited</td><td>Graph state</td></tr>
+          <tr><td>Learning curve</td><td>Low–Medium</td><td>Medium–High</td><td>Low</td><td>Medium–High</td></tr>
+          <tr><td>Best for</td><td>Fast, structured, production crews</td><td>Open-ended research chats</td><td>Demos of role-play</td><td>Fine-grained control graphs</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout concept">
+        <span class="callout-icon">🎓</span>
+        <div class="callout-body"><strong>Study tip:</strong> when choosing, ask "how much do I need to <em>control</em> versus <em>delegate</em>?" More delegation → Crew. More control → Flow or LangGraph. CrewAI is compelling precisely because you can move along that spectrum without switching frameworks.</div>
+      </div>
+
+    </section>
+
+    <!-- ╔══════════════════════════════════════╗ -->
+    <!-- ║        TAB 8: ASSESSMENTS            ║ -->
+    <!-- ╚══════════════════════════════════════╝ -->
+    <section class="tab-panel" id="panel-assessments" data-title="Assessments">
+
+      <h1>Assessments</h1>
+      <p class="subtitle">One full-course assessment covering everything in this guide — architecture, core components, memory &amp; knowledge, flows, production, and framework comparisons. Every attempt draws all 50 multiple-choice questions from the bank, shuffled into a fresh order each time.</p>
+
+      <div class="exam-intro" id="examIntro">
+        <p style="margin:0 0 6px"><strong>How the assessment works.</strong></p>
+        <ul style="margin:0 0 4px 20px">
+          <li>Pick one option per question — you'll see instantly whether you were right, with an explanation either way.</li>
+          <li>Use <b>Back</b> / <b>Next</b> to move through the set; your answers and score are kept as you go.</li>
+          <li>Take it as many times as you like — the bank remembers what you've already seen, so a retake mixes in fresh questions first before repeating any.</li>
+        </ul>
+      </div>
+
+      <div class="assess-summary" id="assessSummary">
+        <div class="row">
+          <div>
+            <div style="font-weight:600;font-size:1rem;margin-bottom:4px">Full-Course Assessment</div>
+            <div class="stat" id="summaryStats"><b>50</b> questions per attempt</div>
+          </div>
+          <button class="nav-btn primary" id="startAssessBtn">Start Assessment →</button>
+        </div>
+        <div class="stat" id="bankStatus" style="margin-top:12px"></div>
+        <div class="stat" id="lastScore" style="margin-top:6px;display:none"></div>
+      </div>
+
+      <!-- Full-screen takeover: one question at a time -->
+      <div class="assess-overlay" id="assessOverlay">
+        <div class="assess-inner">
+          <div class="assess-top">
+            <span class="assess-progress-label" id="assessProgress">Question 1 / 50</span>
+            <button class="assess-exit" id="assessExitBtn">✕ Exit</button>
+          </div>
+          <div class="assess-bar"><div class="assess-bar-fill" id="assessBarFill" style="width:0%"></div></div>
+          <div id="assessStepHost"></div>
+          <div class="assess-nav-row">
+            <button class="nav-btn" id="assessPrevBtn">← Back</button>
+            <span class="spacer"></span>
+            <button class="nav-btn primary" id="assessNextBtn">Next →</button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// ══════════ TAB SWITCHING ══════════
+const tabBtns = document.querySelectorAll('.tab-btn');
+const panels  = document.querySelectorAll('.tab-panel');
+
+function switchTab(tabId){
+  tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
+  panels.forEach(p => p.classList.toggle('active', p.id === 'panel-' + tabId));
+  buildTOC(tabId);
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  if(tabId === 'assessments') mountActiveAssessment();
+}
+tabBtns.forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+
+// ══════════ DYNAMIC TOC ══════════
+const tocList = document.getElementById('tocList');
+function buildTOC(tabId){
+  tocList.innerHTML = '';
+  const panel = document.getElementById('panel-' + tabId);
+  if(!panel) return;
+  const headings = panel.querySelectorAll('h2.section-anchor');
+  if(!headings.length){
+    tocList.innerHTML = '<li style="padding:5px 10px;font-size:.78rem;color:var(--text-light)">—</li>';
+    return;
+  }
+  headings.forEach(h => {
+    const li = document.createElement('li');
+    const a  = document.createElement('a');
+    a.className = 'toc-link';
+    a.href = '#' + h.id;
+    a.textContent = h.textContent;
+    a.addEventListener('click', e => { e.preventDefault(); h.scrollIntoView({ behavior:'smooth', block:'start' }); });
+    li.appendChild(a);
+    tocList.appendChild(li);
+  });
+  updateScrollSpy();
+}
+
+// ══════════ SCROLL SPY ══════════
+function updateScrollSpy(){
+  const links = tocList.querySelectorAll('.toc-link');
+  if(!links.length) return;
+  const offset = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) +
+                 parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tabs-h')) + 40;
+  let current = '';
+  links.forEach(link => {
+    const id = link.getAttribute('href').slice(1);
+    const el = document.getElementById(id);
+    if(el && el.getBoundingClientRect().top <= offset + 20) current = id;
+  });
+  links.forEach(link => link.classList.toggle('active', link.getAttribute('href') === '#' + current));
+}
+window.addEventListener('scroll', updateScrollSpy, { passive:true });
+
+// ══════════ FULL-COURSE ASSESSMENT (single 50-question bank) ══════════
+const L = {
+  new:'<span class="level fresher" style="margin-left:auto">Fresher</span>',
+  int:'<span class="level inter" style="margin-left:auto">Intermediate</span>',
+  adv:'<span class="level adv" style="margin-left:auto">Advanced</span>'
+};
+
+const QUESTION_BANK = [];
+
+QUESTION_BANK.forEach((q,i)=> q.id = i);
+
+const QUIZ_LEN = 50;
+const STORAGE_KEY = 'crewai_assess_seen_qids_v1';
+const SCORE_KEY = 'crewai_assess_last_score_v1';
+
+let memSeen = [];
+let memScore = null;
+
+function storageAvailable(){
+  try{ const k='__t__'; localStorage.setItem(k,'1'); localStorage.removeItem(k); return true; }
+  catch(e){ return false; }
+}
+const HAS_STORAGE = storageAvailable();
+
+function getSeenIds(){
+  if(!HAS_STORAGE) return memSeen;
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch(e){ return []; }
+}
+function saveSeenIds(ids){
+  if(!HAS_STORAGE){ memSeen = ids; return; }
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(ids)); }catch(e){}
+}
+function getLastScore(){
+  if(!HAS_STORAGE) return memScore;
+  try{ return JSON.parse(localStorage.getItem(SCORE_KEY)); }
+  catch(e){ return null; }
+}
+function saveLastScore(s){
+  if(!HAS_STORAGE){ memScore = s; return; }
+  try{ localStorage.setItem(SCORE_KEY, JSON.stringify(s)); }catch(e){}
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1; i>0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function pickQuestions(){
+  const seen = new Set(getSeenIds());
+  const unseen = shuffle(QUESTION_BANK.filter(q=>!seen.has(q.id)));
+  let picked;
+  if(unseen.length >= QUIZ_LEN){
+    picked = unseen.slice(0, QUIZ_LEN);
+  } else {
+    const seenPool = shuffle(QUESTION_BANK.filter(q=>seen.has(q.id)));
+    picked = unseen.concat(seenPool).slice(0, QUIZ_LEN);
+  }
+  return {picked};
+}
+
+function updateBankStatus(){
+  const seenCount = getSeenIds().length;
+  const remaining = Math.max(QUESTION_BANK.length - seenCount, 0);
+  document.getElementById('bankStatus').textContent =
+    remaining >= QUIZ_LEN
+      ? `${remaining} of ${QUESTION_BANK.length} questions still unused for your next attempt.`
+      : `Question bank cycling — your next attempt will mix in some repeats from earlier rounds.`;
+}
+
+function updateSummaryCard(){
+  updateBankStatus();
+  const last = getLastScore();
+  const lastEl = document.getElementById('lastScore');
+  if(last){
+    const pct = Math.round(last.got/last.total*100);
+    lastEl.style.display = 'block';
+    lastEl.innerHTML = `Last attempt: <b>${last.got} / ${last.total}</b> correct (${pct}%)`;
+  } else {
+    lastEl.style.display = 'none';
+  }
+}
+
+let steps = [];
+let stepIdx = 0;
+let answers = {};
+const LETTERS_A = ['A','B','C','D','E'];
+
+function renderStep(){
+  const host = document.getElementById('assessStepHost');
+  const it = steps[stepIdx];
+  const total = steps.length;
+  document.getElementById('assessProgress').textContent = `Question ${stepIdx+1} / ${total}`;
+  document.getElementById('assessBarFill').style.width = `${Math.round((stepIdx/total)*100)}%`;
+
+  const state = answers[stepIdx];
+  host.innerHTML = `
+    <div class="q">
+      <div class="q-head"><span class="q-num">${it.topic}</span>${L[it.lvl]||''}</div>
+      <div class="q-prompt">${it.q}</div>
+      <div class="options">
+        ${it.o.map((o,j)=>{
+          let cls = 'opt';
+          let mark = LETTERS_A[j];
+          if(state!==undefined){
+            cls += ' locked';
+            if(j===it.c){ cls+=' correct'; mark='✓'; }
+            else if(j===state){ cls+=' wrong'; mark='✕'; }
+          }
+          return `<div class="${cls}" data-o="${j}"><span class="marker">${mark}</span><span>${o}</span></div>`;
+        }).join('')}
+      </div>
+      <div class="explain ${state!==undefined?'show':''}"><b>Why:</b> ${it.ex}</div>
+    </div>`;
+  if(state===undefined){
+    host.querySelectorAll('.opt').forEach(opt=>{
+      opt.addEventListener('click', ()=>{
+        answers[stepIdx] = +opt.dataset.o;
+        renderStep();
+      });
+    });
+  }
+
+  document.getElementById('assessPrevBtn').disabled = (stepIdx===0);
+  const nextBtn = document.getElementById('assessNextBtn');
+  nextBtn.disabled = false;
+  nextBtn.textContent = (stepIdx === total-1) ? 'Finish →' : 'Next →';
+}
+
+function scoreRun(){
+  let got = 0;
+  steps.forEach((it,i)=>{ if(answers[i] === it.c) got++; });
+  return {got, total: steps.length};
+}
+
+function renderFinalScreen(){
+  const {got, total} = scoreRun();
+  saveLastScore({got, total});
+  const seen = new Set(getSeenIds());
+  steps.forEach(it=> seen.add(it.id));
+  saveSeenIds([...seen]);
+
+  const pct = total ? Math.round(got/total*100) : 0;
+  const msg = pct===100 ? 'Perfect score — you know this cold. 🎉'
+    : pct>=70 ? 'Solid. Review the ones you missed.'
+    : 'Worth re-reading the relevant tabs, then retry.';
+  document.getElementById('assessProgress').textContent = 'Done';
+  document.getElementById('assessBarFill').style.width = '100%';
+  document.getElementById('assessStepHost').innerHTML = `
+    <div class="assess-final">
+      <div class="q-type" style="margin:0">Score</div>
+      <div class="big">${got} / ${total}</div>
+      <p style="color:var(--text-muted); max-width:44ch; margin:0 auto;">${msg}</p>
+      <p style="color:var(--text-light); font-size:.78rem; max-width:44ch; margin:14px auto 0;">Your next attempt will avoid repeating these 50 questions where possible.</p>
+    </div>`;
+  document.getElementById('assessPrevBtn').disabled = true;
+  const nextBtn = document.getElementById('assessNextBtn');
+  nextBtn.textContent = 'Exit';
+  nextBtn.onclick = closeAssessment;
+}
+
+function openAssessment(){if(window.__mockExamStart)return window.__mockExamStart();
+  const {picked} = pickQuestions();
+  steps = picked;
+  stepIdx = 0;
+  answers = {};
+  document.getElementById('assessOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+  bindAssessNav();
+  renderStep();
+}
+
+function closeAssessment(){
+  document.getElementById('assessOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+  updateSummaryCard();
+}
+
+function bindAssessNav(){
+  document.getElementById('assessExitBtn').onclick = closeAssessment;
+  document.getElementById('assessPrevBtn').onclick = ()=>{
+    if(stepIdx>0){ stepIdx--; renderStep(); }
+  };
+  const nextBtn = document.getElementById('assessNextBtn');
+  nextBtn.onclick = ()=>{
+    if(stepIdx < steps.length-1){ stepIdx++; renderStep(); }
+    else { renderFinalScreen(); }
+  };
+}
+
+function mountActiveAssessment(){
+  updateSummaryCard();
+  document.getElementById('startAssessBtn').onclick = openAssessment;
+}
+
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && document.getElementById('assessOverlay')?.classList.contains('show')){
+    closeAssessment();
+  }
+});
+
+// ══════════ RESET ══════════
+function resetProgress(){
+  saveSeenIds([]);
+  saveLastScore(null);
+  closeAssessment();
+  switchTab('overview');
+}
+
+// ══════════ INIT ══════════
+buildTOC('overview');
+</script>
+
+
+<div id="scoreBoard" class="score-board" style="display:none;max-width:820px;margin:18px auto;padding:0 16px"></div>
+
+<script>
+(function(){
+  /* =====================================================================
+     CrewAI -- full-screen, timed mock exam (MNC style).
+     Random 50/300 from the server (answers never in source).
+     Grading: all answers submitted at the end (server-side).
+     ===================================================================== */
+  const API_Q='/activities/quiz/crewai/questions/';
+  const API_S='/activities/quiz/crewai/submit/';
+  const EXAM_SECONDS=60*60;                 // 1 hour
+  const inIframe = window.self!==window.top;
+
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Outfit',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Outfit',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash h2{font-size:25px;font-weight:800;margin-bottom:8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin-bottom:12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Outfit',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:ecpop .18s ease}
+  @keyframes ecpop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Outfit',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+
+  function examConfirm(title,msg,okLabel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">
+        <button class="exam-btn nav" data-a="0">Cancel</button>
+        <button class="exam-btn primary" data-a="1">${okLabel||'Submit'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  /* ---- score history (localStorage, shared across the exam tab + guide) ---- */
+  const LS_KEY='crewaiScores';
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores();
+    a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: no tab-switch (3 strikes -> auto-submit), deter screenshots ---- */
+  let warns=0, lastWarn=0, proctorOn=false;
+  function examWarn(title,msg){
+    injectCss();
+    const d=document.createElement('div'); d.className='exam-confirm';
+    d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row"><button class="exam-btn primary" data-a="1">OK</button></div></div>`;
+    document.body.appendChild(d);
+    d.addEventListener('click',e=>{ if(e.target.closest('[data-a]'))d.remove(); });
+  }
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function countWarn(){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<800)return; lastWarn=now;
+    warns++;
+    if(warns>=3){ examWarn('Test submitted','You left the test 3 times. It has been auto-submitted.'); submitExam(true); }
+    else { examWarn('Warning '+warns+' of 3','Switching tabs, leaving the window, or exiting fullscreen is not allowed. After 3 warnings the test is auto-submitted.'); }
+  }
+  function fsHandler(){ if(examOn && !document.fullscreenElement){ countWarn(); } }
+  function visHandler(){ if(document.hidden){ showCover(); countWarn(); } else { hideCover(); } }
+  function blurHandler(){ showCover(); countWarn(); }
+  function focusHandler(){ hideCover(); }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function keyGuard(e){
+    const k=(e.key||'').toLowerCase();
+    if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; }
+    if(k==='printscreen'){ e.preventDefault(); }
+  }
+  function printGuard(e){
+    if((e.key||'')==='PrintScreen'){ try{navigator.clipboard.writeText('');}catch(_){}
+      examWarn('Not allowed','Screenshots are not permitted during the test.'); }
+  }
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    window.addEventListener('blur',blurHandler);
+    window.addEventListener('focus',focusHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('cut',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keyup',printGuard,true);
+  }
+  function stopProctor(){
+    proctorOn=false;
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    window.removeEventListener('blur',blurHandler);
+    window.removeEventListener('focus',focusHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('cut',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keyup',printGuard,true);
+    hideCover();
+  }
+
+  function startEntry(){
+    if(inIframe){ window.open(location.pathname+'?mode=exam','_blank'); return; }
+    showSplash();
+  }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; CrewAI &mdash; Mock Test</h2>
+      <p>A timed, exam-style assessment modelled on real technical screening tests.</p>
+      <ul>
+        <li><b>50 questions</b> to attempt</li>
+        <li><b>60-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Results and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> &mdash; stay in fullscreen the whole time</li>
+        <li><b>No tab / window switching</b> and <b>no exiting fullscreen</b></li>
+        <li><b>3 warnings</b> (tab-switch or fullscreen-exit) &rarr; the test <b>auto-submits</b></li>
+        <li><b>Screenshots, copy and right-click are disabled</b></li>
+      </ul>
+      <button class="exam-btn primary" id="examBegin" style="width:100%;padding:14px">Start Test &rarr;</button>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      if(document.documentElement.requestFullscreen){document.documentElement.requestFullscreen().catch(()=>{});}
+      sp.remove(); enterExam();
+    });
+  }
+
+  async function enterExam(){
+    injectCss();
+    let ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Loading your test&hellip;</div>';
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    try{
+      const res=await fetch(API_Q,{headers:{'Accept':'application/json'}});
+      const data=await res.json(); items=data.questions||[];
+    }catch(e){ items=[]; }
+    if(!items.length){ ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center">Could not load the test. Close and try again.</div>'; return; }
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">CrewAI &mdash; Mock Test</div><div class="et-sub">50 questions &middot; one attempt &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}${it.difficulty?`<span class="diff">${it.difficulty}</span>`:''}</div>
+      ${it.code?`<pre><code>${it.code}</code></pre>`:''}
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>el.addEventListener('click',()=>{
+      answers[id]=+el.dataset.i;
+      pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel'));
+      el.classList.add('sel'); refreshPalette();
+    }));
+    const prev=document.getElementById('examPrev'), next=document.getElementById('examNext');
+    if(prev)prev.addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    if(next)next.addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();refreshPalette();});
+    refreshPalette();
+  }
+
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examConfirm('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test');
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    const payload={answers:{}};
+    items.forEach(it=>{ payload.answers[it.id] = (it.id in answers)?answers[it.id]:-1; });
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Grading your test&hellip;</div>';
+    let data;
+    try{
+      const res=await fetch(API_S,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      data=await res.json();
+    }catch(e){ ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center">Could not grade the test. Please try again.</div>'; return; }
+    showResults(data);
+  }
+
+  function showResults(data){
+    const results=data.results||{}, total=items.length, score=data.score||0;
+    saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below and try again.';
+    if(pct>=85)msg='Outstanding &mdash; strong command of OOP, basics to edge cases.';
+    else if(pct>=65)msg='Solid pass. A little more practice on the tricky ones and you are set.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the topics you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const r=results[it.id]||{}; const you=answers[it.id];
+      const attempted=(you!=null);
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      if(!attempted){
+        // Not attempted: reveal nothing (answer stays protected)
+        inner+='<div class="ra">Your answer: <i>Not answered</i></div>';
+        return '<div class="r no">'+inner+'</div>';
+      }
+      const youTxt=String.fromCharCode(65+you)+'. '+it.options[you];
+      const cor=(r.answer!=null&&r.answer>=0)?(String.fromCharCode(65+r.answer)+'. '+it.options[r.answer]):'';
+      inner+='<div class="ra '+(r.correct?'cor':'wrong')+'">Your answer: '+youTxt+'</div>'
+        +(r.correct?'':'<div class="ra cor">Correct: '+cor+'</div>')
+        +(r.explanation?'<div class="rx">'+r.explanation+'</div>':'');
+      return '<div class="r '+(r.correct?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; CrewAI Mock Test</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another test</button></div>
+          <div class="exam-rmsg" id="examRedirect" style="margin-top:8px;color:#94a3b8"></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    let left=30;
+    const rd=document.getElementById('examRedirect');
+    const setTxt=()=>{ if(rd)rd.textContent='Returning to the assessment page in '+left+'s…'; };
+    setTxt();
+    const rt=setInterval(()=>{ left--; setTxt(); if(left<=0){ clearInterval(rt); goBack(); } },1000);
+    function goBack(){
+      if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); }
+      if(window.opener){ try{ window.close(); }catch(_){} }
+      location.href=location.pathname;   // fallback: reload guide (assessment) page
+    }
+    document.getElementById('examRetry').addEventListener('click',()=>{ clearInterval(rt); document.getElementById('examOverlay').remove(); enterExam(); });
+    document.getElementById('examClose').addEventListener('click',()=>{ clearInterval(rt); goBack(); });
+  }
+
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',startEntry);
+  window.__mockExamStart=startEntry;
+  renderScoreboard();
+  window.addEventListener('storage',e=>{ if(e.key===LS_KEY)renderScoreboard(); });
+  if(new URLSearchParams(location.search).get('mode')==='exam'){ showSplash(); }
+})();
+</script>
+</body>
+</html>

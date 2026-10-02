@@ -1,0 +1,753 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+<link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+<style>
+    .roleplay-page {
+        padding-top: 120px;
+        background: #f8fafc;
+        min-height: 100vh;
+        padding-bottom: 5rem;
+    }
+
+    /* Hero */
+    .rp-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border-radius: 24px;
+        padding: 3rem;
+        color: #fff;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .rp-hero h1 {
+        color: #f59e0b;
+        font-size: 2.5rem;
+    }
+
+    .rp-hero::after {
+        content: '{% if active_topic == "storytelling" %}auto_stories{% elif active_topic == "situations" %}psychology{% else %}theater_comedy{% endif %}';
+        font-family: 'Material Symbols Outlined';
+        font-size: 240px;
+        position: absolute;
+        right: -20px;
+        bottom: -60px;
+        opacity: .05;
+        pointer-events: none;
+        color: #fff;
+    }
+
+    /* Interaction Stage */
+    .interaction-container {
+        background: #fff;
+        border-radius: 32px;
+        border: 1px solid #e2e8f0;
+        padding: 2.5rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, .04);
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .ai-bubble {
+        background: #f1f5f9;
+        border-radius: 24px 24px 24px 4px;
+        padding: 1.5rem 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        border: 1px solid #e2e8f0;
+    }
+
+    .ai-bubble::before {
+        content: 'AI Coach';
+        position: absolute;
+        top: -20px;
+        left: 0;
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: #64748b;
+        letter-spacing: 0.1em;
+    }
+
+    .user-bubble {
+        background: #4f46e5;
+        color: #fff;
+        border-radius: 24px 24px 4px 24px;
+        padding: 1.5rem 2rem;
+        margin-bottom: 2rem;
+        align-self: flex-end;
+        position: relative;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2);
+    }
+
+    .user-bubble::after {
+        content: 'You';
+        position: absolute;
+        top: -20px;
+        right: 0;
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: #64748b;
+        letter-spacing: 0.1em;
+    }
+
+    .word-span {
+        display: inline-block;
+        opacity: 0;
+        transform: translateY(5px);
+        transition: all 0.2s ease-out;
+        margin-right: 4px;
+    }
+
+    .word-span.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .controls {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        justify-content: center;
+    }
+
+    .btn-action {
+        padding: 1rem 2rem;
+        border-radius: 16px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        transition: all 0.2s;
+        border: none;
+    }
+
+    .btn-done {
+        background: #10b981;
+        color: #fff;
+    }
+
+    .btn-done:hover {
+        background: #059669;
+        transform: scale(1.02);
+    }
+
+    .btn-analyze {
+        background: #f59e0b;
+        color: #0f172a;
+    }
+
+    .btn-analyze:hover {
+        background: #d97706;
+        transform: scale(1.05);
+    }
+
+    .mic-indicator {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #fef2f2;
+        color: #ef4444;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        position: relative;
+    }
+
+    .mic-indicator.listening::after {
+        content: '';
+        position: absolute;
+        inset: -10px;
+        border: 2px solid #ef4444;
+        border-radius: 50%;
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 0.5;
+        }
+
+        100% {
+            transform: scale(1.5);
+            opacity: 0;
+        }
+    }
+
+    .progress-stepper {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .step-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #e2e8f0;
+    }
+
+    .step-dot.active {
+        background: #4f46e5;
+        width: 24px;
+        border-radius: 4px;
+        transition: all 0.3s;
+    }
+
+    .step-dot.completed {
+        background: #10b981;
+    }
+
+    /* Result View */
+    .result-card {
+        display: none;
+        background: #fff;
+        border-radius: 32px;
+        padding: 3rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    @media (max-width: 768px) {
+        .roleplay-page {
+            padding-top: 90px;
+            padding-bottom: 3rem;
+        }
+
+        .rp-hero {
+            padding: 2rem 1.25rem;
+            border-radius: 18px;
+        }
+
+        .rp-hero h1 {
+            font-size: 1.8rem;
+        }
+
+        #setup-section {
+            padding: 1.25rem;
+            border-radius: 22px;
+        }
+
+        #setup-section .d-flex.gap-3 {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        #topic-prompt {
+            width: 100%;
+            min-width: 0;
+            font-size: 1rem;
+        }
+
+        #start-btn {
+            width: 100%;
+            justify-content: center;
+            padding: 0.9rem 1rem;
+            font-size: 1.1rem;
+        }
+
+        #setup-section .d-flex.flex-wrap.gap-2 {
+            gap: 0.6rem;
+        }
+
+        #setup-section .d-flex.flex-wrap.gap-2>button {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="roleplay-page">
+    <!-- Language Dropdown - fixed top right -->
+    <!-- Language Dropdown (top-right, fixed) - Customized with Images -->
+    <div class="dropdown custom-lang-dropdown" style="position: fixed; top: 85px; right: 1.5rem; z-index: 1050;">
+        <button class="btn btn-sm dropdown-toggle d-flex align-items-center justify-content-between" type="button"
+            data-bs-toggle="dropdown" aria-expanded="false"
+            style="width:auto; min-width:140px; border-radius: 8px; background-color: #fff; color: #333; font-weight: 600; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.12);">
+            <span class="currentLangDisplay d-flex align-items-center"><img src="https://flagcdn.com/w20/gb.png"
+                    class="me-2" style="width:20px; border-radius:2px;"> English</span>
+        </button>
+        <ul class="dropdown-menu shadow-sm"
+            style="border-radius: 8px; border: 1px solid #e2e8f0; min-width: 140px; padding: 0.5rem 0;">
+            <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#"
+                    data-val="english"><img src="https://flagcdn.com/w20/gb.png" class="me-2"
+                        style="width:20px; border-radius:2px;"> English</a></li>
+            <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#"
+                    data-val="vietnam"><img src="https://flagcdn.com/w20/vn.png" class="me-2"
+                        style="width:20px; border-radius:2px;"> Vietnamese</a></li>
+            <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#"
+                    data-val="arabic"><img src="https://flagcdn.com/w20/sa.png" class="me-2"
+                        style="width:20px; border-radius:2px;"> Arabic</a></li>
+            <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#"
+                    data-val="russian"><img src="https://flagcdn.com/w20/ru.png" class="me-2"
+                        style="width:20px; border-radius:2px;"> Russian</a></li>
+        </ul>
+        <select id="languageSelect" class="d-none">
+            <option value="english" selected>English</option>
+            <option value="vietnam">Vietnamese</option>
+            <option value="arabic">Arabic</option>
+            <option value="russian">Russian</option>
+        </select>
+    </div>
+
+    <script>
+        (function () {
+            setTimeout(() => {
+                const dropdownWrapper = document.querySelector('.custom-lang-dropdown');
+                if (!dropdownWrapper) return;
+
+                const langOptions = dropdownWrapper.querySelectorAll('.lang-option');
+                const display = dropdownWrapper.querySelector('.currentLangDisplay');
+                const selectElement = document.getElementById('languageSelect');
+
+                langOptions.forEach(item => {
+                    item.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const val = this.getAttribute('data-val');
+                        display.innerHTML = this.innerHTML;
+
+                        if (selectElement) {
+                            selectElement.value = val;
+                            selectElement.dispatchEvent(new Event('change'));
+                        }
+                    });
+                });
+
+                if (selectElement) {
+                    selectElement.addEventListener('change', (e) => {
+                        const opt = Array.from(langOptions).find(o => o.getAttribute('data-val') === e.target.value);
+                        if (opt) display.innerHTML = opt.innerHTML;
+                    });
+                }
+            }, 100);
+        })();
+    </script>
+    <div class="container" style="max-width: 800px;">
+
+        <!-- Hero -->
+        <div id="hero-section" class="rp-hero">
+            <div style="position:relative; z-index:2;">
+                <h1 class="live-translate fw-bold mb-1">{{ topic_config.page_title }}</h1>
+                <p class="live-translate mb-0 opacity-90">{{ topic_config.page_description }}</p>
+            </div>
+        </div>
+
+        <!-- Setup Section -->
+        <div id="setup-section" class="bg-white rounded-[32px] p-8 border border-slate-200 shadow-sm mb-8">
+            <label class="live-translate small fw-bold text-uppercase text-muted mb-3 d-block"
+                style="letter-spacing:.1em;">Describe your Scenario</label>
+            <div class="d-flex gap-3 mb-4">
+                <input id="topic-prompt" type="text"
+                    class="flex-grow-1 border-2 border-slate-100 rounded-2xl px-4 py-3 outline-none focus:border-amber-400 transition-all"
+                    placeholder="{{ topic_config.input_placeholder }}" maxlength="120">
+                <button id="start-btn"
+                    class="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2">
+                    <span class="material-symbols-outlined">rocket_launch</span>
+                    Create Session
+                </button>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2">
+                <span class="live-translate small text-muted me-2 align-self-center">Try:</span>
+                {% for example in topic_config.examples %}
+                <button
+                    class="px-4 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-full text-xs font-bold text-slate-500 transition-all"
+                    onclick="document.getElementById('topic-prompt').value=this.textContent">{{ example }}</button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Interaction Stage -->
+        <div id="interaction-stage" class="hidden">
+            <div class="progress-stepper" id="stepper">
+                <div class="step-dot active"></div>
+                <div class="step-dot"></div>
+                <div class="step-dot"></div>
+                <div class="step-dot"></div>
+                <div class="step-dot"></div>
+                <div class="step-dot"></div> <!-- One extra for reading stage -->
+            </div>
+
+            <div class="interaction-container flex flex-col">
+                <!-- Reading Stage -->
+                <div id="reading-stage" class="flex flex-col text-center">
+                    <div class="ai-bubble text-left mb-6">
+                        <div id="story-content" class="text-lg leading-relaxed text-slate-800">
+                            <!-- Content injected here -->
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <p class="live-translate text-slate-500 mb-6">Take a moment to read the context above. When
+                            you're ready to answer questions, click below.</p>
+                        <button id="ready-btn"
+                            class="live-translate bg-indigo-600 text-white px-10 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 mx-auto">
+                            <span class="material-symbols-outlined">record_voice_over</span>
+                            I'm Ready - Start Questions
+                        </button>
+                    </div>
+                </div>
+
+                <div id="ai-chat" class="flex flex-col hidden">
+                    <!-- AI Bubbles injected here -->
+                </div>
+
+                <div id="user-response-area" class="mt-auto pt-8 border-t border-slate-100 hidden">
+                    <div class="mic-indicator" id="mic-indicator">
+                        <span class="material-symbols-outlined text-2xl">mic</span>
+                    </div>
+                    <div id="user-bubble" class="user-bubble">
+                        <div id="user-transcript" class="italic opacity-60">Listening to your response...</div>
+                    </div>
+                    <div class="controls">
+                        <button id="done-btn" class="live-translate btn-action btn-done">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            Done - Next Question
+                        </button>
+                    </div>
+                </div>
+
+                <div id="completion-area" class="mt-auto pt-8 border-t border-slate-100 hidden text-center">
+                    <div class="mb-6">
+                        <div
+                            class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="material-symbols-outlined text-3xl">task_alt</span>
+                        </div>
+                        <h3 class="live-translate font-bold text-2xl text-slate-900">Session Complete!</h3>
+                        <p class="live-translate text-slate-500">You've answered all 5 questions. Ready for analysis?
+                        </p>
+                    </div>
+                    <button id="analyze-btn" class="btn-action btn-analyze mx-auto">
+                        <span class="material-symbols-outlined">analytics</span>
+                        Analyze Performance
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="result-card">
+            <h2 class="live-translate text-3xl font-bold mb-6 flex items-center gap-3">
+                <span class="material-symbols-outlined text-amber-500">emoji_events</span>
+                Your Analysis
+            </h2>
+            <div id="analysis-content" class="prose prose-slate max-w-none">
+                <!-- Results injected here -->
+            </div>
+            <div class="mt-12 pt-8 border-t border-slate-100">
+                <button onclick="location.reload()"
+                    class="live-translate bg-indigo-600 text-white px-10 py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 mx-auto">
+                    <span class="material-symbols-outlined">restart_alt</span>
+                    Practice Again
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    (function () {
+        let questions = [];
+        let sessionContent = "";
+        let currentStep = 0;
+        let fullTranscript = "";
+        let recognition = null;
+        let synth = window.speechSynthesis;
+        let isLastQuestion = false;
+        let finalTranscript = "";
+
+        const startBtn = document.getElementById('start-btn');
+        const promptInput = document.getElementById('topic-prompt');
+        const interactionStage = document.getElementById('interaction-stage');
+        const setupSection = document.getElementById('setup-section');
+        const readingStage = document.getElementById('reading-stage');
+        const storyContent = document.getElementById('story-content');
+        const readyBtn = document.getElementById('ready-btn');
+        const aiChat = document.getElementById('ai-chat');
+        const userResponseArea = document.getElementById('user-response-area');
+        const userTranscript = document.getElementById('user-transcript');
+        const doneBtn = document.getElementById('done-btn');
+        const completionArea = document.getElementById('completion-area');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const resultsSection = document.getElementById('results-section');
+        const analysisContent = document.getElementById('analysis-content');
+        const stepperDots = document.querySelectorAll('.step-dot');
+
+        // Init Recognition
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = (event) => {
+                let interim = "";
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript + " ";
+                    } else {
+                        interim += event.results[i][0].transcript;
+                    }
+                }
+                userTranscript.textContent = (finalTranscript + interim).trim();
+                userTranscript.classList.remove('italic', 'opacity-60');
+            };
+        }
+
+        // A roleplay scene needs two people in it ("Student and Teacher",
+        // "Customer and Shopkeeper") — not a single subject like "Environment"
+        // or "Manager". Mirrors the server-side check in
+        // activities/views.py:roleplay_practice (_roleplay_prompt_missing_second_character)
+        // so the error shows immediately without a round trip; the server still
+        // enforces this independently for anyone bypassing the UI.
+        const ROLEPLAY_TWO_PARTY_CONNECTOR = /\b(and|vs\.?|versus|with)\b|&|,/i;
+        function roleplayPromptMissingSecondCharacter(text) {
+            if (!text) return false; // empty prompt falls back to the server's default_prompt
+            if (text.trim().split(/\s+/).length > 3) return false;
+            return !ROLEPLAY_TWO_PARTY_CONNECTOR.test(text);
+        }
+
+        startBtn.addEventListener('click', async () => {
+            const prompt = promptInput.value.trim();
+
+            if ("{{ active_topic }}" === "roleplay" && roleplayPromptMissingSecondCharacter(prompt)) {
+                alert("Please provide another character to start the roleplay.");
+                return;
+            }
+
+            startBtn.disabled = true;
+            startBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> Creating...`;
+
+            try {
+                const formData = new FormData();
+                formData.append("topic", "{{ active_topic }}");
+                formData.append("prompt", prompt);
+                formData.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+                formData.append("language", document.getElementById('languageSelect')?.value || "english");
+
+                const res = await fetch("{% url 'roleplay_practice' %}", { method: "POST", body: formData });
+                const data = await res.json();
+
+                if (!res.ok || data.error) {
+                    throw new Error(data.error || "Could not start session. Please try again.");
+                }
+
+                questions = data.result.follow_ups || [];
+                sessionContent = data.result.content || "";
+
+                if (questions.length === 0) throw new Error("No questions generated");
+
+                setupSection.classList.add('hidden');
+                document.getElementById('hero-section').classList.add('hidden');
+                interactionStage.classList.remove('hidden');
+
+                // Show reading stage first
+                readingStage.classList.remove('hidden');
+                typeWords(sessionContent, storyContent);
+            } catch (e) {
+                alert(e.message || "Could not start session. Please try again.");
+                startBtn.disabled = false;
+                startBtn.innerHTML = `<span class="material-symbols-outlined">rocket_launch</span> Create Session`;
+            }
+        });
+
+        readyBtn.addEventListener('click', () => {
+            readingStage.classList.add('hidden');
+            aiChat.classList.remove('hidden');
+            startStep(0);
+        });
+
+        function typeWords(text, container, callback) {
+            const words = text.split(' ');
+            container.innerHTML = '';
+            let i = 0;
+
+            const interval = setInterval(() => {
+                if (i < words.length) {
+                    const span = document.createElement('span');
+                    span.className = 'word-span';
+                    span.textContent = words[i];
+                    container.appendChild(span);
+                    setTimeout(() => span.classList.add('visible'), 50);
+                    i++;
+                } else {
+                    clearInterval(interval);
+                    if (callback) callback();
+                }
+            }, 120);
+        }
+
+        function speak(text, callback) {
+            if (synth.speaking) synth.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.95;
+            utterance.onend = callback;
+            synth.speak(utterance);
+        }
+
+        function startStep(step) {
+            currentStep = step;
+            isLastQuestion = (step === questions.length - 1);
+
+            // Update dots
+            stepperDots.forEach((dot, i) => {
+                dot.className = 'step-dot';
+                if (i < step + 1) dot.classList.add('completed');
+                if (i === step + 1) dot.classList.add('active');
+            });
+
+            // Add AI bubble
+            const bubble = document.createElement('div');
+            bubble.className = 'ai-bubble';
+            aiChat.innerHTML = '';
+            aiChat.appendChild(bubble);
+
+            const questionText = questions[step];
+
+            speak(questionText, () => {
+                userResponseArea.classList.remove('hidden');
+                document.getElementById('mic-indicator').classList.add('listening');
+                userTranscript.textContent = "Listening to your response...";
+                userTranscript.classList.add('italic', 'opacity-60');
+                finalTranscript = "";
+                if (recognition) {
+                    try { recognition.start(); } catch (e) { }
+                }
+            });
+
+            typeWords(questionText, bubble);
+        }
+
+        doneBtn.addEventListener('click', () => {
+            if (recognition) {
+                try { recognition.stop(); } catch (e) { }
+            }
+            document.getElementById('mic-indicator').classList.remove('listening');
+
+            const rawText = userTranscript.textContent.replace("Listening to your response...", "").trim();
+            const wordCount = window.CareerBuddyValidation ? window.CareerBuddyValidation.validateWordCount(rawText) : rawText.split(/\s+/).filter(w => w).length;
+            
+            if (wordCount < 15) {
+                if (window.CareerBuddyValidation) {
+                    window.CareerBuddyValidation.showShortAnswerWarning("Your response is too short. Please provide at least 15 words to continue.");
+                } else {
+                    alert("Your response is too short. Please provide at least 15 words to continue.");
+                }
+                
+                userTranscript.textContent = rawText || "Listening to your response...";
+                if (!rawText) {
+                    userTranscript.classList.add('italic', 'opacity-60');
+                }
+                document.getElementById('mic-indicator').classList.add('listening');
+                if (recognition) {
+                    try { recognition.start(); } catch (e) { }
+                }
+                return;
+            }
+
+            fullTranscript += `Question: ${questions[currentStep]}\nAnswer: ${rawText}\n\n`;
+
+            if (isLastQuestion) {
+                userResponseArea.classList.add('hidden');
+                completionArea.classList.remove('hidden');
+            } else {
+                userResponseArea.classList.add('hidden');
+                startStep(currentStep + 1);
+            }
+        });
+
+        analyzeBtn.addEventListener('click', async () => {
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> Analyzing...`;
+
+            try {
+                const formData = new FormData();
+                formData.append("topic", promptInput.value || "{{ active_topic }}");
+                formData.append("client_transcript", fullTranscript);
+                formData.append("reference_text", sessionContent);
+                formData.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+                // analyze_roleplay -> SpeakingAgent already reads payload["language"],
+                // this was the only piece missing: the frontend never sent it.
+                formData.append("language", document.getElementById('languageSelect')?.value || "english");
+
+                const res = await fetch("{% url 'analyze_roleplay' %}", { method: "POST", body: formData });
+                const data = await res.json();
+
+                if (data.success) {
+                    renderResults(data.data);
+                } else {
+                    throw new Error("Analysis failed");
+                }
+            } catch (e) {
+                alert("Analysis failed. Please try again.");
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = `<span class="material-symbols-outlined">analytics</span> Analyze Performance`;
+            }
+        });
+
+        function renderResults(data) {
+            interactionStage.classList.add('hidden');
+            resultsSection.style.display = 'block';
+
+            const scores = data.scores || {};
+            const overall = scores.overall || 0;
+
+            let html = `
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-amber-50 p-6 rounded-3xl text-center">
+                    <div class="text-3xl font-bold text-amber-600">${overall}</div>
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-amber-800">Overall</div>
+                </div>
+                <div class="bg-indigo-50 p-6 rounded-3xl text-center">
+                    <div class="text-3xl font-bold text-indigo-600">${scores.fluency || 0}</div>
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-indigo-800">Fluency</div>
+                </div>
+                <div class="bg-emerald-50 p-6 rounded-3xl text-center">
+                    <div class="text-3xl font-bold text-emerald-600">${scores.grammar || 0}</div>
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-emerald-800">Grammar</div>
+                </div>
+                <div class="bg-rose-50 p-6 rounded-3xl text-center">
+                    <div class="text-3xl font-bold text-rose-600">${scores.clarity || scores.pronunciation || 0}</div>
+                    <div class="text-[10px] font-bold uppercase tracking-widest text-rose-800">Clarity</div>
+                </div>
+            </div>
+           
+            <div class="bg-slate-50 p-8 rounded-[32px] border border-slate-100">
+                <h4 class="font-bold text-xl mb-4 text-slate-900">Feedback</h4>
+                <div class="text-slate-600 leading-relaxed">${data.feedback || "Good job practicing!"}</div>
+            </div>
+        `;
+
+            analysisContent.innerHTML = html;
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    })();
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/live-translate.js' %}"></script>
+<script>
+    // Same live-translation mechanism as the activity sub-activity page.
+    // #start-btn and #analyze-btn are deliberately excluded — see the comments
+    // beside them above — because this page's own script resets their
+    // innerHTML to plain English once an AI call finishes.
+    document.addEventListener('DOMContentLoaded', function () {
+        LiveTranslate.init({ dynamicSelectors: ['.live-translate'] });
+    });
+</script>
+{% endblock %}

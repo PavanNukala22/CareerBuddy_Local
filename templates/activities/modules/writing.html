@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+<style>.hidden { display: none !important; }</style>
+<style>
+  .module-page { padding-top: 60px; min-height: 100vh; background: #f8fafc; }
+  .module-hero {
+    background: linear-gradient(135deg, #14532d 0%, #16a34a 100%);
+    padding: 2.5rem 0 3rem; color: #fff;
+  }
+  .module-hero h1 { font-size: 1.9rem; font-weight: 800; margin-bottom: .4rem; }
+  .module-badge {
+    display: inline-flex; align-items: center; gap:.4rem;
+    background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+    border-radius: 50rem; padding: .25rem .8rem; font-size: .8rem; margin-bottom: .8rem;
+  }
+  .panel-card {
+    background:#fff; border-radius:16px;
+    box-shadow:0 2px 16px rgba(0,0,0,.07); border:1px solid #e2e8f0;
+    padding:2rem; margin-bottom:1.5rem;
+  }
+  .writing-textarea {
+    width:100%; min-height:220px; border:1.5px solid #e2e8f0; border-radius:12px;
+    padding:1rem; font-size:.95rem; color:#334155; resize:vertical;
+    transition:border-color .2s;
+  }
+  .writing-textarea:focus { border-color:#16a34a; outline:none; box-shadow:0 0 0 3px rgba(22,163,74,.15); }
+  .char-bar-wrap { background:#f1f5f9; border-radius:50rem; height:8px; overflow:hidden; margin-top:.5rem; }
+  .char-bar { height:100%; background:#16a34a; border-radius:50rem; transition:width .3s; }
+  .transcript-box {
+    background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;
+    padding:1rem 1.25rem; min-height:80px; font-size:.95rem; line-height:1.7; color:#334155;
+  }
+  .score-display { font-size:3rem; font-weight:900; color:#16a34a; line-height:1; }
+  .score-label { font-size:.8rem; color:#64748b; text-transform:uppercase; letter-spacing:.08em; }
+  .btn-primary-solid {
+    background:#16a34a; color:#fff; border:none; border-radius:50rem;
+    padding:.65rem 2rem; font-weight:700; font-size:.95rem; cursor:pointer;
+    transition:background .15s, transform .1s;
+  }
+  .btn-primary-solid:hover { background:#15803d; transform:translateY(-1px); }
+  .btn-primary-solid:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+  .btn-outline-solid {
+    background:transparent; border:1.5px solid #cbd5e1; color:#475569;
+    border-radius:50rem; padding:.5rem 1.5rem; font-weight:600;
+    font-size:.88rem; cursor:pointer; transition:background .15s;
+  }
+  .btn-outline-solid:hover { background:#f1f5f9; }
+  .tips-card { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:1rem 1.25rem; }
+  .tips-card li { font-size:.88rem; color:#166534; margin-bottom:.3rem; }
+  .feedback-row { display:flex; justify-content:space-between; align-items:center; padding:.75rem 0; border-bottom:1px solid #f1f5f9; }
+  .feedback-row:last-child { border:none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="module-page">
+
+  <div class="module-hero" style="position: relative;">
+        <!-- Language Dropdown (top-right, fixed) - Customized with Images -->
+        <div class="dropdown custom-lang-dropdown" style="position: fixed; top: 85px; right: 1.5rem; z-index: 1050;">
+            <button class="btn btn-sm dropdown-toggle d-flex align-items-center justify-content-between" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width:auto; min-width:140px; border-radius: 8px; background-color: #fff; color: #333; font-weight: 600; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.12);">
+                <span class="currentLangDisplay d-flex align-items-center"><img src="https://flagcdn.com/w20/gb.png" class="me-2" style="width:20px; border-radius:2px;"> English</span>
+            </button>
+            <ul class="dropdown-menu shadow-sm" style="border-radius: 8px; border: 1px solid #e2e8f0; min-width: 140px; padding: 0.5rem 0;">
+                <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#" data-val="english"><img src="https://flagcdn.com/w20/gb.png" class="me-2" style="width:20px; border-radius:2px;"> English</a></li>
+                <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#" data-val="vietnam"><img src="https://flagcdn.com/w20/vn.png" class="me-2" style="width:20px; border-radius:2px;"> Vietnamese</a></li>
+                <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#" data-val="arabic"><img src="https://flagcdn.com/w20/sa.png" class="me-2" style="width:20px; border-radius:2px;"> Arabic</a></li>
+                <li><a class="dropdown-item d-flex align-items-center fw-semibold lang-option py-2" href="#" data-val="russian"><img src="https://flagcdn.com/w20/ru.png" class="me-2" style="width:20px; border-radius:2px;"> Russian</a></li>
+            </ul>
+            <select id="languageSelect" class="d-none">
+                <option value="english" selected>English</option>
+                <option value="vietnam">Vietnamese</option>
+                <option value="arabic">Arabic</option>
+                <option value="russian">Russian</option>
+            </select>
+        </div>
+        
+        <script>
+        (function(){
+            setTimeout(() => {
+                const dropdownWrapper = document.querySelector('.custom-lang-dropdown');
+                if (!dropdownWrapper) return;
+                
+                const langOptions = dropdownWrapper.querySelectorAll('.lang-option');
+                const display = dropdownWrapper.querySelector('.currentLangDisplay');
+                const selectElement = document.getElementById('languageSelect');
+                
+                langOptions.forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const val = this.getAttribute('data-val');
+                        display.innerHTML = this.innerHTML;
+                        
+                        if (selectElement) {
+                            selectElement.value = val;
+                            selectElement.dispatchEvent(new Event('change'));
+                        }
+                    });
+                });
+                
+                if (selectElement) {
+                    selectElement.addEventListener('change', (e) => {
+                        const opt = Array.from(langOptions).find(o => o.getAttribute('data-val') === e.target.value);
+                        if (opt) display.innerHTML = opt.innerHTML;
+                    });
+                }
+            }, 100);
+        })();
+        </script>
+    <div class="container">
+      <div id="labelModuleHeader" class="module-badge"><i class="fas fa-pen-nib me-1"></i>Writing Module</div>
+      <h1>{{ activity.title }}</h1>
+      <p>{{ activity.objective }}</p>
+      <nav aria-label="breadcrumb" class="mt-2">
+        <ol class="breadcrumb" style="--bs-breadcrumb-divider-color:#86efac; font-size:.82rem;">
+          <li class="breadcrumb-item"><a href="{% url 'activity_list' %}" class="text-green-200">Activities</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'activity_detail' activity.pk %}" class="text-green-200">{{ activity.title }}</a></li>
+          <li class="breadcrumb-item active text-white">Practice</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <div class="container py-4">
+    <div class="row g-4">
+
+      <!-- Left: writing panel -->
+      <div class="col-lg-8">
+        <!-- Topic selector -->
+        <div class="panel-card" style="border-left:4px solid #16a34a;">
+          <div>
+            <p class="text-uppercase fw-bold mb-1" style="font-size:.75rem;letter-spacing:.08em;color:#16a34a;">Writing Topic</p>
+            <h2 id="topicText" class="h5 fw-bold text-dark mb-3">Write about one person who inspires you.</h2>
+            <div class="d-flex flex-wrap gap-2">
+              <select id="typeSelect" class="form-select form-select-sm" style="width:auto; min-width:130px;">
+                <option value="general" selected>General</option>
+                <option value="story">Story</option>
+                <option value="opinion">Opinion</option>
+              </select>
+              <button type="button" id="newTopicBtn" class="btn-outline-solid btn-sm py-1">
+                <i class="fas fa-sync-alt me-1"></i>New Topic
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Writing area -->
+        <div class="panel-card">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="fw-bold text-dark mb-0"><i class="fas fa-keyboard me-2 text-success"></i>Your Answer</h6>
+            <span class="badge bg-secondary-subtle text-secondary">
+              <span id="wordCount">0</span> / 500–900 chars
+            </span>
+          </div>
+          <textarea id="writingAnswer" class="writing-textarea"
+            placeholder="Write your response here (minimum 500 characters, maximum 900 characters)..."></textarea>
+          <div class="char-bar-wrap">
+            <div class="char-bar" id="charBar" style="width:0%;"></div>
+          </div>
+          <div id="wordAlert" class="alert alert-warning hidden mt-2 py-2 small"></div>
+          <div class="text-center mt-3">
+            <button id="analyzeBtn" class="btn-primary-solid" disabled>
+              <i class="fas fa-brain me-2"></i>Submit for Analysis
+            </button>
+          </div>
+        </div>
+
+        <!-- Mistakes review -->
+        <div id="reviewCard" class="panel-card hidden">
+          <h6 class="fw-bold mb-2"><i class="fas fa-search me-2 text-warning"></i><span id="headingMistakes">Mistakes Review</span></h6>
+          <div id="reviewText" class="transcript-box">Your highlighted mistakes will appear here after analysis.</div>
+        </div>
+
+        <!-- Feedback card -->
+        <div id="analysisCard" class="panel-card hidden">
+          <h5 class="fw-bold mb-4"><i class="fas fa-chart-bar me-2 text-success"></i><span id="headingEvaluation">Evaluation Results</span></h5>
+          <div class="feedback-row">
+            <span class="text-muted"><span id="labelScore">Overall Score</span></span>
+            <span id="lessonScore" class="h4 fw-black mb-0" style="color:#16a34a;">0/25</span>
+          </div>
+          <div class="mt-3 mb-3">
+            <p class="fw-bold text-uppercase small text-muted mb-1"><i class="fas fa-star me-1 text-warning"></i><span id="labelImproved">Improved Version</span></p>
+            <div id="improvedText" class="transcript-box">An improved version will appear after analysis.</div>
+          </div>
+          <div class="mb-3">
+            <p class="fw-bold text-uppercase small text-muted mb-1"><i class="fas fa-comment-dots me-1 text-success"></i><span id="labelFeedback">Overall Feedback</span></p>
+            <p id="feedbackText" class="transcript-box mb-0">Analyze to generate feedback for your writing.</p>
+          </div>
+        </div>
+
+        <!-- Mark complete -->
+        <div class="panel-card text-center" style="background:#f0fdf4; border:1px solid #bbf7d0;">
+          <form method="post" action="{% url 'mark_sub_complete' sub.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-primary-solid">
+              <i class="fas fa-check-circle me-2"></i>Mark Sub-Activity Complete
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Right: tips -->
+      <div class="col-lg-4">
+        <div class="panel-card">
+          <h6 class="fw-bold mb-3"><i class="fas fa-lightbulb text-warning me-2"></i><span id="labelQuickTip">Writing Tip</span></h6>
+          <div class="tips-card">
+            <ul class="list-unstyled mb-2">
+              <li>• Check verb agreement and tense consistency.</li>
+              <li>• Use punctuation correctly.</li>
+              <li>• Break your text into clear paragraphs.</li>
+            </ul>
+          </div>
+          <p class="small text-muted mt-2 mb-0" id="quickTipText">Use punctuation and clear sentence flow for better writing quality.</p>
+        </div>
+        <div class="panel-card" id="rightScoreCard" {% if not previous_result %}style="display:none;"{% endif %}>
+          <h6 class="fw-bold mb-2"><i class="fas fa-history text-secondary me-2"></i><span id="labelPreviousScore">Previous Score</span></h6>
+          <div class="score-display"><span id="rightScoreValue">{{ previous_result.score|default:"0" }}</span><span class="fs-5">/25</span></div>
+          <div class="score-label" id="rightScoreDate">{{ previous_result.completed_at|date:"M d, Y" }}</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="writing-config">
+{
+  "analyzeEndpoint": "{% url 'analyze_writing' exercise.pk %}",
+  "lessonsPath": "{{ request.path }}"
+}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'activities/js/linguavoice-common.js' %}?v=i18n-persist-3"></script>
+<script src="{% static 'activities/js/writing.js' %}?v=i18n-persist-3"></script>
+<script src="{% static 'activities/js/activity-hero-i18n.js' %}?v=i18n-persist-3"></script>
+<script>
+// Enhance char bar
+(function(){
+  const ta = document.getElementById('writingAnswer');
+  const bar = document.getElementById('charBar');
+  if (!ta || !bar) return;
+  ta.addEventListener('input', function(){
+    const len = ta.value.replace(/\s+/g,'').length;
+    const pct = Math.min(len / 900 * 100, 100);
+    bar.style.width = pct + '%';
+    bar.style.background = len < 500 ? '#f59e0b' : len > 900 ? '#dc2626' : '#16a34a';
+  });
+})();
+</script>
+{% endblock %}

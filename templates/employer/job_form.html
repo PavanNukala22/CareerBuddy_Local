@@ -1,0 +1,1954 @@
+{% extends 'employer_base.html' %}
+
+{% block employer_css %}
+<style>
+    .job-form-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 2.5rem 3rem 3rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .editorial-header-band {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border: 1px solid #cbd5e1;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .section-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #185adb;
+        margin: 2rem 0 1.2rem;
+        padding-bottom: 0.6rem;
+        border-bottom: 2px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    /* Only the form's very first heading sits flush at the top. (A bare
+       .section-title:first-of-type also matched every heading wrapped in its
+       own section block, which removed the gap above Salary & Vacancies,
+       Additional Perks and the other sections.) */
+    #jobPostForm > .section-title:first-of-type { margin-top: 0; }
+    /* NON-IT sheets: the fields are moved into #nonit-layout, a second grid
+       row right after the Category / Classification / Job Role row. A
+       Bootstrap .row pulls itself up by its gutter, which left Job Title and
+       Department / Function touching the Job Role field; this restores the
+       normal row gap. */
+    #nonit-layout:not([hidden]) { margin-top: 0; }
+
+    .form-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #0f172a;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control, .form-select, textarea {
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 10px !important;
+        padding: 0.65rem 0.9rem !important;
+        color: #0f172a !important;
+        font-weight: 500;
+        font-size: 0.92rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus, textarea:focus {
+        border-color: #185adb !important;
+        box-shadow: 0 0 0 3px rgba(24, 90, 219, 0.12) !important;
+        background: #ffffff !important;
+    }
+
+    /* Salary fields: the "₹" / "per month" addons share the input style,
+       and only the outer corners of the group are rounded. */
+    .input-group .form-control { border-radius: 0 !important; }
+    .input-group .input-group-text {
+        background: #eef2f7; border: 1px solid #cbd5e1; color: #475569;
+        font-weight: 600; font-size: 0.85rem;
+    }
+    .input-group > :first-child { border-radius: 10px 0 0 10px !important; }
+    .input-group > :last-child { border-radius: 0 10px 10px 0 !important; }
+
+    .btn-group-custom {
+        display: flex;
+        gap: 1.25rem;
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e2e8f0;
+        justify-content: flex-end;
+    }
+
+    /* Radio pill buttons */
+    .radio-pill-group { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+    .radio-pill-group li { list-style: none; }
+    .radio-pill-group li label {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        padding: 0.45rem 1.1rem;
+        border-radius: 50px;
+        border: 1.5px solid #cbd5e1;
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.18s ease;
+    }
+    .radio-pill-group li input[type=radio], .radio-pill-group li input[type=checkbox] { display: none; }
+    .radio-pill-group li input[type=radio]:checked + label,
+    .radio-pill-group li input[type=checkbox]:checked + label {
+        background: linear-gradient(135deg, #185adb, #6366f1);
+        color: #ffffff;
+        border-color: #185adb;
+        box-shadow: 0 2px 8px rgba(24,90,219,0.18);
+    }
+    /* Only the chosen department's skill group is shown (flex would
+       otherwise override the hidden attribute) */
+    .skills-group[hidden] { display: none !important; }
+    /* Skill pills: a star inside a selected pill marks it mandatory */
+    .skills-group li label { position: relative; }
+    .skills-group li label .skill-star {
+        display: none; border: 0; background: transparent; padding: 0 0 0 0.2rem; line-height: 1;
+        color: rgba(255, 255, 255, 0.55); font-size: 0.8rem; cursor: pointer;
+    }
+    .skills-group li input[type=checkbox]:checked + label .skill-star { display: inline-block; }
+    .skills-group li.mandatory input[type=checkbox]:checked + label {
+        background: linear-gradient(135deg, #d97706, #f59e0b); border-color: #d97706;
+        box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
+    }
+    .skills-group li.mandatory label .skill-star { color: #fff; }
+    .skills-legend { font-size: 0.8rem; color: #64748b; }
+    .skills-legend .swatch { display: inline-block; width: 0.8rem; height: 0.8rem; border-radius: 50%; vertical-align: -1px; margin-right: 0.25rem; }
+    .skills-legend .swatch.selected { background: linear-gradient(135deg, #185adb, #6366f1); }
+    .skills-legend .swatch.mandatory { background: linear-gradient(135deg, #d97706, #f59e0b); }
+    /* Perk pills show "+" until selected, then a tick */
+    .radio-pill-group li label .perk-plus { font-size: 0.7rem; order: 2; }
+    .radio-pill-group li input[type=checkbox]:checked + label .perk-plus::before { content: "\f00c"; }
+    .radio-pill-group li label:hover {
+        border-color: #185adb;
+        color: #185adb;
+        background: #eff6ff;
+    }
+    #interview-other-wrap { display: none; margin-top: 0.75rem; }
+    #interview-other-wrap.show { display: block; }
+    #notice-other-wrap { display: none; margin-top: 0.75rem; }
+    #notice-other-wrap.show { display: block; }
+    #contract-duration-wrap { display: none; margin-top: 0.75rem; }
+    #contract-duration-wrap.show { display: block; }
+    /* NON-IT field format: blocks shown only for Non-IT / only for IT
+       postings, and mandatory stars that apply to one mode only. */
+    .nonit-only[hidden], .it-only[hidden], .nontech-only[hidden], .nontech-hide[hidden], .tech-only[hidden], .tech-hide[hidden], .nonit-hide[hidden], .req-star[hidden] { display: none !important; }
+    #job-classification-wrap, #designation-wrap { display: none; }
+    #job-classification-wrap.show, #designation-wrap.show { display: block; }
+    /* Combo fields (Experience, Education): one input that takes a typed
+       value or a picked option */
+    .experience-combo, .education-combo { position: relative; }
+    .experience-combo-toggle, .education-combo-toggle { cursor: pointer; }
+    .experience-combo-menu, .education-combo-menu {
+        display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 20;
+        margin: 0.25rem 0 0; padding: 0.35rem 0; list-style: none;
+        background: #fff; border: 1px solid #cbd5e1; border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    }
+    .experience-combo-menu.show, .education-combo-menu.show { display: block; }
+    .experience-combo-menu li, .education-combo-menu li {
+        padding: 0.5rem 0.9rem; font-size: 0.92rem; font-weight: 500; color: #0f172a; cursor: pointer;
+    }
+    .experience-combo-menu li:hover, .experience-combo-menu li.active,
+    .education-combo-menu li:hover, .education-combo-menu li.active { background: #eef2f7; }
+    .experience-combo-menu li.selected, .education-combo-menu li.selected { color: #185adb; font-weight: 600; }
+
+    /* Error containers render for every required field up-front (see the JS
+       validator below) so they can be filled in live; :empty keeps them from
+       taking up visual space until there's actually a message to show. */
+    .text-danger.small:empty { display: none; margin: 0; }
+
+    /* "No active jobs" notice. Self-contained rather than a Bootstrap modal:
+       base.html loads bootstrap.bundle.js *after* this template's content
+       block, so the `bootstrap` global is not available to the inline script
+       below at the time it runs. */
+    .naj-overlay {
+        display: none;
+        position: fixed; inset: 0;
+        z-index: 1080;
+        background: rgba(15, 23, 42, 0.55);
+        align-items: center; justify-content: center;
+        padding: 1rem;
+    }
+    .naj-overlay.show { display: flex; }
+    .naj-dialog {
+        background: #fff;
+        border-radius: 16px;
+        max-width: 460px; width: 100%;
+        padding: 1.75rem;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+        text-align: center;
+    }
+    .naj-icon {
+        width: 56px; height: 56px; margin: 0 auto 1rem;
+        border-radius: 16px;
+        background: #eff6ff; color: #185adb;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem;
+    }
+    .naj-dialog h5 { font-weight: 700; color: #0f172a; margin-bottom: .5rem; }
+    .naj-dialog p { color: #64748b; font-size: .92rem; margin-bottom: 1.25rem; }
+    .naj-btn {
+        background: linear-gradient(135deg, #185adb, #1d4ed8);
+        color: #fff; border: none; border-radius: 10px;
+        padding: .6rem 2rem; font-weight: 700; cursor: pointer;
+    }
+    .naj-btn:hover { opacity: .92; }
+    .field-invalid .form-control, .field-invalid .form-select, .field-invalid textarea {
+        border-color: #dc3545 !important;
+    }
+    .field-invalid .radio-pill-group li label { border-color: #dc3545 !important; }
+</style>
+{% endblock %}
+
+{% block employer_content %}
+{% if show_no_active_jobs_notice %}
+<div class="naj-overlay" id="noActiveJobsOverlay" role="dialog" aria-modal="true" aria-labelledby="najTitle">
+    <div class="naj-dialog">
+        <div class="naj-icon"><i class="fas fa-circle-info"></i></div>
+        <h5 id="najTitle">You have no active jobs</h5>
+        <p>
+            You currently have <strong>0 active jobs</strong>, so candidates cannot
+            see any openings from your company right now. Fill in the form below and
+            set <strong>Publish Status</strong> to <strong>Active</strong> to make
+            this job visible.
+        </p>
+        <button type="button" class="naj-btn" id="najCloseBtn">Got it</button>
+    </div>
+</div>
+{% endif %}
+<div class="editorial-header-band">
+    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1.5 rounded-full text-xs font-semibold mb-2">
+        <i class="fas fa-pen-nib me-1"></i>Job Creation
+    </span>
+    <h1 class="fw-extrabold text-slate-900 mb-1" style="font-size: 2.2rem; letter-spacing: -1px;">{{ title|default:"Post New Job" }}</h1>
+    <p class="text-slate-600 mb-0" style="font-size: 0.95rem;">Fill out the details below to publish your job listing to verified candidates.</p>
+</div>
+
+<div class="job-form-card">
+    <form method="post" id="jobPostForm" novalidate autocomplete="off"{% if not form.instance.pk and not form.is_bound %} data-fresh-form="1"{% endif %}>
+        {% csrf_token %}
+
+        <div class="section-title">
+            <i class="fas fa-info-circle"></i> Job Overview &amp; Type
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label class="form-label" for="id_job_category">Job Category <span class="text-danger">*</span></label>
+                {{ form.job_category }}
+                <div class="text-danger small mt-1" id="err_job_category">{{ form.job_category.errors|striptags }}</div>
+            </div>
+            <div class="col-md-6" id="job-classification-col"{% if not form.job_category.value == 'non_it' and not form.instance.job_category == 'non_it' %} hidden{% endif %}>
+                {# Non-IT only: Technical / Non-Technical #}
+                <div id="job-classification-wrap" {% if form.job_category.value == 'non_it' or form.instance.job_category == 'non_it' %}class="show"{% endif %}>
+                    <label class="form-label" for="id_job_classification">Job Classification <span class="text-danger">*</span></label>
+                    {{ form.job_classification }}
+                    <div class="text-danger small mt-1" id="err_job_classification">{{ form.job_classification.errors|striptags }}</div>
+                </div>
+            </div>
+            <div class="col-md-6 nonit-only nontech-hide" hidden data-field="department">
+                <label class="form-label" for="id_department"><span data-it-label="Department" data-nonit-label="Department / Function">Department</span> <span class="text-danger req-star">*</span></label>
+                {{ form.department }}
+                <div class="text-danger small mt-1" id="err_department">{{ form.department.errors|striptags }}</div>
+            </div>
+            <div class="col-md-6 nonit-only nontech-only" hidden data-field="department_function">
+                <label class="form-label" for="id_department_function">Department / Function <span class="text-danger req-star">*</span></label>
+                {{ form.department_function }}
+                <div class="text-danger small mt-1" id="err_department_function">{{ form.department_function.errors|striptags }}</div>
+            </div>
+            <div class="col-md-6" id="designation-col"{% if not form.job_category.value == 'non_it' and not form.instance.job_category == 'non_it' %} hidden{% endif %}>
+                {# Non-IT only: roles follow the chosen Job Classification #}
+                <div id="designation-wrap" {% if form.job_category.value == 'non_it' or form.instance.job_category == 'non_it' %}class="show"{% endif %}>
+                    <label class="form-label" for="id_designation">Job Role / Designation</label>
+                    {# Rendered flat (no group headings): the script shows only the roles of the chosen Job Classification. #}
+                    <select name="designation" class="form-select" id="id_designation">
+                        <option value="">Select a job role / designation</option>
+                        {% with current=form.selected_designation %}
+                        {% for cls_key, roles in form.designation_groups %}{% for value, label in roles %}
+                        <option value="{{ value }}" data-classification="{{ cls_key }}"{% if value == current %} selected{% endif %}>{{ label }}</option>
+                        {% endfor %}{% endfor %}
+                        {% endwith %}
+                    </select>
+                    <div class="text-danger small mt-1" id="err_designation">{{ form.designation.errors|striptags }}</div>
+                </div>
+            </div>
+            <div class="col-md-6 nonit-only" hidden data-field="industry_sector">
+                <label class="form-label" for="id_industry_sector"><span data-it-label="Industry / Sector" data-nonit-label="Industry / Sector" data-nontech-label="Relevant Industry">Industry / Sector</span> <span class="text-danger req-star">*</span></label>
+                {{ form.industry_sector }}
+                <div class="text-danger small mt-1" id="err_industry_sector">{{ form.industry_sector.errors|striptags }}</div>
+            </div>
+            <div class="col-md-6" data-field="title">
+                <label class="form-label">Job Title <span class="text-danger">*</span></label>
+                {{ form.title }}
+                <div class="text-danger small mt-1" id="err_title">{{ form.title.errors|striptags }}</div>
+            </div>
+            <div class="col-md-6 nonit-hide" data-field="job_type">
+                <label class="form-label"><span data-it-label="Job Type" data-nonit-label="Employment Type">Job Type</span> <span class="text-danger req-star">*</span></label>
+                {{ form.job_type }}
+                <div class="text-danger small mt-1" id="err_job_type">{{ form.job_type.errors|striptags }}</div>
+                {# Contract only: project duration in whole months #}
+                <div id="contract-duration-wrap" data-field="contract_duration" data-nonit-class="col-md-6" {% if form.job_type.value == 'contract' or form.instance.job_type == 'contract' %}class="show"{% endif %}>
+                    <label class="form-label" for="id_contract_duration_months"><span data-it-label="Project Duration" data-nonit-label="Project / Contract Duration">Project Duration</span> <span class="text-danger req-star" id="duration-star">*</span></label>
+                    <div class="input-group">
+                        {{ form.contract_duration_months }}
+                        <span class="input-group-text">months</span>
+                    </div>
+                    <div class="text-danger small mt-1" id="err_contract_duration_months">{{ form.contract_duration_months.errors|striptags }}</div>
+                </div>
+            </div>
+            <div class="col-md-6 nonit-only" hidden data-field="employment_type">
+                <label class="form-label" for="id_employment_type">Employment Type <span class="text-danger req-star">*</span></label>
+                {{ form.employment_type }}
+                <div class="text-danger small mt-1" id="err_employment_type">{{ form.employment_type.errors|striptags }}</div>
+            </div>
+            <div class="col-md-6" data-field="experience">
+                <label class="form-label" for="experience_combo">Experience Required <span class="text-danger">*</span></label>
+                {# One field: type the years (2 digits) or open the list to pick a preset option. #}
+                <div class="input-group experience-combo">
+                    <input type="text" id="experience_combo" class="form-control" placeholder="Type years (e.g. 4) or choose from the list"
+                           inputmode="numeric" autocomplete="off" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="experience_combo_menu">
+                    <button type="button" class="input-group-text experience-combo-toggle" id="experience_combo_toggle" aria-label="Show experience options"><i class="fas fa-chevron-down"></i></button>
+                    <ul class="experience-combo-menu" id="experience_combo_menu" role="listbox">
+                        {% for value, label in form.fields.experience.choices %}{% if value and value != 'custom' %}<li role="option" data-value="{{ value }}">{{ label }}</li>{% endif %}{% endfor %}
+                    </ul>
+                </div>
+                {# Backing fields the combo writes to; these are what the form submits. #}
+                <div class="d-none">{{ form.experience }}{{ form.experience_years }}{{ form.experience_plus }}{{ form.experience_years_max }}</div>
+                <div class="text-danger small mt-1" id="err_experience">{{ form.experience.errors|striptags }} {{ form.experience_years.errors|striptags }}</div>
+            </div>
+            <div class="col-md-6" data-field="location">
+                <label class="form-label"><span data-it-label="Location" data-nonit-label="Job Location">Location</span> <span class="text-danger req-star">*</span></label>
+                {{ form.location }}
+                <div class="text-danger small mt-1" id="err_location">{{ form.location.errors|striptags }}</div>
+            </div>
+            <div class="col-md-6" data-field="education">
+                <label class="form-label" for="education_combo"><span data-it-label="Education" data-nonit-label="Qualification">Education</span> <span class="text-danger req-star" data-it-required="0" hidden>*</span></label>
+                {# One field: type a qualification or open the list to pick a preset option. #}
+                <div class="input-group education-combo">
+                    <input type="text" id="education_combo" class="form-control" placeholder="Type a qualification or choose from the list"
+                           maxlength="{{ form.EDUCATION_MAX_LEN }}" autocomplete="off" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="education_combo_menu">
+                    <button type="button" class="input-group-text education-combo-toggle" id="education_combo_toggle" aria-label="Show education options"><i class="fas fa-chevron-down"></i></button>
+                    <ul class="education-combo-menu" id="education_combo_menu" role="listbox">
+                        {# Existing presets (IT and NON-IT Non-Technical), then the NON-IT Technical sheet's presets in sheet order; the script shows one list or the other. #}
+                        {% for value, label in form.fields.education.choices %}{% if value and value != 'custom' and value not in form.TECH_ONLY_EDUCATION_KEYS %}<li role="option" data-value="{{ value }}" data-it="1">{{ label }}</li>{% endif %}{% endfor %}
+                        {% for value, label in form.tech_education_choices %}<li role="option" data-value="{{ value }}" data-tech="1" hidden>{{ label }}</li>{% endfor %}
+                    </ul>
+                </div>
+                {# Backing fields the combo writes to; these are what the form submits. #}
+                <div class="d-none">{{ form.education }}{{ form.education_other }}</div>
+                <div class="text-danger small mt-1" id="err_education">{{ form.education.errors|striptags }} {{ form.education_other.errors|striptags }}</div>
+            </div>
+            <div class="col-md-6 nonit-only nontech-only" hidden data-field="functional_skills">
+                <label class="form-label" for="id_functional_skills">Functional Skills <span class="text-danger req-star">*</span></label>
+                {{ form.functional_skills }}
+                <div class="text-danger small mt-1" id="err_functional_skills">{{ form.functional_skills.errors|striptags }}</div>
+            </div>
+            <div class="col-md-6 nonit-only" hidden data-field="industry_experience">
+                <label class="form-label" for="id_industry_experience">Industry Experience <span class="text-danger req-star" data-nontech-required="0">*</span></label>
+                {{ form.industry_experience }}
+                <div class="text-danger small mt-1" id="err_industry_experience">{{ form.industry_experience.errors|striptags }}</div>
+            </div>
+            <div class="col-md-6 nonit-only" hidden data-field="working_hours">
+                <label class="form-label" for="id_working_hours">Working Hours / Shift <span class="text-danger req-star">*</span></label>
+                {{ form.working_hours }}
+                <div class="text-danger small mt-1" id="err_working_hours">{{ form.working_hours.errors|striptags }}</div>
+            </div>
+        </div>
+        {# NON-IT sheets: the tagged field blocks above/below are moved in here, in sheet order, by the page script. #}
+        <div class="row g-4" id="nonit-layout" hidden></div>
+
+        <div data-field="salary" data-nonit-class="col-12">
+        <div class="section-title">
+            <i class="fas fa-coins"></i> <span data-it-label="Salary &amp; Vacancies" data-nonit-label="Salary / CTC">Salary &amp; Vacancies</span> <span class="text-danger req-star" data-it-required="0" hidden>*</span>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <label class="form-label" for="id_salary_format">Salary Format</label>
+                {{ form.salary_format }}
+                <div class="text-danger small mt-1" id="err_salary_format">{{ form.salary_format.errors|striptags }}</div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="id_salary_min"><span data-salary-label="min">Minimum Salary</span> <small class="text-muted" data-salary-unit>(&#8377; per month)</small> <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text">&#8377;</span>
+                    {{ form.salary_min }}
+                    <span class="input-group-text" data-salary-suffix>per month</span>
+                </div>
+                <div class="text-danger small mt-1" id="err_salary_min">{{ form.salary_min.errors|striptags }}</div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="id_salary_max"><span data-salary-label="max">Maximum Salary</span> <small class="text-muted" data-salary-unit>(&#8377; per month)</small> <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text">&#8377;</span>
+                    {{ form.salary_max }}
+                    <span class="input-group-text" data-salary-suffix>per month</span>
+                </div>
+                <div class="text-danger small mt-1" id="err_salary_max">{{ form.salary_max.errors|striptags }}</div>
+            </div>
+            <div class="col-md-3" data-field="openings" data-nonit-class="col-md-6">
+                <label class="form-label"><span data-it-label="Total Openings" data-nonit-label="Number of Vacancies">Total Openings</span> <span class="text-danger req-star">*</span></label>
+                {{ form.openings }}
+                <div class="text-danger small mt-1" id="err_openings">{{ form.openings.errors|striptags }}</div>
+            </div>
+        </div>
+        </div>
+
+        <div data-field="perks" data-nonit-class="col-12">
+        <div class="section-title">
+            <i class="fas fa-gift"></i> <span data-it-label="Additional Perks" data-nonit-label="Benefits / Allowances">Additional Perks</span>
+        </div>
+        <div class="row g-3">
+            <div class="col-12">
+                <label class="form-label"><span data-it-label="Do you offer any additional perks?" data-nonit-label="Benefits / Allowances offered">Do you offer any additional perks?</span></label>
+                <ul class="radio-pill-group" id="perks-group">
+                    {% for checkbox in form.perks %}
+                    <li>
+                        {{ checkbox.tag }}
+                        <label for="{{ checkbox.id_for_label }}"><i class="fas fa-plus perk-plus"></i>{{ checkbox.choice_label }}</label>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div class="text-danger small mt-1" id="err_perks">{{ form.perks.errors|striptags }}</div>
+            </div>
+        </div>
+        </div>
+
+        <div class="section-title it-only">
+            <i class="fas fa-file-alt"></i> Description &amp; Technical Skills
+        </div>
+        <div class="row g-4">
+            <div class="col-12" data-field="description">
+                <label class="form-label">Job Description <span class="text-danger">*</span></label>
+                {{ form.description }}
+                <div class="text-danger small mt-1" id="err_description">{{ form.description.errors|striptags }}</div>
+            </div>
+            <div class="col-12 it-only">
+                <label class="form-label">Technical Requirements</label>
+                {{ form.requirements }}
+                <div class="text-danger small mt-1" id="err_requirements">{{ form.requirements.errors|striptags }}</div>
+            </div>
+            <div class="col-12 nonit-only" hidden data-field="responsibilities">
+                <label class="form-label" for="id_responsibilities">Job Responsibilities <span class="text-danger req-star">*</span></label>
+                {{ form.responsibilities }}
+                <div class="text-danger small mt-1" id="err_responsibilities">{{ form.responsibilities.errors|striptags }}</div>
+            </div>
+            <div class="col-md-6 nonit-only" hidden data-field="certifications">
+                <label class="form-label" for="id_certifications">Required Certifications</label>
+                {{ form.certifications }}
+                <div class="text-danger small mt-1" id="err_certifications">{{ form.certifications.errors|striptags }}</div>
+            </div>
+            <div class="col-md-6 nonit-only nontech-only" hidden data-field="software_skills">
+                <label class="form-label" for="id_software_skills">Software / MS Office Skills</label>
+                {{ form.software_skills }}
+                <div class="text-danger small mt-1" id="err_software_skills">{{ form.software_skills.errors|striptags }}</div>
+            </div>
+            <div class="col-md-6 nonit-only nontech-only" hidden data-field="language_requirements">
+                <label class="form-label" for="id_language_requirements">Language Requirements</label>
+                {{ form.language_requirements }}
+                <div class="text-danger small mt-1" id="err_language_requirements">{{ form.language_requirements.errors|striptags }}</div>
+            </div>
+            <div class="col-md-6 nonit-only" hidden data-field="keywords">
+                <label class="form-label" for="id_keywords">Key Skills / Keywords <span class="text-danger req-star">*</span></label>
+                {{ form.keywords }}
+                <div class="text-danger small mt-1" id="err_keywords">{{ form.keywords.errors|striptags }}</div>
+            </div>
+            <div class="col-md-6 nonit-only" hidden data-field="application_contact">
+                <label class="form-label" for="id_application_contact">Application Contact <span class="text-danger req-star">*</span></label>
+                {{ form.application_contact }}
+                <div class="text-danger small mt-1" id="err_application_contact">{{ form.application_contact.errors|striptags }}</div>
+            </div>
+            <div class="col-12 nontech-hide" data-field="skills">
+                <label class="form-label"><span data-it-label="Skills" data-nonit-label="Technical Skills">Skills</span> <span class="text-danger req-star" data-it-required="0" hidden>*</span></label>
+                <div class="skills-legend mb-2">
+                    <span class="it-only">Optional. If you select skills, click the star on {{ form.MANDATORY_SKILLS_MIN }}&ndash;{{ form.MANDATORY_SKILLS_MAX }} of them to mark them mandatory.</span>
+                    <span class="nonit-only" hidden>Skills follow the selected Department. Select the skills for this role, then click the star on {{ form.MANDATORY_SKILLS_MIN }}&ndash;{{ form.MANDATORY_SKILLS_MAX }} of them to mark them mandatory.</span>
+                    <span class="ms-2"><span class="swatch selected"></span>Selected</span>
+                    <span class="ms-2"><span class="swatch mandatory"></span>Mandatory</span>
+                </div>
+                <div class="small text-slate-500" id="skills-placeholder">Select a Department above to see its skills.</div>
+                {# IT: the general skill pills (data-department="it"). NON-IT Technical: one pill group per department; the script shows only the group that applies. #}
+                {% with selected=form.selected_skills_list current=form.selected_department %}
+                <ul class="radio-pill-group skills-group" data-department="it" aria-label="Skills" hidden>
+                    {% for skill in form.it_skill_options %}
+                    <li data-skill="{{ skill }}">
+                        <input type="checkbox" name="skills" value="{{ skill }}" id="skill_it_{{ forloop.counter }}"{% if skill in selected %} checked{% endif %}>
+                        <label for="skill_it_{{ forloop.counter }}">{{ skill }}<button type="button" class="skill-star" title="Mark as mandatory" aria-label="Mark {{ skill }} as mandatory"><i class="fas fa-star"></i></button></label>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {# IT only: type a skill that is not in the list. It becomes a selected pill like the others and is offered again on this employer's next IT posting. #}
+                <div class="input-group input-group-sm mt-2" id="it-skill-add" style="max-width: 420px;" hidden>
+                    <input type="text" class="form-control" id="it-skill-input" maxlength="40"
+                           placeholder="Add a skill, e.g. Python, React, AWS" aria-label="Add a skill">
+                    <button type="button" class="btn btn-outline-primary" id="it-skill-add-btn"><i class="fas fa-plus me-1"></i>Add skill</button>
+                </div>
+                {% for dept_key, dept_label, dept_skills in form.department_skill_groups %}
+                <ul class="radio-pill-group skills-group" data-department="{{ dept_key }}" aria-label="{{ dept_label }} skills"{% if dept_key != current %} hidden{% endif %}>
+                    {% for skill in dept_skills %}
+                    <li data-skill="{{ skill }}">
+                        <input type="checkbox" name="skills" value="{{ skill }}" id="skill_{{ dept_key }}_{{ forloop.counter }}"{% if dept_key == current and skill in selected %} checked{% endif %}>
+                        <label for="skill_{{ dept_key }}_{{ forloop.counter }}">{{ skill }}<button type="button" class="skill-star" title="Mark as mandatory" aria-label="Mark {{ skill }} as mandatory"><i class="fas fa-star"></i></button></label>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endfor %}
+                {% endwith %}
+                {{ form.mandatory_skills }}
+                <div class="small text-slate-500 mt-2">Mandatory skills marked: <strong id="mandatory_skills_count">0</strong> of {{ form.MANDATORY_SKILLS_MIN }}&ndash;{{ form.MANDATORY_SKILLS_MAX }}</div>
+                <div class="text-danger small mt-1" id="err_skills">{{ form.skills.errors|striptags }} {{ form.mandatory_skills.errors|striptags }}</div>
+            </div>
+        </div>
+
+        <div class="section-title it-only">
+            <i class="fas fa-sliders-h"></i> Timeline &amp; Publish
+        </div>
+        <div class="row g-4 it-only">
+            <div class="col-md-6">
+                <label class="form-label">Application Deadline</label>
+                {{ form.deadline }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Publish Status <span class="text-danger">*</span></label>
+                {{ form.status }}
+                <div class="text-danger small mt-1" id="err_status">{{ form.status.errors|striptags }}</div>
+            </div>
+        </div>
+
+        <div data-field="work_environment" data-nonit-class="col-12" class="nonit-hide">
+        <div class="section-title">
+            <i class="fas fa-building"></i> <span data-it-label="Work Environment" data-nonit-label="Work Mode">Work Environment</span> <span class="text-danger req-star">*</span>
+        </div>
+        <div class="row g-3">
+            <div class="col-12">
+                <ul class="radio-pill-group" id="work-environment-group">
+                    {% for radio in form.work_environment %}
+                    <li>
+                        {{ radio.tag }}
+                        <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div class="text-danger small mt-1" id="err_work_environment">{{ form.work_environment.errors|striptags }}</div>
+            </div>
+        </div>
+        </div>
+
+        <div class="section-title it-only">
+            <i class="fas fa-video"></i> Interview Mode <span class="text-danger">*</span>
+        </div>
+        <div class="row g-3 it-only">
+            <div class="col-12">
+                <ul class="radio-pill-group" id="interview-mode-group">
+                    {% for radio in form.interview_mode %}
+                    <li>
+                        {{ radio.tag }}
+                        <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div id="interview-other-wrap" {% if form.instance.interview_mode == 'others' %}class="show"{% endif %}>
+                    <label class="form-label mt-2">Please specify</label>
+                    {{ form.interview_mode_other }}
+                </div>
+                <div class="text-danger small mt-1" id="err_interview_mode">{{ form.interview_mode.errors|striptags }}</div>
+            </div>
+        </div>
+
+        <div class="nonit-only" hidden data-field="work_mode" data-nonit-class="col-md-6">
+            <label class="form-label" for="id_work_mode">Work Mode <span class="text-danger req-star">*</span></label>
+            {# Options are tagged with the sheet(s) they belong to; the script offers only the current sheet's. #}
+            <select name="work_mode" id="id_work_mode" class="form-select">
+                <option value="">Select work mode</option>
+                {% with current=form.work_mode.value %}
+                {% for value, label, modes, orders in form.work_mode_options %}
+                <option value="{{ value }}" data-modes="{{ modes }}" data-orders="{{ orders }}"{% if value == current %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+                {% endwith %}
+            </select>
+            <div class="text-danger small mt-1" id="err_work_mode">{{ form.work_mode.errors|striptags }}</div>
+        </div>
+        <div class="nonit-only nontech-only" hidden data-field="joining_requirement" data-nonit-class="col-md-6">
+            <label class="form-label" for="id_joining_requirement">Joining Requirement <span class="text-danger req-star">*</span></label>
+            {{ form.joining_requirement }}
+            <div class="text-danger small mt-1" id="err_joining_requirement">{{ form.joining_requirement.errors|striptags }}</div>
+        </div>
+        <div data-field="notice_period" data-nonit-class="col-12" class="nontech-hide">
+        <div class="section-title">
+            <i class="fas fa-clock"></i> <span data-it-label="Notice Period Required" data-nonit-label="Joining Requirement">Notice Period Required</span> <span class="text-danger req-star">*</span>
+        </div>
+        <div class="row g-3">
+            <div class="col-12">
+                <ul class="radio-pill-group" id="notice-period-group">
+                    {% for radio in form.notice_period %}
+                    <li>
+                        {{ radio.tag }}
+                        <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div id="notice-other-wrap" {% if form.instance.notice_period == 'others' %}class="show"{% endif %}>
+                    <label class="form-label mt-2">Please specify</label>
+                    {{ form.notice_period_other }}
+                </div>
+                <div class="text-danger small mt-1" id="err_notice_period">{{ form.notice_period.errors|striptags }}</div>
+            </div>
+        </div>
+        </div>
+
+        <div data-field="gender_preference" data-nonit-class="col-12">
+        <div class="section-title">
+            <i class="fas fa-venus-mars"></i> <span data-it-label="Gender Preference" data-nonit-label="Gender Requirement">Gender Preference</span> <span class="text-danger req-star" data-nonit-required="0">*</span>
+        </div>
+        <div class="row g-3 mb-2">
+            <div class="col-12">
+                <ul class="radio-pill-group" id="gender-preference-group">
+                    {% for radio in form.gender_preference %}
+                    <li>
+                        {{ radio.tag }}
+                        <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div class="text-danger small mt-1" id="err_gender_preference">{{ form.gender_preference.errors|striptags }}</div>
+            </div>
+            <div class="col-md-6 nonit-only" hidden data-field="age_limit">
+                <label class="form-label" for="id_age_limit">Age Limit</label>
+                {{ form.age_limit }}
+                <div class="text-danger small mt-1" id="err_age_limit">{{ form.age_limit.errors|striptags }}</div>
+            </div>
+        </div>
+        </div>
+
+        <div class="btn-group-custom">
+            <a href="{% url 'employer_portal:dashboard' %}" class="btn btn-light px-4 py-2.5" style="border: 1px solid #cbd5e1; border-radius: 10px; font-weight: 600; color: #475569;">
+                Cancel
+            </a>
+            <button type="submit" class="btn btn-primary px-4 py-2.5" style="border-radius: 10px; font-weight: 700; background: linear-gradient(135deg, #185adb, #1d4ed8); border: none; box-shadow: 0 4px 15px rgba(24, 90, 219, 0.3);">
+                <i class="fas fa-check-circle me-2"></i> Save Job Posting
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+(function() {
+    // ── Post New Job always starts as a fresh form ────────────────────────
+    // The server sends an empty form for a new job, but browsers restore the
+    // previous values into it on reload and on Back/Forward (including the
+    // hidden Experience / Education selects behind the combo boxes).
+    // autocomplete="off" on the <form> turns that restore off; reset() puts
+    // every control back to what the server rendered before anything below
+    // reads it; and a page shown again from the back/forward cache is
+    // reloaded so it starts clean. Edit pages and a form redisplayed with
+    // errors are left alone.
+    const jobPostForm = document.getElementById('jobPostForm');
+    if (jobPostForm && jobPostForm.getAttribute('data-fresh-form') === '1') {
+        jobPostForm.reset();
+        window.addEventListener('pageshow', function (ev) { if (ev.persisted) window.location.reload(); });
+    }
+
+    // ── "No active jobs" notice ───────────────────────────────────────────
+    // Rendered only when the view flags 0 active postings for this employer
+    // (see job_create in jobs_app/views.py), so its mere presence means it
+    // should be shown.
+    const najOverlay = document.getElementById('noActiveJobsOverlay');
+    if (najOverlay) {
+        const closeNaj = function () { najOverlay.classList.remove('show'); };
+        najOverlay.classList.add('show');
+        document.getElementById('najCloseBtn').addEventListener('click', closeNaj);
+        // Click the backdrop (but not the dialog itself) to dismiss.
+        najOverlay.addEventListener('click', function (e) {
+            if (e.target === najOverlay) closeNaj();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeNaj();
+        });
+    }
+
+    // Interview mode toggle
+    const intRadios = document.querySelectorAll('#interview-mode-group input[type=radio]');
+    const intWrap = document.getElementById('interview-other-wrap');
+    function toggleInterview() {
+        const sel = document.querySelector('#interview-mode-group input[type=radio]:checked');
+        intWrap.classList.toggle('show', sel && sel.value === 'others');
+    }
+    intRadios.forEach(r => r.addEventListener('change', toggleInterview));
+    toggleInterview();
+
+    // ── Experience: one field, typed years or a picked preset ──────────
+    // The visible combo box is not submitted. It writes to the hidden
+    // `experience` select (a preset value, or 'custom' for typed years) and
+    // the hidden `experience_years` input (the typed number). Typing accepts
+    // digits only and at most two of them; picking shows the option label.
+    const expSelect = document.getElementById('id_experience');
+    const expYears = document.getElementById('id_experience_years');
+    const expCombo = document.getElementById('experience_combo');
+    const expToggle = document.getElementById('experience_combo_toggle');
+    const expMenu = document.getElementById('experience_combo_menu');
+    const EXP_YEARS_MAX_DIGITS = 2;
+    const EXP_LABELS = {};
+    if (expMenu) expMenu.querySelectorAll('li').forEach(function (li) { EXP_LABELS[li.getAttribute('data-value')] = li.textContent.trim(); });
+
+    function expIsPreset() { return Boolean(expSelect && expSelect.value && expSelect.value !== 'custom'); }
+    function setExperienceError(message) {
+        const errorEl = document.getElementById('err_experience');
+        if (errorEl) errorEl.textContent = message;
+        const container = expCombo ? expCombo.closest('.col-12, .col-md-3, .col-md-4, .col-md-6') : null;
+        if (container) container.classList.toggle('field-invalid', Boolean(message));
+    }
+    function expMarkSelected() {
+        if (!expMenu) return;
+        expMenu.querySelectorAll('li').forEach(function (li) {
+            li.classList.toggle('selected', expIsPreset() && li.getAttribute('data-value') === expSelect.value);
+        });
+    }
+    function expApplyPreset(value) {
+        expSelect.value = value;
+        expYears.value = '';
+        expCombo.value = EXP_LABELS[value] || '';
+        expMarkSelected();
+    }
+    // A typed value is up to two digits, optionally followed by one "+",
+    // and is always shown with the unit: "2 Years", "10+ Years". The digits
+    // go to the hidden years input and the "+" to the hidden
+    // experience_plus flag; " Years" is display only.
+    const expPlus = document.getElementById('id_experience_plus');
+    // A typed value is a single number ("5"), a number with "+" ("10+"),
+    // or a range ("2-5"): up to two digits on each side, digits and the
+    // "-" separator only. It is always shown with the unit, e.g. "2-5 Years".
+    const expMax = document.getElementById('id_experience_years_max');
+    function expParseTyped(text) {
+        const m = /^(\d{0,2})(?:(-)(\d{0,2})|(\+)?)/.exec(String(text).replace(/[^\d+-]/g, '')) || ['', '', '', '', ''];
+        const digits = m[1] || '';
+        return {
+            digits: digits,
+            sep: digits !== '' && m[2] === '-',
+            max: digits !== '' && m[2] === '-' ? (m[3] || '') : '',
+            plus: digits !== '' && m[4] === '+'
+        };
+    }
+    function expCoreOf(v) { return v.digits + (v.sep ? '-' + v.max : '') + (v.plus ? '+' : ''); }
+    function expApplyTyped(text) {
+        const v = expParseTyped(text);
+        expSelect.value = v.digits === '' ? '' : 'custom';
+        expYears.value = v.digits;
+        if (expMax) expMax.value = v.sep ? v.max : '';
+        if (expPlus) expPlus.value = v.plus ? 'True' : 'False';
+        const shown = v.digits === '' ? '' : expCoreOf(v) + ' Years';
+        if (expCombo.value !== shown) expCombo.value = shown;
+        expMarkSelected();
+    }
+    // The editable core of the shown value ("2-5" of "2-5 Years").
+    function expTypedCore() { return expCoreOf(expParseTyped(expCombo.value)); }
+    // Returns true when the field holds a preset or a valid number of years.
+    function validateExperience() {
+        let message = '';
+        if (!expSelect || !expSelect.value) message = 'This field is required.';
+        else if (expSelect.value === 'custom') {
+            const v = expParseTyped(expCombo.value);
+            if (!/^\d{1,2}$/.test(v.digits)) message = 'Enter a whole number of years (0-99).';
+            else if (v.sep && v.max === '') message = 'Enter the maximum experience, e.g. 2-5 years.';
+            else if (v.sep && parseInt(v.digits, 10) > parseInt(v.max, 10)) message = 'Minimum experience cannot be greater than maximum experience.';
+        }
+        setExperienceError(message);
+        return message === '';
+    }
+    function expOpenMenu(open) {
+        if (!expMenu) return;
+        expMenu.classList.toggle('show', open);
+        if (expCombo) expCombo.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    if (expCombo && expSelect && expYears) {
+        // Reflect the server-side state (edit page, or a redisplayed form).
+        if (expSelect.value === 'custom') {
+            const plusOn = expPlus && ['True', 'true', '1', 'on'].indexOf(expPlus.value) !== -1;
+            const maxOn = expMax && expMax.value.trim() !== '';
+            expCombo.value = expYears.value
+                ? expYears.value + (maxOn ? '-' + expMax.value.trim() : (plusOn ? '+' : '')) + ' Years'
+                : '';
+        }
+        else if (expIsPreset()) expCombo.value = EXP_LABELS[expSelect.value] || '';
+        expMarkSelected();
+
+        expCombo.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Escape') { expOpenMenu(false); return; }
+            if (ev.key === 'ArrowDown') { expOpenMenu(true); ev.preventDefault(); return; }
+            if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+            // Backspace / Delete on a typed value removes the last character
+            // of the value itself (the "+" if present, otherwise the last
+            // digit); the " Years" unit is never edited on its own.
+            if ((ev.key === 'Backspace' || ev.key === 'Delete') && !expIsPreset() && expCombo.value !== '') {
+                ev.preventDefault();
+                expApplyTyped(expTypedCore().slice(0, -1));
+                validateExperience();
+                return;
+            }
+            if (ev.key.length > 1) return;
+            // Digits: at most two, and none after a "+". Plus: only once,
+            // and only after at least one digit. Everything else is refused.
+            // A preset label is replaced, not appended to, when typing starts.
+            // Digits: up to two before the separator and up to two after it.
+            // "-": once, after at least one digit. "+": once, after a single
+            // value only. Everything else is refused.
+            const cur = expIsPreset() ? expParseTyped('') : expParseTyped(expCombo.value);
+            const core = expCoreOf(cur);
+            let next = null;
+            if (/^\d$/.test(ev.key)) {
+                if (cur.sep && cur.max.length < EXP_YEARS_MAX_DIGITS) next = core + ev.key;
+                else if (!cur.sep && !cur.plus && cur.digits.length < EXP_YEARS_MAX_DIGITS) next = core + ev.key;
+            } else if (ev.key === '-' && cur.digits !== '' && !cur.sep && !cur.plus) {
+                next = core + '-';
+            } else if (ev.key === '+' && cur.digits !== '' && !cur.sep && !cur.plus) {
+                next = core + '+';
+            }
+            ev.preventDefault();
+            if (next !== null) { expApplyTyped(next); validateExperience(); }
+        });
+        expCombo.addEventListener('input', function () {
+            // Editing a shown preset label (e.g. Backspace) clears the field;
+            // otherwise keep digits only, at most two (covers paste too).
+            if (expIsPreset() && expCombo.value !== (EXP_LABELS[expSelect.value] || '')) {
+                expApplyTyped('');
+            } else if (!expIsPreset()) {
+                expApplyTyped(expCombo.value); // paste: "N", "N+" or "N-M"; anything else is dropped
+            }
+            expOpenMenu(false);
+            validateExperience();
+        });
+        if (expToggle) expToggle.addEventListener('click', function () {
+            expOpenMenu(!expMenu.classList.contains('show'));
+            if (expMenu.classList.contains('show')) expCombo.focus();
+        });
+        expMenu.querySelectorAll('li').forEach(function (li) {
+            li.addEventListener('click', function () {
+                expApplyPreset(li.getAttribute('data-value'));
+                expOpenMenu(false);
+                validateExperience();
+            });
+        });
+        document.addEventListener('click', function (ev) {
+            if (!ev.target.closest('.experience-combo')) expOpenMenu(false);
+        });
+    }
+
+    // ── Job Category: Non-IT reveals the Job Classification dropdown ────
+    const jobCategorySelect = document.getElementById('id_job_category');
+    const classificationWrap = document.getElementById('job-classification-wrap');
+    const classificationSelect = document.getElementById('id_job_classification');
+    function isNonIt() { return jobCategorySelect && jobCategorySelect.value === 'non_it'; }
+    // NON-IT Job Posting field format: one sheet per Job Classification.
+    // Returns 'technical', 'non_technical' or '' (no sheet applies).
+    function nonItSheet() {
+        if (!isNonIt() || !classificationSelect) return '';
+        const v = classificationSelect.value;
+        return (v === 'technical' || v === 'non_technical') ? v : '';
+    }
+    function isNonItSheet() { return nonItSheet() !== ''; }
+    function isNonItTech() { return nonItSheet() === 'technical'; }
+    function isNonItNonTech() { return nonItSheet() === 'non_technical'; }
+    function setClassificationError(message) {
+        const errorEl = document.getElementById('err_job_classification');
+        if (errorEl) errorEl.textContent = message;
+        if (classificationWrap) classificationWrap.classList.toggle('field-invalid', Boolean(message));
+    }
+    // Returns true when a classification is chosen (or not in use).
+    function validateClassification() {
+        const message = (isNonIt() && classificationSelect && !classificationSelect.value) ? 'Select a job classification.' : '';
+        setClassificationError(message);
+        return message === '';
+    }
+    function toggleClassification() {
+        if (!classificationWrap) return;
+        classificationWrap.classList.toggle('show', isNonIt());
+        // The column itself is hidden too, so the IT form has no empty gap.
+        const col = document.getElementById('job-classification-col');
+        if (col) col.hidden = !isNonIt();
+        if (!isNonIt()) {
+            if (classificationSelect) classificationSelect.value = '';
+            setClassificationError('');
+        }
+    }
+    if (jobCategorySelect) jobCategorySelect.addEventListener('change', toggleClassification);
+    if (classificationSelect) classificationSelect.addEventListener('change', validateClassification);
+    toggleClassification();
+
+    // ── Job Role / Designation: NON-IT → Classification → Role ───────────
+    // The dropdown is shown for Non-IT postings only. It offers no roles
+    // until a Job Classification is chosen, then lists just that group's
+    // roles (Technical or Non-Technical). Changing category/classification
+    // clears a role that no longer applies (mirrors JobPostingForm.clean()).
+    const designationWrap = document.getElementById('designation-wrap');
+    const designationSelect = document.getElementById('id_designation');
+    const DESIGNATION_PLACEHOLDER = designationSelect && designationSelect.options[0] ? designationSelect.options[0].text : '';
+    function setDesignationError(message) {
+        const errorEl = document.getElementById('err_designation');
+        if (errorEl) errorEl.textContent = message;
+    }
+    function filterDesignations() {
+        if (!designationSelect) return;
+        const nonIt = isNonIt();
+        if (designationWrap) designationWrap.classList.toggle('show', nonIt);
+        const designationCol = document.getElementById('designation-col');
+        if (designationCol) designationCol.hidden = !nonIt;
+        const wanted = nonIt && classificationSelect ? classificationSelect.value : '';
+        let cleared = !nonIt;
+        designationSelect.querySelectorAll('option[data-classification]').forEach(function (opt) {
+            const show = Boolean(wanted) && opt.getAttribute('data-classification') === wanted;
+            opt.hidden = !show;
+            opt.disabled = !show;
+            if (!show && opt.selected) cleared = true;
+        });
+        if (designationSelect.options[0]) {
+            designationSelect.options[0].text = wanted ? DESIGNATION_PLACEHOLDER : 'Select a job classification first';
+        }
+        if (cleared) { designationSelect.value = ''; setDesignationError(''); }
+    }
+    if (jobCategorySelect) jobCategorySelect.addEventListener('change', filterDesignations);
+    if (classificationSelect) classificationSelect.addEventListener('change', filterDesignations);
+    if (designationSelect) designationSelect.addEventListener('change', function () { setDesignationError(''); });
+    filterDesignations();
+
+    // ── Job Type: Contract reveals a whole-months Project Duration input ─
+    const jobTypeSelect = document.getElementById('id_job_type');
+    const durationWrap = document.getElementById('contract-duration-wrap');
+    const durationInput = document.getElementById('id_contract_duration_months');
+    const DURATION_MAX_DIGITS = 2;
+    const DURATION_MAX_MONTHS = 12;
+    const employmentSelect = document.getElementById('id_employment_type');
+    // NON-IT Technical reads Employment Type; everything else reads Job Type.
+    function isContract() {
+        const sel = isNonItSheet() ? employmentSelect : jobTypeSelect;
+        return Boolean(sel && sel.value === 'contract');
+    }
+    function setDurationError(message) {
+        const errorEl = document.getElementById('err_contract_duration_months');
+        if (errorEl) errorEl.textContent = message;
+        if (durationWrap) durationWrap.classList.toggle('field-invalid', Boolean(message));
+    }
+    // Returns true when the duration is acceptable (or not in use).
+    function validateDuration() {
+        if (!durationInput || !isContract()) { setDurationError(''); return true; }
+        const raw = durationInput.value.trim();
+        let message = '';
+        // Non-IT: "If Applicable" unless the employment type is Contract.
+        if (raw === '') message = isContract() ? 'Enter the project duration in months.' : '';
+        else if (!/^\d+$/.test(raw)) message = 'Enter the project duration as a whole number of months.';
+        else if (parseInt(raw, 10) < 1) message = 'Project duration must be at least 1 month.';
+        else if (parseInt(raw, 10) > DURATION_MAX_MONTHS) message = 'Project duration cannot exceed ' + DURATION_MAX_MONTHS + ' months.';
+        setDurationError(message);
+        return message === '';
+    }
+    function toggleDuration() {
+        if (!durationWrap) return;
+        // The duration is asked for Contract postings only (IT and both
+        // NON-IT sheets alike).
+        const show = isContract();
+        durationWrap.classList.toggle('show', show);
+        const star = document.getElementById('duration-star');
+        if (star) star.hidden = !isContract();
+        if (!show && durationInput) durationInput.value = '';
+        if (!isContract()) setDurationError('');
+    }
+    if (jobTypeSelect) jobTypeSelect.addEventListener('change', toggleDuration);
+    if (employmentSelect) employmentSelect.addEventListener('change', toggleDuration);
+    if (durationInput) {
+        // Digits only, at most two, never above 12: every non-digit key, a
+        // third digit and a digit that would exceed the cap are refused;
+        // pasted content is cleaned up the same way.
+        durationInput.addEventListener('keydown', function (ev) {
+            if (ev.ctrlKey || ev.metaKey || ev.altKey || ev.key.length > 1) return;
+            const cur = durationInput.value;
+            let start = cur.length, end = cur.length;
+            try { if (durationInput.selectionStart !== null) { start = durationInput.selectionStart; end = durationInput.selectionEnd; } } catch (_) {}
+            const next = cur.slice(0, start) + ev.key + cur.slice(end);
+            if (!/^\d$/.test(ev.key) || next.length > DURATION_MAX_DIGITS || parseInt(next, 10) > DURATION_MAX_MONTHS) ev.preventDefault();
+        });
+        durationInput.addEventListener('input', function () {
+            let cleaned = durationInput.value.replace(/\D/g, '').slice(0, DURATION_MAX_DIGITS);
+            while (cleaned !== '' && parseInt(cleaned, 10) > DURATION_MAX_MONTHS) cleaned = cleaned.slice(0, -1);
+            if (cleaned !== durationInput.value) durationInput.value = cleaned;
+            validateDuration();
+        });
+    }
+    toggleDuration();
+
+    // ── Education: one field, typed qualification or a picked preset ────
+    // The visible combo box is not submitted. It writes to the hidden
+    // `education` select (a preset value, 'custom' for typed text, or empty)
+    // and the hidden `education_other` input (the typed text). Editing a
+    // shown preset label turns it into custom text, so a preset can be used
+    // as a starting point.
+    const eduSelect = document.getElementById('id_education');
+    const eduOther = document.getElementById('id_education_other');
+    const eduCombo = document.getElementById('education_combo');
+    const eduToggle = document.getElementById('education_combo_toggle');
+    const eduMenu = document.getElementById('education_combo_menu');
+    const EDU_LABELS = {};
+    if (eduMenu) eduMenu.querySelectorAll('li').forEach(function (li) { EDU_LABELS[li.getAttribute('data-value')] = li.textContent.trim(); });
+
+    function eduIsPreset() { return Boolean(eduSelect && eduSelect.value && eduSelect.value !== 'custom'); }
+    function setEducationError(message) {
+        const errorEl = document.getElementById('err_education');
+        if (errorEl) errorEl.textContent = message;
+        const container = eduCombo ? eduCombo.closest('.col-12, .col-md-3, .col-md-4, .col-md-6') : null;
+        if (container) container.classList.toggle('field-invalid', Boolean(message));
+    }
+    function eduMarkSelected() {
+        if (!eduMenu) return;
+        eduMenu.querySelectorAll('li').forEach(function (li) {
+            li.classList.toggle('selected', eduIsPreset() && li.getAttribute('data-value') === eduSelect.value);
+        });
+    }
+    function eduApplyPreset(value) {
+        eduSelect.value = value;
+        eduOther.value = '';
+        eduCombo.value = EDU_LABELS[value] || '';
+        eduMarkSelected();
+    }
+    function eduApplyTyped(text) {
+        // A typed value that exactly matches a preset label is stored as that preset.
+        const match = Object.keys(EDU_LABELS).filter(function (v) { return EDU_LABELS[v].toLowerCase() === text.trim().toLowerCase(); })[0];
+        if (match) { eduSelect.value = match; eduOther.value = ''; }
+        else { eduSelect.value = text.trim() === '' ? '' : 'custom'; eduOther.value = text; }
+        eduMarkSelected();
+    }
+    // Education is optional; the only invalid state is 'custom' with blank
+    // text, which the typed-value handling above never produces. Kept so
+    // the submit flow can treat it like the other combo field.
+    // Rules for typed text (mirror JobPostingForm.education_text_error).
+    const EDU_MAX_LEN = {{ form.EDUCATION_MAX_LEN }};
+    const EDU_ALLOWED_CHAR_RE = /^[A-Za-z0-9 ./,()&+'\-]$/;
+    const EDU_ALLOWED_RE = /^[A-Za-z0-9 ./,()&+'\-]+$/;
+    const EDU_MESSAGES = {
+        too_long: 'Education must be ' + EDU_MAX_LEN + ' characters or fewer.',
+        chars: "Education can contain only letters, numbers, spaces and . / - , ( ) & + '",
+        no_letters: 'Education must include letters, for example 10th, B.Tech or Diploma.',
+        digits: 'Numbers are allowed only as part of a qualification, such as 10th or 12th.'
+    };
+    function eduTextError(text) {
+        if (text.length > EDU_MAX_LEN) return EDU_MESSAGES.too_long;
+        if (!EDU_ALLOWED_RE.test(text)) return EDU_MESSAGES.chars;
+        if (!/[A-Za-z]/.test(text)) return EDU_MESSAGES.no_letters;
+        // A digit run not directly followed by a letter is a standalone number.
+        if (/\d{3,}/.test(text) || /\d+(?![A-Za-z\d])/.test(text) || (text.match(/\d/g) || []).length > 4) return EDU_MESSAGES.digits;
+        return '';
+    }
+    function validateEducation() {
+        let message = '';
+        if (isNonItSheet() && eduSelect && !eduSelect.value) {
+            message = 'Qualification is required.';
+        } else if (eduSelect && eduSelect.value === 'custom') {
+            const text = eduOther.value.replace(/\s+/g, ' ').trim();
+            message = text === '' ? 'Enter the educational qualification.' : eduTextError(text);
+        }
+        setEducationError(message);
+        return message === '';
+    }
+    function eduOpenMenu(open) {
+        if (!eduMenu) return;
+        eduMenu.classList.toggle('show', open);
+        if (eduCombo) eduCombo.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    if (eduCombo && eduSelect && eduOther) {
+        // Reflect the server-side state (edit page, or a redisplayed form).
+        if (eduSelect.value === 'custom') eduCombo.value = eduOther.value;
+        else if (eduIsPreset()) eduCombo.value = EDU_LABELS[eduSelect.value] || '';
+        eduMarkSelected();
+
+        eduCombo.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Escape') { eduOpenMenu(false); return; }
+            if (ev.key === 'ArrowDown') { eduOpenMenu(true); ev.preventDefault(); return; }
+            if (ev.ctrlKey || ev.metaKey || ev.altKey || ev.key.length > 1) return;
+            // Refuse characters that can never be part of a qualification,
+            // and a second consecutive space.
+            if (!EDU_ALLOWED_CHAR_RE.test(ev.key)) { ev.preventDefault(); return; }
+            if (ev.key === ' ') {
+                const cur = eduCombo.value;
+                let start = cur.length;
+                try { if (eduCombo.selectionStart !== null) start = eduCombo.selectionStart; } catch (_) {}
+                if (start === 0 || cur.charAt(start - 1) === ' ' || cur.charAt(start) === ' ') ev.preventDefault();
+            }
+        });
+        eduCombo.addEventListener('input', function () {
+            // Pasted text: keep allowed characters only, collapse repeated
+            // spaces, and stay within the length limit.
+            let cleaned = eduCombo.value.replace(/[^A-Za-z0-9 ./,()&+'\-]/g, '').replace(/\s{2,}/g, ' ').replace(/^\s+/, '').slice(0, EDU_MAX_LEN);
+            if (cleaned !== eduCombo.value) eduCombo.value = cleaned;
+            eduApplyTyped(eduCombo.value);
+            eduOpenMenu(false);
+            validateEducation();
+        });
+        eduCombo.addEventListener('blur', function () {
+            const trimmed = eduCombo.value.trim();
+            if (trimmed !== eduCombo.value) { eduCombo.value = trimmed; eduApplyTyped(trimmed); validateEducation(); }
+        });
+        if (eduToggle) eduToggle.addEventListener('click', function () {
+            eduOpenMenu(!eduMenu.classList.contains('show'));
+            if (eduMenu.classList.contains('show')) eduCombo.focus();
+        });
+        eduMenu.querySelectorAll('li').forEach(function (li) {
+            li.addEventListener('click', function () {
+                eduApplyPreset(li.getAttribute('data-value'));
+                eduOpenMenu(false);
+                validateEducation();
+            });
+        });
+        document.addEventListener('click', function (ev) {
+            if (!ev.target.closest('.education-combo')) eduOpenMenu(false);
+        });
+    }
+
+    // ── Skills: select pills, star 3-4 of them as mandatory ─────────────
+    // The starred skills are written to the hidden mandatory_skills input as
+    // a comma-separated list (mirrors JobPostingForm.clean()).
+    // Skills follow the Department: one pill group per department is in the
+    // page and only the chosen department's group is shown. Changing the
+    // department clears every selection and star, then shows the new group.
+    const skillGroups = Array.prototype.slice.call(document.querySelectorAll('.skills-group[data-department]'));
+    const skillsPlaceholder = document.getElementById('skills-placeholder');
+    const departmentSelect = document.getElementById('id_department');
+    const mandatoryInput = document.getElementById('id_mandatory_skills');
+    const itSkillAdd = document.getElementById('it-skill-add');
+    const MANDATORY_MIN = {{ form.MANDATORY_SKILLS_MIN }};
+    const MANDATORY_MAX = {{ form.MANDATORY_SKILLS_MAX }};
+    // IT -> the general "it" group; NON-IT Technical -> the chosen
+    // department's group; NON-IT Non-Technical -> none (Functional Skills text).
+    function currentSkillsGroup() {
+        let key = '';
+        if (isNonItTech()) key = departmentSelect ? departmentSelect.value : '';
+        else if (!isNonItSheet()) key = 'it';
+        if (!key) return null;
+        return skillGroups.filter(function (g) { return g.getAttribute('data-department') === key; })[0] || null;
+    }
+    function skillItems() { const g = currentSkillsGroup(); return g ? Array.prototype.slice.call(g.querySelectorAll('li')) : []; }
+    function showSkillsForDepartment(clearSelections) {
+        const current = currentSkillsGroup();
+        skillGroups.forEach(function (g) {
+            if (clearSelections) {
+                g.querySelectorAll('input[type=checkbox]').forEach(function (cb) { cb.checked = false; });
+                g.querySelectorAll('li.mandatory').forEach(function (li) { li.classList.remove('mandatory'); });
+            }
+            g.hidden = g !== current;
+        });
+        if (skillsPlaceholder) skillsPlaceholder.hidden = Boolean(current);
+        if (itSkillAdd) itSkillAdd.hidden = !(current && current.getAttribute('data-department') === 'it');
+        syncMandatorySkills();
+        validateSkills();
+    }
+    function skillChecked(li) { const cb = li.querySelector('input[type=checkbox]'); return Boolean(cb && cb.checked); }
+    function mandatorySkills() {
+        return skillItems().filter(function (li) { return li.classList.contains('mandatory') && skillChecked(li); })
+            .map(function (li) { return li.getAttribute('data-skill'); });
+    }
+    function setSkillsError(message) {
+        const errorEl = document.getElementById('err_skills');
+        if (errorEl) errorEl.textContent = message;
+        const container = skillsPlaceholder ? skillsPlaceholder.closest('.col-12, .col-md-3, .col-md-4, .col-md-6') : null;
+        if (container) container.classList.toggle('field-invalid', Boolean(message));
+    }
+    function syncMandatorySkills() {
+        const list = mandatorySkills();
+        if (mandatoryInput) mandatoryInput.value = list.join(',');
+        const counter = document.getElementById('mandatory_skills_count');
+        if (counter) counter.textContent = list.length;
+    }
+    // Skills are required. Returns true when at least one skill is
+    // selected and 3-4 of the selected ones are mandatory. Before a
+    // department is chosen the message is left to the Department field.
+    function validateSkills() {
+        if (isNonItNonTech()) { setSkillsError(''); return true; } // Functional Skills text instead
+        const selected = skillItems().filter(skillChecked).length;
+        const mandatory = mandatorySkills().length;
+        let message = '';
+        if (!currentSkillsGroup()) message = '';
+        else if (selected === 0) message = isNonItTech() ? 'Select the skills required for this job.' : ''; // optional for IT
+        else if (mandatory < MANDATORY_MIN || mandatory > MANDATORY_MAX) {
+            message = 'Mark ' + MANDATORY_MIN + ' to ' + MANDATORY_MAX + ' of the selected skills as mandatory (currently ' + mandatory + ').';
+        }
+        setSkillsError(message);
+        return message === '';
+    }
+    if (skillGroups.length && mandatoryInput) {
+        // Restore stars from the hidden input (edit page / redisplayed form).
+        const initial = mandatoryInput.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+        const allItems = [];
+        skillGroups.forEach(function (g) { Array.prototype.push.apply(allItems, g.querySelectorAll('li')); });
+        allItems.forEach(function (li) {
+            const cb = li.querySelector('input[type=checkbox]');
+            if (initial.indexOf(li.getAttribute('data-skill')) !== -1 && cb && cb.checked) li.classList.add('mandatory');
+            wireSkillItem(li);
+        });
+        function wireSkillItem(li) {
+            const cb = li.querySelector('input[type=checkbox]');
+            if (cb) cb.addEventListener('change', function () {
+                if (!cb.checked) li.classList.remove('mandatory'); // unselecting clears the star
+                syncMandatorySkills();
+                validateSkills();
+            });
+            const star = li.querySelector('.skill-star');
+            if (star) star.addEventListener('click', function (ev) {
+                ev.preventDefault(); // keep the label from toggling the checkbox
+                ev.stopPropagation();
+                if (!skillChecked(li)) return;
+                if (!li.classList.contains('mandatory') && mandatorySkills().length >= MANDATORY_MAX) {
+                    setSkillsError('You can mark at most ' + MANDATORY_MAX + ' skills as mandatory.');
+                    return;
+                }
+                li.classList.toggle('mandatory');
+                syncMandatorySkills();
+                validateSkills();
+            });
+        }
+
+        // IT: add a skill by typing it (mirrors forms.custom_skill_error).
+        const itGroup = skillGroups.filter(function (g) { return g.getAttribute('data-department') === 'it'; })[0];
+        const itSkillInput = document.getElementById('it-skill-input');
+        const CUSTOM_SKILL_RE = /^[A-Za-z0-9 .&\/()'+#\-]+$/;
+        let customSkillCount = 0;
+        function addItSkill() {
+            const skill = itSkillInput.value.replace(/\s+/g, ' ').trim();
+            if (!skill) return;
+            if (skill.indexOf(',') !== -1) { setSkillsError('Add one skill at a time (no commas).'); return; }
+            if (skill.length > 40 || !CUSTOM_SKILL_RE.test(skill) || !/[A-Za-z]/.test(skill)) {
+                setSkillsError('"' + skill + '" is not a valid skill name. Use letters, numbers and . & / ( ) \' + # - only.');
+                return;
+            }
+            // Already offered (any letter case): just select that pill.
+            const existing = Array.prototype.slice.call(itGroup.querySelectorAll('li')).filter(function (li) {
+                return (li.getAttribute('data-skill') || '').toLowerCase() === skill.toLowerCase();
+            })[0];
+            if (existing) {
+                const cb = existing.querySelector('input[type=checkbox]');
+                if (cb && !cb.checked) { cb.checked = true; cb.dispatchEvent(new Event('change')); }
+            } else {
+                customSkillCount += 1;
+                const id = 'skill_it_custom_' + customSkillCount;
+                const li = document.createElement('li');
+                li.setAttribute('data-skill', skill);
+                const cb = document.createElement('input');
+                cb.type = 'checkbox'; cb.name = 'skills'; cb.value = skill; cb.id = id; cb.checked = true;
+                const label = document.createElement('label');
+                label.setAttribute('for', id);
+                label.textContent = skill;
+                const star = document.createElement('button');
+                star.type = 'button'; star.className = 'skill-star';
+                star.title = 'Mark as mandatory'; star.setAttribute('aria-label', 'Mark ' + skill + ' as mandatory');
+                star.innerHTML = '<i class="fas fa-star"></i>';
+                label.appendChild(star);
+                li.appendChild(cb); li.appendChild(label);
+                itGroup.appendChild(li);
+                wireSkillItem(li);
+                syncMandatorySkills();
+                validateSkills();
+            }
+            itSkillInput.value = '';
+            itSkillInput.focus();
+        }
+        if (itGroup && itSkillInput) {
+            document.getElementById('it-skill-add-btn').addEventListener('click', addItSkill);
+            itSkillInput.addEventListener('keydown', function (ev) {
+                if (ev.key === 'Enter') { ev.preventDefault(); addItSkill(); } // never submit the job form
+            });
+        }
+        if (departmentSelect) departmentSelect.addEventListener('change', function () { showSkillsForDepartment(true); });
+        showSkillsForDepartment(false);
+    }
+
+    // Notice period toggle
+    const noticeRadios = document.querySelectorAll('#notice-period-group input[type=radio]');
+    const noticeWrap = document.getElementById('notice-other-wrap');
+    function toggleNotice() {
+        const sel = document.querySelector('#notice-period-group input[type=radio]:checked');
+        noticeWrap.classList.toggle('show', sel && sel.value === 'others');
+    }
+    noticeRadios.forEach(r => r.addEventListener('change', toggleNotice));
+    toggleNotice();
+
+    // ── Required-field validation ──────────────────────────────────────────
+    // novalidate is set on the form (see above) so this is the single source
+    // of truth for validation feedback — native HTML5 required validation is
+    // unreliable here because the radio inputs are styled as pills with
+    // `display: none` on the actual <input>, and browsers cannot show a
+    // validation message or focus/scroll to an element that isn't rendered.
+    // Every required field gets the same guaranteed behaviour instead: a
+    // visible "This field is required" message, plus scroll-to-and-focus on
+    // the first invalid field when the form is submitted.
+    const REQUIRED_FIELDS = [
+        { kind: 'select', id: 'id_job_category' },
+        // Department dropdown + skill pills are replaced on the NON-IT Non-Technical sheet
+        { kind: 'select', id: 'id_department', mode: 'nonit_tech' },
+        { kind: 'text', id: 'id_department_function', mode: 'nonit_nontech' },
+        { kind: 'text', id: 'id_functional_skills', mode: 'nonit_nontech' },
+        { kind: 'text', id: 'id_title' },
+        { kind: 'text', id: 'id_description' },
+        // NON-IT field format: mode 'nonit' applies on both NON-IT sheets,
+        // 'nonit_tech' on the Technical sheet only.
+        { kind: 'text', id: 'id_industry_sector', mode: 'nonit' },
+        { kind: 'text', id: 'id_industry_experience', mode: 'nonit_tech' },
+        { kind: 'text', id: 'id_working_hours', mode: 'nonit' },
+        { kind: 'text', id: 'id_responsibilities', mode: 'nonit' },
+        { kind: 'text', id: 'id_keywords', mode: 'nonit' },
+        { kind: 'text', id: 'id_application_contact', mode: 'nonit' },
+        { kind: 'select', id: 'id_job_type', mode: 'it' },
+        { kind: 'select', id: 'id_employment_type', mode: 'nonit' },
+        { kind: 'select', id: 'id_work_mode', mode: 'nonit' },
+        { kind: 'select', id: 'id_joining_requirement', mode: 'nonit_nontech' },
+        { kind: 'text', id: 'id_location' },
+        { kind: 'select', id: 'id_status' },
+        { kind: 'text', id: 'id_openings' },
+        { kind: 'radio', name: 'work_environment', groupId: 'work-environment-group', mode: 'it' },
+        // Interview Mode is not on the NON-IT sheets (mode: 'it')
+        { kind: 'radio', name: 'interview_mode', groupId: 'interview-mode-group', mode: 'it' },
+        // Notice Period pills double as the Technical sheet's Joining Requirement; Non-Technical uses its dropdown
+        { kind: 'radio', name: 'notice_period', groupId: 'notice-period-group', mode: 'not_nontech' },
+        // Gender is "If Applicable" on both NON-IT sheets (mode: 'it')
+        { kind: 'radio', name: 'gender_preference', groupId: 'gender-preference-group', mode: 'it' },
+    ];
+    function modeApplies(cfg) {
+        if (cfg.mode === 'nonit') return isNonItSheet();
+        if (cfg.mode === 'nonit_tech') return isNonItTech();
+        if (cfg.mode === 'nonit_nontech') return isNonItNonTech();
+        if (cfg.mode === 'not_nontech') return !isNonItNonTech();
+        if (cfg.mode === 'not_tech') return !isNonItTech();
+        if (cfg.mode === 'it') return !isNonItSheet();
+        return true;
+    }
+
+    function fieldParts(cfg) {
+        const input = cfg.kind === 'radio' ? document.getElementById(cfg.groupId) : document.getElementById(cfg.id);
+        const name = cfg.kind === 'radio' ? cfg.name : cfg.id.replace(/^id_/, '');
+        const errorEl = document.getElementById('err_' + name);
+        const container = input ? input.closest('.col-12, .col-md-3, .col-md-4, .col-md-6') : null;
+        return { input, errorEl, container };
+    }
+
+    function isFieldValid(cfg) {
+        if (!modeApplies(cfg)) return true;
+        if (cfg.kind === 'radio') {
+            return Boolean(document.querySelector('input[name="' + cfg.name + '"]:checked'));
+        }
+        const el = document.getElementById(cfg.id);
+        return Boolean(el && el.value.trim());
+    }
+
+    function setFieldError(cfg, show) {
+        const { errorEl, container } = fieldParts(cfg);
+        if (errorEl) errorEl.textContent = show ? 'This field is required.' : '';
+        if (container) container.classList.toggle('field-invalid', show);
+    }
+
+    function validateField(cfg) {
+        const valid = isFieldValid(cfg);
+        setFieldError(cfg, !valid);
+        return valid;
+    }
+
+    // Live-clear a field's error as soon as it's fixed, without waiting for
+    // another submit attempt.
+    REQUIRED_FIELDS.forEach(function (cfg) {
+        if (cfg.kind === 'radio') {
+            document.querySelectorAll('input[name="' + cfg.name + '"]').forEach(function (radio) {
+                radio.addEventListener('change', function () { validateField(cfg); });
+            });
+        } else {
+            const el = document.getElementById(cfg.id);
+            if (!el) return;
+            const evt = cfg.kind === 'select' ? 'change' : 'input';
+            el.addEventListener(evt, function () { validateField(cfg); });
+        }
+    });
+
+    // ── Salary format (Monthly / LPA) ────────────────────────────────────
+    // The Salary Format dropdown decides the unit of Min/Max Salary. Each
+    // unit has its own labels, addon text, placeholder, min/max/step and
+    // validation limits (mirrors JobPostingForm.SALARY_RULES). Values are
+    // typed manually into the single Min / Max inputs. Switching format
+    // clears any entered values so monthly and LPA figures are never mixed.
+    const SALARY_FORMATS = {
+        monthly: {
+            unit: '(\u20B9 per month)', suffix: 'per month', step: '1',
+            placeholder: { min: 'e.g. 30000', max: 'e.g. 50000' },
+            label: { min: 'Minimum Salary', max: 'Maximum Salary' },
+            limits: {{ form.salary_rules_js.monthly|safe }},
+            fmt: function (v) { return '\u20B9' + Number(v).toLocaleString('en-IN') + ' per month'; }
+        },
+        lpa: {
+            unit: '(\u20B9 Lakhs Per Annum)', suffix: 'LPA', step: '1',
+            placeholder: { min: 'e.g. 3', max: 'e.g. 6' },
+            label: { min: 'Minimum LPA', max: 'Maximum LPA' },
+            limits: {{ form.salary_rules_js.lpa|safe }},
+            fmt: function (v) { return v + ' LPA'; }
+        }
+    };
+    const salaryFormatEl = document.getElementById('id_salary_format');
+
+    function currentSalaryFormat() {
+        const v = salaryFormatEl ? salaryFormatEl.value : 'monthly';
+        return SALARY_FORMATS[v] ? v : 'monthly';
+    }
+
+    function applySalaryFormat(clearValues) {
+        const cfg = SALARY_FORMATS[currentSalaryFormat()];
+        document.querySelectorAll('[data-salary-unit]').forEach(function (el) { el.textContent = cfg.unit; });
+        document.querySelectorAll('[data-salary-suffix]').forEach(function (el) { el.textContent = cfg.suffix; });
+        document.querySelectorAll('[data-salary-label]').forEach(function (el) {
+            el.textContent = cfg.label[el.getAttribute('data-salary-label')];
+        });
+        [['id_salary_min', 'min'], ['id_salary_max', 'max']].forEach(function (pair) {
+            const input = document.getElementById(pair[0]);
+            if (!input) return;
+            // Native length cap: 6 digits for monthly, 2 for LPA.
+            input.maxLength = cfg.limits.maxDigits || 6;
+            input.setAttribute('inputmode', cfg.limits.integer ? 'numeric' : 'decimal');
+            input.placeholder = cfg.placeholder[pair[1]];
+            if (clearValues) input.value = '';
+        });
+        // Re-validate values that are present under the new rules; on a
+        // format switch (values cleared) also clear any stale messages, but
+        // leave server-rendered messages alone on initial load.
+        SALARY_FIELDS.forEach(function (id) {
+            const { input, errorEl, container } = salaryFieldParts(id);
+            if (input && input.value.trim() !== '') {
+                validateSalaryField(id);
+            } else if (clearValues) {
+                if (errorEl) errorEl.textContent = '';
+                if (container) container.classList.remove('field-invalid');
+            }
+        });
+    }
+
+    // ── Salary validation ────────────────────────────────────────────────
+    // Both salary fields are required, must be plain positive numbers
+    // within the current format's limits, and Minimum must not exceed
+    // Maximum (mirrors JobPostingForm.SALARY_RULES / clean()). Kept
+    // separate from REQUIRED_FIELDS because the rules depend on the
+    // selected format and the two fields are checked against each other.
+    const SALARY_FIELDS = ['id_salary_min', 'id_salary_max'];
+    const SALARY_DECIMAL_RE = /^\d+(\.\d+)?$/;
+    const SALARY_INTEGER_RE = /^\d+$/;
+
+    function salaryFieldParts(id) {
+        const input = document.getElementById(id);
+        const name = id.replace(/^id_/, '');
+        const errorEl = document.getElementById('err_' + name);
+        const container = input ? input.closest('.col-12, .col-md-3, .col-md-4, .col-md-6') : null;
+        return { input, errorEl, container };
+    }
+
+    // Returns '' when the field is valid on its own, else the message to show.
+    function salaryFieldError(id) {
+        const cfg = SALARY_FORMATS[currentSalaryFormat()];
+        const bound = id === 'id_salary_min' ? 'min' : 'max';
+        const label = cfg.label[bound];
+        const el = document.getElementById(id);
+        const raw = el ? el.value.trim() : '';
+        if (raw === '') return label + ' is required.';
+        if (!SALARY_DECIMAL_RE.test(raw)) return 'Enter a valid numeric value for ' + label + '.';
+        if (cfg.limits.integer && !SALARY_INTEGER_RE.test(raw)) return label + ' must be a whole number (no decimals).';
+        const num = parseFloat(raw);
+        if (num < cfg.limits.min) return label + ' must be at least ' + cfg.fmt(cfg.limits.min) + '.';
+        if (num > cfg.limits.max) return cfg.limits.ceilingMessage || (label + ' must not exceed ' + cfg.fmt(cfg.limits.max) + '.');
+        return '';
+    }
+
+    function isSalaryFieldValid(id) {
+        return salaryFieldError(id) === '';
+    }
+
+    function validateSalaryField(id) {
+        const cfg = SALARY_FORMATS[currentSalaryFormat()];
+        let message = salaryFieldError(id);
+        // Cross-check: reported on Minimum once both values are individually valid.
+        if (!message && id === 'id_salary_min' && isSalaryFieldValid('id_salary_max')) {
+            const mn = parseFloat(document.getElementById('id_salary_min').value);
+            const mx = parseFloat(document.getElementById('id_salary_max').value);
+            if (mn > mx) message = cfg.label.min + ' must not be greater than ' + cfg.label.max + '.';
+        }
+        const { errorEl, container } = salaryFieldParts(id);
+        if (errorEl) errorEl.textContent = message;
+        if (container) container.classList.toggle('field-invalid', Boolean(message));
+        return message === '';
+    }
+
+    SALARY_FIELDS.forEach(function (id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        // Either field changing can change the Minimum-vs-Maximum result.
+        // In a whole-number format the field itself refuses anything the
+        // limits rule out: pasted content is reduced to digits (or digits
+        // plus one decimal point for LPA), trimmed to the digit limit, and
+        // trimmed further until it is within the ceiling.
+        el.addEventListener('input', function () {
+            const limits = SALARY_FORMATS[currentSalaryFormat()].limits;
+            let cleaned = String(el.value);
+            if (limits.integer) {
+                cleaned = cleaned.replace(/\D/g, '');
+                if (limits.maxDigits) cleaned = cleaned.slice(0, limits.maxDigits);
+                while (cleaned !== '' && parseInt(cleaned, 10) > limits.max) cleaned = cleaned.slice(0, -1);
+            } else {
+                cleaned = cleaned.replace(/[^\d.]/g, '').replace(/\.(?=.*\.)/g, '');
+            }
+            if (cleaned !== String(el.value)) el.value = cleaned;
+            SALARY_FIELDS.forEach(validateSalaryField);
+        });
+        // Block every printable key that cannot form a valid salary: only
+        // digits are accepted (plus a single decimal point for LPA), and in
+        // a whole-number format a digit that would push the value past the
+        // digit limit or the ceiling is refused too. Shortcuts, navigation
+        // and editing keys pass through untouched.
+        el.addEventListener('keydown', function (ev) {
+            const limits = SALARY_FORMATS[currentSalaryFormat()].limits;
+            if (ev.ctrlKey || ev.metaKey || ev.altKey || ev.key.length > 1) return;
+            const cur = String(el.value);
+            let start = cur.length, end = cur.length;
+            try { if (el.selectionStart !== null) { start = el.selectionStart; end = el.selectionEnd; } } catch (_) {}
+            const next = cur.slice(0, start) + ev.key + cur.slice(end);
+            if (!limits.integer) {
+                if (!/^\d*(\.\d*)?$/.test(next)) ev.preventDefault();
+                return;
+            }
+            if (!/^\d$/.test(ev.key)
+                || (limits.maxDigits && next.length > limits.maxDigits)
+                || parseInt(next, 10) > limits.max) {
+                ev.preventDefault();
+            }
+        });
+    });
+    if (salaryFormatEl) {
+        salaryFormatEl.addEventListener('change', function () { applySalaryFormat(true); });
+    }
+    applySalaryFormat(false);
+
+    // ── NON-IT field format: labels, mandatory stars and blocks per mode ─
+    // Driven by Job Category + Job Classification, on the same page. For a
+    // NON-IT posting every label switches to the wording of that
+    // classification's "NON-IT Job Posting - Field Format" sheet, the
+    // sheet's fields appear, fields outside it hide and the mandatory stars
+    // follow the sheet. IT shows the existing form, unchanged.
+    // Field order of the NON-IT sheets (both share it; the Non-Technical
+    // only fields are hidden on the Technical sheet). Each key is a
+    // data-field block. With a sheet active the blocks are moved into
+    // #nonit-layout in this order; back on IT each block returns to the
+    // exact spot it came from, so the IT form is untouched.
+    const NONIT_FIELD_ORDER = [
+        'title', 'department', 'department_function', 'industry_sector', 'location', 'work_environment', 'work_mode',
+        'openings', 'job_type', 'employment_type', 'experience', 'education', 'skills', 'functional_skills',
+        'industry_experience', 'responsibilities', 'certifications',
+        'software_skills', 'language_requirements', 'salary', 'perks',
+        'notice_period', 'joining_requirement', 'working_hours', 'contract_duration',
+        'gender_preference', 'age_limit', 'keywords', 'application_contact',
+        'description',
+    ];
+    const nonItLayout = document.getElementById('nonit-layout');
+    const movedBlocks = []; // { el, placeholder, className }
+    function applyLayout(sheetActive) {
+        if (!nonItLayout) return;
+        if (sheetActive) {
+            if (movedBlocks.length) return; // already laid out
+            NONIT_FIELD_ORDER.forEach(function (key) {
+                const el = document.querySelector('[data-field="' + key + '"]');
+                if (!el) return;
+                const placeholder = document.createComment('nonit:' + key);
+                el.parentNode.insertBefore(placeholder, el);
+                movedBlocks.push({ el: el, placeholder: placeholder, className: el.className });
+                const cls = el.getAttribute('data-nonit-class');
+                if (cls) el.className = el.className.replace(/\bcol-(?:md-)?\d+\b/g, '').trim() + ' ' + cls;
+                nonItLayout.appendChild(el);
+            });
+            nonItLayout.hidden = false;
+        } else {
+            while (movedBlocks.length) {
+                const m = movedBlocks.pop();
+                m.el.className = m.className;
+                m.placeholder.parentNode.replaceChild(m.el, m.placeholder);
+            }
+            nonItLayout.hidden = true;
+        }
+    }
+
+    let lastSkillsMode = null;
+    function applyFieldMode() {
+        const nonIt = isNonItSheet();
+        const nonTech = isNonItNonTech();
+        applyLayout(nonIt);
+        // Job Title example text: IT keeps the IT example ("e.g. Senior Python
+        // Developer"); NON-IT Technical / Non-Technical shows no example. Only
+        // the placeholder changes -- anything already typed is left as it is.
+        const titleInput = document.getElementById('id_title');
+        if (titleInput) {
+            if (!titleInput.hasAttribute('data-it-placeholder')) {
+                titleInput.setAttribute('data-it-placeholder', titleInput.getAttribute('placeholder') || '');
+            }
+            titleInput.placeholder = nonIt ? '' : titleInput.getAttribute('data-it-placeholder');
+        }
+        document.querySelectorAll('[data-nonit-label]').forEach(function (el) {
+            let text = el.getAttribute('data-it-label');
+            if (nonIt) text = el.getAttribute('data-nonit-label');
+            if (nonTech && el.hasAttribute('data-nontech-label')) text = el.getAttribute('data-nontech-label');
+            el.innerHTML = text;
+        });
+        document.querySelectorAll('.req-star[data-nonit-required="0"]').forEach(function (el) { el.hidden = nonIt; });
+        document.querySelectorAll('.req-star[data-it-required="0"]').forEach(function (el) { el.hidden = !nonIt; });
+        document.querySelectorAll('.req-star[data-nontech-required="0"]').forEach(function (el) { el.hidden = nonTech; });
+        document.querySelectorAll('.nonit-only').forEach(function (el) { el.hidden = !nonIt; });
+        document.querySelectorAll('.nontech-only').forEach(function (el) { el.hidden = !nonTech; });
+        document.querySelectorAll('.nontech-hide').forEach(function (el) {
+            el.hidden = nonTech || (el.classList.contains('nonit-only') && !nonIt);
+        });
+        const tech = isNonItTech();
+        document.querySelectorAll('.tech-only').forEach(function (el) { el.hidden = !tech; });
+        document.querySelectorAll('.tech-hide').forEach(function (el) { el.hidden = tech; });
+        document.querySelectorAll('.nonit-hide').forEach(function (el) { el.hidden = nonIt; });
+        // Work Mode offers a different option list per sheet; a selection
+        // that is not on the current sheet's list is cleared.
+        const workModeSelect = document.getElementById('id_work_mode');
+        if (workModeSelect) {
+            const sheet = nonItSheet();
+            let cleared = false;
+            const shown = [];
+            workModeSelect.querySelectorAll('option[data-modes]').forEach(function (opt) {
+                const ok = Boolean(sheet) && opt.getAttribute('data-modes').split(' ').indexOf(sheet) !== -1;
+                opt.hidden = !ok;
+                opt.disabled = !ok;
+                if (!ok && opt.selected) cleared = true;
+                if (ok) shown.push(opt);
+            });
+            // Re-order the offered options to the current sheet's order.
+            function orderOf(opt) {
+                const m = (opt.getAttribute('data-orders') || '').split(' ').filter(function (x) { return x.indexOf(sheet + ':') === 0; })[0];
+                return m ? parseInt(m.split(':')[1], 10) : 99;
+            }
+            shown.sort(function (a, b) { return orderOf(a) - orderOf(b); }).forEach(function (opt) { workModeSelect.appendChild(opt); });
+            if (cleared) workModeSelect.value = '';
+        }
+        // Qualification presets: Degree / Diploma / ITI / Certification on
+        // the Technical sheet, the existing list elsewhere. A preset that no
+        // longer applies is cleared (manual entries are kept).
+        if (eduMenu) {
+            eduMenu.querySelectorAll('li').forEach(function (li) {
+                li.hidden = tech ? !li.hasAttribute('data-tech') : !li.hasAttribute('data-it');
+            });
+            if (eduIsPreset()) {
+                const items = Array.prototype.slice.call(eduMenu.querySelectorAll('li[data-value="' + eduSelect.value + '"]'));
+                if (!items.some(function (li) { return !li.hidden; })) eduApplyPreset('');
+            }
+        }
+        // Department dropdown is NON-IT Technical only; the skill pill group
+        // follows the mode (general list for IT, department list for NON-IT
+        // Technical). Changing mode clears selections from the other list.
+        const skillsMode = nonIt ? nonItSheet() : 'it';
+        showSkillsForDepartment(lastSkillsMode !== null && lastSkillsMode !== skillsMode);
+        lastSkillsMode = skillsMode;
+        if (nonTech) setSkillsError('');
+        document.querySelectorAll('.it-only').forEach(function (el) { el.hidden = nonIt; });
+        // Errors shown for a mode that no longer applies are dropped.
+        REQUIRED_FIELDS.forEach(function (cfg) {
+            if (cfg.mode && !modeApplies(cfg)) setFieldError(cfg, false);
+        });
+        if (!nonIt) setEducationError('');
+        toggleDuration();
+    }
+    if (jobCategorySelect) jobCategorySelect.addEventListener('change', applyFieldMode);
+    if (classificationSelect) classificationSelect.addEventListener('change', applyFieldMode);
+    applyFieldMode();
+
+    // ── Field-level input validation ─────────────────────────────────────
+    // Free-text fields (rules from JobPostingForm.TEXT_FIELD_RULES): the
+    // value may only use that field's characters, must contain letters (so
+    // "12345" or "@@@@" is refused) and, for name-like fields, no standalone
+    // run of 3+ digits. Age Limit is numeric (25 or 25-35), Number of
+    // Vacancies a whole number, and Application Contact an email, phone
+    // number or contact name (several may be separated by , / |). Fields
+    // that are hidden in the current mode are skipped. Mirrors the server.
+    const TEXT_RULES = {{ form.text_rules_js|safe }};
+    const AGE_LIMIT_RE = /^(\d{1,2})(?:\s*-\s*(\d{1,2}))?\+?$/;
+    const AGE_LIMIT_MESSAGE = 'Please enter a valid numeric age limit, e.g. 25 or 25-35.';
+    const CONTACT_MESSAGE = 'Application Contact should be a valid email address, phone number or contact name.';
+    const OPENINGS_MESSAGE = 'Please enter a valid numeric value.';
+    function fieldShown(el) { return Boolean(el) && !el.closest('[hidden]'); }
+    function setFormatError(el, message) {
+        const name = el.id.replace(/^id_/, '');
+        const errorEl = document.getElementById('err_' + name);
+        if (errorEl) errorEl.textContent = message;
+        const container = el.closest('.col-12, .col-md-3, .col-md-4, .col-md-6');
+        if (container) container.classList.toggle('field-invalid', Boolean(message));
+    }
+    function textFieldError(value, rule) {
+        const text = value.replace(/\s+/g, ' ').trim();
+        if (!text) return '';
+        if (!new RegExp('^[' + rule.chars + ']+$').test(text)) return rule.message;
+        if ((text.match(/[A-Za-z]/g) || []).length < rule.minLetters) return rule.message;
+        if (rule.noLongDigits && /\d{3,}/.test(text)) return rule.message;
+        return '';
+    }
+    function contactPartError(part) {
+        part = part.trim();
+        if (!part) return '';
+        if (part.indexOf('@') !== -1) return /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(part) ? '' : CONTACT_MESSAGE;
+        const digits = part.replace(/\D/g, '');
+        if (digits && /^\+?[\d\s().\-]{7,20}$/.test(part)) return (digits.length >= 7 && digits.length <= 15) ? '' : CONTACT_MESSAGE;
+        if (/^[A-Za-z .'\-]+$/.test(part) && (part.match(/[A-Za-z]/g) || []).length >= 2) return '';
+        return CONTACT_MESSAGE;
+    }
+    const FORMAT_VALIDATORS = [];
+    Object.keys(TEXT_RULES).forEach(function (name) {
+        const el = document.getElementById('id_' + name);
+        if (el) FORMAT_VALIDATORS.push({ el: el, check: function (v) { return textFieldError(v, TEXT_RULES[name]); } });
+    });
+    const ageLimitEl = document.getElementById('id_age_limit');
+    if (ageLimitEl) {
+        FORMAT_VALIDATORS.push({ el: ageLimitEl, check: function (v) {
+            const t = v.trim(); if (!t) return '';
+            const m = AGE_LIMIT_RE.exec(t); if (!m) return AGE_LIMIT_MESSAGE;
+            const low = parseInt(m[1], 10), high = m[2] !== undefined ? parseInt(m[2], 10) : null;
+            return (low < 1 || (high !== null && (high < 1 || high < low))) ? AGE_LIMIT_MESSAGE : '';
+        } });
+        ageLimitEl.addEventListener('keydown', function (ev) {
+            if (ev.ctrlKey || ev.metaKey || ev.altKey || ev.key.length > 1) return;
+            if (!/[\d\-+ ]/.test(ev.key)) ev.preventDefault();
+        });
+    }
+    const contactEl = document.getElementById('id_application_contact');
+    if (contactEl) FORMAT_VALIDATORS.push({ el: contactEl, check: function (v) {
+        const parts = v.split(/[,\/|;]/).filter(function (p) { return p.trim(); });
+        if (!v.trim()) return '';
+        return (parts.length && !parts.some(contactPartError)) ? '' : CONTACT_MESSAGE;
+    } });
+    const openingsEl = document.getElementById('id_openings');
+    if (openingsEl) {
+        FORMAT_VALIDATORS.push({ el: openingsEl, check: function (v) {
+            const t = v.trim(); if (!t) return '';
+            return (/^\d+$/.test(t) && parseInt(t, 10) >= 1) ? '' : OPENINGS_MESSAGE;
+        } });
+        openingsEl.addEventListener('keydown', function (ev) {
+            if (ev.ctrlKey || ev.metaKey || ev.altKey || ev.key.length > 1) return;
+            if (!/\d/.test(ev.key)) ev.preventDefault();
+        });
+    }
+    function validateFormat(v) {
+        if (!fieldShown(v.el)) { setFormatError(v.el, ''); return true; }
+        const message = v.check(v.el.value);
+        if (message || v.el.value.trim() !== '') setFormatError(v.el, message);
+        return message === '';
+    }
+    FORMAT_VALIDATORS.forEach(function (v) {
+        v.el.addEventListener('input', function () { validateFormat(v); });
+    });
+
+    // ── Cascading reset: Job Category → Job Classification → dependents ──
+    // Changing a parent selection clears every value (and error message)
+    // that belonged to the old selection, then the mode logic above shows
+    // the new category's fields and option lists. Nothing is auto-selected:
+    // dropdowns go back to their placeholder, combo boxes to empty, and the
+    // IT radio groups to the form's defaults. Runs on user changes only, so
+    // an edit page still opens with its saved values.
+    // Fields shared by every category (Job Title, Location, Description,
+    // Salary, Vacancies, Perks, Status, Deadline) are kept.
+    //
+    // Sheet-specific fields (mirrors JobPostingForm.NON_IT_FIELDS). Used by
+    // the category reset; switching Technical <-> Non-Technical now clears
+    // the whole form instead (see resetWholeForm below):
+    //   Technical only     - Department dropdown + department skills/stars,
+    //                        Notice Period pills (its Joining Requirement)
+    //   Non-Technical only - Department / Function, Functional Skills,
+    //                        Software / MS Office Skills, Language
+    //                        Requirements, Joining Requirement dropdown
+    //   Job Role           - roles are per classification, so always cleared
+    //   Shared             - Industry / Sector, Industry Experience,
+    //                        Responsibilities, Certifications, Working Hours,
+    //                        Age Limit, Keywords, Application Contact,
+    //                        Employment Type, Experience; Work Mode and a
+    //                        Qualification preset are kept only when they are
+    //                        on the new sheet's list (see applyFieldMode).
+    const TECH_ONLY_FIELDS = ['department'];
+    const NONTECH_ONLY_FIELDS = ['department_function', 'functional_skills', 'software_skills',
+        'language_requirements', 'joining_requirement'];
+    const SHEET_TEXT_FIELDS = ['department_function', 'functional_skills', 'industry_sector', 'industry_experience',
+        'responsibilities', 'certifications', 'software_skills', 'language_requirements', 'working_hours',
+        'age_limit', 'keywords', 'application_contact'];
+    const NONIT_SELECT_FIELDS = ['work_mode', 'employment_type', 'joining_requirement'];
+    const IT_RADIO_GROUPS = ['work_environment', 'interview_mode', 'notice_period', 'gender_preference'];
+    const COMMON_FIELDS = ['job_category', 'title', 'description', 'location', 'status', 'openings'];
+    function clearFieldError(name) {
+        const errorEl = document.getElementById('err_' + name);
+        if (errorEl) errorEl.textContent = '';
+        const el = document.getElementById('id_' + name);
+        const container = el ? el.closest('.col-12, .col-md-3, .col-md-4, .col-md-6') : null;
+        if (container) container.classList.remove('field-invalid');
+    }
+    function clearFieldValue(name) {
+        const el = document.getElementById('id_' + name);
+        if (el) el.value = '';
+        clearFieldError(name);
+    }
+    function clearDependentRequiredErrors() {
+        REQUIRED_FIELDS.forEach(function (cfg) {
+            const name = cfg.kind === 'radio' ? cfg.name : cfg.id.replace(/^id_/, '');
+            if (COMMON_FIELDS.indexOf(name) === -1) setFieldError(cfg, false);
+        });
+    }
+    function resetNoticePeriod() {
+        document.querySelectorAll('input[name="notice_period"]').forEach(function (r) { r.checked = r.defaultChecked; });
+        clearFieldValue('notice_period_other');
+        REQUIRED_FIELDS.forEach(function (cfg) { if (cfg.name === 'notice_period') setFieldError(cfg, false); });
+    }
+    // Technical <-> Non-Technical: clear the sheet-specific fields only.
+    function resetClassificationDependents() {
+        clearFieldValue('designation');
+        setDesignationError('');
+        TECH_ONLY_FIELDS.forEach(clearFieldValue);
+        NONTECH_ONLY_FIELDS.forEach(clearFieldValue);
+        showSkillsForDepartment(true);   // clears every skill selection and star
+        setSkillsError('');
+        resetNoticePeriod();
+    }
+    // IT <-> Non-IT: everything below the category is cleared.
+    function resetCategoryDependents() {
+        if (classificationSelect) classificationSelect.value = '';
+        setClassificationError('');
+        resetClassificationDependents();
+        SHEET_TEXT_FIELDS.forEach(clearFieldValue);
+        NONIT_SELECT_FIELDS.forEach(clearFieldValue);
+        if (eduSelect && eduOther && eduCombo) {
+            eduApplyTyped('');
+            eduCombo.value = '';
+            eduOpenMenu(false);
+        }
+        setEducationError('');
+        if (expSelect && expYears && expCombo) {
+            expApplyTyped('');
+            expCombo.value = '';
+            expOpenMenu(false);
+        }
+        setExperienceError('');
+        clearFieldValue('job_type');
+        clearFieldValue('contract_duration_months');
+        setDurationError('');
+        IT_RADIO_GROUPS.forEach(function (name) {
+            document.querySelectorAll('input[name="' + name + '"]').forEach(function (r) { r.checked = r.defaultChecked; });
+        });
+        clearFieldValue('interview_mode_other');
+        clearFieldValue('notice_period_other');
+        clearDependentRequiredErrors();
+    }
+    // Technical <-> Non-Technical starts a fresh form: every field is emptied
+    // (common ones too - Title, Location, Industry, Experience, Education,
+    // Salary, Skills, Perks, Contact, Work Mode, Employment Type, ...) and
+    // every error message is cleared. Only Job Category and the newly chosen
+    // Job Classification are kept. Vacancies, Salary Format and Status go
+    // back to the form's defaults (1 / Monthly / Active) - the same values a
+    // brand-new Post New Job form starts with.
+    const FRESH_DEFAULTS = { openings: '1', salary_format: 'monthly', status: 'active' };
+    const KEEP_ON_FRESH = ['csrfmiddlewaretoken', 'job_category', 'job_classification'];
+    function resetWholeForm() {
+        const form = document.getElementById('jobPostForm');
+        if (!form) return;
+        Array.prototype.forEach.call(form.elements, function (el) {
+            if (!el.name && !el.id) return;
+            if (KEEP_ON_FRESH.indexOf(el.name) !== -1) return;
+            const type = (el.type || '').toLowerCase();
+            if (type === 'button' || type === 'submit' || type === 'reset' || el.tagName === 'BUTTON') return;
+            if (type === 'checkbox' || type === 'radio') { el.checked = false; return; }
+            if (Object.prototype.hasOwnProperty.call(FRESH_DEFAULTS, el.name)) { el.value = FRESH_DEFAULTS[el.name]; return; }
+            if (el.tagName === 'SELECT') { el.value = ''; return; }
+            if (el.name === 'experience_plus') { el.value = 'False'; return; }
+            el.value = '';
+        });
+        // The visible combo boxes are not form fields themselves.
+        if (expSelect && expYears && expCombo) { expApplyTyped(''); expCombo.value = ''; expOpenMenu(false); }
+        if (eduSelect && eduOther && eduCombo) { eduApplyTyped(''); eduCombo.value = ''; eduOpenMenu(false); }
+        // Skill stars live on the pills, not in the inputs.
+        form.querySelectorAll('.skills-group li.mandatory').forEach(function (li) { li.classList.remove('mandatory'); });
+        if (typeof syncMandatorySkills === 'function') syncMandatorySkills();
+        // No stale messages: every field error on the page is removed.
+        form.querySelectorAll('[id^="err_"]').forEach(function (errEl) { errEl.textContent = ''; });
+        form.querySelectorAll('.field-invalid').forEach(function (el) { el.classList.remove('field-invalid'); });
+        applySalaryFormat(false);
+    }
+
+    function refreshDependentUi() {
+        toggleClassification();
+        filterDesignations();
+        applyFieldMode();
+        toggleDuration();
+        toggleNotice();
+        toggleInterview();
+    }
+    if (jobCategorySelect) jobCategorySelect.addEventListener('change', function () {
+        resetCategoryDependents();
+        refreshDependentUi();
+    });
+    if (classificationSelect) classificationSelect.addEventListener('change', function () {
+        resetWholeForm();
+        refreshDependentUi();
+        validateClassification();
+    });
+
+    document.getElementById('jobPostForm').addEventListener('submit', function (e) {
+        let firstInvalid = null;
+        REQUIRED_FIELDS.forEach(function (cfg) {
+            const valid = validateField(cfg);
+            if (!valid && !firstInvalid) firstInvalid = cfg;
+        });
+        let firstInvalidSalaryEl = null;
+        if (!validateExperience() && !firstInvalid) {
+            firstInvalidSalaryEl = expCombo; // reuse the scroll-and-focus path below
+        }
+        if (!validateDuration() && !firstInvalid && !firstInvalidSalaryEl) {
+            firstInvalidSalaryEl = durationInput;
+        }
+        if (!validateClassification() && !firstInvalid && !firstInvalidSalaryEl) {
+            firstInvalidSalaryEl = classificationSelect;
+        }
+        if (!validateEducation() && !firstInvalid && !firstInvalidSalaryEl) {
+            firstInvalidSalaryEl = eduCombo;
+        }
+        if (!validateSkills() && !firstInvalid && !firstInvalidSalaryEl) {
+            firstInvalidSalaryEl = skillsGroup;
+        }
+        SALARY_FIELDS.forEach(function (id) {
+            const valid = validateSalaryField(id);
+            if (!valid && !firstInvalidSalaryEl && !firstInvalid) {
+                firstInvalidSalaryEl = salaryFieldParts(id).input;
+            }
+        });
+        FORMAT_VALIDATORS.forEach(function (v) {
+            if (!validateFormat(v) && !firstInvalidSalaryEl && !firstInvalid) firstInvalidSalaryEl = v.el;
+        });
+        if (firstInvalid) {
+            e.preventDefault();
+            const { input } = fieldParts(firstInvalid);
+            if (input) {
+                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const focusable = firstInvalid.kind === 'radio'
+                    ? input.querySelector('input[type=radio]')
+                    : input;
+                if (focusable) focusable.focus({ preventScroll: true });
+            }
+        } else if (firstInvalidSalaryEl) {
+            e.preventDefault();
+            firstInvalidSalaryEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstInvalidSalaryEl.focus({ preventScroll: true });
+        }
+    });
+})();
+</script>
+{% endblock %}

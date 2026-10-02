@@ -1,0 +1,93 @@
+{% extends "skillup_assessment/_skillup_base.html" %}
+
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ label }} Certification</h1>
+    <p>Complete the {{ label }} Skill Up Mock Test and score above {{ pass_threshold }} to unlock your certificate.</p>
+</div>
+
+<div style="max-width: 620px;">
+
+    {% if state == 'not_completed' %}
+        <!-- ===== State A: Mock Test Not Available Yet ===== -->
+        <div class="card" style="text-align:center; padding:48px 24px;">
+            <span class="material-symbols-outlined" style="font-size:52px; color:#cbd5e1;">workspace_premium</span>
+            <h2 style="font-size:19px; margin:16px 0 6px;">Certifications</h2>
+            <p style="color:var(--body); margin:0 0 18px;">
+                Complete the Skill Up Mock Test to earn your Career Buddy certification.
+            </p>
+            <span class="status-pill status-not-completed" style="margin-bottom:20px;">Current status: Mock Test Not Completed</span>
+            <div>
+                <a href="{% url 'skill_up' %}" class="btn btn-primary">Go to Skill Up</a>
+            </div>
+        </div>
+
+    {% elif state == 'locked' %}
+        <!-- ===== State B: Score <= threshold ===== -->
+        <div class="card" style="text-align:center; padding:48px 24px;">
+            <span class="material-symbols-outlined" style="font-size:48px; color:#A64B3C;">lock</span>
+            <h2 style="font-size:19px; margin:16px 0 14px;">Certification Locked</h2>
+            <p style="margin:0 0 4px;">Your Score: <strong>{{ result.score }} / {{ result.total }}</strong></p>
+            <p style="color:var(--body); margin:0 0 14px;">Required Score: Above {{ pass_threshold }}</p>
+            <p style="color:var(--body); font-size:13.5px; margin:0 0 20px;">
+                You must achieve a score above {{ pass_threshold }} to unlock your certificate.
+            </p>
+            <a href="{% url 'skill_up' %}" class="btn btn-primary">Retake Mock Test</a>
+        </div>
+
+    {% elif state == 'eligible' %}
+        <!-- ===== State C: Eligible, name not entered yet ===== -->
+        <div class="card" style="text-align:center; margin-bottom:16px; padding:32px 24px;">
+            <span class="material-symbols-outlined" style="font-size:44px; color:#FCA311;">workspace_premium</span>
+            <h2 style="font-size:19px; margin:12px 0 6px;">Congratulations! 🎉</h2>
+            <p style="color:var(--body); margin:0 0 12px;">You are eligible for your Career Buddy Certification.</p>
+            <p style="margin:0 0 10px;">Score: <strong>{{ result.score }} / {{ result.total }}</strong></p>
+            <span class="status-pill status-eligible">Status: Certification Eligible</span>
+        </div>
+
+        <div class="card">
+            <h2 style="font-size:17px; margin:0 0 4px;">Enter Your Name for the Certificate</h2>
+            <p style="color:var(--body); font-size:13px; margin:0 0 16px;">
+                Please enter your name exactly as you want it to appear on your certificate.
+            </p>
+
+            {% if name_error %}
+                <div class="alert-error">{{ name_error }}</div>
+            {% endif %}
+
+            <form method="post" action="{% url 'skillup_certificate_name' subject %}">
+                {% csrf_token %}
+                <div style="margin-bottom:14px;">
+                    <input type="text" name="certificate_name" class="form-input"
+                           value="{{ prefill_name }}" maxlength="100" required
+                           placeholder="Enter your full name">
+                </div>
+                <button type="submit" class="btn btn-primary">Generate Certificate</button>
+            </form>
+        </div>
+
+    {% elif state == 'certified' %}
+        <!-- ===== Certificate already generated ===== -->
+        <div class="card" style="text-align:center; padding:40px 24px;">
+            <span class="material-symbols-outlined" style="font-size:44px; color:#FCA311;">workspace_premium</span>
+            <h2 style="font-size:19px; margin:12px 0 6px;">🎉 Certificate Ready</h2>
+            <p style="margin:0 0 4px;">Issued to <strong>{{ certificate.certificate_name }}</strong></p>
+            <p style="color:var(--body); font-size:13px; margin:0 0 4px;">Score: {{ certificate.score }} / {{ certificate.total }}</p>
+            <p style="color:var(--body); font-size:13px; margin:0 0 20px;">
+                Certificate ID: {{ certificate.certificate_number }}
+                {% if certificate.generated_at %}&middot; Issued {{ certificate.generated_at|date:"d M Y" }}{% endif %}
+            </p>
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                <a href="{% url 'skillup_certificate_download' subject %}" class="btn btn-primary">
+                    <span class="material-symbols-outlined" style="font-size:16px;">visibility</span>View / Download Certificate
+                </a>
+                <a href="{% url 'skillup_certificate_edit' subject %}" class="btn btn-outline">
+                    Edit Name &amp; Regenerate
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

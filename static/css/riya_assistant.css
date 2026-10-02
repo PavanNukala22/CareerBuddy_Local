@@ -1,0 +1,1082 @@
+.riya-assistant {
+  position: fixed;
+  right: 10px;
+  bottom: 15px;
+  z-index: 5000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+/* ── Greeting bubble floating above character ── */
+.riya-greeting-bubble {
+  pointer-events: none;
+  position: absolute;
+  right: 80px;
+  bottom: 110px;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px 12px;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.15);
+  max-width: none;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 5001;
+}
+
+.riya-greeting-bubble span {
+  font-family: 'Newsreader', serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.25;
+}
+
+.riya-greeting-tail {
+  position: absolute;
+  bottom: -8px;
+  right: 12px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 0px solid transparent;
+  border-top: 8px solid #fff;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.06));
+}
+
+/* Hide greeting bubble when chat panel is open */
+.is-open .riya-greeting-bubble {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+/* Flex layout for bubble header */
+.riya-bubble-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Bubble header name ── */
+.riya-bubble-name {
+  font-family: 'Newsreader', serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.riya-mic-indicator {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Newsreader', serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: #22c55e;
+  animation: mic-pulse 1.6s ease-in-out infinite;
+}
+
+.is-listening .riya-mic-indicator {
+  display: flex;
+}
+
+@keyframes mic-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ── User live transcript card ── */
+.riya-response-card.riya-user-transcript {
+  background: #f0f9ff;
+  border: 1.5px solid #bae6fd;
+  border-radius: 14px 14px 4px 14px;
+  color: #0c4a6e;
+  font-style: italic;
+  font-size: 13px;
+  padding: 10px 14px;
+  margin-bottom: 4px;
+}
+
+.riya-response-card.riya-user-transcript::before {
+  content: "You: ";
+  font-weight: 700;
+  font-style: normal;
+  color: #0ea5e9;
+}
+
+.riya-launcher,
+.riya-thought-bubble {
+  pointer-events: auto;
+}
+
+.riya-launcher {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  border: 0;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 180ms ease, filter 180ms ease;
+}
+
+.riya-launcher-hint {
+  position: absolute;
+  right: -4px;
+  bottom: 115px;
+  background-color: #fff;
+  color: #000000;
+  font-family: 'Newsreader', serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.18);
+  pointer-events: none;
+  user-select: none;
+}
+
+.riya-launcher:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* Hide launcher when chat is open */
+.riya-assistant.is-open .riya-launcher {
+  display: none !important;
+}
+
+/* Robot image launcher styles */
+.riya-launcher-model-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: transparent;
+  animation: aria-float 3s ease-in-out infinite;
+  overflow: visible;
+  transition: filter 200ms ease;
+  filter:
+    drop-shadow(0 0 10px rgba(0, 200, 255, 0.6)) drop-shadow(0 0 20px rgba(0, 180, 255, 0.25));
+}
+
+.riya-launcher:hover .riya-launcher-model-shell {
+  filter:
+    drop-shadow(0 0 16px rgba(0, 220, 255, 0.9)) drop-shadow(0 0 30px rgba(0, 180, 255, 0.5));
+}
+
+.riya-launcher-img {
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+  display: block;
+}
+
+@keyframes aria-float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Screen-reader-only status line.
+
+   #riya-status-text carries the class `sr-only`, which used to be
+   supplied by Bootstrap. Buddy is included on pages that do not load
+   Bootstrap (the Skill Up hub is one), and there the rule simply did
+   not exist — so a line meant only for screen readers rendered as
+   visible text ("Microphone stopped. Click Speak when you are
+   ready."), grew the panel past the top of the viewport and pushed
+   the header, microphone and language selector out of sight.
+
+   Defining it here makes the assistant self-contained: it no longer
+   depends on any stylesheet outside its own file.
+   ────────────────────────────────────────────────────────────── */
+.riya-assistant .sr-only,
+.riya-assistant .riya-status-text {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* ── Chat panel: desktop ── */
+.riya-thought-bubble {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 12px);
+  width: min(380px, calc(100vw - 24px));
+
+  padding: 12px 16px 10px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  color: #0f172a;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px) scale(0.92);
+  transform-origin: bottom right;
+  transition: all 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.riya-bubble-header {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.riya-close-button {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 5px;
+  line-height: 1;
+  z-index: 10;
+  min-width: 36px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.riya-close-button:hover {
+  color: #0f172a;
+}
+
+.riya-assistant.is-open .riya-thought-bubble {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+
+
+/* ============================================================
+   PERSISTENT BUDDY WELCOME / RECOMMENDATIONS
+   The suggestion area is separate from #riya-response-slot so it stays
+   visible while the conversation grows.
+   ============================================================ */
+.riya-thought-bubble {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: min(560px, calc(100vw - 24px));
+  max-height: min(780px, calc(100vh - 150px));
+  min-width: 0;
+  overflow: hidden;
+}
+
+.riya-response-slot {
+  flex: 1 1 auto;
+  min-height: 150px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.riya-welcome-panel {
+  flex: 0 0 auto;
+  min-width: 0;
+  max-height: 270px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 12px 12px;
+  border-top: 1px solid #eef2f7;
+  background: #fff;
+  scrollbar-width: thin;
+}
+
+.riya-welcome-panel::-webkit-scrollbar {
+  width: 4px;
+}
+
+.riya-welcome-panel::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, .22);
+  border-radius: 20px;
+}
+
+.riya-welcome-wrap {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.riya-welcome-mascot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 96px;
+  height: 96px;
+  margin: 6px auto 10px;
+  border-radius: 50%;
+  background: #eaf2ff;
+  overflow: hidden;
+  position: relative;
+}
+
+.riya-welcome-mascot-img {
+  width: 82px;
+  height: 82px;
+  object-fit: contain;
+  display: block;
+}
+
+.riya-welcome-heading {
+  margin: 0 4px 12px;
+  text-align: center;
+  color: #0f172a;
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+.riya-welcome-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.riya-welcome-card {
+  width: 100%;
+  min-width: 0;
+  min-height: 86px;
+  box-sizing: border-box;
+  border: 1px solid #e5eaf3;
+  border-radius: 16px;
+  background: #fff;
+  padding: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  color: #17213a;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+  font: inherit;
+}
+
+.riya-welcome-card:hover {
+  transform: translateY(-1px);
+  border-color: #cbd8ef;
+  box-shadow: 0 6px 18px rgba(30, 64, 175, .08);
+}
+
+.riya-welcome-card:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, .22);
+  outline-offset: 2px;
+}
+
+.riya-welcome-card-icon {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  background: #e8f0ff;
+}
+
+.riya-welcome-card-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.riya-welcome-card:nth-child(2n) .riya-welcome-card-icon {
+  color: #e25555;
+  background: #fff0f0;
+}
+
+.riya-welcome-card:nth-child(3n) .riya-welcome-card-icon {
+  color: #7c3aed;
+  background: #f1eaff;
+}
+
+.riya-welcome-card:nth-child(4n) .riya-welcome-card-icon {
+  color: #16a34a;
+  background: #eaf8ef;
+}
+
+.riya-welcome-card-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.riya-welcome-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.riya-welcome-card-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.25;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.riya-welcome-card-chevron {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  color: #94a3b8;
+}
+
+.riya-welcome-card-chevron svg {
+  width: 16px;
+  height: 16px;
+}
+
+.riya-welcome-card-desc {
+  display: block;
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 11.5px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.riya-welcome-rec-section {
+  margin-top: 14px;
+}
+
+.riya-welcome-rec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 2px 9px;
+}
+
+.riya-welcome-rec-title {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #17213a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.riya-welcome-rec-spark {
+  width: 15px;
+  height: 15px;
+  color: #2563eb;
+}
+
+.riya-welcome-rec-spark svg {
+  width: 15px;
+  height: 15px;
+}
+
+.riya-welcome-seemore {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 3px 0;
+}
+
+.riya-welcome-seemore svg {
+  width: 13px;
+  height: 13px;
+  vertical-align: -2px;
+}
+
+.riya-welcome-grid--rec {
+  margin-bottom: 8px;
+}
+
+.riya-welcome-grid--rec.is-hidden {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .riya-thought-bubble {
+    max-height: none !important;
+  }
+
+  .riya-welcome-panel {
+    max-height: 235px;
+    padding: 4px 12px 10px;
+  }
+
+  .riya-welcome-mascot {
+    width: 76px;
+    height: 76px;
+    margin-bottom: 8px;
+  }
+
+  .riya-welcome-mascot-img {
+    width: 66px;
+    height: 66px;
+  }
+
+  .riya-welcome-heading {
+    font-size: 16px;
+  }
+
+  .riya-welcome-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   MOBILE — Compact floating chat panel (≤ 600px)
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+
+  /* Shrink the launcher on mobile */
+  .riya-assistant {
+    right: 8px;
+    bottom: 8px;
+  }
+
+  .riya-launcher,
+  .riya-launcher-model-shell,
+  .riya-launcher-img {
+    width: 76px;
+    height: 76px;
+  }
+
+  /* Greeting bubble repositioned for smaller launcher */
+  .riya-greeting-bubble {
+    right: 60px;
+    bottom: 80px;
+    font-size: 11px;
+    padding: 5px 10px;
+    max-width: calc(100vw - 90px);
+    white-space: normal;
+  }
+
+  /* Floating chat panel on mobile — anchored by explicit insets on all
+     four sides rather than a height formula. A formula-based height
+     (e.g. calc(100dvh - 120px) capped at a fixed max) happens to leave
+     enough room on some phones but not others - on a device like an
+     iPhone SE (667px tall) that cap still left the panel filling ~82%
+     of the screen with only 8px side margins, which reads as "full
+     screen" even though no rule technically said 100%. Explicit insets
+     guarantee a real, visible gap around the panel on every device. */
+  .riya-thought-bubble {
+    position: fixed !important;
+    top: max(8px, env(safe-area-inset-top, 8px)) !important;
+    bottom: max(8px, env(safe-area-inset-bottom, 8px)) !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: calc(100vw - 16px) !important;
+    height: calc(100vh - 16px) !important;
+    max-height: none !important;
+    max-width: none !important;
+    border-radius: 16px !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 0 !important;
+
+    z-index: 9999 !important;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+    transform-origin: bottom right;
+  }
+
+  /* Landscape phones are short. The insets above still guarantee a
+     margin, but tighten them a little so there's more room for the
+     conversation itself on a ~375px-tall landscape screen. */
+  @media (max-height: 420px) {
+    .riya-thought-bubble {
+      top: max(8px, env(safe-area-inset-top, 8px)) !important;
+      bottom: max(72px, calc(72px + env(safe-area-inset-bottom, 0px))) !important;
+    }
+  }
+
+  /* Header bar — pinned to top */
+  .riya-bubble-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 0;
+    flex-shrink: 0;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Close button */
+  .riya-close-button {
+    min-width: 36px;
+    min-height: 36px;
+    font-size: 20px;
+    border-radius: 50%;
+    background: rgba(100, 116, 139, 0.08);
+  }
+
+  /* Response/conversation area */
+  .riya-response-slot {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 16px 16px 20px;
+  }
+
+  /* Text input bar */
+  .riya-text-form {
+    flex-shrink: 0 !important;
+    padding: 12px 16px !important;
+    border-top: 1px solid #e2e8f0;
+    background: #fff;
+  }
+
+  /* Prevent iOS auto-zoom on focus */
+  .riya-text-input {
+    font-size: 16px !important;
+    height: 40px !important;
+  }
+
+  /* Touch-friendly send button */
+  .riya-text-send {
+    width: 40px !important;
+    min-width: 40px !important;
+    height: 40px !important;
+  }
+
+  /* Audio animation bar */
+  .riya-audio-bars {
+    flex-shrink: 0;
+  }
+}
+
+/* Extra-small phones (≤ 380px) */
+@media (max-width: 380px) {
+
+  .riya-launcher,
+  .riya-launcher-model-shell,
+  .riya-launcher-img {
+    width: 64px;
+    height: 64px;
+  }
+
+  .riya-greeting-bubble {
+    right: 50px;
+    bottom: 68px;
+  }
+}
+
+/* ============================================================
+   CAREERBUDDY BUDDY — PREMIUM WELCOME LAYOUT OVERRIDE
+   Keeps suggestions persistent while giving the initial state a
+   clean, centered assistant experience.
+   ============================================================ */
+
+.riya-thought-bubble {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: 520px;
+  height: min(820px, calc(100vh - 32px));
+  max-height: none;
+  box-sizing: border-box;
+  z-index: 9999;
+  padding: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #e8edf5;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.16);
+  
+  color: #0f172a;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px) scale(0.92);
+  transform-origin: bottom right;
+  transition: all 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.riya-bubble-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #f7f9fc;
+  border-bottom: 1px solid #eef1f7;
+  flex-shrink: 0;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.riya-bubble-title-group {
+  display: flex;
+  align-items: center;
+}
+
+.riya-header-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 10px;
+  background: linear-gradient(145deg, #2f6df6, #1b4fd6);
+  padding: 4px;
+}
+
+.riya-header-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.riya-bubble-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.riya-bubble-status {
+  font-size: 12px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.riya-online-dot {
+  width: 6px;
+  height: 6px;
+  background-color: #22c55e;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.riya-bubble-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.riya-text-form {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+/* Let aria_assistant.html handle riya-response-slot scrolling */
+
+.riya-welcome-panel {
+  order: 2;
+  flex: 0 0 auto;
+  min-height: 0;
+  max-height: none;
+  overflow: visible;
+  padding: 10px 14px 18px;
+  border-top: 0;
+  background: transparent;
+}
+
+.riya-welcome-wrap {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.riya-welcome-mascot,
+.riya-welcome-greeting,
+.riya-welcome-heading,
+.riya-welcome-rec-head {
+  display: none !important;
+}
+
+.riya-suggestion-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.riya-welcome-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.riya-welcome-card {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #c9d8ff;
+  background: #f2f6ff;
+  color: #1b4fd6;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 0;
+  width: auto;
+  box-shadow: none;
+  transition: background 0.15s ease;
+}
+
+.riya-welcome-card:hover {
+  background: #e3ecff;
+  transform: none;
+  box-shadow: none;
+  border-color: #a3c2ff;
+}
+
+.riya-welcome-card-icon,
+.riya-welcome-card-desc,
+.riya-welcome-card-chevron {
+  display: none !important;
+}
+
+.riya-welcome-card-title {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.riya-welcome-rec-section {
+  margin-top: 8px;
+  padding-top: 0;
+  border-top: none;
+}
+
+/* No overrides needed since the layout is always compact pills */
+
+@media (max-width: 600px) {
+  .riya-thought-bubble {
+    width: calc(100vw - 16px);
+    max-height: calc(100vh - 22px);
+    border-radius: 20px;
+  }
+
+  .riya-welcome-panel {
+    padding: 8px 14px 14px;
+  }
+}
+
+/* Final vertical order: header → conversation → persistent suggestions → composer. */
+.riya-welcome-panel {
+  order: 1;
+}
+
+.riya-text-form {
+  order: 2;
+}
+
+.riya-audio-bars {
+  order: 3;
+}
+
+/* ============================================================
+   CAREERBUDDY BUDDY — OPTION 4 IMAGE BACKGROUND
+   ============================================================ */
+.riya-bubble-content {
+  flex: 1 1 auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background-color: #f0f6ff; /* Soft light blue base */
+  background-image: 
+    linear-gradient(rgba(240, 246, 255, 0.75), rgba(240, 246, 255, 0.85)),
+    url('/static/images/buddy-chat-background.png');
+  background-size: cover;
+  background-position: right center;
+  background-repeat: no-repeat;
+}
+
+.riya-response-slot {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.riya-welcome-panel {
+  position: relative;
+  z-index: 1;
+}
+/* ============================================================
+   CONVERSATION HISTORY
+   The panel shows only the most recent few messages; the full
+   transcript lives behind this button, which sits to the RIGHT of the
+   speaker button (language, mic and speaker shift left of it) and matches
+   the mic/speaker sizing and 4px spacing so the header stays even.
+   ============================================================ */
+.riya-history-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  margin: 0 0 0 4px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.riya-history-button:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  transform: translateY(-1px);
+}
+
+.riya-history-button:active {
+  transform: scale(0.96);
+}
+
+.riya-history-button[aria-expanded="true"] {
+  background: #2563eb;
+  color: #fff;
+}
+
+/* Covers the conversation area only, so the header controls stay reachable. */
+.riya-history-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 0 0 20px 20px;
+}
+
+.riya-history-panel[hidden] {
+  display: none;
+}
+
+.riya-history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid #eef1f7;
+  background: #f7f9fc;
+  flex: 0 0 auto;
+}
+
+.riya-history-title {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: #0f172a;
+}
+
+.riya-history-close {
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.riya-history-close:hover {
+  color: #0f172a;
+}
+
+.riya-history-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 12px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.riya-history-item {
+  max-width: 86%;
+  padding: 8px 12px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.riya-history-item--user {
+  align-self: flex-end;
+  background: #1b4fd6;
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.riya-history-item--assistant {
+  align-self: flex-start;
+  background: #f1f5f9;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  border-bottom-left-radius: 4px;
+}
+
+.riya-history-time {
+  display: block;
+  margin-top: 4px;
+  font-size: 10.5px;
+  opacity: 0.65;
+}
+
+.riya-history-empty {
+  margin: auto;
+  color: #64748b;
+  font-size: 13px;
+  text-align: center;
+}

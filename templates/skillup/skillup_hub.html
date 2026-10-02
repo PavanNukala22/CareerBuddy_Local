@@ -1,0 +1,95 @@
+{% load static %}
+{% comment %}
+Skill Up hub, served through Django so the ONE existing Buddy renders on it.
+
+Why this exists
+---------------
+Skill Up was linked with {% static '001 Career Buddy/index.html' %}, i.e. as a
+raw file. A raw static file never passes through Django's template engine, so
+the Buddy include in base.html could not reach it — which is why Buddy is
+absent on the Skill Up screen while it appears everywhere else.
+
+This template serves the SAME index.html markup (injected verbatim by the view)
+and then includes the SAME aria_assistant.html partial every other page uses.
+No second chatbot, no duplicated UI, no new avatar or launcher.
+
+The
+<base> tag keeps every relative asset path inside the Skill Up bundle
+resolving exactly as it did when the file was opened directly.
+{% endcomment %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <base href="{{ skillup_base }}">
+  {{ skillup_head|safe }}
+
+  <link rel="stylesheet" href="{% static 'css/riya_assistant.css' %}?v=riya-welcome-v12">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+<style id="site-font-outfit">
+body{font-family:'Outfit',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif !important}
+</style>
+</head>
+
+<body data-skillup-hub="1">
+  {{ skillup_body|safe }}
+
+  {# The one and only Buddy — same partial, same logo, same launcher. #}
+  {% include "includes/aria_assistant.html" %}
+
+  <script>
+    (function () {
+      // ----------------------------------------------------------------
+      // 1 · Keep fragment links on THIS page.
+      //
+      // Skill Up navigates entirely through the hash: "#depth-english",
+      // "#load=TechCenter/....html&title=...". Per the HTML spec a
+      // fragment-only href resolves against the document base, and the
+      // <base> tag above points at the static bundle — so every nav link
+      // and every "Open lesson" card would navigate to
+      // /static/001 Career Buddy/#... , leaving /skill-up/ and taking
+      // Buddy with it.
+      //
+      // Rewriting the hash in place keeps the SPA behaviour identical
+      // (index.html listens for `hashchange`) without leaving the page.
+      // ----------------------------------------------------------------
+      document.addEventListener('click', function (event) {
+        if (event.defaultPrevented || event.button !== 0) { return; }
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) { return; }
+
+        var link = event.target.closest && event.target.closest('a');
+        if (!link || link.target === '_blank') { return; }
+
+        var raw = link.getAttribute('href') || '';
+        if (raw.charAt(0) !== '#') { return; }
+
+        event.preventDefault();
+        if (raw === '#') { return; }
+
+        if (window.location.hash === raw) {
+          // Same hash: no `hashchange` would fire, so re-render explicitly.
+          window.dispatchEvent(new HashChangeEvent('hashchange'));
+        } else {
+          window.location.hash = raw;
+        }
+      });
+
+      // ----------------------------------------------------------------
+      // 2 · Keep Buddy's page/path context in step with the hash routing,
+      //     so "what is this page about?" resolves against the lesson
+      //     actually open rather than the hub.
+      // ----------------------------------------------------------------
+      var root = document.getElementById('riya-assistant-root');
+      if (!root) { return; }
+      function sync() {
+        root.dataset.riyaPage = 'skill_up';
+        root.dataset.riyaPath = window.location.pathname + window.location.hash;
+      }
+      sync();
+      window.addEventListener('hashchange', sync);
+    })();
+  </script>
+</body>
+
+</html>
