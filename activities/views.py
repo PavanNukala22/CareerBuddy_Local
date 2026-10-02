@@ -87,7 +87,11 @@ def home(request):
         'featured_activities': activities,
         'total_activities': total_activities,
     }
-    return render(request, 'home.html', context)
+    # The public entry point is the CareerBuddy landing page. Its Skill Up and
+    # Resources menus link to /go/<key>/ (core/navigation.py), which handles the
+    # candidate-login check, so the same markup serves signed-in and anonymous
+    # visitors. The previous home.html is left in place, unused by this view.
+    return render(request, 'landing.html', context)
 
 
 @login_required

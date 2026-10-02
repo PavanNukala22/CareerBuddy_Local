@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.core.cache import cache
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from .forms import RegisterForm, LoginForm, ProfileUpdateForm
 from activities.models import UserProgress, UserExerciseResult, Activity
@@ -219,29 +220,56 @@ def _clear_login_failures(request, username):
         cache.delete(key)
 
 
+def _safe_next(request):
+    """Return the validated ``?next=`` destination, or '' if there isn't one.
+
+    ``next`` is reflected into a redirect, so it is checked with Django's own
+    host/scheme validator: without it any landing-page link could be rewritten
+    into ``/users/login/?next=https://evil.example`` and the login form would
+    bounce the candidate off-site (open redirect). A ``next`` pointing back at
+    the login page itself is dropped as well, which is what would otherwise
+    produce a login -> login redirect loop.
+    """
+    candidate = request.POST.get('next') or request.GET.get('next') or ''
+    if not candidate:
+        return ''
+    if not url_has_allowed_host_and_scheme(
+        candidate,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return ''
+    if candidate.split('?')[0].rstrip('/') == reverse('login').rstrip('/'):
+        return ''
+    return candidate
+
+
 def login_view(request):
+    next_url = _safe_next(request)
     if request.user.is_authenticated:
-        return redirect('home')
+        # Honour `next` here too: a candidate who is already signed in and
+        # follows a protected landing-page link must land on that destination,
+        # not be bounced to the home page.
+        return redirect(next_url or 'home')
     if request.method == 'POST':
         submitted_username = request.POST.get('username', '')
         if _login_is_locked_out(request, submitted_username):
             messages.error(request, 'Too many failed login attempts. Please try again in a few minutes.')
             form = LoginForm()
-            return render(request, 'users/login.html', {'form': form})
+            return render(request, 'users/login.html', {'form': form, 'next': next_url})
         form = LoginForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
             _clear_login_failures(request, submitted_username)
             login(request, user)
-            next_url = request.GET.get('next', 'home')
             messages.success(request, f'Welcome back, {user.first_name or user.username}!')
-            return redirect(next_url)
+            return redirect(next_url or 'home')
         else:
             _record_login_failure(request, submitted_username)
             messages.error(request, 'Invalid username or password.')
     else:
         form = LoginForm()
-    return render(request, 'users/login.html', {'form': form})
+    return render(request, 'users/login.html', {'form': form, 'next': next_url})
 
 
 @require_POST

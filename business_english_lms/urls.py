@@ -11,6 +11,7 @@ import subject_views
 from django.views.generic.base import RedirectView
 from django.contrib.staticfiles.storage import staticfiles_storage
 from core.media_views import serve_protected_media
+from core.nav_views import nav_go
 
 urlpatterns = [
     # SR-04 fix: résumés and selfies must be authenticated + ownership-checked;
@@ -27,6 +28,11 @@ urlpatterns = [
     path('interview-recording/<str:filename>', serve_protected_media, {'category': 'interview_videos'}, name='serve_protected_interview_video'),
     path('media/interview_videos/<str:filename>', serve_protected_media, {'category': 'interview_videos'}, name='serve_protected_interview_video_legacy'),
     path('admin/', admin.site.urls),
+
+    # Landing-page navigation gateway. Every Skill Up / Resources link
+    # goes through here so the login check and the post-login redirect
+    # are identical for all of them (core/navigation.py holds the map).
+    path('go/<slug:key>/', nav_go, name='nav_go'),
     path('', activity_views.home, name='home'),
     path('dashboard/', activity_views.dashboard, name='student_dashboard'),
     path('applications/<int:pk>/', job_views.my_application_detail, name='my_application_detail'),

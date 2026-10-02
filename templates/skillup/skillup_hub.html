@@ -33,6 +33,27 @@ body{font-family:'Outfit',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Ar
 </head>
 
 <body data-skillup-hub="1">
+  {% if skillup_section %}
+  <script>
+    // The landing page cannot send a URL fragment through the login redirect
+    // (fragments never reach the server), so it sends ?section=<id> instead.
+    // Restore it as the hash BEFORE the hub's own router runs on
+    // DOMContentLoaded — that router already scrolls to any non-"#load=" hash.
+    (function () {
+      var section = "{{ skillup_section|escapejs }}";
+      if (!section || window.location.hash) { return; }
+      // replaceState, not assignment: no extra history entry, so Back from the
+      // hub returns to the landing page rather than to the hub without a hash.
+      window.history.replaceState(null, "", window.location.pathname + "#" + section);
+      // The Certifications panel loads its status on `hashchange` only, so fire
+      // one once the page is parsed; re-rendering the current hash is a no-op
+      // for every other section.
+      document.addEventListener("DOMContentLoaded", function () {
+        window.dispatchEvent(new HashChangeEvent("hashchange"));
+      });
+    })();
+  </script>
+  {% endif %}
   {{ skillup_body|safe }}
 
   {# The one and only Buddy — same partial, same logo, same launcher. #}

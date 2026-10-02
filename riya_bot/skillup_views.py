@@ -11,10 +11,13 @@ from __future__ import annotations
 import os
 import re
 
+from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import render
 from django.templatetags.static import static
 from django.views.decorators.clickjacking import xframe_options_sameorigin
+
+from core.navigation import ALLOWED_SECTIONS
 
 from .skillup_catalog import SKILLUP_DIRNAME, SKILLUP_INDEX, skillup_root
 
@@ -49,9 +52,18 @@ def _parsed_index(index_path: str):
     return parsed
 
 
+@login_required
 @xframe_options_sameorigin
 def skillup_hub(request):
-    """Render the Skill Up hub with Buddy attached."""
+    """Render the Skill Up hub with Buddy attached.
+
+    ``?section=<id>`` scrolls to one of the hub's own sections. The landing
+    page sends the section as a query parameter rather than a URL fragment
+    because a fragment never reaches the server and so cannot survive the
+    ``?next=`` round-trip through the login page. The template turns it back
+    into a hash, which is what the hub's own router already listens for.
+    Only ids in ALLOWED_SECTIONS are passed through.
+    """
     root = skillup_root()
     if not root:
         raise Http404("Skill Up content is not installed.")
@@ -66,8 +78,12 @@ def skillup_hub(request):
     # under a CDN or a hashed-filename storage backend after collectstatic.
     base_href = static(f"{SKILLUP_DIRNAME}/{SKILLUP_INDEX}").rsplit("/", 1)[0] + "/"
 
+    requested_section = request.GET.get("section", "")
+    section = requested_section if requested_section in ALLOWED_SECTIONS else ""
+
     return render(request, "skillup/skillup_hub.html", {
         "skillup_base": base_href,
         "skillup_head": skillup_head,
         "skillup_body": skillup_body,
+        "skillup_section": section,
     })
