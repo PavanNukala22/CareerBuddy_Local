@@ -34,6 +34,7 @@ urlpatterns = [
     # are identical for all of them (core/navigation.py holds the map).
     path('go/<slug:key>/', nav_go, name='nav_go'),
     path('', activity_views.home, name='home'),
+    path('careers/<slug:track>/', activity_views.career_path, name='career_path'),
     path('dashboard/', activity_views.dashboard, name='student_dashboard'),
     path('applications/<int:pk>/', job_views.my_application_detail, name='my_application_detail'),
     path('activities/', include('activities.urls')),

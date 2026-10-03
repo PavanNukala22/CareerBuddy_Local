@@ -5,7 +5,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_POST, require_GET
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Count, Q, Prefetch
@@ -92,6 +92,22 @@ def home(request):
     # candidate-login check, so the same markup serves signed-in and anonymous
     # visitors. The previous home.html is left in place, unused by this view.
     return render(request, 'landing.html', context)
+
+
+CAREER_TRACKS = {
+    'it': 'IT Roles',
+    'non-it': 'Non-IT Departments',
+    'technical': 'Non-IT Technical Departments',
+    'non-technical': 'Non-IT Non-Technical Departments',
+}
+
+
+def career_path(request, track):
+    # Same template as the landing page: the role cards and role modal live
+    # there, and the 'track' flag hides every section except the role list.
+    if track not in CAREER_TRACKS:
+        raise Http404
+    return render(request, 'landing.html', {'track': track, 'track_title': CAREER_TRACKS[track]})
 
 
 @login_required
