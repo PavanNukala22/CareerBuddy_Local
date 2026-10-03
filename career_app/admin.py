@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import RazorpayPayment, ResumeInterviewSession, InterviewViolation
+from .models import RazorpayPayment, ResumeInterviewSession, InterviewViolation, ResumeRoleTemplate
 
 
 class InterviewViolationInline(admin.TabularInline):
@@ -77,3 +77,21 @@ class RazorpayPaymentAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+
+@admin.register(ResumeRoleTemplate)
+class ResumeRoleTemplateAdmin(admin.ModelAdmin):
+    """Role descriptions, skills, form fields, experience-level suggestions and
+    summary templates for the manual Resume Builder on the landing page."""
+    list_display = ('title', 'slug', 'category', 'industry', 'display_order', 'is_active', 'updated_at')
+    list_filter = ('category', 'is_active')
+    list_editable = ('display_order', 'is_active')
+    search_fields = ('title', 'slug', 'industry')
+    prepopulated_fields = {'slug': ('title',)}
+    fieldsets = (
+        (None, {'fields': ('title', 'slug', 'category', 'industry', 'icon', 'subtitle', 'is_active', 'display_order')}),
+        ('Role information', {'fields': ('description', 'responsibilities', 'required_skills',
+                                         'recommended_skills', 'career_path', 'certifications')}),
+        ('Resume form & suggestions', {'fields': ('experience_label', 'role_fields', 'level_suggestions',
+                                                  'summary_templates')}),
+    )
