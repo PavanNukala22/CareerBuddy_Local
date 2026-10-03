@@ -518,6 +518,7 @@ button.cp-back{border:0;background:none;cursor:pointer;padding:0;font:inherit;fo
 @media(max-width:560px){.skill-list{grid-template-columns:1fr}}
 #ntDeptView{animation:cpIn .25s ease}
 .rm-body [hidden]{display:none}
+.rm-body.solo{grid-template-columns:1fr}
 .ra-list{display:grid;gap:.75rem}
 .ra-list .cp-card{padding:1rem 1.2rem}
 /* Path picker popup */
@@ -1906,12 +1907,39 @@ DEPTS.forEach(function(d){var h=dh[d.c],k=dn[d.c]++;d.key=d.c+'-'+(k+1);if(!h)re
   h.insertAdjacentHTML('beforeend','<a class="role-card3" href="#'+d.key+'"><div class="rc-img g'+(k%6)+'">'+svg(d.i)+'</div><div class="rc-body"><b>'+esc(d.n)+'</b><span>'+d.r.length+' roles</span><em>View roles &rarr;</em></div></a>')});
 if(dh.tech||dh.nt){
   var host=document.querySelector('#choose-path .wrap'),dv=document.createElement('div');dv.id='ntDeptView';dv.hidden=true;host.appendChild(dv);
+  /* #tech-3 is a department, #tech-3-2 is a role inside it. Keeping the level
+     in the hash means browser Back steps out one level at a time, the same as
+     it already did for departments. */
   var route=function(){
-    var d=DEPTS.filter(function(x){return '#'+x.key===location.hash})[0];
+    var h=location.hash, m=h.match(/^(#.+)-(\d+)$/), d=null, ri=-1;
+    d=DEPTS.filter(function(x){return '#'+x.key===h})[0];
+    if(!d&&m){d=DEPTS.filter(function(x){return '#'+x.key===m[1]})[0];ri=+m[2]-1;}
     host.querySelectorAll('.cp-panel').forEach(function(p){p.hidden=!!d});dv.hidden=!d;
     if(!d)return;
-    dv.innerHTML='<a class="cp-back" href="#">&larr; All departments</a><h3 class="cp-ph">'+esc(d.n)+'</h3><div class="role-grid2"></div>';
-    var g=dv.querySelector('.role-grid2');d.idx.forEach(function(idx,j){g.appendChild(card(idx,'g'+(j%6)))});
+
+    if(ri>-1&&d.r[ri]){
+      var role=d.r[ri];
+      dv.innerHTML='<a class="cp-back" href="#'+d.key+'">&larr; '+esc(d.n)+'</a>'
+        +'<h3 class="cp-ph">'+esc(role[0])+'</h3>'
+        +'<p class="cp-sub-t">Skills this role requires.</p>'
+        +'<div class="skill-list"><div class="skill-card"><div class="sk-head g0">'
+        +'<span>01</span><b>Skills</b></div><div class="chips">'
+        +splitSk(role[1]).map(function(sk){return '<span class="chip">'+esc(sk)+'</span>'}).join('')
+        +'</div></div></div>';
+      window.scrollTo(0,0);return;
+    }
+
+    dv.innerHTML='<a class="cp-back" href="#">&larr; All departments</a><h3 class="cp-ph">'+esc(d.n)+'</h3>'
+      +'<p class="cp-sub-t">Pick a role to see the skills it needs.</p><div class="role-grid2"></div>';
+    var g=dv.querySelector('.role-grid2');
+    d.r.forEach(function(x,j){
+      g.insertAdjacentHTML('beforeend','<button type="button" class="role-card3"'
+        +' data-idx="'+d.idx[j]+'" data-skills-hash="#'+d.key+'-'+(j+1)+'">'
+        +'<div class="rc-img g'+(j%6)+'">'+svg(d.i)+'</div>'
+        +'<div class="rc-body"><b>'+esc(x[0])+'</b>'
+        +'<span>'+splitSk(x[1]).length+' skills</span>'
+        +'<em>View options &rarr;</em></div></button>');
+    });
     window.scrollTo(0,0);
   };
   window.addEventListener('hashchange',route);route();
@@ -2339,7 +2367,7 @@ function review(){
 }
 
 /* ───────────────────────── modal ───────────────────────── */
-function openRole(i,btn){
+function openRole(i,btn,build){
   cur=ROLES[i];lastBtn=btn;var r=cur,img=btn&&btn.querySelector('.rc-img'),g=img?img.className.replace('rc-img','').trim():'g0';
   $('rmHead').className='rm-head '+g;$('rmIcon').innerHTML=IC[r.i]||IC.brief;
   $('rmTag').textContent=(r.cat||CAT[r.c])+(r.ind?' · '+r.ind:'');$('rmTitle').textContent=r.n;$('rmSub').textContent=r.sub;$('rmOv').textContent=r.ov;
@@ -2351,8 +2379,8 @@ function openRole(i,btn){
   $('rmOut').hidden=true;$('rmAn').hidden=true;$('rmRes').hidden=true;$('rmParse').hidden=true;$('rbErr').hidden=true;
   showAll=false;touched={};visited={1:1};step=1;mode='doc';lastDoc=null;
   rm.classList.add('open');rm.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';rm.scrollTop=0;$('rmClose').focus();
-  FORM.hidden=!r.slug;
-  if(r.slug)loadRole(r.slug);
+  var withForm=!!(build&&r.slug);FORM.hidden=!withForm;$('rmReq').closest('.rm-body').classList.toggle('solo',!withForm);
+  if(withForm)loadRole(r.slug);
 }
 function loadRole(slug){
   if(FULL[slug]){full=FULL[slug];renderPanels();return}
@@ -2366,17 +2394,21 @@ function loadRole(slug){
   });
 }
 function closeRole(){rm.classList.remove('open');rm.setAttribute('aria-hidden','true');document.body.style.overflow='';if(lastBtn)lastBtn.focus()}
-var ra=$('roleAct'),raIdx=null,raIt=null;
+var ra=$('roleAct'),raIdx=null,raIt=null,raHash=null;
 function pickRole(b){
-  raIdx=b.dataset.idx!=null?+b.dataset.idx:null;raIt=b.dataset.itRole!=null?+b.dataset.itRole:null;lastBtn=b;var r=raIdx==null?null:ROLES[raIdx];
+  raIdx=b.dataset.idx!=null?+b.dataset.idx:null;raIt=b.dataset.itRole!=null?+b.dataset.itRole:null;
+  raHash=b.dataset.skillsHash||null;lastBtn=b;var r=raIdx==null?null:ROLES[raIdx];
   $('raTitle').textContent=r?r.n:b.dataset.name;
   $('raDept').textContent=r?CAT[r.c]+' · '+r.sub:'IT · '+b.dataset.deptName;
-  $('raSkillsP').textContent=r?'See the skills this role needs and check how your profile matches.':'See the skills this role needs.';
+  $('raSkillsP').textContent='See the skills this role needs.';
   ra.showModal();
 }
 document.addEventListener('click',function(e){var b=e.target.closest('.role-card3[data-idx],.role-card3[data-it-role]');if(b)pickRole(b)});
 $('raSkills').addEventListener('click',function(e){
-  if(raIdx!=null){e.preventDefault();ra.close();openRole(raIdx,lastBtn)}
+  // Non-IT cards carry the hash of their own skills page; IT cards render it in
+  // place. Either way Skills lands on the skills view, not the role modal.
+  if(raHash){e.preventDefault();ra.close();location.hash=raHash}
+  else if(raIdx!=null){e.preventDefault();ra.close();openRole(raIdx,lastBtn)}
   else if(raIt!=null&&itSkills){e.preventDefault();ra.close();itSkills(raIt)}
 });
 /* Build Resume: opens the role modal with the builder for this role. A role with a
@@ -2396,7 +2428,7 @@ $('raBuild').addEventListener('click',function(e){
   if(raIdx!=null){var r=ROLES[raIdx];idx=r.slug?raIdx:slugFor(r.n);if(idx<0)idx=customRole(r.n,r.c,r.sub,[['Role skills',r.sk]])}
   else if(raIt!=null&&itRole){var it=itRole(raIt);idx=slugFor(it.n);if(idx<0)idx=customRole(it.n,'it',it.dept,it.groups,'Information Technology')}
   if(idx<0)return; // no role data: follow the link to the general builder
-  e.preventDefault();ra.close();openRole(idx,lastBtn);
+  e.preventDefault();ra.close();openRole(idx,lastBtn,true);
 });
 $('rmClose').addEventListener('click',closeRole);
 rm.addEventListener('click',function(e){if(e.target===rm)closeRole()});
