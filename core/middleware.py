@@ -47,7 +47,7 @@ class ContentProtectionMiddleware:
         # Built lazily: static() needs the staticfiles app to be ready.
         if self._tag is None:
             src = static("js/content-protection.js")
-            self._tag = f'<script src="{src}?v=3" {MARKER}></script>'.encode()
+            self._tag = f'<script src="{src}?v=4" {MARKER}></script>'.encode()
         return self._tag
 
     def __call__(self, request):

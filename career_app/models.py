@@ -291,3 +291,85 @@ class FAQQuestion(models.Model):
 
     def __str__(self):
         return f"[{self.topic}] {str(self.question_text)[:50]}"
+
+class ResumeRoleTemplate(models.Model):
+    """Admin-editable role data for the manual Resume Builder.
+
+    The built-in roles live in ``career_app/resume_roles.py``. A row here with
+    the same slug overrides any non-empty field of that role; a row with a new
+    slug adds a new role (the builder renders it with the same reusable form).
+    Untick ``is_active`` to hide a role. ``manage.py seed_resume_roles`` copies
+    the built-in roles in so they can be edited here.
+    """
+    CATEGORY_CHOICES = [
+        ('it', 'IT'),
+        ('tech', 'Non-IT · Technical'),
+        ('nt', 'Non-IT · Non-Technical'),
+    ]
+    ICON_CHOICES = [(k, k) for k in (
+        'code', 'chart', 'brain', 'layers', 'bug', 'globe', 'net', 'shield', 'flag', 'gear', 'hat',
+        'calc', 'clip', 'people', 'crown', 'search', 'brief', 'trend', 'box', 'cart', 'wallet', 'mega', 'bolt',
+    )]
+    LINES_HELP = 'One item per line. Leave blank to keep the built-in value.'
+
+    slug = models.SlugField(max_length=80, unique=True,
+                            help_text='Matches a built-in role (e.g. "project-manager") or names a new one.')
+    title = models.CharField(max_length=120)
+    category = models.CharField(max_length=10, choices=CATEGORY_CHOICES)
+    industry = models.CharField(max_length=120, blank=True)
+    icon = models.CharField(max_length=20, choices=ICON_CHOICES, default='brief')
+    subtitle = models.CharField(max_length=160, blank=True)
+    description = models.TextField(blank=True)
+    responsibilities = models.TextField(blank=True, help_text=LINES_HELP)
+    required_skills = models.TextField(blank=True, help_text=LINES_HELP)
+    recommended_skills = models.TextField(blank=True, help_text=LINES_HELP)
+    career_path = models.TextField(blank=True, help_text=LINES_HELP)
+    certifications = models.TextField(blank=True, help_text=LINES_HELP)
+    experience_label = models.CharField(max_length=60, blank=True,
+                                        help_text='Heading for the employment section, e.g. "Site Experience".')
+    role_fields = models.JSONField(
+        default=list, blank=True,
+        help_text='Role-specific form fields: [{"label": "Project planning", "options": ["Scheduling", "WBS"]}, …]')
+    level_suggestions = models.JSONField(
+        default=dict, blank=True,
+        help_text='Per experience level ("fresher", "1-3", "3-5", "5+"): '
+                  '{"skills": [...], "responsibilities": [...], "projects": [...], "training": [...]}')
+    summary_templates = models.JSONField(
+        default=dict, blank=True,
+        help_text='Per experience level: a list of editable summary templates. Use [placeholders] '
+                  'for anything the candidate must fill in.')
+    display_order = models.PositiveIntegerField(default=0, help_text='0 keeps the built-in position.')
+    is_active = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('display_order', 'title')
+        verbose_name = 'Resume builder role'
+        verbose_name_plural = 'Resume builder roles'
+
+    def __str__(self):
+        return f'{self.title} ({self.get_category_display()})'
+
+class ResumeDraft(models.Model):
+    """A resume written in the Create Resume builder, owned by one user.
+
+    ``data`` holds the builder's form state (personal details, summary and the
+    repeatable experience / education / project / certification / achievement /
+    internship / volunteering / language entries) as normalised by
+    ``career_app.create_resume.normalize``; every read and write is scoped to
+    ``user`` so a candidate can only ever reach their own resumes.
+    """
+    MAX_PER_USER = 20
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='resume_drafts')
+    title = models.CharField(max_length=120, default='Untitled resume')
+    template = models.CharField(max_length=20, default='classic')
+    data = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('-updated_at',)
+
+    def __str__(self):
+        return f'{self.title} ({self.user_id})'

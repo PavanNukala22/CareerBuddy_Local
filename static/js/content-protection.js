@@ -8,6 +8,7 @@
  *   - Ctrl/Cmd + U  (view source)       - Ctrl+Insert / Shift+Insert / Shift+Delete
  *   - right-click / long-press context menu
  *   - text selection with mouse, touch or keyboard
+ *   (except inside form fields within [data-allow-clipboard], e.g. the resume builder)
  *   - copy / cut / paste through ANY route (browser Edit menu, context menu,
  *     dragging text in or out, scripts calling navigator.clipboard or
  *     execCommand) — the app's own drag-and-drop (draggable="true" elements,
@@ -58,6 +59,22 @@
     var tag = node.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') { return true; }
     return !!node.isContentEditable;
+  }
+
+  // Form fields inside an element marked data-allow-clipboard (the landing
+  // page's resume builder, where candidates paste LinkedIn / GitHub links and
+  // their own text) may use copy, cut, paste, select-all and the context menu.
+  // Everything else on the page stays protected.
+  function inAllowedField(node) {
+    if (!isEditable(node)) { return false; }
+    if (node.nodeType !== 1) { node = node.parentElement; }
+    return !!(node && node.closest && node.closest('[data-allow-clipboard]'));
+  }
+
+  function isClipboardShortcut(e) {
+    var key = (e.key || '').toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && (/^[acvx]$/.test(key) || { KeyA: 1, KeyC: 1, KeyV: 1, KeyX: 1 }[e.code])) { return true; }
+    return key === 'insert' || (key === 'delete' && e.shiftKey);
   }
 
   function isBlockedShortcut(e) {
@@ -166,11 +183,14 @@
     var opts = { capture: true, passive: false };
 
     win.addEventListener('keydown', function (e) {
-      if (isBlockedShortcut(e)) { return stop(e); }
+      if (isBlockedShortcut(e) && !(isClipboardShortcut(e) && inAllowedField(e.target))) { return stop(e); }
     }, opts);
 
     ['copy', 'cut', 'paste', 'contextmenu'].forEach(function (type) {
-      win.addEventListener(type, stop, opts);
+      win.addEventListener(type, function (e) {
+        if (inAllowedField(e.target)) { return; }
+        return stop(e);
+      }, opts);
     });
 
     // Drag-and-drop: block dragging text, links or images out of the page and

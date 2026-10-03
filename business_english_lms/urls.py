@@ -5,6 +5,8 @@ from django.conf.urls.static import static
 from activities import views as activity_views
 from jobs_app import views as job_views
 from career_app import views as career_views
+from career_app import manual_resume_views
+from career_app import create_resume_views
 from riya_bot.skillup_views import skillup_hub
 import subject_views
 
@@ -87,6 +89,19 @@ urlpatterns = [
         path('analytics/', career_views.resume_analytics, name='resume_analytics'),
         path('history/', career_views.resume_history, name='resume_history'),
         path('reanalyze/<int:resume_id>/', career_views.resume_reanalyze, name='resume_reanalyze'),
+        # Manual (rule-based, no-AI) builder used by the landing-page role cards.
+        path('manual/roles/', manual_resume_views.roles_api, name='manual_resume_roles'),
+        path('manual/preview/', manual_resume_views.preview_api, name='manual_resume_preview'),
+        path('manual/pdf/', manual_resume_views.pdf_download, name='manual_resume_pdf'),
+        path('manual/pages/', manual_resume_views.preview_pages_api, name='manual_resume_pages'),
+        # Create Resume builder (landing page): fully manual, no AI.
+        path('create/preview/', create_resume_views.preview_api, name='create_resume_preview'),
+        path('create/pdf/', create_resume_views.pdf_download, name='create_resume_pdf'),
+        path('create/pages/', create_resume_views.pages_api, name='create_resume_pages'),
+        path('create/drafts/', create_resume_views.drafts_list, name='create_resume_drafts'),
+        path('create/drafts/save/', create_resume_views.draft_save, name='create_resume_draft_save'),
+        path('create/drafts/<int:pk>/', create_resume_views.draft_detail, name='create_resume_draft'),
+        path('create/drafts/<int:pk>/delete/', create_resume_views.draft_delete, name='create_resume_draft_delete'),
     ])),
 
     # ── AI Chatbot (Riya) ─────────────────────────────────────────────────────
