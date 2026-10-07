@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complex UI States — Interaction Designer Learning Module</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#d9730d 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans',system-ui,sans-serif;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans',system-ui,sans-serif;font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'Noto Sans',system-ui,sans-serif;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'Noto Sans',system-ui,sans-serif;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'Noto Sans',system-ui,sans-serif;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'Noto Sans',system-ui,sans-serif;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'Noto Sans',system-ui,sans-serif;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'Noto Sans',system-ui,sans-serif;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+
+/* ============= Module additions (same visual language) ============= */
+.table-wrap{overflow-x:auto;margin:16px 0;-webkit-overflow-scrolling:touch}
+.table-wrap table{margin:0;min-width:560px}
+.formula{display:inline-block;font-size:12.5px;background:var(--bg-code);border:1px solid var(--line);padding:2px 8px;border-radius:4px;color:#14213D;font-weight:500}
+.saq-toggle{margin-top:10px}
+.mcq-opt:focus-visible,.btn:focus-visible,.tab:focus-visible,.assess-start-btn:focus-visible,.saq textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.example{border:1px solid var(--line);border-left:4px solid var(--orange);border-radius:var(--radius);padding:14px 18px;margin:16px 0;background:#fffdf9}
+.example-title{font-weight:700;font-size:13px;color:#a85a08;margin-bottom:6px;letter-spacing:.02em}
+.example p,.example ul{margin:6px 0;font-size:14.5px}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.expert{background:#14213D;color:#fff}
+.term{display:grid;grid-template-columns:190px 1fr;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.term:last-child{border-bottom:none}
+details{border:1px solid var(--line);border-radius:var(--radius);margin:10px 0;background:#fff}
+summary{cursor:pointer;padding:11px 16px;font-weight:600;font-size:15px}details[open] summary{border-bottom:1px solid var(--line)}details>div{padding:10px 16px 12px;font-size:14.5px;line-height:1.6;color:#3a3833}
+.term b{color:#14213D}
+.terms{border:1px solid var(--line);border-radius:var(--radius);padding:4px 16px;margin:16px 0;background:#fff}
+@media (max-width:720px){
+  .header-top{padding:12px 16px;flex-wrap:wrap}
+  .brand{font-size:14px;line-height:1.35}
+  .brand-sub{display:block;margin-left:0}
+  .panel-title{font-size:30px}
+  .section h2{font-size:22px}
+  .assess-modal-box{padding:0 18px 40px}
+  .term{grid-template-columns:1fr;gap:2px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+<style>
+/* Noto Sans everywhere */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,td,th,div,section,header,nav,aside,main,label,button,input,textarea,small,strong,b,em,i,code,pre,svg text{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif !important}
+</style>
+<style id="cb-assess-intro-css">
+.cb-assess-intro{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg,12px);padding:28px 30px;box-shadow:var(--shadow-sm,0 1px 3px rgba(0,0,0,.06));margin-top:18px}
+.cb-assess-intro h3{margin:0 0 8px;font-size:20px;font-weight:600}
+.cb-assess-intro p{margin:6px 0;color:var(--ink-soft);font-size:14px}
+.cb-assess-intro ul{margin:12px 0 18px 18px;color:var(--ink-soft);font-size:13.5px;line-height:1.8}
+.cb-start{border:0;background:var(--accent,#14213d);color:#fff;border-radius:9px;padding:12px 20px;font:700 14px 'Noto Sans',system-ui,sans-serif;cursor:pointer}
+.cb-start:hover{opacity:.9}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-top">
+    <div class="brand"><div class="brand-mark">CS</div><span>Design / UX/UI | Interaction Designer (IxD)<span class="brand-sub"> · Complex UI States</span></span></div>
+    <div class="header-actions">
+      <span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 8</span></span>
+      <button class="btn" onclick="resetProgress()" title="Reset to first tab"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9"/><path d="M2 4v3.5h3.5"/></svg> Reset</button>
+    </div>
+  </div>
+  <nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Foundations</button><button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> Edge States</button><button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> Progressive Disclosure</button><button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> Gesture Inputs</button><button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> Tactile Feedback</button><button class="tab" data-tab="t6" role="tab"><span class="tab-num">06</span> Interview Preparation</button><button class="tab" data-tab="t7" role="tab"><span class="tab-num">07</span> Practice</button><button class="tab" data-tab="t8" role="tab"><span class="tab-num">08</span> Assessment</button></nav>
+</header>
+<div class="layout">
+  <aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside>
+  <main class="main">
+    <section class="panel active" id="t1" data-toc='[["s1-1", "What is a UI State?"], ["s1-2", "Types of States"], ["s1-3", "Example: One Checkbox, Many States"], ["s1-4", "Key Terms"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag fresher">→ Fresher-friendly</span></div><div class="panel-eyebrow">Module 01 · Foundations</div><h1 class="panel-title">What are Complex UI States?</h1><p class="panel-subtitle">Start from zero: what a UI state is, the types of states every component has, and why complex products need state thinking.</p></div>
+      <div class="section" id="s1-1"><h2><span class="sec-emoji">🧭</span> What is a UI State?</h2><p>A <strong>UI state</strong> is how an element or screen looks and behaves under specific conditions. Simple components have a few states; complex products have hundreds of combinations across data, permissions, connectivity and input methods. Interaction designers define them all.</p></div><div class="section" id="s1-2"><h2><span class="sec-emoji">🗂️</span> Types of States</h2><div class="table-wrap"><table><tr><th>Category</th><th>States</th></tr><tr><td><strong>Interaction states</strong></td><td>Default, hover, focus, pressed/active, dragged, disabled</td></tr><tr><td><strong>Selection states</strong></td><td>Unselected, selected, indeterminate (partial), expanded/collapsed</td></tr><tr><td><strong>Data states</strong></td><td>Empty, loading, partial, ideal, overflow</td></tr><tr><td><strong>Outcome states</strong></td><td>Success, warning, error, info</td></tr><tr><td><strong>Validation states</strong></td><td>Untouched, valid, invalid, validating</td></tr><tr><td><strong>System states</strong></td><td>Offline, syncing, conflict, read-only, permission denied</td></tr><tr><td><strong>Lifecycle states</strong></td><td>Draft, pending, published, archived, deleted</td></tr></table></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">🧱</span> Example: One Checkbox, Many States</h2><div class="table-wrap"><table><tr><th>Dimension</th><th>Values</th></tr><tr><td>Selection</td><td>Unchecked · checked · indeterminate</td></tr><tr><td>Interaction</td><td>Default · hover · focus · pressed</td></tr><tr><td>Availability</td><td>Enabled · disabled · read-only</td></tr><tr><td>Validation</td><td>Normal · error</td></tr></table></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">3 × 4 × 3 × 2 = <strong>72</strong> possible combinations for one checkbox. Design systems define rules (layers) instead of drawing every one.</div></div></div><div class="section" id="s1-4"><h2><span class="sec-emoji">📖</span> Key Terms</h2><div class="terms"><div class="term"><b>Edge state</b><span>A rare or extreme condition: zero, max, error, conflict.</span></div><div class="term"><b>Progressive disclosure</b><span>Showing only what's needed now; revealing more on demand.</span></div><div class="term"><b>Gesture</b><span>A touch movement with meaning: swipe, pinch, long press.</span></div><div class="term"><b>Haptic feedback</b><span>Vibration patterns that confirm actions through touch.</span></div><div class="term"><b>Indeterminate</b><span>Neither fully on nor off — e.g. some children selected.</span></div><div class="term"><b>State layer</b><span>A semi-transparent overlay showing hover/press/focus (Material).</span></div></div><div class="mcq" data-answer="2"><div class="mcq-q"><span class="mcq-qnum">Q.</span> A "Select all" checkbox where only some items are selected shows which state?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Checked</li><li class="mcq-opt"><span class="opt-letter">B</span> Unchecked</li><li class="mcq-opt"><span class="opt-letter">C</span> Indeterminate</li><li class="mcq-opt"><span class="opt-letter">D</span> Disabled</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — partial selection is indeterminate."></div></div></div>
+    </section>
+    <section class="panel" id="t2" data-toc='[["s2-1", "What is an Edge State?"], ["s2-2", "Types of Edge States"], ["s2-3", "The Edge-State Matrix"], ["s2-4", "Finding Edge States"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">→ Intermediate</span></div><div class="panel-eyebrow">Module 02 · Edge States</div><h1 class="panel-title">Defining Edge States</h1><p class="panel-subtitle">Find and design the extreme, rare and messy states that break interfaces in production.</p></div>
+      <div class="section" id="s2-1"><h2><span class="sec-emoji">🧷</span> What is an Edge State?</h2><p>An <strong>edge state</strong> is a condition at the boundaries of normal use. It's rare for one user but common across millions. Undesigned edge states produce broken layouts, confusing dead-ends and support tickets.</p></div><div class="section" id="s2-2"><h2><span class="sec-emoji">🗂️</span> Types of Edge States</h2><div class="table-wrap"><table><tr><th>Type</th><th>Examples</th></tr><tr><td><strong>Quantity</strong></td><td>0 items, 1 item, 10,000 items, 99+ notifications</td></tr><tr><td><strong>Content</strong></td><td>Very long names, missing images, emojis, multiple scripts, RTL</td></tr><tr><td><strong>Time</strong></td><td>Expired session, deadline passed, time-zone boundaries</td></tr><tr><td><strong>Permission &amp; role</strong></td><td>Viewer vs editor, suspended account, trial expired</td></tr><tr><td><strong>Connectivity</strong></td><td>Offline, slow network, sync conflict</td></tr><tr><td><strong>Concurrency</strong></td><td>Item edited by someone else, sold out during checkout</td></tr><tr><td><strong>Interruption</strong></td><td>App backgrounded, call during payment, back pressed mid-flow</td></tr><tr><td><strong>Device &amp; settings</strong></td><td>Large text, dark mode, landscape, low storage</td></tr></table></div></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🧮</span> The Edge-State Matrix</h2><div class="example"><div class="example-title">EXAMPLE · Shared task card in a team app</div><div class="table-wrap"><table><tr><th>Edge state</th><th>Design decision</th></tr><tr><td>Title 120 characters</td><td>Clamp to 2 lines + ellipsis; full on open</td></tr><tr><td>No assignee</td><td>"Unassigned" chip with Assign action</td></tr><tr><td>Due date passed</td><td>Red "Overdue 3 days" label + icon (not colour alone)</td></tr><tr><td>Edited by teammate while open</td><td>Banner "Riya updated this task" + Refresh</td></tr><tr><td>Viewer role</td><td>Hide edit controls; show "View only" label</td></tr><tr><td>Offline</td><td>Changes queued with "Will sync" indicator</td></tr></table></div></div></div><div class="section" id="s2-4"><h2><span class="sec-emoji">🔍</span> Finding Edge States</h2><ol><li>Walk each state × event in your state machine — empty cells are edge states.</li><li>Apply the 0–1–many rule to every list.</li><li>Review production data: longest values, error logs.</li><li>Pair with QA and engineering; they know where systems break.</li><li>Test with accessibility settings and slow networks.</li></ol><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which is a concurrency edge state?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> A long title</li><li class="mcq-opt"><span class="opt-letter">B</span> Item goes out of stock while it is in the user's cart</li><li class="mcq-opt"><span class="opt-letter">C</span> Dark mode</li><li class="mcq-opt"><span class="opt-letter">D</span> Empty search</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — concurrency is when data changes during use."></div></div></div>
+    </section>
+    <section class="panel" id="t3" data-toc='[["s3-1", "What is Progressive Disclosure?"], ["s3-2", "Types of Progressive Disclosure"], ["s3-3", "Rules of Thumb"], ["s3-4", "Check Yourself"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span></div><div class="panel-eyebrow">Module 03 · Progressive Disclosure</div><h1 class="panel-title">Progressive Disclosure</h1><p class="panel-subtitle">Reduce complexity by showing the essentials first and revealing the rest when needed.</p></div>
+      <div class="section" id="s3-1"><h2><span class="sec-emoji">🪜</span> What is Progressive Disclosure?</h2><p><strong>Progressive disclosure</strong> defers advanced or rarely used features to a secondary screen or interaction. It keeps the interface simple for most users while keeping power available for those who need it.</p><div class="compare"><div class="compare-col"><h4>🔴 Everything at once</h4><p style="font-size:14px;color:var(--ink-soft);margin:0">A transfer screen with 18 fields: amount, payee, remarks, schedule, recurrence, purpose code, SWIFT, charges…</p></div><div class="compare-col"><h4>🟢 Disclosed</h4><p style="font-size:14px;color:var(--ink-soft);margin:0">Amount + payee visible; "Schedule or repeat" and "More options" expand when needed.</p></div></div></div><div class="section" id="s3-2"><h2><span class="sec-emoji">🗂️</span> Types of Progressive Disclosure</h2><div class="table-wrap"><table><tr><th>Pattern</th><th>How</th><th>Example</th></tr><tr><td><strong>Accordion / expander</strong></td><td>Sections expand in place</td><td>FAQ, advanced settings</td></tr><tr><td><strong>"More options" / show more</strong></td><td>Reveal extra fields</td><td>Search filters</td></tr><tr><td><strong>Staged disclosure (wizard)</strong></td><td>Steps in sequence</td><td>Onboarding, KYC</td></tr><tr><td><strong>Contextual disclosure</strong></td><td>Options appear after a related choice</td><td>Choosing "Business" reveals GST field</td></tr><tr><td><strong>Hover / long-press reveal</strong></td><td>Secondary actions on demand</td><td>Row actions in tables</td></tr><tr><td><strong>Drill-down</strong></td><td>Summary → detail screens</td><td>Dashboard → report</td></tr><tr><td><strong>Tooltips / popovers</strong></td><td>Explanations on demand</td><td>"What is IFSC?"</td></tr></table></div></div><div class="section" id="s3-3"><h2><span class="sec-emoji">📏</span> Rules of Thumb</h2><ul><li>Disclose based on <strong>frequency</strong> and <strong>importance</strong> — use analytics to decide what is primary.</li><li>Keep the trigger <strong>obvious and well-labelled</strong> ("Advanced filters (6)").</li><li>Usually limit to <strong>two levels</strong>; deeper nesting gets lost.</li><li>Preserve state: expanded sections stay open when returning.</li><li>Don't hide anything users need to make the main decision (e.g. total price).</li></ul></div><div class="section" id="s3-4"><h2><span class="sec-emoji">🧠</span> Check Yourself</h2><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which should NOT be hidden behind "More details" on a payment screen?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Transaction reference format</li><li class="mcq-opt"><span class="opt-letter">B</span> Total amount including fees</li><li class="mcq-opt"><span class="opt-letter">C</span> Purpose code for rare transfers</li><li class="mcq-opt"><span class="opt-letter">D</span> Help article link</li></ul><div class="mcq-feedback" data-ok="Correct — the total is essential for the main decision." data-bad="Not quite. Never hide information essential to the main decision."></div></div><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Apply progressive disclosure to a flight search form.</div><textarea placeholder="Visible… Disclosed…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> <strong>Visible:</strong> From, To, Date, Passengers (1 adult default), Search. <strong>Disclosed:</strong> "Return trip" toggle reveals return date; "Passengers &amp; class" opens a sheet; "More filters" (airlines, stops, times, baggage) after results; multi-city as a separate tab.</div></div></div>
+    </section>
+    <section class="panel" id="t4" data-toc='[["s4-1", "What is a Gesture?"], ["s4-2", "Types of Gestures"], ["s4-3", "Gesture Design Rules"], ["s4-4", "Example: Swipe-to-Archive as States"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">→ Advanced</span></div><div class="panel-eyebrow">Module 04 · Gesture-Based Inputs</div><h1 class="panel-title">Gesture-Based Inputs</h1><p class="panel-subtitle">Design touch gestures that are discoverable, forgiving and never the only way to act.</p></div>
+      <div class="section" id="s4-1"><h2><span class="sec-emoji">👆</span> What is a Gesture?</h2><p>A <strong>gesture</strong> is a movement on a touch surface that triggers an action. Gestures are fast for experts but <strong>invisible</strong> — users must discover and remember them.</p></div><div class="section" id="s4-2"><h2><span class="sec-emoji">🗂️</span> Types of Gestures</h2><div class="table-wrap"><table><tr><th>Gesture</th><th>Common meaning</th><th>Example</th></tr><tr><td><strong>Tap</strong></td><td>Select / activate</td><td>Open item</td></tr><tr><td><strong>Double tap</strong></td><td>Zoom / like</td><td>Like a photo</td></tr><tr><td><strong>Long press</strong></td><td>Context menu / select mode</td><td>Multi-select messages</td></tr><tr><td><strong>Swipe (horizontal)</strong></td><td>Reveal actions / dismiss / navigate</td><td>Swipe email to archive</td></tr><tr><td><strong>Swipe (vertical) / pull</strong></td><td>Scroll / refresh / dismiss sheet</td><td>Pull to refresh</td></tr><tr><td><strong>Drag</strong></td><td>Move / reorder</td><td>Reorder playlist</td></tr><tr><td><strong>Pinch / spread</strong></td><td>Zoom out / in</td><td>Maps, photos</td></tr><tr><td><strong>Rotate</strong></td><td>Rotate object</td><td>Image editing</td></tr><tr><td><strong>Edge swipe</strong></td><td>System back / navigation</td><td>Android back gesture</td></tr></table></div></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🧠</span> Gesture Design Rules</h2><div class="table-wrap"><table><tr><th>Rule</th><th>Why</th></tr><tr><td>Always provide a visible alternative</td><td>Accessibility, discoverability (WCAG 2.5.1 pointer gestures)</td></tr><tr><td>Follow platform conventions</td><td>Users carry expectations (Jakob's law)</td></tr><tr><td>Show affordances</td><td>Peek of hidden actions, drag handles, "swipe" hint once</td></tr><tr><td>Use thresholds</td><td>Action triggers only past e.g. 40% of width — prevents accidents</td></tr><tr><td>Give continuous feedback</td><td>Content follows the finger; action icon appears as you swipe</td></tr><tr><td>Allow undo for destructive gestures</td><td>Snackbar "Archived · Undo"</td></tr><tr><td>Avoid conflicts</td><td>Horizontal swipe in a carousel inside a swipeable tab view confuses</td></tr></table></div></div><div class="section" id="s4-4"><h2><span class="sec-emoji">🔄</span> Example: Swipe-to-Archive as States</h2><div class="diagram"><svg viewBox="0 0 720 290" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans"><defs><marker id="sm1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><path d="M139,139 Q210,125 281,139" fill="none" stroke="#37352f" stroke-width="1.6" marker-end="url(#sm1)"/><rect x="193" y="123" width="34" height="16" rx="4" fill="#fff" stroke="#e9e9e7"/><text x="210" y="135" text-anchor="middle" fill="#a85a08" font-size="11" font-weight="600">MOVE</text><path d="M281,161 Q210,175 139,161" fill="none" stroke="#37352f" stroke-width="1.6" marker-end="url(#sm1)"/><rect x="166" y="159" width="87" height="16" rx="4" fill="#fff" stroke="#e9e9e7"/><text x="210" y="171" text-anchor="middle" fill="#a85a08" font-size="11" font-weight="600">RELEASE <40%</text><path d="M383,127 Q463,84 541,70" fill="none" stroke="#37352f" stroke-width="1.6" marker-end="url(#sm1)"/><rect x="432" y="82" width="61" height="16" rx="4" fill="#fff" stroke="#e9e9e7"/><text x="462" y="94" text-anchor="middle" fill="#a85a08" font-size="11" font-weight="600">PASS 40%</text><path d="M557,83 Q477,126 399,140" fill="none" stroke="#37352f" stroke-width="1.6" marker-end="url(#sm1)"/><rect x="444" y="110" width="67" height="16" rx="4" fill="#fff" stroke="#e9e9e7"/><text x="478" y="122" text-anchor="middle" fill="#a85a08" font-size="11" font-weight="600">BACK <40%</text><path d="M600,83 Q600,152 600,222" fill="none" stroke="#37352f" stroke-width="1.6" marker-end="url(#sm1)"/><rect x="573" y="144" width="54" height="16" rx="4" fill="#fff" stroke="#e9e9e7"/><text x="600" y="156" text-anchor="middle" fill="#a85a08" font-size="11" font-weight="600">RELEASE</text><rect x="21.0" y="127.0" width="118" height="46" rx="23" fill="#14213D" stroke="#14213D" stroke-width="0"/><text x="80" y="154" text-anchor="middle" fill="#fff" font-weight="700" font-size="12.5">Resting</text><rect x="281.0" y="127.0" width="118" height="46" rx="23" fill="#eef1f7" stroke="#14213D" stroke-width="1.2"/><text x="340" y="154" text-anchor="middle" fill="#14213D" font-weight="700" font-size="12.5">Dragging</text><rect x="541.0" y="37.0" width="118" height="46" rx="23" fill="#eef1f7" stroke="#14213D" stroke-width="1.2"/><text x="600" y="64" text-anchor="middle" fill="#14213D" font-weight="700" font-size="12.5">Armed >40%</text><rect x="541.0" y="222.0" width="118" height="46" rx="23" fill="#0f7b0f" stroke="#14213D" stroke-width="0"/><text x="600" y="249" text-anchor="middle" fill="#fff" font-weight="700" font-size="12.5">Archived</text></svg><div class="diagram-caption">Figure 4.1 · A swipe gesture modelled as states with a threshold</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Swipe-to-delete has no other way to delete. Problem?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> None</li><li class="mcq-opt"><span class="opt-letter">B</span> Not discoverable or accessible — add a visible delete option</li><li class="mcq-opt"><span class="opt-letter">C</span> Too fast</li><li class="mcq-opt"><span class="opt-letter">D</span> Wrong colour</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite. Gestures need visible alternatives."></div></div></div>
+    </section>
+    <section class="panel" id="t5" data-toc='[["s5-1", "What is Haptic Feedback?"], ["s5-2", "Types of Haptics (iOS / Android)"], ["s5-3", "Haptic Design Rules"], ["s5-4", "Other Tactile Signals"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag adv">Advanced</span></div><div class="panel-eyebrow">Module 05 · Tactile Feedback</div><h1 class="panel-title">Tactile & Haptic Feedback</h1><p class="panel-subtitle">Use vibration to confirm actions and communicate states through touch — subtly and meaningfully.</p></div>
+      <div class="section" id="s5-1"><h2><span class="sec-emoji">📳</span> What is Haptic Feedback?</h2><p><strong>Haptic feedback</strong> uses the device's vibration motor to create touch sensations. Well-designed haptics confirm actions, mark boundaries and signal outcomes without needing the user to look.</p></div><div class="section" id="s5-2"><h2><span class="sec-emoji">🗂️</span> Types of Haptics (iOS / Android)</h2><div class="table-wrap"><table><tr><th>Type</th><th>Feels like</th><th>Use for</th></tr><tr><td><strong>Impact (light / medium / heavy)</strong></td><td>A tap or bump</td><td>Snapping into place, collisions, toggles</td></tr><tr><td><strong>Selection</strong></td><td>Tiny tick</td><td>Scrolling through picker values</td></tr><tr><td><strong>Notification: success</strong></td><td>Double light tap</td><td>Payment success, task complete</td></tr><tr><td><strong>Notification: warning</strong></td><td>Medium pattern</td><td>Approaching a limit</td></tr><tr><td><strong>Notification: error</strong></td><td>Strong triple</td><td>Failed action</td></tr><tr><td><strong>Custom patterns</strong></td><td>Designed sequences (Core Haptics)</td><td>Games, rich experiences</td></tr></table></div><div class="table-wrap"><table><tr><th>Platform</th><th>API</th></tr><tr><td>iOS</td><td>UIImpactFeedbackGenerator, UISelectionFeedbackGenerator, UINotificationFeedbackGenerator, Core Haptics</td></tr><tr><td>Android</td><td>HapticFeedbackConstants (CONFIRM, REJECT, CLOCK_TICK…), VibrationEffect</td></tr><tr><td>Web</td><td>navigator.vibrate() — limited support (not on iOS Safari)</td></tr></table></div></div><div class="section" id="s5-3"><h2><span class="sec-emoji">📏</span> Haptic Design Rules</h2><ul><li>Pair haptics with a <strong>visible</strong> (and ideally audible) change — never haptics alone.</li><li>Use them for <strong>meaningful moments</strong>; constant buzzing becomes noise and drains battery.</li><li>Match intensity to importance: light for selection, stronger for errors.</li><li>Be consistent: the same event always feels the same.</li><li>Respect system settings (haptics off, low power).</li></ul></div><div class="section" id="s5-4"><h2><span class="sec-emoji">🎛️</span> Other Tactile Signals</h2><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#14213D">🧲</div><div class="card-title">Snap points</div><div class="card-desc">Haptic tick when a slider reaches a meaningful value.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🧱</div><div class="card-title">Boundaries</div><div class="card-desc">Light impact when a list hits its end.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🔐</div><div class="card-title">Security</div><div class="card-desc">Distinct pattern for biometric success/failure.</div></div><div class="card"><div class="card-icon" style="background:var(--pink-soft);color:#8c1a63">📍</div><div class="card-title">Drag & drop</div><div class="card-desc">Tick when an item lifts and when it drops into place.</div></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which haptic suits scrolling through a time picker?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Heavy impact</li><li class="mcq-opt"><span class="opt-letter">B</span> Selection ticks</li><li class="mcq-opt"><span class="opt-letter">C</span> Error notification</li><li class="mcq-opt"><span class="opt-letter">D</span> No feedback ever</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — selection haptics give a tick per value."></div></div></div>
+    </section>
+    <section class="panel" id="t6" data-toc='[["s6-1", "Edge State Questions"], ["s6-2", "Progressive Disclosure Questions"], ["s6-3", "Gesture & Haptic Questions"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 06 · Interview Preparation</div><h1 class="panel-title">Interview Preparation</h1><p class="panel-subtitle">Click a question to reveal a model answer.</p></div>
+      <div class="section" id="s6-1"><h2><span class="sec-emoji">🧷</span> Edge State Questions</h2><details><summary>What is an edge state, and how do you find them?</summary><div>A rare or extreme condition at the boundary of normal use. Find them by walking every state × event, applying the 0–1–many rule, reviewing production data, and pairing with QA and engineers.</div></details><details><summary>Give examples of concurrency edge states.</summary><div>An item sells out while in the cart, a teammate edits a record you have open, or two devices sync conflicting changes.</div></details><details><summary>How do you handle the "many" case for notifications?</summary><div>Cap the badge (99+), group items by day or type, offer "Mark all as read", and paginate or virtualise long lists.</div></details><details><summary>How do you prioritise which edge states to design first?</summary><div>By frequency × impact: how many users hit it and how badly it blocks them. Blocking, money-related or data-loss cases come first.</div></details></div><div class="section" id="s6-2"><h2><span class="sec-emoji">🪜</span> Progressive Disclosure Questions</h2><details><summary>What is progressive disclosure?</summary><div>Showing essentials first and revealing advanced or rare options on demand, keeping the interface simple for most users while keeping power available.</div></details><details><summary>What should never be hidden?</summary><div>Anything users need for the main decision — like the total price including fees, or important warnings.</div></details><details><summary>How many levels of disclosure are reasonable?</summary><div>Usually two. Deeper nesting makes features hard to find; use clear labels such as "Advanced filters (6)".</div></details><details><summary>Give an example of contextual disclosure.</summary><div>Selecting "Business account" reveals GST and company fields; personal users never see them.</div></details></div><div class="section" id="s6-3"><h2><span class="sec-emoji">👆</span> Gesture & Haptic Questions</h2><details><summary>What are the rules for designing gestures?</summary><div>Follow platform conventions, give continuous feedback, use thresholds to prevent accidents, allow undo for destructive actions, avoid gesture conflicts, and always provide a visible alternative.</div></details><details><summary>Why must every gesture have a visible alternative?</summary><div>Gestures are invisible and hard to discover, and some users can't perform them. WCAG 2.5.1 requires single-pointer alternatives for path-based gestures.</div></details><details><summary>Which haptic types exist on iOS?</summary><div>Impact (light/medium/heavy), selection (ticks), and notification (success/warning/error), plus custom patterns with Core Haptics.</div></details><details><summary>When should you not use haptics?</summary><div>For constant or trivial events, as the only feedback channel, or when the system haptics setting is off. Overuse becomes noise and drains battery.</div></details><details><summary>How do you manage state explosion in a component?</summary><div>Separate independent dimensions (selection, interaction, validation), use state layers for hover/press/focus, define priority rules (disabled overrides hover) and use component variants and properties.</div></details></div>
+    </section>
+    <section class="panel" id="t7" data-toc='[["s7-1", "Scenario: TeamMail Mobile Inbox"], ["s7-2", "Task 1 \u00b7 Edge States"], ["s7-3", "Task 2 \u00b7 Gestures"], ["s7-4", "Task 3 \u00b7 Progressive Disclosure"], ["s7-5", "Task 4 \u00b7 Haptics"], ["s7-6", "Task 5 \u00b7 Multi-Select States"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 07 · Practice</div><h1 class="panel-title">Practice: Design a Smart Inbox</h1><p class="panel-subtitle">Define edge states, disclosure, gestures and haptics for a real-feeling feature.</p></div>
+      <div class="quiz-progress"><span class="quiz-score">0 / 0 correct</span><div class="quiz-bar-track"><div class="quiz-bar-fill"></div></div><button class="btn quiz-reset-btn">↻ Reset answers</button></div><div class="section" id="s7-1"><h2><span class="sec-emoji">📥</span> Scenario: TeamMail Mobile Inbox</h2><p><strong>TeamMail</strong> is a work email app. Users want faster triage on mobile. Proposed features: swipe actions, multi-select, smart filters, and offline support. Support logs show accidental deletions and confusion about "where emails went".</p></div><div class="section" id="s7-2"><h2><span class="sec-emoji">1️⃣</span> Task 1 · Edge States</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> List 5 edge states for the inbox list and your decision for each.</div><textarea placeholder="Edge → decision"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> (1) Empty inbox → "You're all caught up" + link to Archive. (2) 10,000 unread → "9,999+" badge, "Mark all as read". (3) Offline → cached list, banner, actions queued. (4) Email deleted on desktop while open on mobile → "This email was moved" + Back. (5) Very long subject/sender → 1-line clamp with ellipsis.</div></div></div><div class="section" id="s7-3"><h2><span class="sec-emoji">2️⃣</span> Task 2 · Gestures</h2><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Users accidentally delete emails with swipe. Best fix?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Remove swipe</li><li class="mcq-opt"><span class="opt-letter">B</span> Make right-swipe Archive (reversible), require a longer swipe threshold for Delete, and show Undo</li><li class="mcq-opt"><span class="opt-letter">C</span> Add more swipe actions</li><li class="mcq-opt"><span class="opt-letter">D</span> Make swipe faster</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite. Use reversible defaults, thresholds and Undo."></div></div><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Specify the swipe-to-archive behaviour (threshold, feedback, alternative).</div><textarea placeholder="Threshold… Feedback… Alternative…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Threshold 40% of row width; below it the row springs back. Feedback: archive icon fades in and grows as you swipe, background turns green at threshold + light impact haptic; on release row collapses (200 ms) and snackbar "Archived · Undo" for 5 s. Alternative: long-press → multi-select toolbar with Archive button; also an Archive action inside the email.</div></div></div><div class="section" id="s7-4"><h2><span class="sec-emoji">3️⃣</span> Task 3 · Progressive Disclosure</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> How would you disclose smart filters?</div><textarea placeholder="Visible… Disclosed…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Visible: chips for "Unread", "Mentions", "Attachments". Disclosed: "Filters (3)" opens a sheet with sender, date range, labels, size; active filters show as removable chips above the list.</div></div></div><div class="section" id="s7-5"><h2><span class="sec-emoji">4️⃣</span> Task 4 · Haptics</h2><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which moment deserves a success haptic?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Every scroll</li><li class="mcq-opt"><span class="opt-letter">B</span> Archiving reaches the threshold / bulk action completes</li><li class="mcq-opt"><span class="opt-letter">C</span> Opening the app</li><li class="mcq-opt"><span class="opt-letter">D</span> Typing each letter</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — use haptics for meaningful moments."></div></div></div><div class="section" id="s7-6"><h2><span class="sec-emoji">5️⃣</span> Task 5 · Multi-Select States</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Define the states of the "Select all" checkbox in selection mode.</div><textarea placeholder="States… Rules…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Unchecked (none selected), Indeterminate (some selected, aria-checked="mixed"), Checked (all loaded selected). Tapping indeterminate selects all; tapping checked clears all. If the list has more than loaded items, show "All 50 on this page selected · Select all 1,240".</div></div></div>
+    </section>
+    <section class="panel" id="t8" data-toc='[["sA-1","Take the Assessment"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag expert">→ Expert</span></div><p class="panel-eyebrow">Module 08</p><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">Test yourself on Complex UI States — from basic to expert.</p></div>
+      <div class="section" id="sA-1"><div class="cb-assess-intro"><h3>Test what you've learned</h3><p>Full-screen, timed assessment on Complex UI States.</p><ul><li><strong>50 multiple-choice questions</strong> — concepts and scenarios, basic to expert</li><li><strong>60-minute</strong> timer with warning state and automatic submission</li><li>Question palette, Previous/Next, Mark for Review</li><li>Full-screen and tab-switch warnings — <strong>3 warnings auto-submit</strong></li><li>Copy, cut, right-click and screenshot/print shortcuts are blocked</li><li>Questions and options are shuffled on every attempt</li></ul><button class="cb-start" id="cbAssessStart">▶ Start Assessment</button></div></div>
+</section>
+  </main>
+</div>
+<script>
+
+/* Tabs, dynamic TOC, scroll-spy, progress pill */
+(function(){
+  const tabs=document.querySelectorAll('.tab'),panels=document.querySelectorAll('.panel'),tocEl=document.getElementById('toc'),total=tabs.length,pt=document.getElementById('progressText');
+  function buildToc(panel){const data=JSON.parse(panel.getAttribute('data-toc')||'[]');tocEl.innerHTML=data.map(([id,l])=>`<li><a href="#${id}" data-target="${id}">${l}</a></li>`).join('');const f=tocEl.querySelector('a');if(f)f.classList.add('active');}
+  function activate(i){tabs.forEach((t,k)=>{t.classList.toggle('active',k===i);t.setAttribute('aria-selected',k===i)});panels.forEach((p,k)=>p.classList.toggle('active',k===i));buildToc(panels[i]);pt.textContent=`Tab ${i+1} of ${total}`;window.scrollTo({top:0,behavior:'instant'});}
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{const a=e.target.closest('.toc-list a');if(!a)return;e.preventDefault();const el=document.getElementById(a.dataset.target);if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});});
+  let tk=false;function spy(){const ap=document.querySelector('.panel.active');if(!ap)return;let cur=null;ap.querySelectorAll('.section').forEach(s=>{if(s.getBoundingClientRect().top-180<0)cur=s.id});if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));tk=false;}
+  window.addEventListener('scroll',()=>{if(!tk){requestAnimationFrame(spy);tk=true}},{passive:true});
+  window.resetProgress=()=>activate(0);activate(0);
+})();
+/* Inline MCQs, per-panel score, model answers */
+(function(){
+  function update(panel){const bar=panel.querySelector('.quiz-progress');if(!bar||bar.id)return;const all=panel.querySelectorAll('.mcq').length,done=panel.querySelectorAll('.mcq.answered').length,okc=panel.querySelectorAll('.mcq.answered[data-correct="1"]').length;bar.querySelector('.quiz-score').textContent=`${okc} / ${all} correct`;bar.querySelector('.quiz-bar-fill').style.width=(all?done/all*100:0)+'%';}
+  document.querySelectorAll('.mcq').forEach(m=>{const ans=+m.dataset.answer,opts=m.querySelectorAll('.mcq-opt'),fb=m.querySelector('.mcq-feedback');
+    opts.forEach((o,i)=>{o.tabIndex=0;o.setAttribute('role','button');const go=()=>{if(m.classList.contains('answered'))return;m.classList.add('answered');const r=i===ans;m.dataset.correct=r?'1':'0';opts[ans].classList.add('correct');if(!r)o.classList.add('incorrect');fb.className='mcq-feedback '+(r?'ok':'bad');fb.textContent=r?fb.dataset.ok:fb.dataset.bad;update(m.closest('.panel'));};
+      o.addEventListener('click',go);o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});});});
+  document.querySelectorAll('.panel').forEach(p=>{update(p);const rb=p.querySelector('.quiz-reset-btn');if(rb)rb.addEventListener('click',()=>{p.querySelectorAll('.mcq').forEach(m=>{m.classList.remove('answered');delete m.dataset.correct;m.querySelectorAll('.mcq-opt').forEach(o=>o.classList.remove('correct','incorrect'));const fb=m.querySelector('.mcq-feedback');fb.className='mcq-feedback';fb.textContent='';});p.querySelectorAll('.saq textarea').forEach(t=>t.value='');p.querySelectorAll('.saq-model').forEach(x=>x.classList.remove('show'));p.querySelectorAll('.saq-toggle').forEach(b=>b.textContent='Show model answer');update(p);});});
+  document.querySelectorAll('.saq-toggle').forEach(b=>b.addEventListener('click',()=>{const s=b.nextElementSibling.classList.toggle('show');b.textContent=s?'Hide model answer':'Show model answer';}));
+})();
+
+/* Assessment — timed full-screen exam with rules & security */
+(function(){
+  const ROLE = "Interaction Designer (IxD) \u2014 Complex UI States";
+  const QUESTION_BANK = [{"id": "ixd_complex_ui_states-01", "q": "A UI state is\u2026", "options": ["A colour", "How an element looks and behaves under specific conditions", "A server", "A sprint"], "answer": 1, "difficulty": "", "explanation": "Every component has multiple states."}, {"id": "ixd_complex_ui_states-02", "q": "Which is an interaction state?", "options": ["Archived", "Offline", "Hover", "Empty"], "answer": 2, "difficulty": "", "explanation": "Interaction states: default, hover, focus, pressed, disabled."}, {"id": "ixd_complex_ui_states-03", "q": "Which is a data state?", "options": ["Hover", "Loading", "Focus", "Pressed"], "answer": 1, "difficulty": "", "explanation": "Data states: empty, loading, partial, ideal, overflow."}, {"id": "ixd_complex_ui_states-04", "q": "Which is a selection state?", "options": ["Indeterminate", "Hover", "Offline", "Loading"], "answer": 0, "difficulty": "", "explanation": "Selection: unselected, selected, indeterminate."}, {"id": "ixd_complex_ui_states-05", "q": "Which is a system state?", "options": ["Pressed", "Checked", "Hover", "Offline"], "answer": 3, "difficulty": "", "explanation": "System states include offline, syncing, conflict."}, {"id": "ixd_complex_ui_states-06", "q": "Which is a lifecycle state?", "options": ["Hover", "Focus", "Pressed", "Archived"], "answer": 3, "difficulty": "", "explanation": "Draft, pending, published, archived, deleted."}, {"id": "ixd_complex_ui_states-07", "q": "A checkbox with 3 selection \u00d7 4 interaction \u00d7 3 availability \u00d7 2 validation values has\u2026", "options": ["72 combinations", "12", "24", "144"], "answer": 0, "difficulty": "", "explanation": "3 \u00d7 4 \u00d7 3 \u00d7 2 = 72."}, {"id": "ixd_complex_ui_states-08", "q": "An edge state is\u2026", "options": ["A font", "A rare or extreme condition at the boundary of normal use", "The default view", "A layout grid"], "answer": 1, "difficulty": "", "explanation": "Rare per user, common at scale."}, {"id": "ixd_complex_ui_states-09", "q": "1% of 2 million users hitting an edge case is\u2026", "options": ["200", "20,000 people", "200,000", "2,000"], "answer": 1, "difficulty": "", "explanation": "Edge cases matter at scale."}, {"id": "ixd_complex_ui_states-10", "q": "An item selling out while in the cart is a\u2026", "options": ["Typography state", "Concurrency edge state", "Quantity edge state", "Device state"], "answer": 1, "difficulty": "", "explanation": "Data changes during use."}, {"id": "ixd_complex_ui_states-11", "q": "A 120-character task title is a\u2026", "options": ["Time edge state", "Content edge state", "Interaction state", "Permission state"], "answer": 1, "difficulty": "", "explanation": "Long content breaks layouts."}, {"id": "ixd_complex_ui_states-12", "q": "An expired session is a\u2026", "options": ["Time edge state", "Quantity state", "Colour state", "Content edge state"], "answer": 0, "difficulty": "", "explanation": "Time-based conditions."}, {"id": "ixd_complex_ui_states-13", "q": "Large text at 200% is a\u2026", "options": ["Lifecycle state", "Selection state", "Concurrency state", "Device & settings edge state"], "answer": 3, "difficulty": "", "explanation": "Accessibility settings change layouts."}, {"id": "ixd_complex_ui_states-14", "q": "The 0\u20131\u2013many rule checks\u2026", "options": ["Font weights", "How designs handle none, one and many items", "Animation speed", "Colour contrast"], "answer": 1, "difficulty": "", "explanation": "Covers empty, singular grammar and scale."}, {"id": "ixd_complex_ui_states-15", "q": "A good way to find edge states is\u2026", "options": ["Walking every state \u00d7 event in the state model", "Asking marketing", "Only checking the default screen", "Ignoring QA"], "answer": 0, "difficulty": "", "explanation": "Empty cells reveal edge states."}, {"id": "ixd_complex_ui_states-16", "q": "Progressive disclosure means\u2026", "options": ["Show everything at once", "Remove features", "Show essentials first, reveal more on demand", "Hide everything"], "answer": 2, "difficulty": "", "explanation": "Reduces complexity for most users."}, {"id": "ixd_complex_ui_states-17", "q": "Which should never be hidden behind 'More details' on payment?", "options": ["Transaction reference format", "Purpose codes for rare transfers", "Total amount including fees", "Help links"], "answer": 2, "difficulty": "", "explanation": "Essential decision info must be visible."}, {"id": "ixd_complex_ui_states-18", "q": "Contextual disclosure example\u2026", "options": ["Search box", "Choosing 'Business' reveals a GST field", "An FAQ accordion", "Dark mode"], "answer": 1, "difficulty": "", "explanation": "Options appear after a related choice."}, {"id": "ixd_complex_ui_states-19", "q": "Staged disclosure is commonly implemented as\u2026", "options": ["A wizard or stepper", "A colour token", "A carousel", "A tooltip"], "answer": 0, "difficulty": "", "explanation": "Information revealed step by step."}, {"id": "ixd_complex_ui_states-20", "q": "Progressive disclosure should usually be limited to\u2026", "options": ["Unlimited", "About 2 levels", "10 levels", "1 level always"], "answer": 1, "difficulty": "", "explanation": "Deep nesting gets lost."}, {"id": "ixd_complex_ui_states-21", "q": "A good disclosure trigger label is\u2026", "options": ["'More'", "'Click here'", "'...'", "'Advanced filters (6)'"], "answer": 3, "difficulty": "", "explanation": "Clear labels with counts aid discovery."}, {"id": "ixd_complex_ui_states-22", "q": "Expanded sections should\u2026", "options": ["Disappear", "Stay open when users return", "Always reset", "Close randomly"], "answer": 1, "difficulty": "", "explanation": "Preserve state."}, {"id": "ixd_complex_ui_states-23", "q": "Long press commonly means\u2026", "options": ["Refresh", "Delete immediately", "Context menu or multi-select mode", "Zoom"], "answer": 2, "difficulty": "", "explanation": "Platform convention."}, {"id": "ixd_complex_ui_states-24", "q": "Pinch/spread is used for\u2026", "options": ["Refreshing", "Deleting", "Zooming out/in", "Selecting text only"], "answer": 2, "difficulty": "", "explanation": "Maps and photos."}, {"id": "ixd_complex_ui_states-25", "q": "Pull to refresh is a\u2026", "options": ["Vertical swipe/pull gesture", "Rotate", "Long press", "Pinch"], "answer": 0, "difficulty": "", "explanation": "Pull down to reload content."}, {"id": "ixd_complex_ui_states-26", "q": "Every gesture should have\u2026", "options": ["A visible alternative", "A delay", "A video tutorial", "A sound"], "answer": 0, "difficulty": "", "explanation": "Gestures are invisible and not universal."}, {"id": "ixd_complex_ui_states-27", "q": "WCAG 2.5.1 Pointer Gestures requires\u2026", "options": ["Voice control only", "Gestures only", "Single-pointer alternatives for path-based or multipoint gestures", "3D Touch"], "answer": 2, "difficulty": "", "explanation": "Users who can't perform gestures need options."}, {"id": "ixd_complex_ui_states-28", "q": "A swipe threshold (e.g. 40% width) prevents\u2026", "options": ["Scrolling", "Haptics", "Animation", "Accidental actions"], "answer": 3, "difficulty": "", "explanation": "Action only triggers past the threshold."}, {"id": "ixd_complex_ui_states-29", "q": "During a swipe, continuous feedback means\u2026", "options": ["Content follows the finger and the action icon appears", "The screen flashes", "Nothing moves until release", "A pop-up appears"], "answer": 0, "difficulty": "", "explanation": "Users see what will happen."}, {"id": "ixd_complex_ui_states-30", "q": "Undo after swipe-to-archive helps\u2026", "options": ["SEO", "Performance", "Contrast", "Recover from mistakes"], "answer": 3, "difficulty": "", "explanation": "Reversibility reduces fear."}, {"id": "ixd_complex_ui_states-31", "q": "Gesture conflicts happen when\u2026", "options": ["A horizontal swipe in a carousel sits inside a swipeable tab view", "Buttons are large", "Colours contrast", "Text is readable"], "answer": 0, "difficulty": "", "explanation": "Competing gestures confuse users."}, {"id": "ixd_complex_ui_states-32", "q": "Swipe-to-delete with no other delete option is a problem because\u2026", "options": ["It's not discoverable or accessible", "It's too fast", "It's the wrong colour", "It saves data"], "answer": 0, "difficulty": "", "explanation": "Add a visible delete action."}, {"id": "ixd_complex_ui_states-33", "q": "Haptic feedback is\u2026", "options": ["Colour changes", "Vibration patterns confirming actions", "Sound effects only", "Fonts"], "answer": 1, "difficulty": "", "explanation": "Touch-based feedback."}, {"id": "ixd_complex_ui_states-34", "q": "Which haptic fits scrolling through picker values?", "options": ["Selection ticks", "None ever", "Heavy impact", "Error notification"], "answer": 0, "difficulty": "", "explanation": "A tick per value."}, {"id": "ixd_complex_ui_states-35", "q": "Which haptic fits a payment success?", "options": ["Selection", "Heavy impact on every scroll", "Notification: success", "Error"], "answer": 2, "difficulty": "", "explanation": "Outcome notifications for meaningful moments."}, {"id": "ixd_complex_ui_states-36", "q": "iOS haptics API for custom patterns is\u2026", "options": ["Material Motion", "WebGL", "Lottie", "Core Haptics"], "answer": 3, "difficulty": "", "explanation": "Core Haptics designs custom sequences."}, {"id": "ixd_complex_ui_states-37", "q": "Android haptics can be triggered with\u2026", "options": ["UIImpactFeedbackGenerator", "HapticFeedbackConstants / VibrationEffect", "CSS", "Core Haptics"], "answer": 1, "difficulty": "", "explanation": "Android platform APIs."}, {"id": "ixd_complex_ui_states-38", "q": "navigator.vibrate() on the web\u2026", "options": ["Has limited support (not on iOS Safari)", "Controls screen brightness", "Works everywhere", "Plays sound"], "answer": 0, "difficulty": "", "explanation": "Web haptics are unreliable."}, {"id": "ixd_complex_ui_states-39", "q": "Haptics should\u2026", "options": ["Accompany visible feedback for meaningful moments", "Always be strong", "Replace visual feedback", "Be used constantly"], "answer": 0, "difficulty": "", "explanation": "Never rely on haptics alone."}, {"id": "ixd_complex_ui_states-40", "q": "Respecting system settings for haptics means\u2026", "options": ["Not vibrating when the user disabled haptics", "Forcing vibration", "Ignoring settings", "Doubling intensity"], "answer": 0, "difficulty": "", "explanation": "User control matters."}, {"id": "ixd_complex_ui_states-41", "q": "State layers in Material are\u2026", "options": ["Database tables", "Semi-transparent overlays showing hover/press/focus", "Icons", "Font styles"], "answer": 1, "difficulty": "", "explanation": "They apply on any base state."}, {"id": "ixd_complex_ui_states-42", "q": "Disabled + hover: which wins?", "options": ["Both", "Hover", "Disabled (no hover)", "Neither"], "answer": 2, "difficulty": "", "explanation": "Priority rules avoid confusing feedback."}, {"id": "ixd_complex_ui_states-43", "q": "Error + focus should show\u2026", "options": ["Only error", "Only focus", "Error styling plus the focus ring", "Nothing"], "answer": 2, "difficulty": "", "explanation": "Both pieces of information matter."}, {"id": "ixd_complex_ui_states-44", "q": "Loading + selected: which shows?", "options": ["Error", "Neither", "Loading, with selection kept underneath", "Selected only"], "answer": 2, "difficulty": "", "explanation": "Activity takes priority visually."}, {"id": "ixd_complex_ui_states-45", "q": "aria-expanded communicates\u2026", "options": ["Colour", "Font size", "Whether an accordion/disclosure is open", "Language"], "answer": 2, "difficulty": "", "explanation": "Exposes state to assistive tech."}, {"id": "ixd_complex_ui_states-46", "q": "aria-checked=\"mixed\" represents\u2026", "options": ["Checked", "Unchecked", "Disabled", "An indeterminate checkbox"], "answer": 3, "difficulty": "", "explanation": "Partial selection."}, {"id": "ixd_complex_ui_states-47", "q": "aria-busy=\"true\" signals\u2026", "options": ["Content is hidden", "An error", "Selection", "Content is loading/updating"], "answer": 3, "difficulty": "", "explanation": "Assistive tech can wait for updates."}, {"id": "ixd_complex_ui_states-48", "q": "'Select all' tapped while indeterminate should\u2026", "options": ["Clear all", "Do nothing", "Select all items", "Delete items"], "answer": 2, "difficulty": "", "explanation": "Common convention."}, {"id": "ixd_complex_ui_states-49", "q": "When more items exist than loaded, 'Select all' should offer\u2026", "options": ["Select random items", "'All 50 on this page selected \u00b7 Select all 1,240'", "Silently select only loaded", "Crash"], "answer": 1, "difficulty": "", "explanation": "Makes scope explicit."}, {"id": "ixd_complex_ui_states-50", "q": "Managing state explosion is best done by\u2026", "options": ["Detaching components", "Ignoring states", "Separating independent dimensions and using state layers and priority rules", "Drawing every combination by hand"], "answer": 2, "difficulty": "", "explanation": "Define each dimension once."}];
+  const EXAM_MINUTES = Math.ceil(QUESTION_BANK.length*1.2);
+  const EXAM_SECONDS = EXAM_MINUTES*60;
+  const EXAM_COUNT = QUESTION_BANK.length;
+  const LS_KEY = 'careerBuddyAssessment:' + ROLE;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false, warns=0, proctorOn=false, lastWarn=0;
+  const esc = s => String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const fmt=t=>{const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s};
+  const css=`
+  .cb-exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .cb-exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .cb-exam-top .et-title{font-size:16px;font-weight:800}.cb-exam-top .et-sub{font-size:12px;color:#cdd5e5}.cb-exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}.cb-exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:cbpulse 1s infinite}@keyframes cbpulse{50%{opacity:.5}}
+  .cb-exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}.cb-exam-q-pane{padding:28px 36px;overflow:auto}.cb-exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}.cb-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}.cb-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}.cb-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}.cb-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}.cb-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}.cb-opt:hover{border-color:#14213D;background:#f9f9ff}.cb-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}.cb-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}.cb-opt.sel .k{background:#14213D;color:#fff}.cb-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}.cb-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}.cb-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}.cb-btn.nav:disabled{opacity:.4;cursor:not-allowed}.cb-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}.cb-btn.mark.on{background:#FCA311;color:#14213D}.cb-btn.submit{background:#FCA311;color:#14213D}.cb-btn.primary{background:#14213D;color:#fff}.cb-side-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}.cb-count{font-size:13px;color:#4a5568;font-weight:600}.cb-count b{color:#14213D}.cb-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.cb-pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}.cb-pal.answered{background:#14213D;color:#fff;border-color:#14213D}.cb-pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}.cb-pal.cur{outline:2px solid #14213D;outline-offset:1px}.cb-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}.cb-legend span{display:inline-flex;align-items:center;gap:8px}.cb-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}.cb-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}.cb-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}.cb-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}.cb-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}.cb-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}.cb-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}.cb-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}.cb-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}.cb-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}.cb-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}.cb-rev .r.ok{border-left-color:#38a169}.cb-rev .r.no{border-left-color:#e53e3e}.cb-rev .rq{font-weight:700;margin-bottom:6px}.cb-rev .ra{font-size:13px;margin:2px 0}.cb-rev .ra.wrong{color:#c53030}.cb-rev .ra.cor{color:#276749}.cb-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}.cb-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}.cb-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}.cb-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}.cb-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}.cb-confirm .row{display:flex;gap:10px;justify-content:flex-end}.cb-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}.cb-cover small{font-weight:500;color:#cdd5e5;font-size:14px}.cb-assess-intro{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}.cb-assess-intro h3{margin:0 0 8px;font-size:21px}.cb-assess-intro p{margin:6px 0;color:var(--ink-soft)}.cb-assess-intro ul{margin:12px 0 18px}.cb-start{border:0;background:#14213D;color:#fff;border-radius:9px;padding:12px 18px;font:700 14px inherit;cursor:pointer}.cb-start:hover{opacity:.92}
+  @media(max-width:820px){.cb-exam-main{grid-template-columns:1fr}.cb-exam-side{border-left:none;border-top:1px solid #e2e8f0}.cb-exam-q-pane{padding:22px 18px}.cb-exam-top{padding:10px 14px}}
+  `;
+  function injectCss(){if(document.getElementById('cbExamCss'))return;const s=document.createElement('style');s.id='cbExamCss';s.textContent=css;document.head.appendChild(s)}
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function buildAttempt(){
+    const recent=JSON.parse(localStorage.getItem(LS_KEY+'_attempts')||'[]');
+    let selected=[], sig='';
+    for(let tries=0;tries<25;tries++){
+      selected=shuffle(QUESTION_BANK.slice()).slice(0,EXAM_COUNT);
+      sig=selected.map(x=>x.id).sort().join('|');
+      if(!recent.includes(sig))break;
+    }
+    recent.unshift(sig); try{localStorage.setItem(LS_KEY+'_attempts',JSON.stringify(recent.slice(0,20)))}catch(e){}
+    return selected.map(q=>{const c=JSON.parse(JSON.stringify(q)); const pairs=c.options.map((o,i)=>({o,i}));shuffle(pairs);c.options=pairs.map(x=>x.o);c.answer=pairs.findIndex(x=>x.i===q.answer);return c});
+  }
+  function confirmBox(title,msg,okLabel){return new Promise(resolve=>{injectCss();const d=document.createElement('div');d.className='cb-confirm';d.innerHTML=`<div class="box"><h3>${esc(title)}</h3><p>${esc(msg)}</p><div class="row"><button class="cb-btn nav" data-a="0">Cancel</button><button class="cb-btn primary" data-a="1">${esc(okLabel||'Confirm')}</button></div></div>`;document.body.appendChild(d);d.addEventListener('click',e=>{if(e.target===d){d.remove();resolve(false);return}const b=e.target.closest('[data-a]');if(!b)return;d.remove();resolve(b.dataset.a==='1')})})}
+  function startEntry(){showSplash()}
+  function showSplash(){injectCss();const sp=document.createElement('div');sp.className='cb-splash';sp.id='cbExamSplash';sp.innerHTML=`<div class="card"><h2>🎯 ${esc(ROLE)} — Assessment</h2><p>A timed, full-screen assessment based on this course.</p><ul><li><b>${EXAM_COUNT} questions</b> drawn from this course's question bank</li><li><b>${EXAM_MINUTES}-minute</b> timer — the assessment auto-submits when time is up</li><li>Navigate freely, answer questions, and <b>mark questions for review</b></li><li>Questions and answer options are shuffled on every attempt</li></ul><p style="font-weight:700;color:#14213D;margin-bottom:6px">Assessment rules</p><ul style="margin-top:0"><li>The assessment runs in <b>fullscreen</b>.</li><li>Do not switch tabs/windows or exit fullscreen.</li><li><b>3 warnings</b> for tab/window switching or leaving fullscreen will auto-submit the assessment.</li><li>Copy, cut, right-click and common screenshot/print shortcuts are blocked during the assessment.</li></ul><button class="cb-btn primary" id="cbExamBegin" style="width:100%;padding:14px">Start Assessment →</button></div>`;document.body.appendChild(sp);document.getElementById('cbExamBegin').addEventListener('click',()=>{if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});sp.remove();enterExam()})}
+  function enterExam(){injectCss();items=buildAttempt();answers={};marked={};cur=0;remaining=EXAM_SECONDS;examOn=true;document.body.style.overflow='hidden';const ov=document.createElement('div');ov.className='cb-exam-overlay';ov.id='cbExamOverlay';ov.innerHTML=`<div class="cb-exam-top"><div><div class="et-title">${esc(ROLE)} — Assessment</div><div class="et-sub">${EXAM_COUNT} questions · ${EXAM_MINUTES}-minute timer · one attempt</div></div><div class="cb-exam-timer" id="cbExamTimer">${fmt(remaining)}</div></div><div class="cb-exam-main"><div class="cb-exam-q-pane" id="cbExamQ"></div><div class="cb-exam-side"><div class="cb-count">Answered <b id="cbExamAnsN">0</b> / ${EXAM_COUNT}</div><h4 class="cb-side-title">Question palette</h4><div class="cb-palette" id="cbExamPal"></div><div class="cb-legend"><span><i style="background:#14213D;border-color:#14213D"></i> Answered</span><span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span><span><i></i> Not answered</span></div><button class="cb-btn submit" id="cbExamSubmit" style="width:100%">Submit Assessment</button></div></div>`;document.body.appendChild(ov);buildPalette();renderQ();timerId=setInterval(tick,1000);window.addEventListener('beforeunload',beforeUnload);startProctor();document.getElementById('cbExamSubmit').addEventListener('click',()=>submitExam(false))}
+  function beforeUnload(e){if(examOn){e.preventDefault();e.returnValue=''}}
+  function tick(){remaining--;const el=document.getElementById('cbExamTimer');if(el){el.textContent=fmt(Math.max(remaining,0));if(remaining<=300)el.classList.add('warn')}if(remaining<=0)submitExam(true)}
+  function buildPalette(){const pal=document.getElementById('cbExamPal');pal.innerHTML='';items.forEach((it,n)=>{const b=document.createElement('button');b.className='cb-pal';b.textContent=n+1;b.dataset.n=n;b.addEventListener('click',()=>{cur=n;renderQ()});pal.appendChild(b)});refreshPalette()}
+  function refreshPalette(){document.querySelectorAll('#cbExamPal .cb-pal').forEach(b=>{const n=+b.dataset.n,id=items[n].id;b.classList.toggle('answered',id in answers);b.classList.toggle('marked',!!marked[id]);b.classList.toggle('cur',n===cur)});const el=document.getElementById('cbExamAnsN');if(el)el.textContent=Object.keys(answers).length}
+  function renderQ(){const it=items[cur],id=it.id,pane=document.getElementById('cbExamQ');pane.innerHTML=`<div class="cb-qnum">Question ${cur+1} of ${items.length}</div><div class="cb-qtext">${esc(it.q)}${it.difficulty?`<span class="diff">${esc(it.difficulty)}</span>`:''}</div><div class="cb-opts" id="cbExamOpts">${it.options.map((o,i)=>`<div class="cb-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${esc(o)}</span></div>`).join('')}</div><div class="cb-actions"><button class="cb-btn nav" id="cbPrev" ${cur===0?'disabled':''}>← Previous</button><button class="cb-btn mark${marked[id]?' on':''}" id="cbMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button><button class="cb-btn nav" id="cbNext" ${cur===items.length-1?'disabled':''}>Next →</button></div>`;pane.querySelectorAll('.cb-opt').forEach(el=>el.addEventListener('click',()=>{answers[id]=+el.dataset.i;pane.querySelectorAll('.cb-opt').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');refreshPalette()}));document.getElementById('cbPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ()}});document.getElementById('cbNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ()}});document.getElementById('cbMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ()});refreshPalette()}
+  async function submitExam(auto){if(!examOn)return;const unanswered=items.length-Object.keys(answers).length;if(!auto){const ok=await confirmBox('Submit assessment?',unanswered?`You have ${unanswered} unanswered question(s). Once submitted, you cannot change your answers.`:'Once submitted, you cannot change your answers.','Submit Assessment');if(!ok)return}examOn=false;clearInterval(timerId);window.removeEventListener('beforeunload',beforeUnload);stopProctor();const score=items.reduce((n,it)=>n+(answers[it.id]===it.answer?1:0),0);saveScore(score,items.length);showResults(score)}
+  function saveScore(score,total){const a=JSON.parse(localStorage.getItem(LS_KEY)||'[]');a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,EXAM_COUNT)))}catch(e){}}
+  function showResults(score){const total=items.length,pct=Math.round(score/total*100);let msg='Keep practicing — review the questions you missed and try again.';if(pct>=85)msg='Outstanding — strong command of this topic.';else if(pct>=65)msg='Solid performance. Review the harder areas and try another attempt.';else if(pct>=50)msg='Borderline — revisit the course topics and retake the assessment.';const rev=items.map((it,n)=>{const you=answers[it.id],attempted=you!=null;const your=attempted?String.fromCharCode(65+you)+'. '+esc(it.options[you]):'<i>Not answered</i>';const cor=String.fromCharCode(65+it.answer)+'. '+esc(it.options[it.answer]);return `<div class="r ${attempted&&you===it.answer?'ok':'no'}"><div class="rq">Q${n+1}. ${esc(it.q)}</div><div class="ra ${attempted&&you===it.answer?'cor':'wrong'}">Your answer: ${your}</div>${attempted&&you!==it.answer?`<div class="ra cor">Correct: ${cor}</div>`:''}${it.explanation?`<div class="rx">${esc(it.explanation)}</div>`:''}</div>`}).join('');const ov=document.getElementById('cbExamOverlay');ov.innerHTML=`<div class="cb-exam-top"><div class="et-title">Result — ${esc(ROLE)} Assessment</div><button class="cb-btn" id="cbClose" style="background:rgba(255,255,255,.15);color:#fff">✕ Close</button></div><div class="cb-exam-q-pane" style="flex:1"><div class="cb-result"><div class="cb-score">${score} / ${total}</div><div class="cb-rmsg">${pct}% correct — ${msg}</div><div style="margin-top:16px"><button class="cb-btn primary" id="cbRetry">↻ Take another assessment</button></div><div class="cb-rev">${rev}</div></div></div>`;document.getElementById('cbRetry').addEventListener('click',()=>{ov.remove();enterExam()});document.getElementById('cbClose').addEventListener('click',()=>closeExam())}
+  function closeExam(){stopProctor();const ov=document.getElementById('cbExamOverlay');if(ov)ov.remove();document.body.style.overflow='';if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}
+  function warning(title,msg){if(!proctorOn||!examOn)return;const now=Date.now();if(now-lastWarn<1200)return;lastWarn=now;warns++;const cover=document.getElementById('cbExamCover')||document.createElement('div');cover.className='cb-cover';cover.id='cbExamCover';cover.style.display='flex';cover.innerHTML=`<div>⚠️ ${esc(title)}</div><small>${esc(msg)}</small><small>Warning ${warns} of 3</small><button class="cb-btn primary" id="cbResume">Return to assessment</button>`;document.body.appendChild(cover);document.getElementById('cbResume').onclick=()=>{cover.style.display='none';if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});if(warns>=3)submitExam(true)};if(warns>=3)setTimeout(()=>submitExam(true),500)}
+  function visHandler(){if(document.hidden)warning('Tab or window switch detected','Please stay on the assessment screen. Repeated violations will submit the assessment automatically.')}
+  function fsHandler(){if(examOn&&!document.fullscreenElement)warning('Fullscreen exited','The assessment must remain in fullscreen mode.')}
+  function blurHandler(){if(examOn)warning('Focus changed','Please keep the assessment window active.')}
+  function focusHandler(){}
+  function blockEvt(e){if(examOn){e.preventDefault();warning('Action blocked','Copy, cut and right-click are disabled during the assessment.')}}
+  function keyGuard(e){if(!examOn)return;const k=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&['c','x','p','s','u'].includes(k)){e.preventDefault();warning('Shortcut blocked','This assessment disables copy, print, save and source shortcuts.')}if(k==='f12'){e.preventDefault();warning('Developer tools shortcut blocked','This action is disabled during the assessment.')}}
+  function printGuard(e){if(examOn&&e.key==='PrintScreen'){e.preventDefault();warning('Screenshot action blocked','Screenshot capture is restricted during the assessment.')}}
+  function startProctor(){warns=0;lastWarn=0;proctorOn=true;document.addEventListener('visibilitychange',visHandler);document.addEventListener('fullscreenchange',fsHandler);window.addEventListener('blur',blurHandler);document.addEventListener('contextmenu',blockEvt,true);document.addEventListener('copy',blockEvt,true);document.addEventListener('cut',blockEvt,true);document.addEventListener('keydown',keyGuard,true);document.addEventListener('keyup',printGuard,true)}
+  function stopProctor(){proctorOn=false;document.removeEventListener('visibilitychange',visHandler);document.removeEventListener('fullscreenchange',fsHandler);window.removeEventListener('blur',blurHandler);document.removeEventListener('contextmenu',blockEvt,true);document.removeEventListener('copy',blockEvt,true);document.removeEventListener('cut',blockEvt,true);document.removeEventListener('keydown',keyGuard,true);document.removeEventListener('keyup',printGuard,true);const c=document.getElementById('cbExamCover');if(c)c.remove()}
+  document.addEventListener('click',function(e){const b=e.target.closest('#cbAssessStart');if(b){e.preventDefault();startEntry();}},true)
+  window.addEventListener('keydown',e=>{if(e.key==='Escape'&&examOn)e.preventDefault()});
+})();
+
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body>
+</html>

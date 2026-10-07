@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Databases — Software Developer Learning Module</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#d9730d 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans',system-ui,sans-serif;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans',system-ui,sans-serif;font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'Noto Sans',system-ui,sans-serif;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'Noto Sans',system-ui,sans-serif;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'Noto Sans',system-ui,sans-serif;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'Noto Sans',system-ui,sans-serif;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'Noto Sans',system-ui,sans-serif;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'Noto Sans',system-ui,sans-serif;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+
+/* ============= Module additions (same visual language) ============= */
+.table-wrap{overflow-x:auto;margin:16px 0;-webkit-overflow-scrolling:touch}
+.table-wrap table{margin:0;min-width:560px}
+.formula{display:inline-block;font-size:12.5px;background:var(--bg-code);border:1px solid var(--line);padding:2px 8px;border-radius:4px;color:#14213D;font-weight:500}
+.saq-toggle{margin-top:10px}
+.mcq-opt:focus-visible,.btn:focus-visible,.tab:focus-visible,.assess-start-btn:focus-visible,.saq textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.example{border:1px solid var(--line);border-left:4px solid var(--orange);border-radius:var(--radius);padding:14px 18px;margin:16px 0;background:#fffdf9}
+.example-title{font-weight:700;font-size:13px;color:#a85a08;margin-bottom:6px;letter-spacing:.02em}
+.example p,.example ul{margin:6px 0;font-size:14.5px}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.expert{background:#14213D;color:#fff}
+.term{display:grid;grid-template-columns:190px 1fr;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.term:last-child{border-bottom:none}
+details{border:1px solid var(--line);border-radius:var(--radius);margin:10px 0;background:#fff}
+summary{cursor:pointer;padding:11px 16px;font-weight:600;font-size:15px}details[open] summary{border-bottom:1px solid var(--line)}details>div{padding:10px 16px 12px;font-size:14.5px;line-height:1.6;color:#3a3833}
+.term b{color:#14213D}
+.terms{border:1px solid var(--line);border-radius:var(--radius);padding:4px 16px;margin:16px 0;background:#fff}
+@media (max-width:720px){
+  .header-top{padding:12px 16px;flex-wrap:wrap}
+  .brand{font-size:14px;line-height:1.35}
+  .brand-sub{display:block;margin-left:0}
+  .panel-title{font-size:30px}
+  .section h2{font-size:22px}
+  .assess-modal-box{padding:0 18px 40px}
+  .term{grid-template-columns:1fr;gap:2px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+<style>
+/* Noto Sans everywhere */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,td,th,div,section,header,nav,aside,main,label,button,input,textarea,small,strong,b,em,i,code,pre,svg text{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif !important}
+
+/* ===== Scrollable navbar: arrow buttons, wheel + drag scrolling ===== */
+.tabbar-wrap{position:relative}
+.tabbar-wrap .tabbar{cursor:grab;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.tabbar-wrap .tabbar.dragging{cursor:grabbing;user-select:none}
+.tabbar-wrap .tabbar.dragging .tab{pointer-events:none}
+.tb-arrow{position:absolute;top:0;bottom:0;width:46px;border:none;padding:0;margin:0;display:none;align-items:center;z-index:60;cursor:pointer;background:transparent;color:#14213D}
+.tb-arrow.show{display:flex}
+.tb-prev{left:0;justify-content:flex-start;padding-left:6px;background:linear-gradient(90deg,#fff 55%,rgba(255,255,255,0))}
+.tb-next{right:0;justify-content:flex-end;padding-right:6px;background:linear-gradient(270deg,#fff 55%,rgba(255,255,255,0))}
+.tb-arrow span{width:26px;height:26px;border-radius:50%;background:#fff;border:1px solid #d9dde7;box-shadow:0 1px 3px rgba(20,33,61,.15);display:grid;place-items:center;transition:background .15s,border-color .15s,color .15s}
+.tb-arrow:hover span,.tb-arrow:focus-visible span{background:#14213D;border-color:#14213D;color:#fff}
+.tb-arrow svg{width:14px;height:14px;display:block}
+@media (hover:none){.tb-arrow span{width:24px;height:24px}}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header"><div class="header-top"><div class="brand"><div class="brand-mark">DB</div><span>Software Developer | Databases<span class="brand-sub"> · Relational Databases &amp; SQL</span></span></div><div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 8</span></span><button class="btn" onclick="resetProgress()">↻ Reset</button></div></div><div class="tabbar-wrap"><button class="tb-arrow tb-prev" type="button" aria-label="Scroll tabs left" tabindex="-1"><span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3 5 8l5 5"/></svg></span></button><nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Foundations</button><button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> SQL Basics</button><button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> Joins & Aggregation</button><button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> Design & Constraints</button><button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> Advanced & Expert</button><button class="tab" data-tab="t6" role="tab"><span class="tab-num">06</span> Interview Preparation</button><button class="tab" data-tab="t7" role="tab"><span class="tab-num">07</span> Practice</button><button class="tab" data-tab="t8" role="tab"><span class="tab-num">08</span> Assessment</button></nav><button class="tb-arrow tb-next" type="button" aria-label="Scroll tabs right" tabindex="-1"><span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l5 5-5 5"/></svg></span></button></div></header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside><main class="main"><section class="panel active" id="t1" data-toc='[["s1-1", "What is a Database?"], ["s1-2", "Types of Databases"], ["s1-3", "The Relational Model"], ["s1-4", "PostgreSQL vs MySQL"], ["s1-5", "Key Terms (What is What)"]]'><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Basic</span></div><p class="panel-eyebrow">Module 01</p><h1 class="panel-title">Foundations</h1><p class="panel-subtitle">What databases are, how relational databases work, and how PostgreSQL and MySQL fit in.</p></div><div class="section" id="s1-1"><h2><span class="sec-emoji">🧭</span> What is a Database?</h2><p>A <strong>database</strong> is an organised collection of data stored so applications can save, find, update and delete it reliably. A <strong>DBMS</strong> (database management system) is the software that manages it; developers talk to it through a query language.</p><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#14213D">💾</div><div class="card-title">Persist</div><div class="card-desc">Data survives restarts, unlike variables in memory.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🔍</div><div class="card-title">Query</div><div class="card-desc">Find exactly the rows you need, fast.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🔒</div><div class="card-title">Protect</div><div class="card-desc">Control who can read or change data.</div></div><div class="card"><div class="card-icon" style="background:var(--pink-soft);color:#8c1a63">🤝</div><div class="card-title">Share</div><div class="card-desc">Many users and services use the same data safely.</div></div></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">🗂️</span> Types of Databases</h2><div class="table-wrap"><table><tr><th>Type</th><th>Stores data as</th><th>Examples</th><th>Best for</th></tr><tr><td><strong>Relational (SQL)</strong></td><td>Tables of rows and columns, linked by keys</td><td>PostgreSQL, MySQL, SQL Server, Oracle</td><td>Structured data, transactions, reports</td></tr><tr><td><strong>Document</strong></td><td>JSON-like documents</td><td>MongoDB</td><td>Flexible, nested data</td></tr><tr><td><strong>Key-value</strong></td><td>Key → value pairs</td><td>Redis</td><td>Caching, sessions</td></tr><tr><td><strong>Wide-column</strong></td><td>Rows with dynamic columns</td><td>Cassandra</td><td>Huge write-heavy workloads</td></tr><tr><td><strong>Graph</strong></td><td>Nodes and edges</td><td>Neo4j</td><td>Relationships, recommendations</td></tr></table></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">This course focuses on <strong>relational databases</strong> — the default choice for most business applications.</div></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">🧱</span> The Relational Model</h2><p>Data lives in <strong>tables</strong> (relations). Each <strong>row</strong> is one record, each <strong>column</strong> is one attribute with a data type. Tables connect through <strong>keys</strong>.</p><pre><span class="pre-lang">SQL</span><code>CREATE TABLE customers (id INT PRIMARY KEY, name VARCHAR(50), city VARCHAR(30));
+CREATE TABLE orders (id INT PRIMARY KEY, customer_id INT REFERENCES customers(id),
+                     amount DECIMAL(10,2), status VARCHAR(15), ordered_on DATE);</code></pre><div class="example"><div class="example-title">EXAMPLE · Shop data</div><p><code>customers</code> holds people; <code>orders</code> holds purchases. <code>orders.customer_id</code> points to <code>customers.id</code>, so one customer can have many orders (one-to-many).</p></div></div><div class="section" id="s1-4"><h2><span class="sec-emoji">🐘</span> PostgreSQL vs MySQL</h2><div class="table-wrap"><table><tr><th></th><th>PostgreSQL</th><th>MySQL</th></tr><tr><td>Style</td><td>Object-relational, standards-focused, very extensible</td><td>Simple, fast, hugely popular for web apps</td></tr><tr><td>Strengths</td><td>Complex queries, JSON/JSONB, window functions, extensions</td><td>Easy setup, strong read performance, wide hosting support</td></tr><tr><td>Default engine</td><td>Single storage engine (heap)</td><td>InnoDB (transactional)</td></tr><tr><td>Auto ID</td><td><code>SERIAL</code> / <code>GENERATED ... AS IDENTITY</code></td><td><code>AUTO_INCREMENT</code></td></tr><tr><td>Text quoting</td><td>Single quotes for strings; double quotes for identifiers</td><td>Single quotes for strings; backticks for identifiers</td></tr></table></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Both speak <strong>SQL</strong>. Core syntax is ~90% identical; differences appear in data types, functions and advanced features.</div></div></div><div class="section" id="s1-5"><h2><span class="sec-emoji">📖</span> Key Terms (What is What)</h2><div class="terms"><div class="term"><b>Table</b><span>A set of rows with the same columns.</span></div><div class="term"><b>Primary key</b><span>Column(s) that uniquely identify each row.</span></div><div class="term"><b>Foreign key</b><span>Column that references another table’s primary key.</span></div><div class="term"><b>Schema</b><span>The structure: tables, columns, types, constraints.</span></div><div class="term"><b>SQL</b><span>Structured Query Language — the standard language for relational databases.</span></div><div class="term"><b>Index</b><span>A lookup structure that makes searches faster.</span></div><div class="term"><b>Transaction</b><span>A group of statements that succeed or fail together.</span></div><div class="term"><b>ACID</b><span>Atomicity, Consistency, Isolation, Durability.</span></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which database type is the best default for structured data with transactions?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Key-value</li><li class="mcq-opt"><span class="opt-letter">B</span> Relational</li><li class="mcq-opt"><span class="opt-letter">C</span> Graph</li><li class="mcq-opt"><span class="opt-letter">D</span> Wide-column</li></ul><div class="mcq-feedback" data-ok="Correct — relational databases excel at structured, transactional data." data-bad="Not quite. Relational databases are built for structured, transactional data."></div></div></div></section><section class="panel" id="t2" data-toc='[["s2-1", "What is SQL? (Categories)"], ["s2-2", "INSERT, UPDATE, DELETE"], ["s2-3", "SELECT, WHERE, ORDER BY, LIMIT"], ["s2-4", "NULL, DISTINCT & Aliases"]]'><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Basic</span></div><p class="panel-eyebrow">Module 02</p><h1 class="panel-title">SQL Basics</h1><p class="panel-subtitle">The four everyday operations: create structures, insert, read, change and delete data.</p></div><div class="section" id="s2-1"><h2><span class="sec-emoji">📜</span> What is SQL? (Categories)</h2><div class="table-wrap"><table><tr><th>Group</th><th>Meaning</th><th>Statements</th></tr><tr><td><strong>DDL</strong></td><td>Define structure</td><td><code>CREATE</code>, <code>ALTER</code>, <code>DROP</code></td></tr><tr><td><strong>DML</strong></td><td>Change data</td><td><code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code></td></tr><tr><td><strong>DQL</strong></td><td>Read data</td><td><code>SELECT</code></td></tr><tr><td><strong>DCL / TCL</strong></td><td>Permissions / transactions</td><td><code>GRANT</code>, <code>COMMIT</code>, <code>ROLLBACK</code></td></tr></table></div></div><div class="section" id="s2-2"><h2><span class="sec-emoji">➕</span> INSERT, UPDATE, DELETE</h2><pre><span class="pre-lang">SQL</span><code>INSERT INTO customers (id, name, city) VALUES (1,&#x27;Asha&#x27;,&#x27;Hyderabad&#x27;), (2,&#x27;Ravi&#x27;,&#x27;Vijayawada&#x27;);
+INSERT INTO orders VALUES (101,1,2500.00,&#x27;PAID&#x27;,&#x27;2026-09-01&#x27;), (102,1,800.00,&#x27;PENDING&#x27;,&#x27;2026-09-05&#x27;), (103,2,1200.00,&#x27;PAID&#x27;,&#x27;2026-09-07&#x27;);
+UPDATE orders SET status=&#x27;PAID&#x27; WHERE id=102;
+DELETE FROM orders WHERE status=&#x27;CANCELLED&#x27;;</code></pre><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Always include <code>WHERE</code> on <code>UPDATE</code>/<code>DELETE</code> — without it, <strong>every row</strong> is changed or removed.</div></div></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🔎</span> SELECT, WHERE, ORDER BY, LIMIT</h2><pre><span class="pre-lang">SQL</span><code>SELECT name, city FROM customers;                 -- chosen columns
+SELECT * FROM orders WHERE amount &gt; 1000 AND status = &#x27;PAID&#x27;;
+SELECT * FROM orders ORDER BY amount DESC LIMIT 2;  -- top 2</code></pre><div class="table-wrap"><table><tr><th>Operator</th><th>Use</th><th>Example</th></tr><tr><td><code>= &lt;&gt; &lt; &gt;</code></td><td>Compare</td><td><code>amount &gt;= 1000</code></td></tr><tr><td><code>AND OR NOT</code></td><td>Combine</td><td><code>city='X' OR city='Y'</code></td></tr><tr><td><code>IN</code></td><td>Any of a list</td><td><code>status IN ('PAID','PENDING')</code></td></tr><tr><td><code>BETWEEN</code></td><td>Range</td><td><code>amount BETWEEN 500 AND 2000</code></td></tr><tr><td><code>LIKE</code></td><td>Pattern</td><td><code>name LIKE 'A%'</code></td></tr><tr><td><code>IS NULL</code></td><td>Missing value</td><td><code>city IS NULL</code></td></tr></table></div></div><div class="section" id="s2-4"><h2><span class="sec-emoji">🕳️</span> NULL, DISTINCT & Aliases</h2><pre><span class="pre-lang">SQL</span><code>SELECT DISTINCT city FROM customers;
+SELECT name AS customer, COALESCE(city,&#x27;Unknown&#x27;) AS location FROM customers;</code></pre><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body"><code>NULL</code> means <em>unknown</em>. <code>NULL = NULL</code> is not true — use <code>IS NULL</code>.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which query finds customers with no city?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> WHERE city = NULL</li><li class="mcq-opt"><span class="opt-letter">B</span> WHERE city IS NULL</li><li class="mcq-opt"><span class="opt-letter">C</span> WHERE city = &#x27;&#x27;</li><li class="mcq-opt"><span class="opt-letter">D</span> WHERE NOT city</li></ul><div class="mcq-feedback" data-ok="Correct — NULL needs IS NULL." data-bad="Not quite. Comparisons with NULL need IS NULL."></div></div></div></section><section class="panel" id="t3" data-toc='[["s3-1", "JOINs"], ["s3-2", "Aggregates, GROUP BY, HAVING"], ["s3-3", "Subqueries & CASE"]]'><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Intermediate</span></div><p class="panel-eyebrow">Module 03</p><h1 class="panel-title">Joins & Aggregation</h1><p class="panel-subtitle">Combine tables, summarise data with GROUP BY, and write subqueries.</p></div><div class="section" id="s3-1"><h2><span class="sec-emoji">🔗</span> JOINs</h2><div class="table-wrap"><table><tr><th>Join</th><th>Returns</th></tr><tr><td><strong>INNER JOIN</strong></td><td>Only rows that match in both tables</td></tr><tr><td><strong>LEFT JOIN</strong></td><td>All left rows + matches (NULL if none)</td></tr><tr><td><strong>RIGHT JOIN</strong></td><td>All right rows + matches</td></tr><tr><td><strong>FULL JOIN</strong></td><td>All rows from both (PostgreSQL; emulate in MySQL with UNION)</td></tr><tr><td><strong>CROSS JOIN</strong></td><td>Every combination</td></tr></table></div><pre><span class="pre-lang">SQL</span><code>SELECT c.name, o.amount FROM customers c
+INNER JOIN orders o ON o.customer_id = c.id;
+-- customers with NO orders
+SELECT c.name FROM customers c LEFT JOIN orders o ON o.customer_id = c.id WHERE o.id IS NULL;</code></pre></div><div class="section" id="s3-2"><h2><span class="sec-emoji">📊</span> Aggregates, GROUP BY, HAVING</h2><pre><span class="pre-lang">SQL</span><code>SELECT c.name, COUNT(*) AS orders, SUM(o.amount) AS total
+FROM customers c JOIN orders o ON o.customer_id = c.id
+WHERE o.status = &#x27;PAID&#x27;
+GROUP BY c.name
+HAVING SUM(o.amount) &gt; 1000
+ORDER BY total DESC;</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><code>WHERE</code> filters rows <em>before</em> grouping; <code>HAVING</code> filters groups <em>after</em>. Functions: <code>COUNT SUM AVG MIN MAX</code>.</div></div></div><div class="section" id="s3-3"><h2><span class="sec-emoji">🪆</span> Subqueries & CASE</h2><pre><span class="pre-lang">SQL</span><code>SELECT * FROM orders WHERE amount &gt; (SELECT AVG(amount) FROM orders);
+SELECT id, amount, CASE WHEN amount&gt;=2000 THEN &#x27;High&#x27; WHEN amount&gt;=1000 THEN &#x27;Medium&#x27; ELSE &#x27;Low&#x27; END AS tier FROM orders;</code></pre><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which clause filters groups after GROUP BY?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> WHERE</li><li class="mcq-opt"><span class="opt-letter">B</span> HAVING</li><li class="mcq-opt"><span class="opt-letter">C</span> ORDER BY</li><li class="mcq-opt"><span class="opt-letter">D</span> LIMIT</li></ul><div class="mcq-feedback" data-ok="Correct — HAVING filters aggregated groups." data-bad="Not quite. WHERE is row-level; HAVING is group-level."></div></div></div></section><section class="panel" id="t4" data-toc='[["s4-1", "Keys & Constraints"], ["s4-2", "Relationships"], ["s4-3", "Normalization"]]'><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Intermediate</span></div><p class="panel-eyebrow">Module 04</p><h1 class="panel-title">Design & Constraints</h1><p class="panel-subtitle">Design clean schemas: keys, constraints, relationships and normalization.</p></div><div class="section" id="s4-1"><h2><span class="sec-emoji">🔐</span> Keys & Constraints</h2><div class="table-wrap"><table><tr><th>Constraint</th><th>Purpose</th></tr><tr><td><code>PRIMARY KEY</code></td><td>Unique, not null identifier</td></tr><tr><td><code>FOREIGN KEY</code></td><td>Keeps references valid</td></tr><tr><td><code>UNIQUE</code></td><td>No duplicates (e.g. email)</td></tr><tr><td><code>NOT NULL</code></td><td>Value required</td></tr><tr><td><code>CHECK</code></td><td>Custom rule, e.g. <code>amount &gt;= 0</code></td></tr><tr><td><code>DEFAULT</code></td><td>Value when none supplied</td></tr></table></div><pre><span class="pre-lang">SQL</span><code>CREATE TABLE products (
+  id SERIAL PRIMARY KEY,             -- MySQL: INT AUTO_INCREMENT PRIMARY KEY
+  sku VARCHAR(20) UNIQUE NOT NULL,
+  price DECIMAL(10,2) CHECK (price &gt;= 0),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);</code></pre></div><div class="section" id="s4-2"><h2><span class="sec-emoji">🔀</span> Relationships</h2><div class="table-wrap"><table><tr><th>Type</th><th>Example</th><th>How</th></tr><tr><td>One-to-one</td><td>User ↔ profile</td><td>FK that is also UNIQUE</td></tr><tr><td>One-to-many</td><td>Customer → orders</td><td>FK on the “many” side</td></tr><tr><td>Many-to-many</td><td>Students ↔ courses</td><td>Junction table with two FKs</td></tr></table></div></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🧹</span> Normalization</h2><div class="terms"><div class="term"><b>1NF</b><span>Atomic values — no lists in a cell.</span></div><div class="term"><b>2NF</b><span>Every non-key column depends on the whole key.</span></div><div class="term"><b>3NF</b><span>No column depends on another non-key column.</span></div><div class="term"><b>Denormalize</b><span>Deliberately duplicate data to speed up reads (trade-off: consistency).</span></div></div><div class="example"><div class="example-title">EXAMPLE · Fixing a bad table</div><p><code>orders(id, customer_name, customer_city, item)</code> repeats customer data. Split into <code>customers</code> and <code>orders</code> with a foreign key — update a city once, not in 50 rows.</p></div><div class="mcq" data-answer="2"><div class="mcq-q"><span class="mcq-qnum">Q.</span> A junction table is used for…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> One-to-one</li><li class="mcq-opt"><span class="opt-letter">B</span> One-to-many</li><li class="mcq-opt"><span class="opt-letter">C</span> Many-to-many</li><li class="mcq-opt"><span class="opt-letter">D</span> Indexes</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite. Many-to-many needs a junction table."></div></div></div></section><section class="panel" id="t5" data-toc='[["s5-1", "Transactions & ACID"], ["s5-2", "Indexes & EXPLAIN"], ["s5-3", "CTEs & Window Functions"], ["s5-4", "Production Practices"]]'><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Expert</span></div><p class="panel-eyebrow">Module 05</p><h1 class="panel-title">Advanced & Expert</h1><p class="panel-subtitle">Transactions, indexes, query plans, window functions and production practices.</p></div><div class="section" id="s5-1"><h2><span class="sec-emoji">⚛️</span> Transactions & ACID</h2><pre><span class="pre-lang">SQL</span><code>BEGIN;  -- MySQL: START TRANSACTION;
+UPDATE accounts SET balance = balance - 500 WHERE id = 1;
+UPDATE accounts SET balance = balance + 500 WHERE id = 2;
+COMMIT;   -- or ROLLBACK; to undo both</code></pre><div class="table-wrap"><table><tr><th>Isolation level</th><th>Prevents</th><th>Notes</th></tr><tr><td>Read Committed</td><td>Dirty reads</td><td>PostgreSQL default</td></tr><tr><td>Repeatable Read</td><td>+ non-repeatable reads</td><td>MySQL InnoDB default</td></tr><tr><td>Serializable</td><td>+ phantoms</td><td>Strictest, slowest</td></tr></table></div></div><div class="section" id="s5-2"><h2><span class="sec-emoji">⚡</span> Indexes & EXPLAIN</h2><pre><span class="pre-lang">SQL</span><code>CREATE INDEX idx_orders_customer ON orders (customer_id);
+CREATE UNIQUE INDEX idx_cust_email ON customers (email);
+EXPLAIN ANALYZE SELECT * FROM orders WHERE customer_id = 1;  -- PostgreSQL
+EXPLAIN SELECT * FROM orders WHERE customer_id = 1;          -- MySQL</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Index columns used in <code>WHERE</code>, <code>JOIN</code> and <code>ORDER BY</code>. Indexes speed reads but slow writes and use space. Look for “Seq Scan” / “ALL” (full scans) in plans. Wrapping a column in a function (<code>WHERE LOWER(name)=…</code>) can stop index use.</div></div></div><div class="section" id="s5-3"><h2><span class="sec-emoji">🪟</span> CTEs & Window Functions</h2><pre><span class="pre-lang">SQL</span><code>WITH paid AS (SELECT * FROM orders WHERE status=&#x27;PAID&#x27;)
+SELECT customer_id, amount,
+       RANK() OVER (PARTITION BY customer_id ORDER BY amount DESC) AS rnk,
+       SUM(amount) OVER (PARTITION BY customer_id) AS customer_total
+FROM paid;</code></pre><p>Window functions calculate across related rows <em>without collapsing them</em> like <code>GROUP BY</code>.</p></div><div class="section" id="s5-4"><h2><span class="sec-emoji">🛡️</span> Production Practices</h2><div class="terms"><div class="term"><b>SQL injection</b><span>Never concatenate user input into SQL; use parameterised queries.</span></div><div class="term"><b>N+1 queries</b><span>Fetch related rows in one JOIN, not one query per row.</span></div><div class="term"><b>Migrations</b><span>Version schema changes (Flyway, Liquibase, Alembic).</span></div><div class="term"><b>Backups</b><span>Regular dumps (<code>pg_dump</code>, <code>mysqldump</code>) and tested restores.</span></div><div class="term"><b>Pooling</b><span>Reuse connections (PgBouncer, HikariCP).</span></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> The safest way to include user input in a query is…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> String concatenation</li><li class="mcq-opt"><span class="opt-letter">B</span> Parameterised queries</li><li class="mcq-opt"><span class="opt-letter">C</span> Escaping manually</li><li class="mcq-opt"><span class="opt-letter">D</span> Using SELECT *</li></ul><div class="mcq-feedback" data-ok="Correct — parameters prevent SQL injection." data-bad="Not quite. Use parameterised queries."></div></div></div></section><section class="panel" id="t6" data-toc='[["s6-1", "Basics"], ["s6-2", "Intermediate & Expert"]]'><div class="panel-header"><div class="level-row"><span class="level-tag fresher">All levels</span></div><p class="panel-eyebrow">Module 06</p><h1 class="panel-title">Interview Preparation</h1><p class="panel-subtitle">Common database questions with crisp answers.</p></div><div class="section" id="s6-1"><h2><span class="sec-emoji">🌱</span> Basics</h2><details><summary>DELETE vs TRUNCATE vs DROP?</summary><div><code>DELETE</code> removes chosen rows (logged, can rollback); <code>TRUNCATE</code> empties a table quickly; <code>DROP</code> removes the table itself.</div></details><details><summary>Primary key vs unique key?</summary><div>A table has one primary key (not null); it can have many unique keys (NULLs allowed in most databases).</div></details><details><summary>WHERE vs HAVING?</summary><div>WHERE filters rows before grouping; HAVING filters groups after aggregation.</div></details></div><div class="section" id="s6-2"><h2><span class="sec-emoji">🚀</span> Intermediate & Expert</h2><details><summary>INNER vs LEFT JOIN?</summary><div>INNER keeps only matches; LEFT keeps all left rows and fills NULL when no match.</div></details><details><summary>What is an index and its cost?</summary><div>A structure (usually B-tree) for fast lookups; costs storage and slows INSERT/UPDATE/DELETE.</div></details><details><summary>Explain ACID.</summary><div>Atomic (all or nothing), Consistent (rules preserved), Isolated (concurrent transactions don’t interfere), Durable (committed data survives crashes).</div></details><details><summary>PostgreSQL vs MySQL — when to choose which?</summary><div>PostgreSQL for complex queries, JSONB, extensions and strict standards; MySQL for simple, read-heavy web workloads and broad hosting support.</div></details><details><summary>How do you find a slow query?</summary><div>Use EXPLAIN (ANALYZE), slow query log / pg_stat_statements, then add indexes or rewrite the query.</div></details></div></section><section class="panel" id="t7" data-toc='[["s7-1", "Scenario: ShopKart"], ["s7-2", "Task 1 \u00b7 Basic"], ["s7-3", "Task 2 \u00b7 Joins"], ["s7-4", "Task 3 \u00b7 Find gaps"], ["s7-5", "Task 4 \u00b7 Expert"]]'><div class="panel-header"><div class="level-row"><span class="level-tag fresher">All levels</span></div><p class="panel-eyebrow">Module 07</p><h1 class="panel-title">Practice</h1><p class="panel-subtitle">Hands-on tasks using the customers/orders tables.</p></div><div class="quiz-progress"><span class="quiz-score">0 / 0 correct</span><div class="quiz-bar-track"><div class="quiz-bar-fill"></div></div><button class="btn quiz-reset-btn">↻ Reset answers</button></div><div class="section" id="s7-1"><h2><span class="sec-emoji">🛒</span> Scenario: ShopKart</h2><p>Use the <code>customers</code> and <code>orders</code> tables from Module 01. Try each task in PostgreSQL or MySQL before checking the model answer.</p></div><div class="section" id="s7-2"><h2><span class="sec-emoji">1️⃣</span> Task 1 · Basic</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> List names of customers from Hyderabad, sorted A–Z.</div><textarea placeholder="Write your query here…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> <code>SELECT name FROM customers WHERE city='Hyderabad' ORDER BY name;</code></div></div></div><div class="section" id="s7-3"><h2><span class="sec-emoji">2️⃣</span> Task 2 · Joins</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Show each customer’s name and total PAID amount, highest first.</div><textarea placeholder="Write your query here…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> <code>SELECT c.name, SUM(o.amount) AS total FROM customers c JOIN orders o ON o.customer_id=c.id WHERE o.status='PAID' GROUP BY c.name ORDER BY total DESC;</code></div></div></div><div class="section" id="s7-4"><h2><span class="sec-emoji">3️⃣</span> Task 3 · Find gaps</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Find customers who have never placed an order.</div><textarea placeholder="Write your query here…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> <code>SELECT c.name FROM customers c LEFT JOIN orders o ON o.customer_id=c.id WHERE o.id IS NULL;</code></div></div></div><div class="section" id="s7-5"><h2><span class="sec-emoji">4️⃣</span> Task 4 · Expert</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Add an index for “orders of a customer by date” and describe how to confirm it is used.</div><textarea placeholder="Write your query here…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> <code>CREATE INDEX idx_orders_cust_date ON orders (customer_id, ordered_on);</code> then run <code>EXPLAIN</code> and look for an index scan instead of a full table scan.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> What does a missing WHERE in an UPDATE do?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Nothing</li><li class="mcq-opt"><span class="opt-letter">B</span> Updates every row</li><li class="mcq-opt"><span class="opt-letter">C</span> Raises an error always</li><li class="mcq-opt"><span class="opt-letter">D</span> Updates the first row</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite. It updates all rows."></div></div></div></section><section class="panel" id="t8" data-toc='[["sA-1", "Take the Assessment"], ["sA-2", "Exam Rules &amp; Security"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag expert">→ Expert</span></div><p class="panel-eyebrow">Module 08</p><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">Test yourself on relational databases, SQL, joins, design, transactions and indexing — from basic to expert.</p></div>
+      <div class="section" id="sA-1"><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div><div class="assess-intro-text">A timed, exam-style final assessment for the Databases &amp; SQL track. Questions cover every module of this course and are shuffled on every attempt.</div><ul class="assess-intro-list"><li><strong>14 multiple-choice questions</strong> — concept checks plus scenario-based judgement calls</li><li>Difficulty ranges from <strong>Basic</strong> to <strong>Expert</strong></li><li>17-minute timer, question palette, mark-for-review, full answers after you submit</li><li>Your attempts and top score are saved in this browser</li></ul><button class="assess-start-btn" id="assessStartBtn" type="button">▶ Start Assessment</button></div><div id="scoreBoard" class="score-board" style="display:none"></div></div>
+<div class="section" id="sA-2"><h2><span class="sec-emoji">🔒</span> Exam Rules &amp; Security</h2><ul><li>The test runs in <strong>fullscreen</strong> (where your browser allows it) with a <strong>17-minute</strong> countdown timer; it auto-submits when time is up.</li><li><strong>No tab or window switching</strong>, no losing window focus and no exiting fullscreen. Each violation shows a warning screen; after <strong>3 warnings</strong> the test auto-submits.</li><li><strong>Copy, cut, print, save, view-source, right-click and the F12 developer-tools shortcut are disabled</strong>, and the PrintScreen key is blocked where the browser allows it. Refreshing or closing the page asks for confirmation.</li><li>Navigate freely, <strong>mark questions for review</strong>, then submit. Correct answers appear only after submission.</li><li>Questions are <strong>shuffled on every attempt</strong>. Your attempts and top score are saved in this browser.</li></ul></div>
+    </section>
+  </main></div>
+<script>
+
+/* Tabs, dynamic TOC, scroll-spy, progress pill */
+(function(){
+  const tabs=document.querySelectorAll('.tab'),panels=document.querySelectorAll('.panel'),tocEl=document.getElementById('toc'),total=tabs.length,pt=document.getElementById('progressText');
+  function buildToc(panel){const data=JSON.parse(panel.getAttribute('data-toc')||'[]');tocEl.innerHTML=data.map(([id,l])=>`<li><a href="#${id}" data-target="${id}">${l}</a></li>`).join('');const f=tocEl.querySelector('a');if(f)f.classList.add('active');}
+  function activate(i){tabs.forEach((t,k)=>{t.classList.toggle('active',k===i);t.setAttribute('aria-selected',k===i)});panels.forEach((p,k)=>p.classList.toggle('active',k===i));buildToc(panels[i]);pt.textContent=`Tab ${i+1} of ${total}`;window.scrollTo({top:0,behavior:'instant'});}
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{const a=e.target.closest('.toc-list a');if(!a)return;e.preventDefault();const el=document.getElementById(a.dataset.target);if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});});
+  let tk=false;function spy(){const ap=document.querySelector('.panel.active');if(!ap)return;let cur=null;ap.querySelectorAll('.section').forEach(s=>{if(s.getBoundingClientRect().top-180<0)cur=s.id});if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));tk=false;}
+  window.addEventListener('scroll',()=>{if(!tk){requestAnimationFrame(spy);tk=true}},{passive:true});
+  window.resetProgress=()=>activate(0);activate(0);
+})();
+/* Inline MCQs, per-panel score, model answers */
+(function(){
+  function update(panel){const bar=panel.querySelector('.quiz-progress');if(!bar||bar.id)return;const all=panel.querySelectorAll('.mcq').length,done=panel.querySelectorAll('.mcq.answered').length,okc=panel.querySelectorAll('.mcq.answered[data-correct="1"]').length;bar.querySelector('.quiz-score').textContent=`${okc} / ${all} correct`;bar.querySelector('.quiz-bar-fill').style.width=(all?done/all*100:0)+'%';}
+  document.querySelectorAll('.mcq').forEach(m=>{const ans=+m.dataset.answer,opts=m.querySelectorAll('.mcq-opt'),fb=m.querySelector('.mcq-feedback');
+    opts.forEach((o,i)=>{o.tabIndex=0;o.setAttribute('role','button');const go=()=>{if(m.classList.contains('answered'))return;m.classList.add('answered');const r=i===ans;m.dataset.correct=r?'1':'0';opts[ans].classList.add('correct');if(!r)o.classList.add('incorrect');fb.className='mcq-feedback '+(r?'ok':'bad');fb.textContent=r?fb.dataset.ok:fb.dataset.bad;update(m.closest('.panel'));};
+      o.addEventListener('click',go);o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});});});
+  document.querySelectorAll('.panel').forEach(p=>{update(p);const rb=p.querySelector('.quiz-reset-btn');if(rb)rb.addEventListener('click',()=>{p.querySelectorAll('.mcq').forEach(m=>{m.classList.remove('answered');delete m.dataset.correct;m.querySelectorAll('.mcq-opt').forEach(o=>o.classList.remove('correct','incorrect'));const fb=m.querySelector('.mcq-feedback');fb.className='mcq-feedback';fb.textContent='';});p.querySelectorAll('.saq textarea').forEach(t=>t.value='');p.querySelectorAll('.saq-model').forEach(x=>x.classList.remove('show'));p.querySelectorAll('.saq-toggle').forEach(b=>b.textContent='Show model answer');update(p);});});
+  document.querySelectorAll('.saq-toggle').forEach(b=>b.addEventListener('click',()=>{const s=b.nextElementSibling.classList.toggle('show');b.textContent=s?'Hide model answer':'Show model answer';}));
+})();
+
+
+
+/* Final assessment (proctored exam) */
+window.COURSE = {"slug": "sd-databases", "title": "Software Developer · Databases", "minutes": 17, "assess": [{"q": "A database management system is…", "options": ["A spreadsheet", "Software that stores and manages data", "A programming language", "A web server"], "answer": 1}, {"q": "Which is a relational database?", "options": ["Redis", "MongoDB", "PostgreSQL", "Neo4j"], "answer": 2}, {"q": "A foreign key…", "options": ["Is always unique", "References a primary key in another table", "Speeds up queries", "Stores images"], "answer": 1}, {"q": "Which statement reads data?", "options": ["INSERT", "SELECT", "UPDATE", "ALTER"], "answer": 1}, {"q": "Which finds NULL values?", "options": ["= NULL", "IS NULL", "== NULL", "LIKE NULL"], "answer": 1}, {"q": "LEFT JOIN returns…", "options": ["Only matches", "All left rows plus matches", "All right rows only", "No rows"], "answer": 1}, {"q": "HAVING is used to filter…", "options": ["Rows before grouping", "Groups after aggregation", "Columns", "Indexes"], "answer": 1}, {"q": "Auto-increment ID in MySQL uses…", "options": ["SERIAL", "AUTO_INCREMENT", "SEQUENCE only", "UUID only"], "answer": 1}, {"q": "3NF removes…", "options": ["Primary keys", "Dependencies between non-key columns", "Indexes", "Foreign keys"], "answer": 1}, {"q": "ACID “I” stands for…", "options": ["Index", "Isolation", "Integrity only", "Insert"], "answer": 1}, {"q": "Best fix for a slow filtered query?", "options": ["Add an index on the filtered column", "Use SELECT *", "Remove WHERE", "Add more columns"], "answer": 0}, {"q": "Prevent SQL injection with…", "options": ["String concatenation", "Parameterised queries", "Longer passwords", "LIMIT"], "answer": 1}, {"q": "A window function…", "options": ["Collapses rows like GROUP BY", "Calculates across related rows without collapsing", "Deletes rows", "Creates indexes"], "answer": 1}, {"q": "PostgreSQL default isolation level?", "options": ["Serializable", "Read Committed", "Repeatable Read", "None"], "answer": 1}]};
+/* =====================================================================
+   Final assessment — full-screen, timed exam (graded in-browser)
+   Rules & security: fullscreen, 3-strike tab-switch / fullscreen-exit
+   policy (auto-submit), copy / cut / print / save / right-click blocked,
+   PrintScreen deterrent, reload/close confirmation.
+   ===================================================================== */
+(function(){
+  const C = window.COURSE;
+  const BANK = C.assess.map((q,i)=>Object.assign({id:'q'+i}, q));
+  const EXAM_SECONDS = C.minutes*60;
+  const LS_KEY = 'rhrms_scores_' + C.slug;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;display:flex;flex-direction:column;overflow:hidden}
+  .exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-q-pane pre.exam-code{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:14px 16px;overflow:auto;max-width:820px;margin:0 0 20px;font-size:13.5px;line-height:1.55;white-space:pre;font-family:'Noto Sans Mono',ui-monospace,SFMono-Regular,Consolas,monospace}
+  .exam-q-pane pre.exam-code code{background:none;color:inherit;padding:0;font-family:inherit}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4);border:none;margin:auto}
+  .exam-splash .card:hover{transform:none}
+  .exam-splash h2{font-size:25px;font-weight:800;margin:0 0 8px;border:none;padding:0}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9;padding:0;list-style:disc}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-rev pre.exam-code{margin:6px 0 8px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  .exam-cover .exam-btn{margin-top:14px;padding:12px 26px;font-size:15px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}.exam-q-pane{padding:20px}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+  function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+  const codeBlock=it=>it.code?'<pre class="exam-code"><code>'+it.code+'</code></pre>':'';
+
+  function examDialog(title,msg,okLabel,cancel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">${cancel?'<button class="exam-btn nav" data-a="0">Cancel</button>':''}<button class="exam-btn primary" data-a="1">${okLabel||'OK'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d && cancel){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  /* ---- score history (localStorage) ---- */
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores(); a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring (same rules & security as the Frontend Developer module):
+         tab/window switch, focus loss, fullscreen exit, blocked actions & shortcuts
+         -> warning screen; 3 warnings -> auto-submit ---- */
+  let warns=0, lastWarn=0, proctorOn=false, fsWanted=false;
+  function warning(title,msg){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<1200)return; lastWarn=now; warns++;
+    injectCss();
+    let cover=document.getElementById('examCover');
+    if(!cover){ cover=document.createElement('div'); cover.id='examCover'; document.body.appendChild(cover); }
+    cover.className='exam-cover'; cover.style.display='flex';
+    cover.innerHTML='<div>&#9888;&#65039; '+title+'</div><small>'+msg+'</small><small>Warning '+warns+' of 3</small>'+
+      '<button class="exam-btn primary" id="examResume" type="button">'+(warns>=3?'Submit assessment':'Return to assessment')+'</button>';
+    document.getElementById('examResume').onclick=function(){
+      cover.style.display='none';
+      if(document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().catch(()=>{}); }
+      if(warns>=3)submitExam(true);
+    };
+    if(warns>=3)setTimeout(()=>submitExam(true),500);
+  }
+  function visHandler(){ if(document.hidden)warning('Tab or window switch detected','Please stay on the assessment screen. Repeated violations will submit the assessment automatically.'); }
+  function fsHandler(){ if(examOn&&!document.fullscreenElement)warning('Fullscreen exited','The assessment must remain in fullscreen mode.'); }
+  function blurHandler(){ if(examOn)warning('Focus changed','Please keep the assessment window active.'); }
+  function blockEvt(e){ if(examOn){ e.preventDefault(); warning('Action blocked','Copy, cut and right-click are disabled during the assessment.'); } }
+  function keyGuard(e){
+    if(!examOn)return;
+    const k=(e.key||'').toLowerCase();
+    if((e.ctrlKey||e.metaKey)&&['c','x','p','s','u'].includes(k)){ e.preventDefault(); warning('Shortcut blocked','This assessment disables copy, print, save and source shortcuts.'); }
+    if(k==='f12'){ e.preventDefault(); warning('Developer tools shortcut blocked','This action is disabled during the assessment.'); }
+  }
+  function printGuard(e){
+    if(examOn&&(e.key||'')==='PrintScreen'){
+      e.preventDefault(); try{navigator.clipboard.writeText('');}catch(_){}
+      warning('Screenshot action blocked','Screenshot capture is restricted during the assessment.');
+    }
+  }
+  function escGuard(e){ if(e.key==='Escape'&&examOn)e.preventDefault(); }
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    window.addEventListener('blur',blurHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('cut',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keydown',escGuard);
+    document.addEventListener('keyup',printGuard,true);
+  }
+  function stopProctor(){
+    proctorOn=false;
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    window.removeEventListener('blur',blurHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('cut',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keydown',escGuard);
+    document.removeEventListener('keyup',printGuard,true);
+    const c=document.getElementById('examCover'); if(c)c.remove();
+  }
+
+  function showSplash(){
+    if(examOn||document.getElementById('examSplash'))return;
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; ${C.title} &mdash; Final Assessment</h2>
+      <p>A timed, exam-style assessment modelled on real technical screening tests.</p>
+      <ul>
+        <li><b>${BANK.length} questions</b>, shuffled every attempt</li>
+        <li><b>${C.minutes}-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Correct answers are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Assessment rules</p>
+      <ul style="margin-top:0">
+        <li>The assessment runs in <b>fullscreen</b>.</li>
+        <li>Do not switch tabs/windows or exit fullscreen.</li>
+        <li><b>3 warnings</b> for tab/window switching or leaving fullscreen will <b>auto-submit</b> the assessment.</li>
+        <li>Copy, cut, right-click and common screenshot/print shortcuts are blocked during the assessment.</li>
+      </ul>
+      <div style="display:flex;gap:10px"><button class="exam-btn nav" id="examCancel" style="flex:0 0 auto">Cancel</button>
+      <button class="exam-btn primary" id="examBegin" style="flex:1;padding:14px">Start Test &rarr;</button></div>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examCancel').addEventListener('click',()=>sp.remove());
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      fsWanted=false;
+      if(document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().then(()=>{fsWanted=true;}).catch(()=>{}); }
+      sp.remove(); enterExam();
+    });
+  }
+
+  function enterExam(){
+    injectCss();
+    items = shuffle(BANK);
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    const ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">${C.title} &mdash; Final Assessment</div><div class="et-sub">${items.length} questions &middot; one attempt &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}</div>
+      ${codeBlock(it)}
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}" tabindex="0"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>{
+      const pick=()=>{ answers[id]=+el.dataset.i; pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); refreshPalette(); };
+      el.addEventListener('click',pick);
+      el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();} });
+    });
+    document.getElementById('examPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    document.getElementById('examNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();});
+    refreshPalette();
+    pane.scrollTop=0;
+  }
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examDialog('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test', true);
+      if(!ok)return;
+    }
+    if(!examOn)return;
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    let score=0; items.forEach(it=>{ if(answers[it.id]===it.answer) score++; });
+    showResults(score);
+  }
+  function showResults(score){
+    const total=items.length; saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing: review the answers below, revisit the modules and try again.';
+    if(pct>=85)msg='Outstanding &mdash; you are working at an expert level on this topic.';
+    else if(pct>=65)msg='Solid pass. Review the questions you missed and you are interview-ready.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the modules you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const you=answers[it.id], attempted=(you!=null), ok=attempted&&you===it.answer;
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>'+codeBlock(it);
+      inner+= attempted ? '<div class="ra '+(ok?'cor':'wrong')+'">Your answer: '+String.fromCharCode(65+you)+'. '+it.options[you]+'</div>' : '<div class="ra wrong">Your answer: <i>Not answered</i></div>';
+      if(!ok) inner+='<div class="ra cor">Correct: '+String.fromCharCode(65+it.answer)+'. '+it.options[it.answer]+'</div>';
+      if(it.exp) inner+='<div class="rx">'+it.exp+'</div>';
+      return '<div class="r '+(ok?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; ${C.title}</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1;flex:1;min-height:0">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another attempt</button></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    document.getElementById('examRetry').addEventListener('click',()=>{ closeExam(); showSplash(); });
+    document.getElementById('examClose').addEventListener('click',closeExam);
+  }
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',showSplash);
+  renderScoreboard();
+})();
+
+
+/* Scrollable navbar — arrow buttons, mouse-wheel, click-drag, auto-reveal of the active tab */
+(function(){
+  const bar=document.getElementById('tabbar'); if(!bar)return;
+  const wrap=bar.parentElement; if(!wrap||!wrap.classList.contains('tabbar-wrap'))return;
+  const prev=wrap.querySelector('.tb-prev'), next=wrap.querySelector('.tb-next');
+  const maxScroll=()=>Math.max(0,bar.scrollWidth-bar.clientWidth);
+  const step=()=>Math.max(180,Math.round(bar.clientWidth*.6));
+  function update(){
+    const m=maxScroll();
+    prev.classList.toggle('show',bar.scrollLeft>2);
+    next.classList.toggle('show',bar.scrollLeft<m-2);
+  }
+  function reveal(smooth){
+    const a=bar.querySelector('.tab.active'); if(!a)return;
+    const br=bar.getBoundingClientRect(), ar=a.getBoundingClientRect();
+    const left=ar.left-br.left+bar.scrollLeft, pad=56;
+    if(left<bar.scrollLeft+pad || left+ar.width>bar.scrollLeft+bar.clientWidth-pad){
+      bar.scrollTo({left:Math.max(0,left-(bar.clientWidth-ar.width)/2),behavior:smooth?'smooth':'auto'});
+    }
+  }
+  prev.addEventListener('click',()=>bar.scrollBy({left:-step(),behavior:'smooth'}));
+  next.addEventListener('click',()=>bar.scrollBy({left:step(),behavior:'smooth'}));
+  bar.addEventListener('scroll',update,{passive:true});
+  window.addEventListener('resize',()=>{update();reveal(false);});
+
+  /* mouse wheel: vertical wheel scrolls the tabs sideways while the pointer is over the bar */
+  bar.addEventListener('wheel',e=>{
+    if(maxScroll()<=0)return;
+    const d=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY; if(!d)return;
+    if((d<0&&bar.scrollLeft<=0)||(d>0&&bar.scrollLeft>=maxScroll()-1))return;   // at the edge: let the page scroll
+    e.preventDefault(); bar.scrollLeft+=d;
+  },{passive:false});
+
+  /* click-and-drag (mouse only; touch already scrolls natively) */
+  let down=false,moved=false,sx=0,sl=0;
+  bar.addEventListener('pointerdown',e=>{ if(e.pointerType!=='mouse'||e.button!==0)return; down=true;moved=false;sx=e.clientX;sl=bar.scrollLeft; });
+  window.addEventListener('pointermove',e=>{
+    if(!down)return; const dx=e.clientX-sx;
+    if(!moved&&Math.abs(dx)>5){moved=true;bar.classList.add('dragging');}
+    if(moved)bar.scrollLeft=sl-dx;
+  });
+  window.addEventListener('pointerup',()=>{ if(!down)return; down=false; bar.classList.remove('dragging'); setTimeout(()=>{moved=false;},0); });
+  bar.addEventListener('click',e=>{ if(moved){e.stopPropagation();e.preventDefault();} },true);
+
+  /* keep arrows + active tab in sync when tabs are added / switched */
+  if(window.ResizeObserver)new ResizeObserver(update).observe(bar);
+  new MutationObserver(()=>{update();reveal(true);}).observe(bar,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+  update(); reveal(false);
+})();
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body>
+</html>

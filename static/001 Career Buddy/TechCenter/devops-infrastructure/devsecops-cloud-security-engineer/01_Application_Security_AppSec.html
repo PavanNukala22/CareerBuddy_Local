@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevSecOps · Application Security (AppSec) — SAST, DAST, SCA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>:root{--brand1:#14213D;--brand2:#2563eb}
+:root{--bg:#fff;--bg-soft:#f7f6f3;--bg-block:#f1f1ef;--bg-code:#f6f5f4;--ink:#37352f;--ink-soft:#6b6a66;--ink-mute:#9b9a97;--line:#e9e9e7;--line-strong:#d3d3d0;
+--accent:#14213D;--accent-soft:#eef1f7;--green:#0f7b0f;--green-soft:#ddedea;--orange:#d9730d;--orange-soft:#fadec9;--red:#e03e3e;--red-soft:#ffe2dd;
+--purple:#22345f;--purple-soft:#eef1f7;--yellow:#dfab01;--yellow-soft:#fdecc8;--pink:#ad1a72;--pink-soft:#f5e0e9;
+--shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);--shadow-md:0 4px 14px rgba(15,15,15,.08);--radius-sm:6px;--radius:10px;--radius-lg:14px;
+--font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--mono:'Noto Sans Mono',ui-monospace,SFMono-Regular,Consolas,monospace}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,button,input,textarea,table,svg text{font-family:var(--font)}
+.header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:12px 32px;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand-mark{width:34px;height:34px;display:grid;place-items:center;background:linear-gradient(135deg,var(--brand1) 0%,var(--brand2) 100%);border-radius:9px;color:#fff;font-family:var(--mono);font-weight:700;font-size:13px;box-shadow:var(--shadow-sm)}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500;color:var(--ink-soft)}
+.progress-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-soft)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--bg-soft)}.btn svg{width:14px;height:14px}
+.tabbar{display:flex;gap:2px;padding:6px 24px;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--line);background:#fff}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{padding:8px 15px;background:transparent;border:none;border-radius:8px;font-size:13.5px;font-weight:500;color:#4a5568;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.tab:hover{background:var(--accent-soft);color:var(--accent)}
+.tab.active{background:var(--accent);color:#fff;font-weight:700}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr)}
+@media(max-width:960px){.layout{grid-template-columns:1fr}.toc{display:none}}
+.toc{position:sticky;top:112px;align-self:start;height:calc(100vh - 124px);overflow-y:auto;padding:28px 16px 28px 28px;border-right:1px solid var(--line);scrollbar-width:thin}
+.toc-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);font-weight:700;margin-bottom:12px;padding-left:8px}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:2px}
+.toc-list a{display:block;padding:6px 10px;font-size:13px;color:var(--ink-soft);text-decoration:none;border-radius:6px;line-height:1.4}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{color:#fff;background:#16233f;font-weight:600;border-radius:12px;padding:9px 14px}
+.main{padding:44px 56px 80px;min-width:0;max-width:1100px}
+@media(max-width:720px){.main{padding:28px 18px 60px}.header-top{padding:10px 16px}}
+.panel{display:none}.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel-header{margin-bottom:30px}
+.panel-eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:8px}
+.panel-title{font-size:38px;line-height:1.15;font-weight:700;letter-spacing:-.02em;margin:0 0 14px}
+.panel-subtitle{font-size:17px;color:var(--ink-soft);margin:0;max-width:720px}
+.level-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.level-tag{font-family:var(--mono);font-size:11px;font-weight:600;padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase}
+.level-tag.inter{background:var(--accent-soft);color:#1d4f8f}.level-tag.adv{background:var(--pink-soft);color:#8c1a63}.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+.section{margin-top:46px;scroll-margin-top:130px}
+.section h2{font-size:26px;font-weight:700;letter-spacing:-.01em;margin:0 0 10px;padding-bottom:8px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.sec-emoji{font-size:24px}
+.section h3{font-size:18px;font-weight:700;margin:26px 0 8px}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}.section li{margin:5px 0}.section li::marker{color:var(--ink-mute)}
+code{font-family:var(--mono);font-size:.86em;background:var(--bg-code);border:1px solid var(--line);padding:1px 6px;border-radius:4px;color:#c2410c}
+pre{font-family:var(--mono);background:#1f2430;color:#e6e6e3;padding:20px 20px 16px;border-radius:var(--radius);overflow-x:auto;font-size:13px;line-height:1.6;margin:14px 0;box-shadow:var(--shadow-sm);position:relative}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{position:absolute;top:6px;right:12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#8b93a7;font-weight:700}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-c{color:#7f8bb3;font-style:italic}
+.callout{display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start;background:var(--bg-block);border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout-icon{width:28px;height:28px;display:grid;place-items:center;background:#fff;border-radius:6px;font-size:16px;border:1px solid var(--line)}
+.callout-body{font-size:14.5px;line-height:1.6}
+.callout.tip{background:var(--accent-soft);border-color:#c9d3e8}.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;transition:transform .2s,box-shadow .2s,border-color .2s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:9px;font-size:19px;margin-bottom:10px}
+.card-title{font-weight:700;font-size:15px;margin-bottom:4px}.card-desc{font-size:13.5px;color:var(--ink-soft);line-height:1.55}
+.tbl-wrap{overflow-x:auto;margin:16px 0;border:1px solid var(--line);border-radius:var(--radius)}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--bg-soft);font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg-soft)}
+.diagram{background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin:18px 0;text-align:center}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{font-size:12px;color:var(--ink-soft);margin-top:10px;font-style:italic}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media(max-width:760px){.compare{grid-template-columns:1fr}}
+.compare-col{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;min-width:0}
+.compare-col h4{margin:0 0 8px;font-size:15px;font-weight:700}
+.compare-col p,.compare-col li{font-size:14px}
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{padding:4px 10px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-family:var(--mono);color:var(--ink)}
+.assess-start-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px}
+.assess-intro-title{font-size:20px;font-weight:700;margin-bottom:10px}.assess-intro-text{font-size:14px;color:var(--ink-soft);margin-bottom:14px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn,.assess-retry-btn{background:var(--accent);color:#fff;border:none;padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;cursor:pointer}
+.assess-start-btn:hover,.assess-retry-btn:hover{opacity:.9}
+.quiz-progress{display:flex;align-items:center;gap:14px;background:var(--bg-block);border:1px solid var(--line);border-radius:var(--radius);padding:14px 18px;margin:18px 0}
+.quiz-score{font-family:var(--mono);font-weight:700;font-size:14px;white-space:nowrap}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}.quiz-bar-fill{height:100%;width:0;background:var(--accent);transition:width .3s}
+.assess-q{font-weight:700;font-size:17px;line-height:1.5;margin-bottom:14px}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:14.5px;background:var(--bg-soft)}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt-letter{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:11px;font-weight:700;font-family:var(--mono);flex-shrink:0;color:var(--ink-soft)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.fb{margin-top:14px;padding:12px 16px;border-radius:10px;font-size:14px}.fb.ok{background:var(--green-soft);color:#0a5f0a}.fb.bad{background:var(--red-soft);color:#a01c1c}
+.assess-next-btn{background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:13.5px;cursor:pointer;margin-top:14px}
+.assess-result-score{font-size:40px;font-weight:700;text-align:center;margin:20px 0 6px}.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:20px}
+.assess-retry-btn{display:block;margin:0 auto}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:#cbd2e0;border-radius:8px}::-webkit-scrollbar-thumb:hover{background:#9aa4b8}
+
+/* ===== Tab bar: even spread + custom scrollbar under the tabs ===== */
+.tabbar{overflow-x:auto !important;overflow-y:hidden;scroll-padding:0 16px;scrollbar-width:none !important}
+.tabbar::-webkit-scrollbar{display:none !important}
+.tabbar .tab{flex:1 0 auto !important;justify-content:center;text-align:center}
+.tabscroll{position:relative;height:10px;margin:0;background:#e6e9f1;border-top:1px solid #d3d8e4;cursor:pointer;touch-action:none;user-select:none}
+.tabscroll-thumb{position:absolute;top:1px;bottom:1px;left:0;width:100%;min-width:40px;background:#14213D;border-radius:5px;cursor:grab;transition:background .15s}
+.tabscroll-thumb:hover{background:#2f4a85}
+.tabscroll.dragging .tabscroll-thumb{cursor:grabbing;background:#2f4a85}
+.tabscroll.fits .tabscroll-thumb{background:#c3c9d8;cursor:default}
+</style><style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head><body>
+<header class="header"><div class="header-top"><div class="brand"><div class="brand-mark">AS</div><span>AppSec: A Visual Course<span class="brand-sub"> · SonarQube · Snyk · OWASP ZAP · SCA</span></span></div>
+<div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 7</span></span>
+<button class="btn" onclick="resetProgress()"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9"/><path d="M2 4v3.5h3.5"/></svg>Reset</button></div></div>
+<nav class="tabbar" role="tablist"><button class="tab active" data-tab="t1" role="tab">01 AppSec Foundations</button><button class="tab" data-tab="t2" role="tab">02 SAST — Static Analysis</button><button class="tab" data-tab="t3" role="tab">03 SCA — Dependency Scanning</button><button class="tab" data-tab="t4" role="tab">04 DAST — Dynamic Testing</button><button class="tab" data-tab="t5" role="tab">05 Pipeline Integration</button><button class="tab" data-tab="t6" role="tab">06 Expert AppSec Practices</button><button class="tab" data-tab="t7" role="tab">07 Assessment</button></nav></header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside><main class="main"><section class="panel" id="t1" data-toc="[&quot;What is Application Security?&quot;, &quot;Why \&quot;Shift Left\&quot;?&quot;, &quot;Essential Vocabulary&quot;, &quot;OWASP Top 10 (web application risks)&quot;, &quot;The Testing Toolbox at a Glance&quot;]"><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Beginner</span></div><div class="panel-eyebrow">Module 01 · Foundations</div><h1 class="panel-title">AppSec Foundations</h1><p class="panel-subtitle">What application security is, why we "shift left", the vocabulary every engineer must know, and where each testing technique fits in the delivery pipeline.</p></div><div class="section" id="s1-1"><h2><span class="sec-emoji">🛡️</span> What is Application Security?</h2><p><strong>Application Security (AppSec)</strong> is the practice of finding, fixing and preventing security weaknesses in software — in the code you write, the libraries you import, the services you deploy and the APIs you expose. Firewalls protect the network; AppSec protects the <em>logic</em> an attacker can reach through the network.</p><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d4f8f">🔎</div><div class="card-title">Find</div><div class="card-desc">Detect flaws early with automated scanners and code review.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🔧</div><div class="card-title">Fix</div><div class="card-desc">Give developers clear, actionable remediation guidance.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#22345f">🧱</div><div class="card-title">Prevent</div><div class="card-desc">Secure-by-default frameworks, patterns and guardrails.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">📈</div><div class="card-title">Measure</div><div class="card-desc">Track risk, MTTR and coverage to prove improvement.</div></div></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><strong>DevSecOps in one line:</strong> security becomes a shared responsibility that is <em>automated inside the CI/CD pipeline</em> instead of a manual gate at the end of the project.</div></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">⬅️</span> Why "Shift Left"?</h2><p>The later a defect is found, the more it costs. A bug caught in the IDE costs minutes; the same bug found in production can cost an incident, a breach notification and a reputation hit. <strong>Shift-left</strong> moves security checks to the earliest possible stage.</p><div class="diagram"><svg viewBox="0 0 720 192" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Security checks along the delivery pipeline — cheaper to fix the further left you go"><defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><text x="360.0" y="30" text-anchor="middle" font-weight="700" font-size="16" fill="#37352f">Shift-left in the SDLC</text><rect x="20.0" y="54" width="108.8" height="104" rx="12" fill="#14213D"/><text x="74.4" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Code</text><text x="74.4" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">IDE plugin</text><text x="74.4" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">pre-commit</text><line x1="132.8" y1="106.0" x2="158.8" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar1)"/><rect x="162.8" y="54" width="108.8" height="104" rx="12" fill="#2563eb"/><text x="217.2" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Commit / PR</text><text x="217.2" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">SAST · SCA</text><text x="217.2" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">secret scan</text><line x1="275.6" y1="106.0" x2="301.6" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar1)"/><rect x="305.6" y="54" width="108.8" height="104" rx="12" fill="#0f7b0f"/><text x="360.0" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Build</text><text x="360.0" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">image scan</text><text x="360.0" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">SBOM</text><line x1="418.4" y1="106.0" x2="444.4" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar1)"/><rect x="448.4" y="54" width="108.8" height="104" rx="12" fill="#d9730d"/><text x="502.8" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Test / Stage</text><text x="502.8" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">DAST · API test</text><line x1="561.2" y1="106.0" x2="587.2" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar1)"/><rect x="591.2" y="54" width="108.8" height="104" rx="12" fill="#6d28d9"/><text x="645.6" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Production</text><text x="645.6" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">monitor · WAF</text><text x="645.6" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">RASP</text></svg><div class="diagram-caption">Figure · Security checks along the delivery pipeline — cheaper to fix the further left you go</div></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">"Shift left" does not mean "stop testing later". Mature teams do <strong>shift-left + shift-right</strong>: prevent early, detect continuously in production.</div></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">📖</span> Essential Vocabulary</h2><div class="tbl-wrap"><table><thead><tr><th>Term</th><th>Meaning</th><th>Example</th></tr></thead><tbody><tr><td><strong>Vulnerability</strong></td><td>A weakness that can be exploited</td><td>Unsanitised SQL query</td></tr><tr><td><strong>Threat</strong></td><td>Anyone/anything that may exploit it</td><td>Attacker, malicious insider</td></tr><tr><td><strong>Exploit</strong></td><td>Code/technique that abuses a vulnerability</td><td>sqlmap payload</td></tr><tr><td><strong>Risk</strong></td><td>Likelihood × impact</td><td>Likely + customer data exposed = high</td></tr><tr><td><strong>CVE</strong></td><td>Public ID for a known vulnerability</td><td>CVE-2021-44228 (Log4Shell)</td></tr><tr><td><strong>CWE</strong></td><td>Catalogue of <em>weakness types</em></td><td>CWE-89 SQL Injection</td></tr><tr><td><strong>CVSS</strong></td><td>0–10 severity score of a vulnerability</td><td>9.8 = Critical</td></tr><tr><td><strong>EPSS</strong></td><td>Probability a CVE gets exploited in 30 days</td><td>0.92 = very likely</td></tr><tr><td><strong>KEV</strong></td><td>CISA list of vulnerabilities exploited in the wild</td><td>Fix immediately</td></tr><tr><td><strong>False positive</strong></td><td>Scanner flags a safe thing</td><td>Test file with fake password</td></tr></tbody></table></div></div><div class="section" id="s1-4"><h2><span class="sec-emoji">🔟</span> OWASP Top 10 (web application risks)</h2><p>The OWASP Top 10 is the industry-standard awareness list of the most critical web application risks. The widely-referenced 2021 edition is shown below.</p><div class="tbl-wrap"><table><thead><tr><th>#</th><th>Category</th><th>One-line meaning</th><th>Typical defence</th></tr></thead><tbody><tr><td>A01</td><td>Broken Access Control</td><td>Users act outside their permissions (IDOR)</td><td>Server-side authZ checks, deny by default</td></tr><tr><td>A02</td><td>Cryptographic Failures</td><td>Weak/absent encryption of sensitive data</td><td>TLS, strong algorithms, key management</td></tr><tr><td>A03</td><td>Injection</td><td>Untrusted data run as a command (SQLi, XSS, OS cmd)</td><td>Parameterised queries, output encoding</td></tr><tr><td>A04</td><td>Insecure Design</td><td>Flaws in the design itself</td><td>Threat modelling, secure patterns</td></tr><tr><td>A05</td><td>Security Misconfiguration</td><td>Defaults, open buckets, verbose errors</td><td>Hardening, IaC scanning</td></tr><tr><td>A06</td><td>Vulnerable &amp; Outdated Components</td><td>Using libraries with known CVEs</td><td><strong>SCA</strong>, patching</td></tr><tr><td>A07</td><td>Identification &amp; Auth Failures</td><td>Weak passwords, broken sessions</td><td>MFA, secure session handling</td></tr><tr><td>A08</td><td>Software &amp; Data Integrity Failures</td><td>Unsigned updates, insecure CI/CD</td><td>Signing, pipeline hardening</td></tr><tr><td>A09</td><td>Logging &amp; Monitoring Failures</td><td>Attacks go unnoticed</td><td>Central logs, alerts</td></tr><tr><td>A10</td><td>Server-Side Request Forgery</td><td>Server tricked into calling internal URLs</td><td>Allow-lists, network egress rules</td></tr></tbody></table></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">OWASP refreshes the list periodically — always check <code>owasp.org/Top10</code> for the latest edition. The categories shift, but the underlying ideas stay the same.</div></div></div><div class="section" id="s1-5"><h2><span class="sec-emoji">🧰</span> The Testing Toolbox at a Glance</h2><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d4f8f">📝</div><div class="card-title">SAST</div><div class="card-desc">Static analysis of <strong>source code</strong> without running it. Tools: SonarQube, Snyk Code, Semgrep.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🌐</div><div class="card-title">DAST</div><div class="card-desc">Black-box attack of the <strong>running app</strong>. Tools: OWASP ZAP, Burp Suite.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#22345f">📦</div><div class="card-title">SCA</div><div class="card-desc">Finds known-vulnerable <strong>open-source dependencies</strong> and licence issues. Tools: Snyk, Dependabot, Trivy.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🔬</div><div class="card-title">IAST</div><div class="card-desc">Agent <strong>inside</strong> the running app watching code during tests. Tools: Contrast, Seeker.</div></div><div class="card"><div class="card-icon" style="background:var(--red-soft);color:#a01c1c">🔑</div><div class="card-title">Secret Scanning</div><div class="card-desc">Finds leaked keys/tokens in code and history. Tools: Gitleaks, TruffleHog.</div></div><div class="card"><div class="card-icon" style="background:var(--pink-soft);color:#8c1a63">🏗️</div><div class="card-title">IaC Scanning</div><div class="card-desc">Checks Terraform/K8s/Docker files. Tools: Checkov, tfsec, Trivy.</div></div></div><div class="diagram"><svg viewBox="0 0 720 272" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Each technique sees a different slice of the application"><text x="360.0" y="28" text-anchor="middle" font-weight="700" font-size="16" fill="#37352f">Four lenses, one application</text><rect x="20" y="46" width="680" height="46" rx="10" fill="#14213D"/><text x="38" y="75" fill="#fff" font-weight="700" font-size="13.5">SAST</text><text x="682" y="75" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">white-box · code · early · many findings</text><rect x="20" y="100" width="680" height="46" rx="10" fill="#2563eb"/><text x="38" y="129" fill="#fff" font-weight="700" font-size="13.5">SCA</text><text x="682" y="129" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">dependencies · known CVEs · very fast</text><rect x="20" y="154" width="680" height="46" rx="10" fill="#0f7b0f"/><text x="38" y="183" fill="#fff" font-weight="700" font-size="13.5">DAST</text><text x="682" y="183" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">black-box · running app · low false positives</text><rect x="20" y="208" width="680" height="46" rx="10" fill="#d9730d"/><text x="38" y="237" fill="#fff" font-weight="700" font-size="13.5">IAST / RASP</text><text x="682" y="237" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">agent in app · runtime context</text></svg><div class="diagram-caption">Figure · Each technique sees a different slice of the application</div></div></div></section><section class="panel" id="t2" data-toc="[&quot;What is SAST and how does it work?&quot;, &quot;Types of SAST engines&quot;, &quot;A real finding: SQL Injection&quot;, &quot;SonarQube \u2014 code quality + security&quot;, &quot;Snyk Code \u2014 developer-first SAST&quot;, &quot;Semgrep \u2014 write your own rules (open-source)&quot;, &quot;Triage: handling false positives&quot;]"><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Beginner</span><span class="level-tag inter">Intermediate</span></div><div class="panel-eyebrow">Module 02 · Code Security</div><h1 class="panel-title">SAST — Static Analysis</h1><p class="panel-subtitle">Understand how static analysers read your code, the different types of SAST engines, and get hands-on with SonarQube, Snyk Code and Semgrep.</p></div><div class="section" id="s2-1"><h2><span class="sec-emoji">🧠</span> What is SAST and how does it work?</h2><p><strong>Static Application Security Testing</strong> analyses source code, bytecode or binaries <em>without executing</em> them. It is "white-box" testing: the tool sees every line, including code paths that tests never reach.</p><div class="diagram"><svg viewBox="0 0 720 192" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="How a SAST engine turns code into findings"><defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><text x="360.0" y="30" text-anchor="middle" font-weight="700" font-size="16" fill="#37352f">Inside a SAST engine</text><rect x="20.0" y="54" width="108.8" height="104" rx="12" fill="#14213D"/><text x="74.4" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Source code</text><text x="74.4" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">.py .java .js</text><line x1="132.8" y1="106.0" x2="158.8" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar3)"/><rect x="162.8" y="54" width="108.8" height="104" rx="12" fill="#2563eb"/><text x="217.2" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Parse → AST</text><text x="217.2" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">syntax tree</text><line x1="275.6" y1="106.0" x2="301.6" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar3)"/><rect x="305.6" y="54" width="108.8" height="104" rx="12" fill="#0f7b0f"/><text x="360.0" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Build graphs</text><text x="360.0" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">control flow</text><text x="360.0" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">data flow</text><line x1="418.4" y1="106.0" x2="444.4" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar3)"/><rect x="448.4" y="54" width="108.8" height="104" rx="12" fill="#d9730d"/><text x="502.8" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Taint analysis</text><text x="502.8" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">source → sink</text><line x1="561.2" y1="106.0" x2="587.2" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar3)"/><rect x="591.2" y="54" width="108.8" height="104" rx="12" fill="#6d28d9"/><text x="645.6" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Findings</text><text x="645.6" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">rule · line · fix</text></svg><div class="diagram-caption">Figure · How a SAST engine turns code into findings</div></div><p>The key idea is <strong>taint analysis</strong>: data from an untrusted <em>source</em> (HTTP parameter) must not reach a dangerous <em>sink</em> (SQL execute, <code>eval</code>, file open) without passing a <em>sanitiser</em>.</p><div class="tbl-wrap"><table><thead><tr><th>Concept</th><th>Meaning</th><th>Example</th></tr></thead><tbody><tr><td>Source</td><td>Where untrusted data enters</td><td><code>request.args["id"]</code></td></tr><tr><td>Sink</td><td>Dangerous function</td><td><code>cursor.execute(q)</code></td></tr><tr><td>Sanitiser</td><td>Cleans/validates data</td><td>Parameter binding, <code>html.escape</code></td></tr><tr><td>Rule</td><td>Pattern describing a flaw</td><td>"string concat in SQL query"</td></tr></tbody></table></div></div><div class="section" id="s2-2"><h2><span class="sec-emoji">🧩</span> Types of SAST engines</h2><div class="tbl-wrap"><table><thead><tr><th>Type</th><th>How it detects</th><th>Strength</th><th>Weakness</th></tr></thead><tbody><tr><td>Pattern / regex</td><td>Text or token matching</td><td>Very fast, simple rules</td><td>Many false positives</td></tr><tr><td>AST / semantic</td><td>Matches structure of syntax tree</td><td>Understands language, low noise</td><td>Single-file view</td></tr><tr><td>Data-flow / taint</td><td>Tracks values across functions and files</td><td>Finds injection chains</td><td>Slower, needs build info</td></tr><tr><td>Symbolic / abstract interpretation</td><td>Reasons about all possible values</td><td>Deep bugs (null, overflow)</td><td>Complex, costly</td></tr><tr><td>IaC SAST</td><td>Scans Terraform, K8s, Dockerfiles</td><td>Catches misconfig pre-deploy</td><td>Cannot see runtime state</td></tr><tr><td>AI-assisted</td><td>LLM explains / suggests fixes, ranks findings</td><td>Faster triage</td><td>Verify suggestions; not a replacement for rules</td></tr></tbody></table></div><div class="compare"><div class="compare-col"><h4>✅ SAST is great at</h4><ul><li>Finding flaws <strong>early</strong>, in the IDE or PR</li><li>Pointing to the <strong>exact line</strong></li><li>Covering code paths tests miss</li><li>Enforcing coding standards</li></ul></div><div class="compare-col"><h4>⚠️ SAST struggles with</h4><ul><li><strong>False positives</strong> that waste time</li><li>Runtime / config issues (it never runs the app)</li><li>Business-logic and auth flaws</li><li>Language / framework coverage gaps</li></ul></div></div></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🐞</span> A real finding: SQL Injection</h2><p>Below is the classic flaw every SAST tool detects (CWE-89), followed by the fix.</p><div class="compare"><div class="compare-col"><h4>❌ Vulnerable</h4><pre><span class="pre-lang">python</span><code>@app.route(<span class="tok-s">"/user"</span>)
+<span class="tok-k">def</span> user():
+    uid = request.args[<span class="tok-s">"id"</span>]          <span class="tok-c"># SOURCE</span>
+    q = <span class="tok-s">"SELECT * FROM users WHERE id="</span> + uid
+    <span class="tok-k">return</span> db.execute(q).fetchall()   <span class="tok-c"># SINK</span></code></pre></div><div class="compare-col"><h4>✅ Fixed</h4><pre><span class="pre-lang">python</span><code>@app.route(<span class="tok-s">"/user"</span>)
+<span class="tok-k">def</span> user():
+    uid = request.args[<span class="tok-s">"id"</span>]
+    q = <span class="tok-s">"SELECT * FROM users WHERE id = %s"</span>
+    <span class="tok-k">return</span> db.execute(q, (uid,)).fetchall()  <span class="tok-c"># parameterised</span></code></pre></div></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Attacker sends <code>id=1 OR 1=1</code> → the vulnerable query returns <em>every</em> user. Parameter binding keeps data separate from SQL code.</div></div></div><div class="section" id="s2-4"><h2><span class="sec-emoji">📊</span> SonarQube — code quality + security</h2><p><strong>SonarQube</strong> (Community, Developer, Enterprise editions) analyses 30+ languages and reports <em>bugs, vulnerabilities, security hotspots, code smells, coverage and duplications</em>.</p><div class="diagram"><svg viewBox="0 0 720 192" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SonarQube architecture and the Quality Gate decision"><defs><marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><text x="360.0" y="30" text-anchor="middle" font-weight="700" font-size="16" fill="#37352f">SonarQube data flow</text><rect x="20.0" y="54" width="108.8" height="104" rx="12" fill="#14213D"/><text x="74.4" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Developer</text><text x="74.4" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">git push</text><line x1="132.8" y1="106.0" x2="158.8" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar4)"/><rect x="162.8" y="54" width="108.8" height="104" rx="12" fill="#2563eb"/><text x="217.2" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">CI job</text><text x="217.2" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">sonar-scanner</text><line x1="275.6" y1="106.0" x2="301.6" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar4)"/><rect x="305.6" y="54" width="108.8" height="104" rx="12" fill="#0f7b0f"/><text x="360.0" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="10.4">SonarQube server</text><text x="360.0" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">analysis engine</text><line x1="418.4" y1="106.0" x2="444.4" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar4)"/><rect x="448.4" y="54" width="108.8" height="104" rx="12" fill="#d9730d"/><text x="502.8" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Database</text><text x="502.8" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">PostgreSQL</text><line x1="561.2" y1="106.0" x2="587.2" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar4)"/><rect x="591.2" y="54" width="108.8" height="104" rx="12" fill="#6d28d9"/><text x="645.6" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Quality Gate</text><text x="645.6" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">pass / fail</text></svg><div class="diagram-caption">Figure · SonarQube architecture and the Quality Gate decision</div></div><div class="tbl-wrap"><table><thead><tr><th>Concept</th><th>What it is</th></tr></thead><tbody><tr><td><strong>Vulnerability</strong></td><td>Confirmed security flaw you must fix</td></tr><tr><td><strong>Security Hotspot</strong></td><td>Security-sensitive code needing <em>human review</em> (e.g. regex, crypto use)</td></tr><tr><td><strong>Quality Profile</strong></td><td>The set of rules activated per language</td></tr><tr><td><strong>Quality Gate</strong></td><td>Pass/fail conditions, e.g. "no new vulnerabilities, ≥80% new coverage"</td></tr><tr><td><strong>New Code period</strong></td><td>"Clean as you code" — enforce on changed code only, not legacy debt</td></tr><tr><td><strong>Ratings</strong></td><td>A–E grades for Security, Reliability, Maintainability</td></tr></tbody></table></div><pre><span class="pre-lang">properties</span><code><span class="tok-c"># sonar-project.properties</span>
+sonar.projectKey=shop-api
+sonar.sources=src
+sonar.tests=tests
+sonar.python.coverage.reportPaths=coverage.xml
+sonar.qualitygate.wait=<span class="tok-k">true</span>      <span class="tok-c"># fail the pipeline if gate fails</span></code></pre></div><div class="section" id="s2-5"><h2><span class="sec-emoji">🐶</span> Snyk Code — developer-first SAST</h2><p>Snyk Code is a cloud-based, AI-assisted engine with IDE plugins, CLI and PR checks. It returns data-flow paths and suggested fixes.</p><pre><span class="pre-lang">bash</span><code><span class="tok-c"># authenticate once</span>
+snyk auth
+
+<span class="tok-c"># scan the current project's source</span>
+snyk code test
+
+<span class="tok-c"># fail only on high+ findings, output SARIF for GitHub code scanning</span>
+snyk code test --severity-threshold=high --sarif-file-output=snyk.sarif
+
+<span class="tok-c"># ignore an accepted finding with justification (writes .snyk policy)</span>
+snyk ignore --id=&lt;issue-id&gt; --reason=<span class="tok-s">"Input validated upstream"</span> --expiry=2026-12-31</code></pre><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Always add an <strong>expiry date</strong> and <strong>reason</strong> to every suppression. Permanent, unexplained ignores silently become the biggest risk in your backlog.</div></div></div><div class="section" id="s2-6"><h2><span class="sec-emoji">🔍</span> Semgrep — write your own rules (open-source)</h2><p>Semgrep matches code <em>patterns</em> that look like the source itself, so security engineers can write custom rules in minutes.</p><pre><span class="pre-lang">yaml</span><code>rules:
+  - id: no-eval-user-<span class="tok-k">input</span>
+    languages: [python]
+    severity: ERROR
+    message: <span class="tok-s">"eval() on request data allows remote code execution (CWE-95)"</span>
+    pattern: eval(request.$X.get(...))</code></pre><pre><span class="pre-lang">bash</span><code>semgrep scan --config p/owasp-top-ten --config rules/ --error</code></pre></div><div class="section" id="s2-7"><h2><span class="sec-emoji">🧹</span> Triage: handling false positives</h2><ol><li><strong>Reproduce</strong> — can you trace source → sink?</li><li><strong>Check sanitiser</strong> — is the data validated earlier (framework, middleware)?</li><li><strong>Decide</strong> — True Positive (fix) / False Positive (suppress with reason) / Won't Fix (accept risk, owner + expiry).</li><li><strong>Tune</strong> — disable noisy rules, exclude generated code and test fixtures.</li><li><strong>Gate on new findings</strong> only, so teams are not blocked by legacy debt.</li></ol><div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Goal: a scanner developers <em>trust</em>. Aim for &lt;10–20% false-positive rate; otherwise people start ignoring every alert.</div></div></div></section><section class="panel" id="t3" data-toc="[&quot;What is SCA and why does it matter?&quot;, &quot;Direct vs transitive dependencies&quot;, &quot;Vulnerability data sources&quot;, &quot;Prioritising: not every CVE is urgent&quot;, &quot;SCA tools in practice&quot;, &quot;Automating fixes with Dependabot&quot;, &quot;Licence compliance&quot;]"><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Beginner</span><span class="level-tag inter">Intermediate</span></div><div class="panel-eyebrow">Module 03 · Dependencies</div><h1 class="panel-title">SCA — Dependency Scanning</h1><p class="panel-subtitle">Modern apps are mostly other people's code. Learn how Software Composition Analysis finds vulnerable and risky libraries, and how to prioritise what actually matters.</p></div><div class="section" id="s3-1"><h2><span class="sec-emoji">📦</span> What is SCA and why does it matter?</h2><p><strong>Software Composition Analysis</strong> inventories every open-source library your app uses (direct <em>and</em> transitive), then matches each name+version against vulnerability databases and licence rules. A typical project is composed mostly of third-party code, so most of your attack surface is code you never wrote.</p><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body"><strong>Log4Shell (CVE-2021-44228)</strong> hit teams that had never heard of Log4j — it was buried several levels down their dependency tree. SCA answers "<em>where do we use it?</em>" in minutes.</div></div><div class="diagram"><svg viewBox="0 0 720 192" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The SCA scanning loop"><defs><marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><text x="360.0" y="30" text-anchor="middle" font-weight="700" font-size="16" fill="#37352f">How SCA works</text><rect x="20.0" y="54" width="108.8" height="104" rx="12" fill="#14213D"/><text x="74.4" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Manifest</text><text x="74.4" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">package.json</text><text x="74.4" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">requirements.txt</text><text x="74.4" y="140" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">pom.xml</text><line x1="132.8" y1="106.0" x2="158.8" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar5)"/><rect x="162.8" y="54" width="108.8" height="104" rx="12" fill="#2563eb"/><text x="217.2" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="10.4">Dependency graph</text><text x="217.2" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="8.8">direct + transitive</text><line x1="275.6" y1="106.0" x2="301.6" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar5)"/><rect x="305.6" y="54" width="108.8" height="104" rx="12" fill="#0f7b0f"/><text x="360.0" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Match DBs</text><text x="360.0" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">NVD · GHSA</text><text x="360.0" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">OSV · vendor</text><line x1="418.4" y1="106.0" x2="444.4" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar5)"/><rect x="448.4" y="54" width="108.8" height="104" rx="12" fill="#d9730d"/><text x="502.8" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Report</text><text x="502.8" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">CVE · fix version</text><line x1="561.2" y1="106.0" x2="587.2" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar5)"/><rect x="591.2" y="54" width="108.8" height="104" rx="12" fill="#6d28d9"/><text x="645.6" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Fix / PR</text><text x="645.6" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">upgrade · patch</text></svg><div class="diagram-caption">Figure · The SCA scanning loop</div></div></div><div class="section" id="s3-2"><h2><span class="sec-emoji">🌳</span> Direct vs transitive dependencies</h2><pre><span class="pre-lang">text</span><code>my-app
+├── express 4.17.1            &lt;- DIRECT   (you chose it)
+│   ├── qs 6.7.0              &lt;- TRANSITIVE (pulled in by express)
+│   └── body-parser 1.19.0    &lt;- TRANSITIVE
+└── lodash 4.17.20            &lt;- DIRECT</code></pre><ul><li><strong>Lockfiles</strong> (<code>package-lock.json</code>, <code>poetry.lock</code>, <code>go.sum</code>) pin exact versions — scan the lockfile, not just the manifest.</li><li>A vulnerable <em>transitive</em> package is fixed by upgrading the direct parent, or by an <strong>override/resolution</strong> entry.</li><li><strong>Dev dependencies</strong> usually carry lower risk than runtime ones — but they run in your CI, so don't ignore them.</li></ul></div><div class="section" id="s3-3"><h2><span class="sec-emoji">🗃️</span> Vulnerability data sources</h2><div class="tbl-wrap"><table><thead><tr><th>Source</th><th>What it is</th></tr></thead><tbody><tr><td><strong>NVD</strong></td><td>NIST National Vulnerability Database — CVE records + CVSS</td></tr><tr><td><strong>GitHub Advisory DB (GHSA)</strong></td><td>Curated, ecosystem-aware advisories</td></tr><tr><td><strong>OSV</strong></td><td>Open, machine-friendly format used by OSV-Scanner &amp; pip-audit</td></tr><tr><td><strong>Vendor DBs</strong></td><td>Snyk intel, Red Hat, Debian, Alpine security trackers</td></tr><tr><td><strong>CISA KEV / EPSS</strong></td><td>Exploitation signals used for prioritisation</td></tr></tbody></table></div></div><div class="section" id="s3-4"><h2><span class="sec-emoji">🎯</span> Prioritising: not every CVE is urgent</h2><p>A big project can show hundreds of CVEs. Triage with several signals, not just CVSS:</p><div class="diagram"><svg viewBox="0 0 720 272" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Risk-based prioritisation ladder"><text x="360.0" y="28" text-anchor="middle" font-weight="700" font-size="16" fill="#37352f">From urgent to routine</text><rect x="20" y="46" width="680" height="46" rx="10" fill="#14213D"/><text x="38" y="75" fill="#fff" font-weight="700" font-size="13.5">1 · Known exploited (KEV)</text><text x="682" y="75" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">fix now</text><rect x="20" y="100" width="680" height="46" rx="10" fill="#2563eb"/><text x="38" y="129" fill="#fff" font-weight="700" font-size="13.5">2 · Reachable + high EPSS</text><text x="682" y="129" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">fix this sprint</text><rect x="20" y="154" width="680" height="46" rx="10" fill="#0f7b0f"/><text x="38" y="183" fill="#fff" font-weight="700" font-size="13.5">3 · Reachable, high CVSS</text><text x="682" y="183" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">plan fix</text><rect x="20" y="208" width="680" height="46" rx="10" fill="#d9730d"/><text x="38" y="237" fill="#fff" font-weight="700" font-size="13.5">4 · Not reachable / dev-only</text><text x="682" y="237" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">monitor, batch upgrade</text></svg><div class="diagram-caption">Figure · Risk-based prioritisation ladder</div></div><ul><li><strong>Reachability analysis</strong> — is the vulnerable function actually called by your code?</li><li><strong>Exploit maturity</strong> — public PoC? seen in the wild?</li><li><strong>Exposure</strong> — internet-facing service vs internal batch job.</li><li><strong>VEX statements</strong> — formally record "not affected" with a reason.</li></ul></div><div class="section" id="s3-5"><h2><span class="sec-emoji">🛠️</span> SCA tools in practice</h2><div class="tbl-wrap"><table><thead><tr><th>Tool</th><th>Type</th><th>Best for</th></tr></thead><tbody><tr><td><strong>Snyk Open Source</strong></td><td>Commercial</td><td>Fix PRs, reachability, licence policy</td></tr><tr><td><strong>Dependabot</strong></td><td>GitHub native</td><td>Automatic version/security update PRs</td></tr><tr><td><strong>Renovate</strong></td><td>Open source</td><td>Flexible grouped upgrade PRs</td></tr><tr><td><strong>OWASP Dependency-Check</strong></td><td>Open source</td><td>Java/.NET, CPE matching</td></tr><tr><td><strong>Trivy / Grype</strong></td><td>Open source</td><td>Filesystems, containers, SBOMs</td></tr><tr><td><strong>OSV-Scanner</strong></td><td>Open source (Google)</td><td>Lockfile scanning with OSV</td></tr><tr><td><strong>npm audit / pip-audit</strong></td><td>Ecosystem built-ins</td><td>Quick local check</td></tr></tbody></table></div><pre><span class="pre-lang">bash</span><code><span class="tok-c"># Snyk</span>
+snyk test                              <span class="tok-c"># find vulnerable deps</span>
+snyk test --severity-threshold=high    <span class="tok-c"># fail only on high+</span>
+snyk monitor                           <span class="tok-c"># snapshot for continuous alerts</span>
+
+<span class="tok-c"># Open-source alternatives</span>
+npm audit --omit=dev
+pip-audit -r requirements.txt
+osv-scanner --lockfile=<span class="tok-k">package</span>-lock.json
+trivy fs --scanners vuln,license --severity HIGH,CRITICAL .</code></pre></div><div class="section" id="s3-6"><h2><span class="sec-emoji">🤖</span> Automating fixes with Dependabot</h2><pre><span class="pre-lang">yaml</span><code><span class="tok-c"># .github/dependabot.yml</span>
+version: 2
+updates:
+  - <span class="tok-k">package</span>-ecosystem: <span class="tok-s">"npm"</span>
+    directory: <span class="tok-s">"/"</span>
+    schedule: { interval: <span class="tok-s">"weekly"</span> }
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [<span class="tok-s">"minor"</span>, <span class="tok-s">"patch"</span>]
+  - <span class="tok-k">package</span>-ecosystem: <span class="tok-s">"docker"</span>
+    directory: <span class="tok-s">"/"</span>
+    schedule: { interval: <span class="tok-s">"weekly"</span> }</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Pair auto-update PRs with good tests. Green tests + auto-merge for patch updates = security that scales without a human in the loop.</div></div></div><div class="section" id="s3-7"><h2><span class="sec-emoji">⚖️</span> Licence compliance</h2><div class="tbl-wrap"><table><thead><tr><th>Licence family</th><th>Examples</th><th>Risk</th></tr></thead><tbody><tr><td>Permissive</td><td>MIT, Apache-2.0, BSD</td><td>Low — attribution only</td></tr><tr><td>Weak copyleft</td><td>LGPL, MPL-2.0</td><td>Medium — share changes to that library</td></tr><tr><td>Strong copyleft</td><td>GPL, AGPL</td><td>High for proprietary SaaS — may force source disclosure</td></tr><tr><td>No licence / custom</td><td>—</td><td>Block until legal review</td></tr></tbody></table></div><p>SCA tools can fail a build when a banned licence appears, e.g. <code>trivy fs --scanners license --severity HIGH,CRITICAL .</code></p></div></section><section class="panel" id="t4" data-toc="[&quot;What is DAST?&quot;, &quot;SAST vs DAST vs IAST vs RASP&quot;, &quot;OWASP ZAP \u2014 the core features&quot;, &quot;ZAP scan modes (Docker)&quot;, &quot;Automation Framework (repeatable YAML plan)&quot;, &quot;Safe DAST practice&quot;]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span></div><div class="panel-eyebrow">Module 04 · Runtime Testing</div><h1 class="panel-title">DAST — Dynamic Testing</h1><p class="panel-subtitle">Attack your running application the way a real adversary would. Learn DAST concepts and run OWASP ZAP in baseline, full, API and authenticated modes.</p></div><div class="section" id="s4-1"><h2><span class="sec-emoji">🌐</span> What is DAST?</h2><p><strong>Dynamic Application Security Testing</strong> is <em>black-box</em>: the scanner knows nothing about your code. It crawls the running app, sends malicious requests (SQLi, XSS, path traversal…) and watches the responses.</p><div class="diagram"><svg viewBox="0 0 720 192" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A DAST scan lifecycle"><defs><marker id="ar7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><text x="360.0" y="30" text-anchor="middle" font-weight="700" font-size="16" fill="#37352f">How DAST works</text><rect x="20.0" y="54" width="108.8" height="104" rx="12" fill="#14213D"/><text x="74.4" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Target URL</text><text x="74.4" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">staging app</text><line x1="132.8" y1="106.0" x2="158.8" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar7)"/><rect x="162.8" y="54" width="108.8" height="104" rx="12" fill="#2563eb"/><text x="217.2" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Spider / crawl</text><text x="217.2" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">discover pages</text><text x="217.2" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">&amp; API routes</text><line x1="275.6" y1="106.0" x2="301.6" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar7)"/><rect x="305.6" y="54" width="108.8" height="104" rx="12" fill="#0f7b0f"/><text x="360.0" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Passive scan</text><text x="360.0" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">inspect traffic</text><line x1="418.4" y1="106.0" x2="444.4" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar7)"/><rect x="448.4" y="54" width="108.8" height="104" rx="12" fill="#d9730d"/><text x="502.8" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Active scan</text><text x="502.8" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">send attacks</text><line x1="561.2" y1="106.0" x2="587.2" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar7)"/><rect x="591.2" y="54" width="108.8" height="104" rx="12" fill="#6d28d9"/><text x="645.6" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Report</text><text x="645.6" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">alerts + evidence</text></svg><div class="diagram-caption">Figure · A DAST scan lifecycle</div></div></div><div class="section" id="s4-2"><h2><span class="sec-emoji">⚖️</span> SAST vs DAST vs IAST vs RASP</h2><div class="tbl-wrap"><table><thead><tr><th></th><th>SAST</th><th>DAST</th><th>IAST</th><th>RASP</th></tr></thead><tbody><tr><td>Sees</td><td>Source code</td><td>Running app from outside</td><td>Running app from inside</td><td>Running app from inside</td></tr><tr><td>When</td><td>Commit / PR</td><td>Staging / test env</td><td>During QA tests</td><td>Production</td></tr><tr><td>Finds</td><td>Code flaws, line numbers</td><td>Runtime &amp; config flaws</td><td>Accurate runtime flaws</td><td><em>Blocks</em> attacks live</td></tr><tr><td>False positives</td><td>Higher</td><td>Lower</td><td>Lowest</td><td>Low</td></tr><tr><td>Language dependent</td><td>Yes</td><td>No</td><td>Yes (agent)</td><td>Yes (agent)</td></tr></tbody></table></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">They are <strong>complementary</strong>. SAST finds the flaw in the code; DAST proves it is exploitable in the deployed environment.</div></div></div><div class="section" id="s4-3"><h2><span class="sec-emoji">⚡</span> OWASP ZAP — the core features</h2><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d4f8f">🕷️</div><div class="card-title">Spider / Ajax Spider</div><div class="card-desc">Crawls classic and JavaScript-heavy apps to build a site map.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">👂</div><div class="card-title">Passive scanner</div><div class="card-desc">Analyses traffic without attacking — headers, cookies, info leaks. Safe anywhere.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">💥</div><div class="card-title">Active scanner</div><div class="card-desc">Sends attack payloads. <strong>Only run against test environments.</strong></div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#22345f">🧪</div><div class="card-title">Fuzzer</div><div class="card-desc">Mutates inputs to uncover unexpected behaviour.</div></div><div class="card"><div class="card-icon" style="background:var(--red-soft);color:#a01c1c">🔐</div><div class="card-title">Contexts &amp; auth</div><div class="card-desc">Defines scope, users and login so ZAP can test behind the login page.</div></div><div class="card"><div class="card-icon" style="background:var(--pink-soft);color:#8c1a63">🧰</div><div class="card-title">API &amp; Automation</div><div class="card-desc">REST API, Automation Framework (YAML), Docker images for CI.</div></div></div></div><div class="section" id="s4-4"><h2><span class="sec-emoji">🐳</span> ZAP scan modes (Docker)</h2><div class="tbl-wrap"><table><thead><tr><th>Mode</th><th>Script</th><th>What it does</th><th>Typical use</th></tr></thead><tbody><tr><td>Baseline</td><td><code>zap-baseline.py</code></td><td>Spider + passive rules only, no attacks</td><td>Every PR / fast (1–5 min)</td></tr><tr><td>Full</td><td><code>zap-full-scan.py</code></td><td>Spider + active attack scan</td><td>Nightly on staging</td></tr><tr><td>API</td><td><code>zap-api-scan.py</code></td><td>Imports OpenAPI / SOAP / GraphQL definition then attacks</td><td>API-first services</td></tr></tbody></table></div><pre><span class="pre-lang">bash</span><code><span class="tok-c"># 1) Baseline (safe, fast) – write HTML report to current dir</span>
+docker <span class="tok-k">run</span> --rm -v $(pwd):/zap/wd:rw -t ghcr.io/zaproxy/zaproxy:stable \
+  zap-baseline.py -t https://staging.example.com -r baseline.html
+
+<span class="tok-c"># 2) Full active scan</span>
+docker <span class="tok-k">run</span> --rm -v $(pwd):/zap/wd:rw -t ghcr.io/zaproxy/zaproxy:stable \
+  zap-full-scan.py -t https://staging.example.com -r full.html
+
+<span class="tok-c"># 3) API scan from an OpenAPI file</span>
+docker <span class="tok-k">run</span> --rm -v $(pwd):/zap/wd:rw -t ghcr.io/zaproxy/zaproxy:stable \
+  zap-api-scan.py -t https://staging.example.com/openapi.json -f openapi -r api.html</code></pre><p>Exit codes: <code>0</code> pass · <code>1</code> failures · <code>2</code> warnings — use them to gate the pipeline.</p></div><div class="section" id="s4-5"><h2><span class="sec-emoji">🧾</span> Automation Framework (repeatable YAML plan)</h2><pre><span class="pre-lang">yaml</span><code><span class="tok-c"># zap-plan.yaml</span>
+<span class="tok-k">env</span>:
+  contexts:
+    - <span class="tok-k">name</span>: shop
+      urls: [<span class="tok-s">"https://staging.example.com"</span>]
+      includePaths: [<span class="tok-s">"https://staging.example.com.*"</span>]
+<span class="tok-k">jobs</span>:
+  - type: spider
+    parameters: { maxDuration: 5 }
+  - type: passiveScan-wait
+  - type: activeScan
+    parameters: { maxScanDurationInMins: 15 }
+  - type: report
+    parameters: { template: traditional-html, reportDir: /zap/wd, reportFile: zap-report }</code></pre><pre><span class="pre-lang">bash</span><code>docker <span class="tok-k">run</span> --rm -v $(pwd):/zap/wd:rw -t ghcr.io/zaproxy/zaproxy:stable \
+  zap.sh -cmd -autorun /zap/wd/zap-plan.yaml</code></pre><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">For <strong>authenticated scanning</strong> add a user + authentication method (form, header token or script) to the context. Most real bugs live <em>behind</em> the login.</div></div></div><div class="section" id="s4-6"><h2><span class="sec-emoji">🧯</span> Safe DAST practice</h2><ul><li>Scan <strong>staging/ephemeral</strong> environments with test data — never run an active scan against production.</li><li>Get written <strong>authorisation</strong> for every target; scanning without permission is illegal.</li><li>Rate-limit and use a dedicated test account; active scans can create junk records or lock accounts.</li><li>Re-test after the fix — the pipeline should confirm the alert disappears.</li><li>Tune with a rules file (<code>-c rules.tsv</code>) to ignore known-accepted alerts.</li></ul></div></section><section class="panel" id="t5" data-toc="[&quot;Reference secure pipeline&quot;, &quot;GitHub Actions: SAST + SCA + secrets + container&quot;, &quot;GitLab CI: built-in templates&quot;, &quot;Jenkins declarative pipeline&quot;, &quot;Quality gates &amp;amp; SLAs&quot;, &quot;Secrets &amp;amp; IaC scanning&quot;, &quot;Reducing noise: a practical checklist&quot;]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Advanced</span></div><div class="panel-eyebrow">Module 05 · CI/CD Integration</div><h1 class="panel-title">Pipeline Integration</h1><p class="panel-subtitle">Put SAST, SCA, secret scanning, container scanning and DAST into real pipelines — GitHub Actions, GitLab CI and Jenkins — with sensible quality gates.</p></div><div class="section" id="s5-1"><h2><span class="sec-emoji">🏗️</span> Reference secure pipeline</h2><div class="diagram"><svg viewBox="0 0 720 192" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Where each scan runs in a secure CI/CD pipeline"><defs><marker id="ar8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><text x="360.0" y="30" text-anchor="middle" font-weight="700" font-size="16" fill="#37352f">Secure pipeline stages</text><rect x="20.0" y="54" width="108.8" height="104" rx="12" fill="#14213D"/><text x="74.4" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Pre-commit</text><text x="74.4" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">gitleaks</text><text x="74.4" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">lint</text><line x1="132.8" y1="106.0" x2="158.8" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar8)"/><rect x="162.8" y="54" width="108.8" height="104" rx="12" fill="#2563eb"/><text x="217.2" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Pull Request</text><text x="217.2" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">SAST</text><text x="217.2" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">SCA</text><text x="217.2" y="140" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">IaC scan</text><line x1="275.6" y1="106.0" x2="301.6" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar8)"/><rect x="305.6" y="54" width="108.8" height="104" rx="12" fill="#0f7b0f"/><text x="360.0" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Build</text><text x="360.0" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">image scan</text><text x="360.0" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">SBOM</text><line x1="418.4" y1="106.0" x2="444.4" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar8)"/><rect x="448.4" y="54" width="108.8" height="104" rx="12" fill="#d9730d"/><text x="502.8" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Deploy staging</text><text x="502.8" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">DAST baseline</text><line x1="561.2" y1="106.0" x2="587.2" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar8)"/><rect x="591.2" y="54" width="108.8" height="104" rx="12" fill="#6d28d9"/><text x="645.6" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Release</text><text x="645.6" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">sign · gate</text></svg><div class="diagram-caption">Figure · Where each scan runs in a secure CI/CD pipeline</div></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Rule of thumb: <strong>fast checks block the PR</strong> (&lt;10 min), <strong>slow checks run on a schedule</strong> (nightly full DAST, deep scans).</div></div></div><div class="section" id="s5-2"><h2><span class="sec-emoji">🐙</span> GitHub Actions: SAST + SCA + secrets + container</h2><pre><span class="pre-lang">yaml</span><code><span class="tok-k">name</span>: secure-ci
+<span class="tok-k">on</span>: [pull_request]
+permissions:
+  contents: read
+  security-events: write
+<span class="tok-k">jobs</span>:
+  appsec:
+    runs-<span class="tok-k">on</span>: ubuntu-latest
+    <span class="tok-k">steps</span>:
+      - <span class="tok-k">uses</span>: actions/checkout@v4
+        <span class="tok-k">with</span>: { fetch-depth: 0 }          <span class="tok-c"># full history for secret scan</span>
+
+      - <span class="tok-k">name</span>: Secret scan
+        <span class="tok-k">uses</span>: gitleaks/gitleaks-action@v2
+
+      - <span class="tok-k">name</span>: SAST – SonarQube
+        <span class="tok-k">uses</span>: SonarSource/sonarqube-scan-action@v5
+        <span class="tok-k">env</span>:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      - <span class="tok-k">name</span>: SCA – Snyk Open Source
+        <span class="tok-k">run</span>: npx snyk test --severity-threshold=high
+        <span class="tok-k">env</span>: { SNYK_TOKEN: <span class="tok-s">"${{ secrets.SNYK_TOKEN }}"</span> }
+
+      - <span class="tok-k">name</span>: Build <span class="tok-k">image</span>
+        <span class="tok-k">run</span>: docker build -t shop-api:${{ github.sha }} .
+
+      - <span class="tok-k">name</span>: Image scan – Trivy
+        <span class="tok-k">uses</span>: aquasecurity/trivy-action@master   <span class="tok-c"># pin to a release tag or SHA in production</span>
+        <span class="tok-k">with</span>:
+          <span class="tok-k">image</span>-ref: shop-api:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          exit-code: <span class="tok-s">"1"</span></code></pre><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><strong>Pin third-party actions to a full commit SHA.</strong> A mutable tag like <code>@master</code> is itself a supply-chain risk (see the Supply Chain module).</div></div></div><div class="section" id="s5-3"><h2><span class="sec-emoji">🦊</span> GitLab CI: built-in templates</h2><pre><span class="pre-lang">yaml</span><code><span class="tok-k">include</span>:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+  - template: Security/Container-Scanning.gitlab-ci.yml
+  - template: DAST.gitlab-ci.yml
+
+variables:
+  DAST_WEBSITE: https://staging.example.com
+stages: [test, dast]</code></pre></div><div class="section" id="s5-4"><h2><span class="sec-emoji">🤵</span> Jenkins declarative pipeline</h2><pre><span class="pre-lang">groovy</span><code>pipeline {
+  agent any
+  stages {
+    <span class="tok-k">stage</span>(<span class="tok-s">'SAST'</span>)  { <span class="tok-k">steps</span> { withSonarQubeEnv(<span class="tok-s">'sonar'</span>) { sh <span class="tok-s">'sonar-scanner'</span> } } }
+    <span class="tok-k">stage</span>(<span class="tok-s">'Quality Gate'</span>) { <span class="tok-k">steps</span> { timeout(time: 10, unit: <span class="tok-s">'MINUTES'</span>) { waitForQualityGate abortPipeline: <span class="tok-k">true</span> } } }
+    <span class="tok-k">stage</span>(<span class="tok-s">'SCA'</span>)   { <span class="tok-k">steps</span> { sh <span class="tok-s">'snyk test --severity-threshold=high'</span> } }
+    <span class="tok-k">stage</span>(<span class="tok-s">'DAST'</span>)  { <span class="tok-k">steps</span> { sh <span class="tok-s">'docker run --rm -v $PWD:/zap/wd:rw ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t $STAGING_URL -r zap.html'</span> } }
+  }
+  post { always { archiveArtifacts artifacts: <span class="tok-s">'*.html'</span>, allowEmptyArchive: <span class="tok-k">true</span> } }
+}</code></pre></div><div class="section" id="s5-5"><h2><span class="sec-emoji">🚦</span> Quality gates &amp; SLAs</h2><div class="tbl-wrap"><table><thead><tr><th>Severity</th><th>Pipeline action</th><th>Fix SLA (example)</th></tr></thead><tbody><tr><td>Critical (KEV / reachable)</td><td><span style="color:#a01c1c;font-weight:700">Block merge</span></td><td>24–72 hours</td></tr><tr><td>High</td><td>Block merge on <em>new</em> findings</td><td>7–14 days</td></tr><tr><td>Medium</td><td>Warn + create ticket</td><td>30–60 days</td></tr><tr><td>Low / Info</td><td>Report only</td><td>Next maintenance window</td></tr></tbody></table></div><ul><li><strong>Gate on new code</strong> — don't punish teams for legacy debt on day one.</li><li><strong>Baseline first</strong>, then ratchet: record today's findings, forbid growth, burn down over time.</li><li>Provide an <strong>exception workflow</strong> (owner, reason, expiry) instead of letting people disable the scan.</li></ul></div><div class="section" id="s5-6"><h2><span class="sec-emoji">🔑</span> Secrets &amp; IaC scanning</h2><pre><span class="pre-lang">bash</span><code><span class="tok-c"># Secrets in code and git history</span>
+gitleaks detect --source . --redact --exit-code 1
+
+<span class="tok-c"># Infrastructure as Code (Terraform, K8s, Dockerfile)</span>
+checkov -d infra/ --framework terraform --compact
+trivy config --severity HIGH,CRITICAL .</code></pre><p>Install <code>gitleaks</code> as a <strong>pre-commit hook</strong> so a secret never leaves the laptop — once pushed, treat it as compromised and rotate it.</p></div><div class="section" id="s5-7"><h2><span class="sec-emoji">🔇</span> Reducing noise: a practical checklist</h2><ol><li>Start in <strong>report-only</strong> mode for 2 weeks; measure findings and false positives.</li><li>Exclude vendored, generated and test-fixture paths.</li><li>Deduplicate findings across tools in one place (e.g. DefectDojo).</li><li>Turn on <strong>blocking</strong> for Critical only, then High, then expand.</li><li>Review gate failures weekly: which rules cause the most friction?</li></ol></div></section><section class="panel" id="t6" data-toc="[&quot;Threat modelling with STRIDE&quot;, &quot;Risk-based vulnerability management&quot;, &quot;Custom rules &amp;amp; policy as code&quot;, &quot;ASPM &amp;amp; central vulnerability management&quot;, &quot;Maturity models &amp;amp; standards&quot;, &quot;Metrics that matter&quot;, &quot;Security champions &amp;amp; culture&quot;, &quot;Capstone lab&quot;]"><div class="panel-header"><div class="level-row"><span class="level-tag adv">Advanced</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 06 · Mastery</div><h1 class="panel-title">Expert AppSec Practices</h1><p class="panel-subtitle">Move from running scanners to running a security programme: threat modelling, risk-based vulnerability management, custom rules, maturity models and metrics.</p></div><div class="section" id="s6-1"><h2><span class="sec-emoji">🗺️</span> Threat modelling with STRIDE</h2><p>Scanners find <em>implementation</em> bugs. <strong>Threat modelling</strong> finds <em>design</em> flaws before code exists. Draw a data-flow diagram (actors, processes, data stores, trust boundaries) then ask STRIDE questions at each element.</p><div class="tbl-wrap"><table><thead><tr><th>Letter</th><th>Threat</th><th>Violates</th><th>Example mitigation</th></tr></thead><tbody><tr><td>S</td><td>Spoofing</td><td>Authentication</td><td>MFA, signed tokens</td></tr><tr><td>T</td><td>Tampering</td><td>Integrity</td><td>HMAC, DB constraints, signing</td></tr><tr><td>R</td><td>Repudiation</td><td>Non-repudiation</td><td>Audit logs</td></tr><tr><td>I</td><td>Information disclosure</td><td>Confidentiality</td><td>Encryption, least data</td></tr><tr><td>D</td><td>Denial of service</td><td>Availability</td><td>Rate limits, autoscaling</td></tr><tr><td>E</td><td>Elevation of privilege</td><td>Authorisation</td><td>Least privilege, RBAC checks</td></tr></tbody></table></div><div class="diagram"><svg viewBox="0 0 720 192" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Threat-modelling loop"><defs><marker id="ar9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><text x="360.0" y="30" text-anchor="middle" font-weight="700" font-size="16" fill="#37352f">Four-question approach</text><rect x="20.0" y="54" width="108.8" height="104" rx="12" fill="#14213D"/><text x="74.4" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Scope</text><text x="74.4" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="8.0">what are we building?</text><line x1="132.8" y1="106.0" x2="158.8" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar9)"/><rect x="162.8" y="54" width="108.8" height="104" rx="12" fill="#2563eb"/><text x="217.2" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Model</text><text x="217.2" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">DFD + trust zones</text><line x1="275.6" y1="106.0" x2="301.6" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar9)"/><rect x="305.6" y="54" width="108.8" height="104" rx="12" fill="#0f7b0f"/><text x="360.0" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Threats</text><text x="360.0" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.3">STRIDE per element</text><line x1="418.4" y1="106.0" x2="444.4" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar9)"/><rect x="448.4" y="54" width="108.8" height="104" rx="12" fill="#d9730d"/><text x="502.8" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Mitigate</text><text x="502.8" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.3">controls + tickets</text><line x1="561.2" y1="106.0" x2="587.2" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar9)"/><rect x="591.2" y="54" width="108.8" height="104" rx="12" fill="#6d28d9"/><text x="645.6" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Verify</text><text x="645.6" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">tests · re-review</text></svg><div class="diagram-caption">Figure · Threat-modelling loop</div></div></div><div class="section" id="s6-2"><h2><span class="sec-emoji">📐</span> Risk-based vulnerability management</h2><div class="tbl-wrap"><table><thead><tr><th>Signal</th><th>Question it answers</th></tr></thead><tbody><tr><td>CVSS</td><td>How bad <em>could</em> it be?</td></tr><tr><td>EPSS</td><td>How likely is exploitation soon?</td></tr><tr><td>KEV</td><td>Is it being exploited <em>now</em>?</td></tr><tr><td>Reachability</td><td>Does my code even call it?</td></tr><tr><td>Asset criticality</td><td>What data / revenue is behind it?</td></tr><tr><td>SSVC decision tree</td><td>Act, Attend, Track* or Track? (CISA-style stakeholder-specific outcome)</td></tr></tbody></table></div><pre><span class="pre-lang">text</span><code>priority = f( exploited_in_wild , EPSS , reachable , internet_exposed , data_sensitivity )
+
+Example: CVSS 9.8, not reachable, internal only       -&gt; Track
+Example: CVSS 7.5, KEV listed, internet-facing        -&gt; Act NOW</code></pre></div><div class="section" id="s6-3"><h2><span class="sec-emoji">📜</span> Custom rules &amp; policy as code</h2><p>Expert teams encode <em>their own</em> standards: "never call our legacy crypto helper", "all controllers must call <code>authorize()</code>".</p><pre><span class="pre-lang">yaml</span><code>rules:
+  - id: controller-missing-authz
+    languages: [java]
+    severity: WARNING
+    message: <span class="tok-s">"Controller method without @PreAuthorize"</span>
+    patterns:
+      - pattern: |
+          @GetMapping(...)
+          $RET $METHOD(...) { ... }
+      - pattern-not: |
+          @PreAuthorize(...)
+          @GetMapping(...)
+          $RET $METHOD(...) { ... }</code></pre><p>Pair this with <strong>OPA / Conftest</strong> for pipeline policy, e.g. "no container may run as root".</p><pre><span class="pre-lang">rego</span><code><span class="tok-k">package</span> main
+<span class="tok-k">deny</span>[msg] {
+  <span class="tok-k">input</span>.kind == <span class="tok-s">"Deployment"</span>
+  not <span class="tok-k">input</span>.spec.template.spec.securityContext.runAsNonRoot
+  msg := <span class="tok-s">"Deployment must set runAsNonRoot: true"</span>
+}</code></pre></div><div class="section" id="s6-4"><h2><span class="sec-emoji">🗂️</span> ASPM &amp; central vulnerability management</h2><p><strong>Application Security Posture Management</strong> aggregates results from many scanners, deduplicates, correlates to the owning service/team and tracks SLAs. Open-source option: <strong>DefectDojo</strong>; commercial: Snyk AppRisk, Cycode, Apiiro, etc.</p><ul><li>Ingest SARIF / JSON from every tool</li><li>Map finding → repo → service → team owner</li><li>Auto-create Jira tickets with due dates from the SLA</li><li>Dashboards for leadership: open criticals, MTTR, SLA breaches</li></ul></div><div class="section" id="s6-5"><h2><span class="sec-emoji">🏅</span> Maturity models &amp; standards</h2><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d4f8f">📏</div><div class="card-title">OWASP ASVS</div><div class="card-desc">Verification standard — L1 (basic), L2 (standard), L3 (high-assurance) requirements for apps.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🧭</div><div class="card-title">OWASP SAMM</div><div class="card-desc">Measure and improve your software-assurance practices across 15 practices.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#22345f">🏢</div><div class="card-title">BSIMM</div><div class="card-desc">Data-driven study of what real companies do — benchmark yourself.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🔧</div><div class="card-title">NIST SSDF</div><div class="card-desc">Secure Software Development Framework (SP 800-218) — often required by government buyers.</div></div></div></div><div class="section" id="s6-6"><h2><span class="sec-emoji">📉</span> Metrics that matter</h2><div class="tbl-wrap"><table><thead><tr><th>Metric</th><th>Why it matters</th></tr></thead><tbody><tr><td>MTTR by severity</td><td>Speed of remediation</td></tr><tr><td>% repos with SAST/SCA/secret scanning</td><td>Coverage</td></tr><tr><td>Vulnerability escape rate</td><td>Flaws found in prod vs pre-prod</td></tr><tr><td>SLA breach count</td><td>Process health</td></tr><tr><td>Fix rate vs introduction rate</td><td>Is the backlog shrinking?</td></tr><tr><td>False-positive rate</td><td>Developer trust in tooling</td></tr></tbody></table></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Never measure teams by "number of findings found" — it rewards noise. Measure <strong>risk reduced</strong>.</div></div></div><div class="section" id="s6-7"><h2><span class="sec-emoji">🥋</span> Security champions &amp; culture</h2><ul><li>Nominate one <strong>security champion</strong> per squad — trained, first line of triage.</li><li>Run <em>secure coding katas</em> (OWASP Juice Shop, WebGoat) and CTF days.</li><li>Publish "paved road" templates: starter repos with scanning, auth and logging already wired in.</li><li>Blameless post-mortems for every escaped vulnerability.</li></ul></div><div class="section" id="s6-8"><h2><span class="sec-emoji">🧪</span> Capstone lab</h2><ol><li>Fork a deliberately vulnerable app (OWASP Juice Shop or DVWA).</li><li>Add Gitleaks, Semgrep and Snyk/Trivy SCA to a PR workflow.</li><li>Run ZAP baseline against a docker-compose staging copy; export HTML report.</li><li>Create a quality gate: block on new High+; collect findings in DefectDojo.</li><li>Fix 3 real findings, re-run, and record before/after metrics.</li></ol></div></section><section class="panel" id="t7" data-toc="[&quot;Take the Assessment&quot;]"><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Beginner</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Advanced</span></div><div class="panel-eyebrow">Module 07</div><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">Check your understanding of the whole module.</p></div><div class="section" id="t7-1"><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div><div class="assess-intro-text">A timed, exam-style secured assessment for the Application Security (AppSec) module. Questions are shuffled on every attempt.</div><ul class="assess-intro-list"><li><strong>15 multiple-choice questions</strong> — concept checks plus scenario-based judgement calls</li><li>23-minute timer, question palette, mark-for-review, full explanations after you submit</li><li>Full-screen proctoring: 3 warnings for leaving the test and it auto-submits</li><li>Your attempts and top score are saved in this browser</li></ul><button class="assess-start-btn" id="assessStartBtn" type="button">▶ Start Assessment</button></div><div id="scoreBoard" class="score-board" style="display:none"></div></div></section></main></div>
+<script>
+(function(){
+ let manual=null;const tabs=[...document.querySelectorAll('.tab')],panels=[...document.querySelectorAll('.panel')],tocEl=document.getElementById('toc'),pt=document.getElementById('progressText');
+ function buildToc(panel){const labels=JSON.parse(panel.getAttribute('data-toc')||'[]');const secs=[...panel.querySelectorAll('.section')];
+  tocEl.innerHTML=secs.map((s,i)=>`<li><a href="#${s.id}" data-target="${s.id}">${labels[i]||''}</a></li>`).join('');const f=tocEl.querySelector('a');if(f)f.classList.add('active')}
+ function activate(i){tabs.forEach((t,k)=>t.classList.toggle('active',k===i));panels.forEach((p,k)=>p.classList.toggle('active',k===i));manual=null;buildToc(panels[i]);pt.textContent='Tab '+(i+1)+' of '+tabs.length;window.scrollTo(0,0)}
+ tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+ document.addEventListener('click',e=>{const a=e.target.closest('.toc-list a');if(!a)return;e.preventDefault();const el=document.getElementById(a.dataset.target);manual=a.dataset.target;tocEl.querySelectorAll('a').forEach(x=>x.classList.toggle('active',x===a));if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-125,behavior:'smooth'})});
+ let tk=false;function spy(){if(manual){tk=false;return}const ap=document.querySelector('.panel.active');if(!ap){tk=false;return}let cur=null;const secs=[...ap.querySelectorAll('.section')];secs.forEach(s=>{if(s.getBoundingClientRect().top-180<0)cur=s.id});if(secs.length&&window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-4)cur=secs[secs.length-1].id;
+  if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));tk=false}
+ window.addEventListener('scroll',()=>{if(!tk){requestAnimationFrame(spy);tk=true}},{passive:true});
+ ['wheel','touchstart','keydown','pointerdown'].forEach(ev=>window.addEventListener(ev,e=>{if(e.target&&e.target.closest&&e.target.closest('.toc-list a'))return;manual=null},{passive:true}));
+ window.resetProgress=()=>activate(0);activate(0);
+})();
+</script>
+<script>
+window.COURSE = {"slug": "appsec", "title": "Application Security (AppSec)", "assess": [{"q": "Which technique analyses source code WITHOUT running the application?", "options": ["Penetration test", "DAST", "SAST", "RASP"], "answer": 2, "exp": "SAST is white-box static analysis of code, bytecode or binaries."}, {"q": "In taint analysis, <code>request.args[\"id\"]<\/code> reaching <code>cursor.execute()<\/code> unsanitised is an example of…", "options": ["Sink → source", "Source → sink flow", "Quality gate failure", "Licence violation"], "answer": 1, "exp": "Untrusted data (source) reaching a dangerous function (sink) without a sanitiser is the classic injection pattern."}, {"q": "In SonarQube, a \"Security Hotspot\" is…", "options": ["A confirmed vulnerability to fix immediately", "A dependency with a CVE", "A failed pipeline stage", "Security-sensitive code requiring human review"], "answer": 3, "exp": "Hotspots highlight sensitive code (regex, crypto, cookies) where a reviewer decides if it is safe."}, {"q": "What does \"Clean as you code\" / New Code period enforce?", "options": ["Scans run once per year", "Only tests are scanned", "All legacy issues must be fixed first", "Quality gates apply to newly added/changed code"], "answer": 3, "exp": "It focuses gates on new code so teams stop adding debt without being blocked by legacy issues."}, {"q": "Which fix correctly prevents SQL injection?", "options": ["Hide the error message", "Escape quotes by hand", "Use POST instead of GET", "Parameterised queries"], "answer": 3, "exp": "Bound parameters keep user data separate from SQL code."}, {"q": "A vulnerable library pulled in indirectly by your direct dependency is called…", "options": ["Phantom dependency", "Transitive dependency", "Dev dependency", "Peer licence"], "answer": 1, "exp": "Transitive dependencies are dependencies of your dependencies; SCA scans them via the lockfile."}, {"q": "Which signal tells you a CVE is being exploited in the wild right now?", "options": ["CISA KEV listing", "CWE ID", "CVSS base score", "EPSS percentile"], "answer": 0, "exp": "The Known Exploited Vulnerabilities catalogue lists CVEs with confirmed active exploitation."}, {"q": "Which ZAP script performs ONLY spider + passive checks (safe and fast)?", "options": ["zap-baseline.py", "zap-full-scan.py", "zap-api-scan.py", "zap-attack.py"], "answer": 0, "exp": "Baseline mode never launches active attacks, so it is suitable for every PR."}, {"q": "Why must active DAST scans NOT be pointed at production?", "options": ["They send attack payloads that can corrupt data or cause outages", "They are slow", "They only work on HTTP", "They need a licence"], "answer": 0, "exp": "Active scanning sends malicious inputs; always use staging or ephemeral test environments."}, {"q": "What is the safest way to reference a third-party GitHub Action in a pipeline?", "options": ["A full commit SHA", "@latest tag", "@main", "Copy-paste from a blog"], "answer": 0, "exp": "Tags/branches are mutable; a SHA guarantees the exact code you reviewed."}, {"q": "Which STRIDE category does \"an attacker modifies an order total in transit\" belong to?", "options": ["Tampering", "Repudiation", "Spoofing", "Denial of service"], "answer": 0, "exp": "Tampering violates integrity — mitigations include signing and server-side validation."}, {"q": "The best way to reduce scanner noise when first adopting SAST is to…", "options": ["Only scan once a year", "Start report-only, tune rules, then gate on new High/Critical findings", "Disable the scanner", "Fix every finding before any deploy"], "answer": 1, "exp": "A phased rollout builds developer trust and avoids blocking everything on day one."}, {"q": "ASPM tools such as DefectDojo mainly…", "options": ["Aggregate, deduplicate and track findings from many tools", "Replace all scanners", "Provide a WAF", "Encrypt source code"], "answer": 0, "exp": "ASPM centralises findings, owners and SLAs across scanners."}, {"q": "OWASP ASVS Level 3 is intended for…", "options": ["Hobby projects", "Only mobile apps", "High-assurance apps (e.g. finance, health)", "Static websites"], "answer": 2, "exp": "L1 = basic, L2 = most apps, L3 = highest assurance."}, {"q": "Which metric best reflects real security improvement?", "options": ["Total findings detected", "MTTR and fix rate vs introduction rate", "Number of scanners installed", "Lines of code scanned"], "answer": 1, "exp": "Measure risk reduction and speed of fixing, not volume of noise."}]};
+</script>
+<script>
+/* =====================================================================
+   Final assessment — full-screen, timed mock exam (graded in-browser)
+   ===================================================================== */
+(function(){
+  const C = window.COURSE;
+  const BANK = C.assess.map((q,i)=>Object.assign({id:'q'+i}, q));
+  const EXAM_SECONDS = Math.ceil(BANK.length*1.5)*60; // 1.5 min per question
+  const LS_KEY = 'devsecops_scores_' + C.slug;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash .card:hover{transform:none}
+  .exam-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9;padding:0}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-fswarn{position:fixed;inset:0;z-index:100003;background:rgba(15,23,42,.92);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#fff;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fswarn .fw-box{max-width:520px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .exam-fswarn h3{font-size:30px;font-weight:800;margin:0;display:flex;align-items:center;gap:12px;color:#fff}
+  .exam-fswarn p{margin:0;font-size:16px;color:#e2e8f0;line-height:1.5}
+  .exam-fswarn .fw-count{font-size:16px;font-weight:600;color:#fff}
+  .exam-fswarn .fw-btn{margin-top:6px;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:15px 26px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+  .exam-fswarn .fw-btn:hover{background:#000}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}.exam-q-pane{padding:20px}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+  function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function examDialog(title,msg,okLabel,cancel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">${cancel?'<button class="exam-btn nav" data-a="0">Cancel</button>':''}<button class="exam-btn primary" data-a="1">${okLabel||'OK'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d && cancel){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores(); a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: tab-switch / fullscreen-exit warnings (3 strikes -> auto-submit) ---- */
+  let warns=0, lastWarn=0, proctorOn=false;
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function hideFsWarn(){ const w=document.getElementById('examFsWarn'); if(w)w.remove(); }
+  function showFsWarn(n){
+    injectCss(); hideFsWarn();
+    const w=document.createElement('div'); w.className='exam-fswarn'; w.id='examFsWarn';
+    w.innerHTML='<div class="fw-box"><h3><span>&#9888;&#65039;</span> Fullscreen exited</h3>'+
+      '<p>The assessment must remain in fullscreen mode.</p>'+
+      '<div class="fw-count">Warning '+n+' of 3</div>'+
+      '<button class="fw-btn" id="examFsReturn">Return to assessment</button></div>';
+    document.body.appendChild(w);
+    const btn=document.getElementById('examFsReturn');
+    btn.addEventListener('click',()=>{
+      const el=document.documentElement;
+      const done=()=>{ fsWanted=true; hideFsWarn(); };
+      if(el.requestFullscreen){ el.requestFullscreen().then(done).catch(()=>{}); } else { done(); }
+    });
+    try{btn.focus();}catch(e){}
+  }
+  function countWarn(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<1500)return; lastWarn=now;
+    warns++;
+    if(warns>=3){ hideFsWarn(); examDialog('Test submitted','You left the test 3 times. It has been auto-submitted.'); submitExam(true); }
+    else if(kind==='fs'){ showFsWarn(warns); }
+    else { examDialog('Warning '+warns+' of 3','Switching tabs or leaving the window is not allowed. After 3 warnings the test is auto-submitted.'); }
+  }
+  function fsHandler(){
+    if(!examOn)return;
+    if(document.fullscreenElement){ hideFsWarn(); return; }
+    if(fsWanted){ countWarn('fs'); }
+  }
+  function visHandler(){ if(document.hidden){ showCover(); countWarn(); } else { hideCover(); } }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function keyGuard(e){ const k=(e.key||'').toLowerCase(); if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; } }
+  let fsWanted=false;
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+  }
+  function stopProctor(){
+    proctorOn=false; hideFsWarn();
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    hideCover();
+  }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; ${C.title} &mdash; Secured Assessment</h2>
+      <p>A timed, exam-style secured assessment for this module.</p>
+      <ul>
+        <li><b>${BANK.length} questions</b>, shuffled every attempt</li>
+        <li><b>${Math.round(EXAM_SECONDS/60)}-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Correct answers and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> where your browser allows it</li>
+        <li><b>No tab / window switching</b> and <b>no exiting fullscreen (Esc)</b> &mdash; 3 warnings and the test <b>auto-submits</b></li>
+        <li>Copy and right-click are disabled during the test</li>
+      </ul>
+      <div style="display:flex;gap:10px"><button class="exam-btn nav" id="examCancel" style="flex:0 0 auto">Cancel</button>
+      <button class="exam-btn primary" id="examBegin" style="flex:1;padding:14px">Start Test &rarr;</button></div>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examCancel').addEventListener('click',()=>sp.remove());
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      fsWanted=false;
+      if(document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().then(()=>{fsWanted=true;}).catch(()=>{}); }
+      sp.remove(); enterExam();
+    });
+  }
+
+  function enterExam(){
+    injectCss();
+    items = shuffle(BANK);
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    const ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">${C.title} &mdash; Secured Assessment</div><div class="et-sub">${items.length} questions &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}${it.code?'<pre><code>'+it.code+'</code></pre>':''}</div>
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}" tabindex="0"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>{
+      const pick=()=>{ answers[id]=+el.dataset.i; pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); refreshPalette(); };
+      el.addEventListener('click',pick);
+      el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();} });
+    });
+    document.getElementById('examPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    document.getElementById('examNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();});
+    refreshPalette();
+    pane.scrollTop=0;
+  }
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examDialog('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test', true);
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    let score=0; items.forEach(it=>{ if(answers[it.id]===it.answer) score++; });
+    showResults(score);
+  }
+  function showResults(score){
+    const total=items.length; saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below, revisit the modules and try again.';
+    if(pct>=85)msg='Outstanding &mdash; you are operating at an expert level for this role.';
+    else if(pct>=65)msg='Solid pass. Review the questions you missed and you are interview-ready.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the modules you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const you=answers[it.id], attempted=(you!=null), ok=attempted&&you===it.answer;
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+(it.code?'<pre><code>'+it.code+'</code></pre>':'')+'</div>';
+      inner+= attempted ? '<div class="ra '+(ok?'cor':'wrong')+'">Your answer: '+String.fromCharCode(65+you)+'. '+it.options[you]+'</div>' : '<div class="ra wrong">Your answer: <i>Not answered</i></div>';
+      if(!ok) inner+='<div class="ra cor">Correct: '+String.fromCharCode(65+it.answer)+'. '+it.options[it.answer]+'</div>';
+      if(it.exp) inner+='<div class="rx">'+it.exp+'</div>';
+      return '<div class="r '+(ok?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; ${C.title}</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another attempt</button></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    document.getElementById('examRetry').addEventListener('click',()=>{ closeExam(); showSplash(); });
+    document.getElementById('examClose').addEventListener('click',closeExam);
+  }
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',showSplash);
+  renderScoreboard();
+})();
+</script><script>
+(function(){
+  var nav=document.querySelector('.tabbar'); if(!nav)return; var PAD=16;
+  var bar=document.createElement('div'); bar.className='tabscroll'; bar.setAttribute('aria-hidden','true');
+  var thumb=document.createElement('div'); thumb.className='tabscroll-thumb'; bar.appendChild(thumb);
+  nav.insertAdjacentElement('afterend',bar);
+  function sync(){
+    var sw=nav.scrollWidth, cw=nav.clientWidth, max=sw-cw, bw=bar.clientWidth;
+    if(max<=1){ bar.classList.add('fits'); thumb.style.width='100%'; thumb.style.left='0px'; return; }
+    bar.classList.remove('fits');
+    var tw=Math.max(40,Math.round(bw*cw/sw)); thumb.style.width=tw+'px';
+    thumb.style.left=Math.round((bw-tw)*nav.scrollLeft/max)+'px';
+  }
+  function toScroll(x){ // x = pointer offset inside bar, centre thumb on it
+    var max=nav.scrollWidth-nav.clientWidth, bw=bar.clientWidth, tw=thumb.offsetWidth; if(max<=1)return;
+    var r=(x-tw/2)/(bw-tw); nav.scrollLeft=Math.max(0,Math.min(1,r))*max;
+  }
+  var drag=false, grab=0;
+  bar.addEventListener('pointerdown',function(e){
+    if(bar.classList.contains('fits'))return;
+    var br=bar.getBoundingClientRect(), tr=thumb.getBoundingClientRect();
+    drag=true; bar.classList.add('dragging'); bar.setPointerCapture(e.pointerId);
+    if(e.target===thumb){ grab=e.clientX-tr.left-tr.width/2; } else { grab=0; nav.style.scrollBehavior='smooth'; toScroll(e.clientX-br.left); setTimeout(function(){nav.style.scrollBehavior='';},350); }
+  });
+  bar.addEventListener('pointermove',function(e){ if(!drag)return; nav.style.scrollBehavior=''; toScroll(e.clientX-bar.getBoundingClientRect().left-grab); });
+  function end(e){ if(!drag)return; drag=false; bar.classList.remove('dragging'); try{bar.releasePointerCapture(e.pointerId);}catch(x){} }
+  bar.addEventListener('pointerup',end); bar.addEventListener('pointercancel',end);
+  nav.addEventListener('scroll',sync,{passive:true});
+  window.addEventListener('resize',sync);
+  if(window.ResizeObserver) new ResizeObserver(sync).observe(nav);
+  function reveal(t){
+    var nb=nav.getBoundingClientRect(), tb=t.getBoundingClientRect();
+    var l=tb.left-nb.left+nav.scrollLeft, r=l+tb.width;
+    if(l<nav.scrollLeft+PAD) nav.scrollTo({left:Math.max(0,l-PAD),behavior:'smooth'});
+    else if(r>nav.scrollLeft+nav.clientWidth-PAD) nav.scrollTo({left:r-nav.clientWidth+PAD,behavior:'smooth'});
+  }
+  new MutationObserver(function(){var a=nav.querySelector('.tab.active'); if(a)reveal(a);}).observe(nav,{attributes:true,subtree:true,attributeFilter:['class']});
+  sync(); setTimeout(sync,300);
+  var a=nav.querySelector('.tab.active'); if(a)setTimeout(function(){reveal(a);},50);
+})();
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body></html>

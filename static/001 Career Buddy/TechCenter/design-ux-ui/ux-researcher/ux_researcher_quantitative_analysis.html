@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quantitative Analysis — UX Researcher Learning Module</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#d9730d 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans',system-ui,sans-serif;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans',system-ui,sans-serif;font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'Noto Sans',system-ui,sans-serif;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'Noto Sans',system-ui,sans-serif;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'Noto Sans',system-ui,sans-serif;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'Noto Sans',system-ui,sans-serif;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'Noto Sans',system-ui,sans-serif;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'Noto Sans',system-ui,sans-serif;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+
+/* ============= Module additions (same visual language) ============= */
+.table-wrap{overflow-x:auto;margin:16px 0;-webkit-overflow-scrolling:touch}
+.table-wrap table{margin:0;min-width:560px}
+.formula{display:inline-block;font-size:12.5px;background:var(--bg-code);border:1px solid var(--line);padding:2px 8px;border-radius:4px;color:#14213D;font-weight:500}
+.saq-toggle{margin-top:10px}
+.mcq-opt:focus-visible,.btn:focus-visible,.tab:focus-visible,.assess-start-btn:focus-visible,.saq textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.example{border:1px solid var(--line);border-left:4px solid var(--orange);border-radius:var(--radius);padding:14px 18px;margin:16px 0;background:#fffdf9}
+.example-title{font-weight:700;font-size:13px;color:#a85a08;margin-bottom:6px;letter-spacing:.02em}
+.example p,.example ul{margin:6px 0;font-size:14.5px}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.expert{background:#14213D;color:#fff}
+.term{display:grid;grid-template-columns:190px 1fr;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.term:last-child{border-bottom:none}
+details{border:1px solid var(--line);border-radius:var(--radius);margin:10px 0;background:#fff}
+summary{cursor:pointer;padding:11px 16px;font-weight:600;font-size:15px}details[open] summary{border-bottom:1px solid var(--line)}details>div{padding:10px 16px 12px;font-size:14.5px;line-height:1.6;color:#3a3833}
+.term b{color:#14213D}
+.terms{border:1px solid var(--line);border-radius:var(--radius);padding:4px 16px;margin:16px 0;background:#fff}
+@media (max-width:720px){
+  .header-top{padding:12px 16px;flex-wrap:wrap}
+  .brand{font-size:14px;line-height:1.35}
+  .brand-sub{display:block;margin-left:0}
+  .panel-title{font-size:30px}
+  .section h2{font-size:22px}
+  .assess-modal-box{padding:0 18px 40px}
+  .term{grid-template-columns:1fr;gap:2px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+<style>
+/* Noto Sans everywhere */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,td,th,div,section,header,nav,aside,main,label,button,input,textarea,small,strong,b,em,i,code,pre,svg text{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif !important}
+</style>
+<style id="cb-assess-intro-css">
+.cb-assess-intro{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg,12px);padding:28px 30px;box-shadow:var(--shadow-sm,0 1px 3px rgba(0,0,0,.06));margin-top:18px}
+.cb-assess-intro h3{margin:0 0 8px;font-size:20px;font-weight:600}
+.cb-assess-intro p{margin:6px 0;color:var(--ink-soft);font-size:14px}
+.cb-assess-intro ul{margin:12px 0 18px 18px;color:var(--ink-soft);font-size:13.5px;line-height:1.8}
+.cb-start{border:0;background:var(--accent,#14213d);color:#fff;border-radius:9px;padding:12px 20px;font:700 14px 'Noto Sans',system-ui,sans-serif;cursor:pointer}
+.cb-start:hover{opacity:.9}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-top">
+    <div class="brand"><div class="brand-mark">QT</div><span>Design / UX/UI | UX Researcher<span class="brand-sub"> · Quantitative Analysis</span></span></div>
+    <div class="header-actions">
+      <span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 8</span></span>
+      <button class="btn" onclick="resetProgress()" title="Reset to first tab"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9"/><path d="M2 4v3.5h3.5"/></svg> Reset</button>
+    </div>
+  </div>
+  <nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Foundations</button><button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> Survey Design</button><button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> Benchmark Metrics</button><button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> Cohort Tracking</button><button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> Statistics</button><button class="tab" data-tab="t6" role="tab"><span class="tab-num">06</span> Interview Preparation</button><button class="tab" data-tab="t7" role="tab"><span class="tab-num">07</span> Practice</button><button class="tab" data-tab="t8" role="tab"><span class="tab-num">08</span> Assessment</button></nav>
+</header>
+<div class="layout">
+  <aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside>
+  <main class="main">
+    <section class="panel active" id="t1" data-toc='[["s1-1", "What is Quantitative UX Research?"], ["s1-2", "Types of Quantitative Methods"], ["s1-3", "Types of Data & Scales"], ["s1-4", "Key Terms (What is What)"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag fresher">→ Fresher-friendly</span></div><div class="panel-eyebrow">Module 01 · Foundations</div><h1 class="panel-title">What is Quantitative UX Research?</h1><p class="panel-subtitle">Start from zero: what quantitative research measures, types of data and scales, and core statistical vocabulary.</p></div>
+      <div class="section" id="s1-1"><h2><span class="sec-emoji">🧭</span> What is Quantitative UX Research?</h2><p><strong>Quantitative UX research</strong> uses numbers from larger samples to measure <em>how many</em>, <em>how much</em> and <em>how often</em>. It tells you how widespread a problem is, tracks experience over time and helps prioritise with confidence.</p><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#14213D">📏</div><div class="card-title">Measure</div><div class="card-desc">Satisfaction, ease and loyalty scores.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">📊</div><div class="card-title">Size</div><div class="card-desc">How many users face a problem.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">📈</div><div class="card-title">Track</div><div class="card-desc">Change across releases and cohorts.</div></div><div class="card"><div class="card-icon" style="background:var(--pink-soft);color:#8c1a63">🎯</div><div class="card-title">Prioritise</div><div class="card-desc">Back decisions with representative evidence.</div></div></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">🗂️</span> Types of Quantitative Methods</h2><div class="table-wrap"><table><tr><th>Method</th><th>Measures</th><th>Example</th></tr><tr><td><strong>Surveys</strong></td><td>Attitudes, preferences, self-reported behaviour</td><td>Satisfaction survey to 5,000 users</td></tr><tr><td><strong>Standardised UX metrics</strong></td><td>SUS, CSAT, NPS, CES, UMUX-Lite</td><td>Quarterly SUS benchmark</td></tr><tr><td><strong>Behavioural analytics</strong></td><td>What users actually do</td><td>Funnels, retention cohorts</td></tr><tr><td><strong>Quantitative usability testing</strong></td><td>Success rates and times on larger samples</td><td>40 users × 5 tasks</td></tr><tr><td><strong>A/B testing</strong></td><td>Causal effect of a change</td><td>New onboarding vs old</td></tr></table></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">📐</span> Types of Data & Scales</h2><div class="table-wrap"><table><tr><th>Scale</th><th>Meaning</th><th>Example</th><th>Valid summaries</th></tr><tr><td><strong>Nominal</strong></td><td>Categories, no order</td><td>Device: Android / iOS</td><td>Counts, %</td></tr><tr><td><strong>Ordinal</strong></td><td>Ordered, gaps not equal</td><td>Very unsatisfied → very satisfied</td><td>Median, % top-2-box</td></tr><tr><td><strong>Interval</strong></td><td>Ordered, equal gaps, no true zero</td><td>SUS score (treated as interval)</td><td>Mean, SD</td></tr><tr><td><strong>Ratio</strong></td><td>Equal gaps + true zero</td><td>Time on task, number of orders</td><td>Mean, median, ratios</td></tr></table></div></div><div class="section" id="s1-4"><h2><span class="sec-emoji">📖</span> Key Terms (What is What)</h2><div class="terms"><div class="term"><b>Population</b><span>Everyone you want to learn about (all active users).</span></div><div class="term"><b>Sample</b><span>The subset you actually measure.</span></div><div class="term"><b>Mean / median</b><span>Average / middle value. Prefer median for skewed data like time.</span></div><div class="term"><b>Standard deviation</b><span>How spread out values are.</span></div><div class="term"><b>Margin of error</b><span>The ± range around a survey result, e.g. 62% ± 4%.</span></div><div class="term"><b>Confidence level</b><span>How sure you are the true value is inside that range (usually 95%).</span></div><div class="term"><b>Statistical significance</b><span>A difference unlikely to be due to chance alone.</span></div><div class="term"><b>Top-2-box</b><span>% choosing the top two options on a scale.</span></div></div><div class="mcq" data-answer="2"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Time on task is which type of scale?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Nominal</li><li class="mcq-opt"><span class="opt-letter">B</span> Ordinal</li><li class="mcq-opt"><span class="opt-letter">C</span> Ratio</li><li class="mcq-opt"><span class="opt-letter">D</span> None</li></ul><div class="mcq-feedback" data-ok="Correct — it has a true zero and equal intervals." data-bad="Not quite. Time has a true zero, so it is a ratio scale."></div></div></div>
+    </section>
+    <section class="panel" id="t2" data-toc='[["s2-1", "What Makes a Good Survey?"], ["s2-2", "Types of Survey Questions"], ["s2-3", "Common Question Mistakes"], ["s2-4", "Sampling & Sample Size"], ["s2-5", "Survey Workflow"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">→ Intermediate</span></div><div class="panel-eyebrow">Module 02 · Survey Design</div><h1 class="panel-title">Survey Design</h1><p class="panel-subtitle">Write surveys that give clean, unbiased, decision-ready data.</p></div>
+      <div class="section" id="s2-1"><h2><span class="sec-emoji">📝</span> What Makes a Good Survey?</h2><ul><li>Starts from a <strong>research question and decision</strong>, not a list of "nice to know" questions.</li><li>Short: aim for 5–10 minutes; completion drops with length.</li><li>Targets the right people at the right moment (e.g. right after a task).</li><li>Uses clear, neutral, single-topic questions.</li></ul></div><div class="section" id="s2-2"><h2><span class="sec-emoji">🗂️</span> Types of Survey Questions</h2><div class="table-wrap"><table><tr><th>Type</th><th>Example</th><th>Use for</th></tr><tr><td><strong>Single choice</strong></td><td>"Which device do you mainly use?"</td><td>Categories</td></tr><tr><td><strong>Multiple choice</strong></td><td>"Which features have you used? (select all)"</td><td>Usage breadth</td></tr><tr><td><strong>Likert scale</strong></td><td>"The app is easy to use." Strongly disagree → Strongly agree</td><td>Attitudes</td></tr><tr><td><strong>Rating scale</strong></td><td>"How satisfied are you? 1–5"</td><td>Satisfaction</td></tr><tr><td><strong>Ranking</strong></td><td>"Rank these 5 features by importance"</td><td>Priorities (max 5–7 items)</td></tr><tr><td><strong>Matrix</strong></td><td>Several items on the same scale</td><td>Compact, but causes fatigue</td></tr><tr><td><strong>Open-ended</strong></td><td>"What is the main reason for your score?"</td><td>Explaining numbers</td></tr></table></div></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🧲</span> Common Question Mistakes</h2><div class="table-wrap"><table><tr><th>Mistake</th><th>Bad</th><th>Better</th></tr><tr><td>Leading</td><td>"How much do you love our new design?"</td><td>"How would you rate the new design?"</td></tr><tr><td>Double-barrelled</td><td>"Was checkout fast and easy?"</td><td>Split into two questions</td></tr><tr><td>Jargon</td><td>"Rate the IA of the PDP."</td><td>"How easy was it to find product details?"</td></tr><tr><td>Unbalanced scale</td><td>Good / Very good / Excellent</td><td>Very poor → Very good, with a midpoint</td></tr><tr><td>Missing option</td><td>No "Other" or "Not applicable"</td><td>Add them</td></tr><tr><td>Hypothetical</td><td>"Would you pay for premium?"</td><td>"Have you paid for any app subscription in the last 3 months?"</td></tr></table></div></div><div class="section" id="s2-4"><h2><span class="sec-emoji">🎯</span> Sampling & Sample Size</h2><div class="table-wrap"><table><tr><th>Sampling type</th><th>How</th><th>Risk</th></tr><tr><td>Random</td><td>Every user has equal chance</td><td>Best for representativeness</td></tr><tr><td>Stratified</td><td>Random within segments (plan, region)</td><td>Ensures small segments are included</td></tr><tr><td>Convenience</td><td>Whoever responds (social media)</td><td>High bias</td></tr><tr><td>Intercept</td><td>In-app at a key moment</td><td>Captures only active users</td></tr></table></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body"><strong>Rule of thumb:</strong> about <strong>385 responses</strong> gives ±5% margin of error at 95% confidence for a large population; about 1,070 gives ±3%.</div></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><strong>Non-response bias:</strong> people with strong feelings respond more. Compare respondent profiles with your user base.</div></div></div><div class="section" id="s2-5"><h2><span class="sec-emoji">🔄</span> Survey Workflow</h2><div class="diagram"><svg viewBox="0 0 720 160" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans"><defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><rect x="8" y="30" width="123" height="118" rx="12" fill="#14213D"/><text x="70" y="60" text-anchor="middle" fill="#fff" font-weight="700" font-size="12">Objectives</text><text x="70" y="86" text-anchor="middle" fill="#cdd5e5" font-size="10.5">Decision +</text><text x="70" y="102" text-anchor="middle" fill="#cdd5e5" font-size="10.5">research question</text><line x1="133" y1="89" x2="150" y2="89" stroke="#37352f" stroke-width="2" marker-end="url(#a1)"/><rect x="153" y="30" width="123" height="118" rx="12" fill="#eef1f7" stroke="#d3d3d0"/><text x="215" y="60" text-anchor="middle" fill="#14213D" font-weight="700" font-size="12">Draft</text><text x="215" y="86" text-anchor="middle" fill="#37352f" font-size="10.5">Questions,</text><text x="215" y="102" text-anchor="middle" fill="#37352f" font-size="10.5">logic, scales</text><line x1="278" y1="89" x2="295" y2="89" stroke="#37352f" stroke-width="2" marker-end="url(#a1)"/><rect x="298" y="30" width="123" height="118" rx="12" fill="#ddedea" stroke="#d3d3d0"/><text x="360" y="60" text-anchor="middle" fill="#0a5f0a" font-weight="700" font-size="12">Pilot</text><text x="360" y="86" text-anchor="middle" fill="#37352f" font-size="10.5">5–10 people,</text><text x="360" y="102" text-anchor="middle" fill="#37352f" font-size="10.5">fix confusion</text><line x1="424" y1="89" x2="441" y2="89" stroke="#37352f" stroke-width="2" marker-end="url(#a1)"/><rect x="444" y="30" width="123" height="118" rx="12" fill="#fadec9" stroke="#d3d3d0"/><text x="505" y="60" text-anchor="middle" fill="#a85a08" font-weight="700" font-size="12">Field</text><text x="505" y="86" text-anchor="middle" fill="#37352f" font-size="10.5">Distribute,</text><text x="505" y="102" text-anchor="middle" fill="#37352f" font-size="10.5">monitor quality</text><line x1="569" y1="89" x2="586" y2="89" stroke="#37352f" stroke-width="2" marker-end="url(#a1)"/><rect x="589" y="30" width="123" height="118" rx="12" fill="#0f7b0f"/><text x="650" y="60" text-anchor="middle" fill="#fff" font-weight="700" font-size="12">Analyse</text><text x="650" y="86" text-anchor="middle" fill="#fff" font-size="10.5">Clean, segment,</text><text x="650" y="102" text-anchor="middle" fill="#fff" font-size="10.5">report</text></svg><div class="diagram-caption">Figure 2.1 · From objective to analysis</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> "How satisfied are you with our delivery speed and packaging?" is…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> A good question</li><li class="mcq-opt"><span class="opt-letter">B</span> Double-barrelled</li><li class="mcq-opt"><span class="opt-letter">C</span> A ranking question</li><li class="mcq-opt"><span class="opt-letter">D</span> An NPS question</li></ul><div class="mcq-feedback" data-ok="Correct — two topics in one question." data-bad="Not quite. It asks about two things at once."></div></div></div>
+    </section>
+    <section class="panel" id="t3" data-toc='[["s3-1", "What is a Benchmark Metric?"], ["s3-2", "SUS \u2014 System Usability Scale"], ["s3-3", "CSAT \u2014 Customer Satisfaction"], ["s3-4", "NPS \u2014 Net Promoter Score"], ["s3-5", "Check Yourself"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span></div><div class="panel-eyebrow">Module 03 · Benchmark Metrics</div><h1 class="panel-title">Benchmark Metrics: SUS, CSAT & NPS</h1><p class="panel-subtitle">Calculate and interpret the standard UX metrics used to track experience quality.</p></div>
+      <div class="section" id="s3-1"><h2><span class="sec-emoji">📏</span> What is a Benchmark Metric?</h2><p>A <strong>benchmark metric</strong> is a standardised measure collected the same way over time, so you can compare releases, segments or competitors. Using validated questionnaires makes results comparable with industry norms.</p><div class="table-wrap"><table><tr><th>Metric</th><th>Measures</th><th>Scale</th></tr><tr><td><strong>SUS</strong></td><td>Perceived usability of a system</td><td>10 items → 0–100 score</td></tr><tr><td><strong>CSAT</strong></td><td>Satisfaction with an interaction</td><td>1–5 (or 1–7)</td></tr><tr><td><strong>NPS</strong></td><td>Loyalty / likelihood to recommend</td><td>0–10 → −100 to +100</td></tr><tr><td><strong>CES</strong></td><td>Effort to get something done</td><td>1–7 "easy to handle my issue"</td></tr><tr><td><strong>SEQ</strong></td><td>Ease of a single task</td><td>1–7</td></tr><tr><td><strong>UMUX-Lite</strong></td><td>Short usability measure</td><td>2 items</td></tr></table></div></div><div class="section" id="s3-2"><h2><span class="sec-emoji">🧮</span> SUS — System Usability Scale</h2><p>10 statements rated 1 (strongly disagree) to 5 (strongly agree), alternating positive and negative wording.</p><ol><li>Odd items (positive): score − 1.</li><li>Even items (negative): 5 − score.</li><li>Add all 10 contributions (0–40).</li><li>Multiply by 2.5 → SUS score 0–100.</li></ol><div class="example"><div class="example-title">EXAMPLE · One participant</div><p>Odd items 4, 5, 4, 4, 5 → 3+4+3+3+4 = 17. Even items 2, 1, 2, 2, 1 → 3+4+3+3+4 = 17. Total 34 × 2.5 = <strong>SUS 85</strong>.</p></div><div class="table-wrap"><table><tr><th>SUS score</th><th>Interpretation</th></tr><tr><td>&gt; 80.3</td><td>Excellent (top ~10%)</td></tr><tr><td>68</td><td>Average</td></tr><tr><td>&lt; 51</td><td>Poor — serious usability problems</td></tr></table></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">SUS is <strong>not a percentage</strong>. A score of 68 is the 50th percentile, not "68% usable".</div></div></div><div class="section" id="s3-3"><h2><span class="sec-emoji">😊</span> CSAT — Customer Satisfaction</h2><p>"How satisfied were you with [interaction]?" on 1–5. <strong>CSAT = % of responses that are 4 or 5.</strong></p><div class="example"><div class="example-title">EXAMPLE · Support chat CSAT</div><p>200 responses: 90 gave 5, 60 gave 4 → (90 + 60) ÷ 200 = <strong>75% CSAT</strong>.</p></div></div><div class="section" id="s3-4"><h2><span class="sec-emoji">📣</span> NPS — Net Promoter Score</h2><p>"How likely are you to recommend [product] to a friend or colleague?" 0–10.</p><div class="table-wrap"><table><tr><th>Score</th><th>Group</th></tr><tr><td>9–10</td><td>Promoters</td></tr><tr><td>7–8</td><td>Passives (not counted)</td></tr><tr><td>0–6</td><td>Detractors</td></tr></table></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body"><strong>NPS = % Promoters − % Detractors</strong>, ranging from −100 to +100.</div></div><div class="example"><div class="example-title">EXAMPLE · Calculation</div><p>1,000 responses: 450 promoters (45%), 350 passives, 200 detractors (20%) → NPS = 45 − 20 = <strong>+25</strong>.</p></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">NPS is a relationship/loyalty signal, best for trends and segments. Always ask a follow-up "Why?" — the score alone tells you nothing about what to fix.</div></div></div><div class="section" id="s3-5"><h2><span class="sec-emoji">🧠</span> Check Yourself</h2><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> 30% promoters, 40% passives, 30% detractors. NPS?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> +30</li><li class="mcq-opt"><span class="opt-letter">B</span> 0</li><li class="mcq-opt"><span class="opt-letter">C</span> +40</li><li class="mcq-opt"><span class="opt-letter">D</span> −30</li></ul><div class="mcq-feedback" data-ok="Correct: 30 − 30 = 0." data-bad="Not quite. NPS = 30% − 30% = 0."></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Your app scores SUS 72. What does it mean?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> 72% of users can use it</li><li class="mcq-opt"><span class="opt-letter">B</span> Slightly above average usability</li><li class="mcq-opt"><span class="opt-letter">C</span> Excellent usability</li><li class="mcq-opt"><span class="opt-letter">D</span> Failing usability</li></ul><div class="mcq-feedback" data-ok="Correct — average is 68." data-bad="Not quite. SUS 72 is slightly above the 68 average; it is not a percentage."></div></div></div>
+    </section>
+    <section class="panel" id="t4" data-toc='[["s4-1", "What is a Cohort?"], ["s4-2", "Types of Cohorts"], ["s4-3", "Reading a Retention Cohort"], ["s4-4", "Connecting Behaviour and Attitude"], ["s4-5", "Behavioural Metrics to Track"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">→ Advanced</span></div><div class="panel-eyebrow">Module 04 · Cohort Behavioural Tracking</div><h1 class="panel-title">Cohort Behavioural Tracking</h1><p class="panel-subtitle">Measure what groups of users actually do over time, and connect behaviour to attitudes.</p></div>
+      <div class="section" id="s4-1"><h2><span class="sec-emoji">👥</span> What is a Cohort?</h2><p>A <strong>cohort</strong> is a group of users who share a characteristic or start point. <strong>Cohort analysis</strong> tracks how each group behaves over time, so you can see whether changes help new users more than old ones.</p></div><div class="section" id="s4-2"><h2><span class="sec-emoji">🗂️</span> Types of Cohorts</h2><div class="table-wrap"><table><tr><th>Type</th><th>Grouped by</th><th>Example</th></tr><tr><td><strong>Acquisition / time-based</strong></td><td>When users started</td><td>Signed up in Week 12</td></tr><tr><td><strong>Behavioural</strong></td><td>An action they took</td><td>Users who completed onboarding checklist</td></tr><tr><td><strong>Attribute / segment</strong></td><td>A property</td><td>Android users in Tier-2 cities</td></tr><tr><td><strong>Experiment</strong></td><td>Test group</td><td>Variant B of new onboarding</td></tr></table></div></div><div class="section" id="s4-3"><h2><span class="sec-emoji">📊</span> Reading a Retention Cohort</h2><div class="table-wrap"><table><tr><th>Cohort</th><th>Users</th><th>Week 1</th><th>Week 2</th><th>Week 4</th><th>Week 8</th></tr><tr><td>Jan wk 1</td><td>3,200</td><td>40%</td><td>29%</td><td>21%</td><td>17%</td></tr><tr><td>Jan wk 2</td><td>3,050</td><td>41%</td><td>30%</td><td>22%</td><td>17%</td></tr><tr><td>Jan wk 3 (new tutorial)</td><td>3,300</td><td><strong>49%</strong></td><td><strong>36%</strong></td><td><strong>27%</strong></td><td><strong>22%</strong></td></tr><tr><td>Jan wk 4</td><td>3,150</td><td>50%</td><td>37%</td><td>27%</td><td>—</td></tr></table></div><div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">The tutorial lifted retention at every week, and the curve still flattens (around 22%) — evidence of a lasting, not novelty, effect.</div></div></div><div class="section" id="s4-4"><h2><span class="sec-emoji">🔗</span> Connecting Behaviour and Attitude</h2><div class="table-wrap"><table><tr><th>Behavioural cohort</th><th>SUS</th><th>NPS</th><th>90-day retention</th></tr><tr><td>Used "Saved lists"</td><td>79</td><td>+38</td><td>64%</td></tr><tr><td>Never used it</td><td>66</td><td>+12</td><td>31%</td></tr></table></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">This is <strong>correlation</strong>. Engaged users may both like the app more and use Saved lists. Use an experiment or qualitative follow-up to test cause.</div></div></div><div class="section" id="s4-5"><h2><span class="sec-emoji">📈</span> Behavioural Metrics to Track</h2><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#14213D">🚀</div><div class="card-title">Activation</div><div class="card-desc">% reaching the key first action within N days.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🔁</div><div class="card-title">Retention</div><div class="card-desc">% still active at day/week N.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">📆</div><div class="card-title">Frequency</div><div class="card-desc">Active days per week per user.</div></div><div class="card"><div class="card-icon" style="background:var(--pink-soft);color:#8c1a63">🧩</div><div class="card-title">Feature adoption</div><div class="card-desc">% of active users using a feature.</div></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> You group users by "completed profile in first 3 days". This is which cohort type?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Acquisition</li><li class="mcq-opt"><span class="opt-letter">B</span> Behavioural</li><li class="mcq-opt"><span class="opt-letter">C</span> Attribute</li><li class="mcq-opt"><span class="opt-letter">D</span> Experiment</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — grouping by an action taken is a behavioural cohort."></div></div></div>
+    </section>
+    <section class="panel" id="t5" data-toc='[["s5-1", "Data Cleaning"], ["s5-2", "Descriptive Statistics"], ["s5-3", "Confidence Intervals"], ["s5-4", "Comparing Groups"], ["s5-5", "Check Yourself"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag adv">Advanced</span></div><div class="panel-eyebrow">Module 05 · Analysis & Statistics</div><h1 class="panel-title">Analysing Quantitative Data</h1><p class="panel-subtitle">Clean data, compare groups correctly and report numbers honestly with confidence intervals.</p></div>
+      <div class="section" id="s5-1"><h2><span class="sec-emoji">🧹</span> Data Cleaning</h2><ul><li>Remove <strong>speeders</strong> (finished far faster than possible) and <strong>straight-liners</strong> (same answer every row).</li><li>Add an <strong>attention check</strong> ("Select 'Agree' for this item").</li><li>Handle missing values consistently; report how many were excluded.</li><li>Check for duplicate responses.</li></ul></div><div class="section" id="s5-2"><h2><span class="sec-emoji">📊</span> Descriptive Statistics</h2><div class="table-wrap"><table><tr><th>Statistic</th><th>Use</th><th>Example</th></tr><tr><td>Count / %</td><td>Categorical answers</td><td>62% use Android</td></tr><tr><td>Mean ± SD</td><td>Interval data, roughly symmetric</td><td>SUS 71 ± 14</td></tr><tr><td>Median, IQR</td><td>Skewed data (time)</td><td>Median 48 s (IQR 32–80)</td></tr><tr><td>Top-2-box</td><td>Likert items</td><td>58% agree or strongly agree</td></tr></table></div></div><div class="section" id="s5-3"><h2><span class="sec-emoji">🎯</span> Confidence Intervals</h2><p>A 95% <strong>confidence interval</strong> shows the range the true value likely sits in. Always show it for small samples.</p><div class="example"><div class="example-title">EXAMPLE · Task success with 20 users</div><p>16/20 succeeded = 80%. The 95% CI (adjusted-Wald) is roughly <strong>58%–93%</strong>. You can say "most users succeed", not "exactly 80% succeed".</p></div></div><div class="section" id="s5-4"><h2><span class="sec-emoji">⚖️</span> Comparing Groups</h2><div class="table-wrap"><table><tr><th>Comparison</th><th>Common test</th></tr><tr><td>Two means (SUS old vs new, different users)</td><td>Independent t-test</td></tr><tr><td>Same users, before vs after</td><td>Paired t-test</td></tr><tr><td>Two proportions (success rates)</td><td>Chi-square or N-1 two-proportion test</td></tr><tr><td>3+ groups</td><td>ANOVA</td></tr><tr><td>Ordinal data / non-normal</td><td>Mann–Whitney U</td></tr></table></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">You don't need to calculate by hand — tools like Excel, Google Sheets, R, Python or MeasuringU calculators do it. You <strong>do</strong> need to choose the right test and explain the result plainly.</div></div></div><div class="section" id="s5-5"><h2><span class="sec-emoji">🧠</span> Check Yourself</h2><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which summary is best for time-on-task?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Mean only</li><li class="mcq-opt"><span class="opt-letter">B</span> Median with range or IQR</li><li class="mcq-opt"><span class="opt-letter">C</span> Mode</li><li class="mcq-opt"><span class="opt-letter">D</span> Sum</li></ul><div class="mcq-feedback" data-ok="Correct — time is usually skewed." data-bad="Not quite. Time is skewed, so report the median."></div></div></div>
+    </section>
+    <section class="panel" id="t6" data-toc='[["s6-1", "Survey Design Questions"], ["s6-2", "Benchmark Metrics Questions"], ["s6-3", "Cohorts & Analysis Questions"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 06 · Interview Preparation</div><h1 class="panel-title">Interview Preparation</h1><p class="panel-subtitle">Click a question to reveal a model answer.</p></div>
+      <div class="section" id="s6-1"><h2><span class="sec-emoji">📝</span> Survey Design Questions</h2><details><summary>What makes a good survey question?</summary><div>Clear, neutral, about one topic, with balanced scales and options like "Other" or "Not applicable". Avoid leading, double-barrelled and hypothetical questions.</div></details><details><summary>How many responses do you need?</summary><div>About 385 gives ±5% margin of error at 95% confidence for a large population; about 1,070 gives ±3%.</div></details><details><summary>What is non-response bias?</summary><div>People with strong opinions respond more, so results may not represent all users. Compare respondent profiles with the user base.</div></details><details><summary>Why pilot a survey?</summary><div>To catch confusing wording, broken logic and length problems with 5–10 people before sending to thousands.</div></details></div><div class="section" id="s6-2"><h2><span class="sec-emoji">📏</span> Benchmark Metrics Questions</h2><details><summary>How is SUS calculated and what is a good score?</summary><div>Odd items: score − 1; even items: 5 − score; sum and multiply by 2.5 for 0–100. Average is about 68; above 80 is excellent. It is not a percentage.</div></details><details><summary>How is NPS calculated?</summary><div>% promoters (9–10) minus % detractors (0–6), ranging from −100 to +100. Passives (7–8) aren't counted.</div></details><details><summary>CSAT vs NPS vs CES?</summary><div>CSAT measures satisfaction with an interaction, NPS measures loyalty/likelihood to recommend, and CES measures effort to get something done.</div></details><details><summary>What are the limitations of NPS?</summary><div>It measures loyalty, not usability, says nothing about why, and is sensitive to timing and culture. Always add a "why" follow-up and trend it over time.</div></details></div><div class="section" id="s6-3"><h2><span class="sec-emoji">👥</span> Cohorts & Analysis Questions</h2><details><summary>What is cohort analysis?</summary><div>Tracking groups of users who share a start point or behaviour over time, e.g. weekly sign-up cohorts, to see whether changes improve retention.</div></details><details><summary>Mean or median for time on task?</summary><div>Median, because time data is skewed by a few very slow participants.</div></details><details><summary>What is a confidence interval?</summary><div>The range in which the true value likely lies, e.g. 80% success (95% CI 58–93%) with 20 users. It shows how precise a result is.</div></details><details><summary>How do you combine quant and qual?</summary><div>Explanatory (quant first, then qual explains why) or exploratory (qual first, then quant sizes the finding), triangulating for confidence.</div></details><details><summary>What is the HEART framework?</summary><div>Happiness, Engagement, Adoption, Retention and Task success — a way to choose UX metrics linked to goals.</div></details></div>
+    </section>
+    <section class="panel" id="t7" data-toc='[["s7-1", "Scenario: WalletWise Expense App"], ["s7-2", "Task 1 \u00b7 Design the Survey"], ["s7-3", "Task 2 \u00b7 Calculate the Metrics"], ["s7-4", "Task 3 \u00b7 Read the Cohort Data"], ["s7-5", "Task 4 \u00b7 Report to Leadership"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 07 · Practice</div><h1 class="panel-title">Practice: Measure an Experience</h1><p class="panel-subtitle">Design a survey, calculate benchmark metrics and interpret cohort data for a real-feeling product.</p></div>
+      <div class="quiz-progress"><span class="quiz-score">0 / 0 correct</span><div class="quiz-bar-track"><div class="quiz-bar-fill"></div></div><button class="btn quiz-reset-btn">↻ Reset answers</button></div><div class="section" id="s7-1"><h2><span class="sec-emoji">💳</span> Scenario: WalletWise Expense App</h2><p><strong>WalletWise</strong> redesigned its expense-tracking flow in April. Leadership asks: <em>"Did the redesign improve the experience, and is it keeping people around?"</em> You have survey access to all users and analytics data.</p></div><div class="section" id="s7-2"><h2><span class="sec-emoji">1️⃣</span> Task 1 · Design the Survey</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Write 4 survey questions (include one standardised metric and one open question).</div><textarea placeholder="Q1… Q2… Q3… Q4…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Q1 SUS (10 items) about the expense flow. Q2 SEQ after adding an expense: "Overall, how easy or difficult was adding this expense?" 1–7. Q3 "How often did you log expenses in the past 2 weeks?" (Never / 1–2 / 3–6 / Daily). Q4 open: "What, if anything, makes logging expenses difficult?"</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which is the biggest problem: "How easy and fast was adding an expense?"</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> It is leading</li><li class="mcq-opt"><span class="opt-letter">B</span> It is double-barrelled</li><li class="mcq-opt"><span class="opt-letter">C</span> It is too short</li><li class="mcq-opt"><span class="opt-letter">D</span> Nothing</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — &quot;easy and fast&quot; combines two topics."></div></div></div><div class="section" id="s7-3"><h2><span class="sec-emoji">2️⃣</span> Task 2 · Calculate the Metrics</h2><div class="table-wrap"><table><tr><th>Metric</th><th>Before (March)</th><th>After (May)</th></tr><tr><td>SUS (mean, n=420 / 410)</td><td>63</td><td>74</td></tr><tr><td>Promoters / Passives / Detractors</td><td>32% / 38% / 30%</td><td>41% / 37% / 22%</td></tr><tr><td>CSAT (4–5 on 1–5)</td><td>58%</td><td>71%</td></tr></table></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> What is NPS after the redesign?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> +41</li><li class="mcq-opt"><span class="opt-letter">B</span> +19</li><li class="mcq-opt"><span class="opt-letter">C</span> +22</li><li class="mcq-opt"><span class="opt-letter">D</span> +63</li></ul><div class="mcq-feedback" data-ok="Correct: 41 − 22 = +19." data-bad="Not quite. 41% − 22% = +19."></div></div><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Interpret the SUS change.</div><textarea placeholder="SUS moved from… meaning…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> SUS rose from 63 (below the 68 average) to 74 (above average, approaching "good"). With n≈400 per wave the difference is likely significant (confirm with a t-test); this suggests the redesign improved perceived usability.</div></div></div><div class="section" id="s7-4"><h2><span class="sec-emoji">3️⃣</span> Task 3 · Read the Cohort Data</h2><div class="table-wrap"><table><tr><th>Sign-up cohort</th><th>Week 1</th><th>Week 4</th><th>Week 8</th></tr><tr><td>March (old flow)</td><td>38%</td><td>20%</td><td>15%</td></tr><tr><td>April (new flow)</td><td>47%</td><td>28%</td><td>23%</td></tr><tr><td>May (new flow)</td><td>48%</td><td>29%</td><td>—</td></tr></table></div><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> What do you conclude, and what would make you more confident it was the redesign?</div><textarea placeholder="Conclusion… Confidence…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Retention improved ~8–9 points at every week and holds in May, suggesting a durable effect. To strengthen causality: check no marketing or seasonal changes in April, compare with a holdout or A/B test if available, and segment by platform to ensure the effect is consistent.</div></div></div><div class="section" id="s7-5"><h2><span class="sec-emoji">4️⃣</span> Task 4 · Report to Leadership</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Write a 3-sentence summary for leadership.</div><textarea placeholder="Headline… Evidence… Next step…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> "The April redesign made expense tracking easier and more habit-forming. Usability rose from below average (SUS 63) to above average (74), NPS improved from +2 to +19, and week-8 retention rose from 15% to 23%. Next, we'll address the top remaining complaint — receipt scanning accuracy — and re-measure in Q3."</div></div></div>
+    </section>
+    <section class="panel" id="t8" data-toc='[["sA-1","Take the Assessment"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag expert">→ Expert</span></div><p class="panel-eyebrow">Module 08</p><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">Test yourself on Quantitative Analysis — from basic to expert.</p></div>
+<div class="section" id="sA-1"><div class="cb-assess-intro"><h3>Test what you've learned</h3><p>Full-screen, timed assessment on Quantitative Analysis.</p><ul><li><strong>50 multiple-choice questions</strong> — concepts and scenarios, basic to expert</li><li><strong>60-minute</strong> timer with warning state and automatic submission</li><li>Question palette, Previous/Next, Mark for Review</li><li>Full-screen and tab-switch warnings — <strong>3 warnings auto-submit</strong></li><li>Copy, cut, right-click and screenshot/print shortcuts are blocked</li><li>Questions and options are shuffled on every attempt</li></ul><button class="cb-start" id="cbAssessStart">▶ Start Assessment</button></div></div>
+</section>
+  </main>
+</div>
+<script>
+
+/* Tabs, dynamic TOC, scroll-spy, progress pill */
+(function(){
+  const tabs=document.querySelectorAll('.tab'),panels=document.querySelectorAll('.panel'),tocEl=document.getElementById('toc'),total=tabs.length,pt=document.getElementById('progressText');
+  function buildToc(panel){const data=JSON.parse(panel.getAttribute('data-toc')||'[]');tocEl.innerHTML=data.map(([id,l])=>`<li><a href="#${id}" data-target="${id}">${l}</a></li>`).join('');const f=tocEl.querySelector('a');if(f)f.classList.add('active');}
+  function activate(i){tabs.forEach((t,k)=>{t.classList.toggle('active',k===i);t.setAttribute('aria-selected',k===i)});panels.forEach((p,k)=>p.classList.toggle('active',k===i));buildToc(panels[i]);pt.textContent=`Tab ${i+1} of ${total}`;window.scrollTo({top:0,behavior:'instant'});}
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{const a=e.target.closest('.toc-list a');if(!a)return;e.preventDefault();const el=document.getElementById(a.dataset.target);if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});});
+  let tk=false;function spy(){const ap=document.querySelector('.panel.active');if(!ap)return;let cur=null;ap.querySelectorAll('.section').forEach(s=>{if(s.getBoundingClientRect().top-180<0)cur=s.id});if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));tk=false;}
+  window.addEventListener('scroll',()=>{if(!tk){requestAnimationFrame(spy);tk=true}},{passive:true});
+  window.resetProgress=()=>activate(0);activate(0);
+})();
+/* Inline MCQs, per-panel score, model answers */
+(function(){
+  function update(panel){const bar=panel.querySelector('.quiz-progress');if(!bar||bar.id)return;const all=panel.querySelectorAll('.mcq').length,done=panel.querySelectorAll('.mcq.answered').length,okc=panel.querySelectorAll('.mcq.answered[data-correct="1"]').length;bar.querySelector('.quiz-score').textContent=`${okc} / ${all} correct`;bar.querySelector('.quiz-bar-fill').style.width=(all?done/all*100:0)+'%';}
+  document.querySelectorAll('.mcq').forEach(m=>{const ans=+m.dataset.answer,opts=m.querySelectorAll('.mcq-opt'),fb=m.querySelector('.mcq-feedback');
+    opts.forEach((o,i)=>{o.tabIndex=0;o.setAttribute('role','button');const go=()=>{if(m.classList.contains('answered'))return;m.classList.add('answered');const r=i===ans;m.dataset.correct=r?'1':'0';opts[ans].classList.add('correct');if(!r)o.classList.add('incorrect');fb.className='mcq-feedback '+(r?'ok':'bad');fb.textContent=r?fb.dataset.ok:fb.dataset.bad;update(m.closest('.panel'));};
+      o.addEventListener('click',go);o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});});});
+  document.querySelectorAll('.panel').forEach(p=>{update(p);const rb=p.querySelector('.quiz-reset-btn');if(rb)rb.addEventListener('click',()=>{p.querySelectorAll('.mcq').forEach(m=>{m.classList.remove('answered');delete m.dataset.correct;m.querySelectorAll('.mcq-opt').forEach(o=>o.classList.remove('correct','incorrect'));const fb=m.querySelector('.mcq-feedback');fb.className='mcq-feedback';fb.textContent='';});p.querySelectorAll('.saq textarea').forEach(t=>t.value='');p.querySelectorAll('.saq-model').forEach(x=>x.classList.remove('show'));p.querySelectorAll('.saq-toggle').forEach(b=>b.textContent='Show model answer');update(p);});});
+  document.querySelectorAll('.saq-toggle').forEach(b=>b.addEventListener('click',()=>{const s=b.nextElementSibling.classList.toggle('show');b.textContent=s?'Hide model answer':'Show model answer';}));
+})();
+/* Assessment — timed full-screen exam with rules & security */
+(function(){
+  const ROLE = "UX Researcher \u2014 Quantitative Analysis";
+  const QUESTION_BANK = [{"id": "ux_researcher_quantitative_analysis-01", "q": "Quantitative research mainly answers\u2026", "options": ["What does it feel like", "How many, how much, how often", "Why", "What do users dream"], "answer": 1, "difficulty": "", "explanation": "Breadth and scale."}, {"id": "ux_researcher_quantitative_analysis-02", "q": "A Likert scale is which data type?", "options": ["Ratio", "Ordinal", "Interval always", "Nominal"], "answer": 1, "difficulty": "", "explanation": "Ordered, unequal gaps."}, {"id": "ux_researcher_quantitative_analysis-03", "q": "Device type (Android/iOS) is which scale?", "options": ["Ordinal", "Interval", "Ratio", "Nominal"], "answer": 3, "difficulty": "", "explanation": "Categories without order."}, {"id": "ux_researcher_quantitative_analysis-04", "q": "Time on task is which scale?", "options": ["Ordinal", "None", "Ratio", "Nominal"], "answer": 2, "difficulty": "", "explanation": "True zero."}, {"id": "ux_researcher_quantitative_analysis-05", "q": "A population is\u2026", "options": ["A cohort", "The people who responded", "A segment", "Everyone you want to learn about"], "answer": 3, "difficulty": "", "explanation": "Sample is a subset."}, {"id": "ux_researcher_quantitative_analysis-06", "q": "A sample is\u2026", "options": ["The subset you actually measure", "A metric", "A dashboard", "Everyone"], "answer": 0, "difficulty": "", "explanation": "Should represent the population."}, {"id": "ux_researcher_quantitative_analysis-07", "q": "Margin of error is\u2026", "options": ["A typo", "The \u00b1 range around a survey result", "Sample size", "The error rate of servers"], "answer": 1, "difficulty": "", "explanation": "E.g. 62% \u00b1 4%."}, {"id": "ux_researcher_quantitative_analysis-08", "q": "~385 responses give about\u2026", "options": ["\u00b11%", "\u00b120%", "\u00b15% margin at 95% confidence", "\u00b10.1%"], "answer": 2, "difficulty": "", "explanation": "Large population rule of thumb."}, {"id": "ux_researcher_quantitative_analysis-09", "q": "~1,070 responses give about\u2026", "options": ["\u00b10.5%", "\u00b110%", "\u00b115%", "\u00b13% margin at 95% confidence"], "answer": 3, "difficulty": "", "explanation": "More precision needs more responses."}, {"id": "ux_researcher_quantitative_analysis-10", "q": "'How satisfied are you with delivery speed and packaging?' is\u2026", "options": ["An NPS item", "Double-barrelled", "A good question", "A ranking"], "answer": 1, "difficulty": "", "explanation": "Split it."}, {"id": "ux_researcher_quantitative_analysis-11", "q": "'How much do you love our new design?' is\u2026", "options": ["Leading", "Open", "Neutral", "Ranking"], "answer": 0, "difficulty": "", "explanation": "Biased wording."}, {"id": "ux_researcher_quantitative_analysis-12", "q": "Random sampling\u2026", "options": ["Uses only power users", "Gives every user an equal chance", "Picks friends", "Uses only volunteers"], "answer": 1, "difficulty": "", "explanation": "Most representative."}, {"id": "ux_researcher_quantitative_analysis-13", "q": "Stratified sampling\u2026", "options": ["Samples randomly within segments", "Ignores segments", "Uses convenience", "Picks only one segment"], "answer": 0, "difficulty": "", "explanation": "Ensures small groups included."}, {"id": "ux_researcher_quantitative_analysis-14", "q": "Convenience sampling risk\u2026", "options": ["Needs strata", "Respondents may not represent the user base", "Too expensive", "Too random"], "answer": 1, "difficulty": "", "explanation": "Bias."}, {"id": "ux_researcher_quantitative_analysis-15", "q": "Non-response bias means\u2026", "options": ["Questions are long", "Data is lost", "Everyone responded", "Those who respond differ from those who don't"], "answer": 3, "difficulty": "", "explanation": "Compare respondent profile."}, {"id": "ux_researcher_quantitative_analysis-16", "q": "An attention check\u2026", "options": ["Filters out careless respondents", "Records audio", "Adds tasks", "Measures contrast"], "answer": 0, "difficulty": "", "explanation": "Data quality."}, {"id": "ux_researcher_quantitative_analysis-17", "q": "Speeders and straight-liners should be\u2026", "options": ["Kept", "Doubled", "Rewarded", "Removed during data cleaning"], "answer": 3, "difficulty": "", "explanation": "Low-quality responses."}, {"id": "ux_researcher_quantitative_analysis-18", "q": "SUS has\u2026", "options": ["10 items producing a 0\u2013100 score", "1 item", "5 items scored 0\u201310", "20 items"], "answer": 0, "difficulty": "", "explanation": "System Usability Scale."}, {"id": "ux_researcher_quantitative_analysis-19", "q": "SUS odd items contribute\u2026", "options": ["Score \u00d7 2", "Score", "Score \u2212 1", "5 \u2212 score"], "answer": 2, "difficulty": "", "explanation": "Positive items."}, {"id": "ux_researcher_quantitative_analysis-20", "q": "SUS even items contribute\u2026", "options": ["Score \u00d7 2.5", "Score \u2212 1", "5 \u2212 score", "Score"], "answer": 2, "difficulty": "", "explanation": "Negative items."}, {"id": "ux_researcher_quantitative_analysis-21", "q": "SUS raw total is multiplied by\u2026", "options": ["10", "4", "1", "2.5"], "answer": 3, "difficulty": "", "explanation": "Converts 0\u201340 to 0\u2013100."}, {"id": "ux_researcher_quantitative_analysis-22", "q": "Average SUS score is about\u2026", "options": ["50", "68", "85", "100"], "answer": 1, "difficulty": "", "explanation": "50th percentile."}, {"id": "ux_researcher_quantitative_analysis-23", "q": "SUS above ~80 is considered\u2026", "options": ["Excellent", "Average", "Failing", "Poor"], "answer": 0, "difficulty": "", "explanation": "Top ~10%."}, {"id": "ux_researcher_quantitative_analysis-24", "q": "A SUS score of 72 means\u2026", "options": ["Slightly above average usability", "Failing", "72% usable", "Excellent"], "answer": 0, "difficulty": "", "explanation": "Not a percentage."}, {"id": "ux_researcher_quantitative_analysis-25", "q": "CSAT is usually reported as\u2026", "options": ["Promoters \u2212 detractors", "Mean of 0\u201310", "% of responses that are 4 or 5 on a 5-point scale", "Median time"], "answer": 2, "difficulty": "", "explanation": "Satisfaction."}, {"id": "ux_researcher_quantitative_analysis-26", "q": "200 CSAT responses: 90 fives, 60 fours \u2192 CSAT?", "options": ["75%", "90%", "60%", "45%"], "answer": 0, "difficulty": "", "explanation": "150 \u00f7 200."}, {"id": "ux_researcher_quantitative_analysis-27", "q": "NPS promoters score\u2026", "options": ["5 only", "7\u20138", "0\u20136", "9\u201310"], "answer": 3, "difficulty": "", "explanation": "Likely to recommend."}, {"id": "ux_researcher_quantitative_analysis-28", "q": "NPS passives score\u2026", "options": ["7\u20138", "9\u201310", "0\u20136", "1\u20133"], "answer": 0, "difficulty": "", "explanation": "Not counted."}, {"id": "ux_researcher_quantitative_analysis-29", "q": "NPS detractors score\u2026", "options": ["9\u201310", "7\u20138", "5\u20137", "0\u20136"], "answer": 3, "difficulty": "", "explanation": "Unlikely to recommend."}, {"id": "ux_researcher_quantitative_analysis-30", "q": "NPS =", "options": ["Detractors \u2212 promoters", "Promoters + passives", "Mean score \u00d7 10", "% promoters \u2212 % detractors"], "answer": 3, "difficulty": "", "explanation": "Range \u2212100 to +100."}, {"id": "ux_researcher_quantitative_analysis-31", "q": "45% promoters, 20% detractors \u2192 NPS?", "options": ["+45", "\u221225", "+25", "+65"], "answer": 2, "difficulty": "", "explanation": "45 \u2212 20."}, {"id": "ux_researcher_quantitative_analysis-32", "q": "30% promoters, 30% detractors \u2192 NPS?", "options": ["\u221230", "0", "+30", "+60"], "answer": 1, "difficulty": "", "explanation": "Equal groups."}, {"id": "ux_researcher_quantitative_analysis-33", "q": "NPS is best used as\u2026", "options": ["A usability metric", "A loyalty trend metric with a 'why?' follow-up", "A task metric", "A contrast check"], "answer": 1, "difficulty": "", "explanation": "Not usability."}, {"id": "ux_researcher_quantitative_analysis-34", "q": "CES measures\u2026", "options": ["Revenue", "Effort to get something done", "Loyalty", "Contrast"], "answer": 1, "difficulty": "", "explanation": "Customer Effort Score."}, {"id": "ux_researcher_quantitative_analysis-35", "q": "UMUX-Lite is\u2026", "options": ["A tree test", "A short 2-item usability measure", "A 50-item survey", "A heatmap"], "answer": 1, "difficulty": "", "explanation": "Lightweight usability."}, {"id": "ux_researcher_quantitative_analysis-36", "q": "A cohort is\u2026", "options": ["A group of users sharing a start point or characteristic", "A survey item", "A single event", "A chart"], "answer": 0, "difficulty": "", "explanation": "Tracked over time."}, {"id": "ux_researcher_quantitative_analysis-37", "q": "An acquisition cohort groups users by\u2026", "options": ["An action", "A property", "When they started", "A test group"], "answer": 2, "difficulty": "", "explanation": "Time-based."}, {"id": "ux_researcher_quantitative_analysis-38", "q": "A behavioural cohort groups users by\u2026", "options": ["Sign-up date", "Device", "Random assignment", "An action they took"], "answer": 3, "difficulty": "", "explanation": "E.g. completed onboarding."}, {"id": "ux_researcher_quantitative_analysis-39", "q": "A retention cohort table shows\u2026", "options": ["Fonts", "Survey items", "Revenue per user", "% of each cohort still active over later periods"], "answer": 3, "difficulty": "", "explanation": "Retention over time."}, {"id": "ux_researcher_quantitative_analysis-40", "q": "A retention curve flattening means\u2026", "options": ["Tracking error", "A core group of retained users", "Everyone leaving", "No data"], "answer": 1, "difficulty": "", "explanation": "The plateau."}, {"id": "ux_researcher_quantitative_analysis-41", "q": "Users of feature X retain better. This is\u2026", "options": ["Proof X causes retention", "Always causal", "Irrelevant", "Correlation; test causality with an experiment"], "answer": 3, "difficulty": "", "explanation": "Engaged users may use X more."}, {"id": "ux_researcher_quantitative_analysis-42", "q": "For skewed data like time, report\u2026", "options": ["Sum", "Median", "Mean", "Max"], "answer": 1, "difficulty": "", "explanation": "Robust to outliers."}, {"id": "ux_researcher_quantitative_analysis-43", "q": "A confidence interval shows\u2026", "options": ["Error messages", "Exact certainty", "Sample names", "The range where the true value likely lies"], "answer": 3, "difficulty": "", "explanation": "Precision of estimates."}, {"id": "ux_researcher_quantitative_analysis-44", "q": "16/20 successes \u2192 95% CI roughly 58\u201393% means\u2026", "options": ["No one succeeds", "Most users succeed, but the exact rate is uncertain", "Exactly 80% succeed", "Everyone succeeds"], "answer": 1, "difficulty": "", "explanation": "Small samples are imprecise."}, {"id": "ux_researcher_quantitative_analysis-45", "q": "Comparing SUS between two different user groups uses\u2026", "options": ["Chi-square on means", "No test", "Independent t-test", "Paired t-test"], "answer": 2, "difficulty": "", "explanation": "Different people."}, {"id": "ux_researcher_quantitative_analysis-46", "q": "Comparing the same users before and after uses\u2026", "options": ["Independent t-test", "Paired t-test", "ANOVA always", "Card sort"], "answer": 1, "difficulty": "", "explanation": "Same people."}, {"id": "ux_researcher_quantitative_analysis-47", "q": "Comparing two success rates uses\u2026", "options": ["Regression only", "Nothing", "t-test on medians", "Chi-square or two-proportion test"], "answer": 3, "difficulty": "", "explanation": "Proportions."}, {"id": "ux_researcher_quantitative_analysis-48", "q": "HEART stands for\u2026", "options": ["Happiness, Engagement, Adoption, Retention, Task success", "Help, Ease, Access, Reach, Trust", "None", "Hypothesis, Experiment, Analysis, Result, Test"], "answer": 0, "difficulty": "", "explanation": "Google's framework."}, {"id": "ux_researcher_quantitative_analysis-49", "q": "Exploratory mixed methods means\u2026", "options": ["Qual first, then quant to size findings", "Quant then qual", "Only quant", "Only qual"], "answer": 0, "difficulty": "", "explanation": "Discover then measure."}, {"id": "ux_researcher_quantitative_analysis-50", "q": "Keeping survey wording identical over time ensures\u2026", "options": ["Higher scores", "More respondents", "Faster surveys", "Comparable benchmark results"], "answer": 3, "difficulty": "", "explanation": "Consistency enables comparison."}];
+  const EXAM_MINUTES = Math.ceil(QUESTION_BANK.length*1.2);
+  const EXAM_SECONDS = EXAM_MINUTES*60;
+  const EXAM_COUNT = QUESTION_BANK.length;
+  const LS_KEY = 'careerBuddyAssessment:' + ROLE;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false, warns=0, proctorOn=false, lastWarn=0;
+  const esc = s => String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const fmt=t=>{const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s};
+  const css=`
+  .cb-exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .cb-exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .cb-exam-top .et-title{font-size:16px;font-weight:800}.cb-exam-top .et-sub{font-size:12px;color:#cdd5e5}.cb-exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}.cb-exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:cbpulse 1s infinite}@keyframes cbpulse{50%{opacity:.5}}
+  .cb-exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}.cb-exam-q-pane{padding:28px 36px;overflow:auto}.cb-exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}.cb-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}.cb-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}.cb-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}.cb-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}.cb-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}.cb-opt:hover{border-color:#14213D;background:#f9f9ff}.cb-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}.cb-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}.cb-opt.sel .k{background:#14213D;color:#fff}.cb-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}.cb-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}.cb-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}.cb-btn.nav:disabled{opacity:.4;cursor:not-allowed}.cb-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}.cb-btn.mark.on{background:#FCA311;color:#14213D}.cb-btn.submit{background:#FCA311;color:#14213D}.cb-btn.primary{background:#14213D;color:#fff}.cb-side-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}.cb-count{font-size:13px;color:#4a5568;font-weight:600}.cb-count b{color:#14213D}.cb-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.cb-pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}.cb-pal.answered{background:#14213D;color:#fff;border-color:#14213D}.cb-pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}.cb-pal.cur{outline:2px solid #14213D;outline-offset:1px}.cb-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}.cb-legend span{display:inline-flex;align-items:center;gap:8px}.cb-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}.cb-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}.cb-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}.cb-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}.cb-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}.cb-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}.cb-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}.cb-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}.cb-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}.cb-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}.cb-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}.cb-rev .r.ok{border-left-color:#38a169}.cb-rev .r.no{border-left-color:#e53e3e}.cb-rev .rq{font-weight:700;margin-bottom:6px}.cb-rev .ra{font-size:13px;margin:2px 0}.cb-rev .ra.wrong{color:#c53030}.cb-rev .ra.cor{color:#276749}.cb-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}.cb-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}.cb-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}.cb-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}.cb-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}.cb-confirm .row{display:flex;gap:10px;justify-content:flex-end}.cb-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}.cb-cover small{font-weight:500;color:#cdd5e5;font-size:14px}.cb-assess-intro{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}.cb-assess-intro h3{margin:0 0 8px;font-size:21px}.cb-assess-intro p{margin:6px 0;color:var(--ink-soft)}.cb-assess-intro ul{margin:12px 0 18px}.cb-start{border:0;background:#14213D;color:#fff;border-radius:9px;padding:12px 18px;font:700 14px inherit;cursor:pointer}.cb-start:hover{opacity:.92}
+  @media(max-width:820px){.cb-exam-main{grid-template-columns:1fr}.cb-exam-side{border-left:none;border-top:1px solid #e2e8f0}.cb-exam-q-pane{padding:22px 18px}.cb-exam-top{padding:10px 14px}}
+  `;
+  function injectCss(){if(document.getElementById('cbExamCss'))return;const s=document.createElement('style');s.id='cbExamCss';s.textContent=css;document.head.appendChild(s)}
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function buildAttempt(){
+    const recent=JSON.parse(localStorage.getItem(LS_KEY+'_attempts')||'[]');
+    let selected=[], sig='';
+    for(let tries=0;tries<25;tries++){
+      selected=shuffle(QUESTION_BANK.slice()).slice(0,EXAM_COUNT);
+      sig=selected.map(x=>x.id).sort().join('|');
+      if(!recent.includes(sig))break;
+    }
+    recent.unshift(sig); try{localStorage.setItem(LS_KEY+'_attempts',JSON.stringify(recent.slice(0,20)))}catch(e){}
+    return selected.map(q=>{const c=JSON.parse(JSON.stringify(q)); const pairs=c.options.map((o,i)=>({o,i}));shuffle(pairs);c.options=pairs.map(x=>x.o);c.answer=pairs.findIndex(x=>x.i===q.answer);return c});
+  }
+  function confirmBox(title,msg,okLabel){return new Promise(resolve=>{injectCss();const d=document.createElement('div');d.className='cb-confirm';d.innerHTML=`<div class="box"><h3>${esc(title)}</h3><p>${esc(msg)}</p><div class="row"><button class="cb-btn nav" data-a="0">Cancel</button><button class="cb-btn primary" data-a="1">${esc(okLabel||'Confirm')}</button></div></div>`;document.body.appendChild(d);d.addEventListener('click',e=>{if(e.target===d){d.remove();resolve(false);return}const b=e.target.closest('[data-a]');if(!b)return;d.remove();resolve(b.dataset.a==='1')})})}
+  function startEntry(){showSplash()}
+  function showSplash(){injectCss();const sp=document.createElement('div');sp.className='cb-splash';sp.id='cbExamSplash';sp.innerHTML=`<div class="card"><h2>🎯 ${esc(ROLE)} — Assessment</h2><p>A timed, full-screen assessment based on this course.</p><ul><li><b>${EXAM_COUNT} questions</b> drawn from this course's question bank</li><li><b>${EXAM_MINUTES}-minute</b> timer — the assessment auto-submits when time is up</li><li>Navigate freely, answer questions, and <b>mark questions for review</b></li><li>Questions and answer options are shuffled on every attempt</li></ul><p style="font-weight:700;color:#14213D;margin-bottom:6px">Assessment rules</p><ul style="margin-top:0"><li>The assessment runs in <b>fullscreen</b>.</li><li>Do not switch tabs/windows or exit fullscreen.</li><li><b>3 warnings</b> for tab/window switching or leaving fullscreen will auto-submit the assessment.</li><li>Copy, cut, right-click and common screenshot/print shortcuts are blocked during the assessment.</li></ul><button class="cb-btn primary" id="cbExamBegin" style="width:100%;padding:14px">Start Assessment →</button></div>`;document.body.appendChild(sp);document.getElementById('cbExamBegin').addEventListener('click',()=>{if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});sp.remove();enterExam()})}
+  function enterExam(){injectCss();items=buildAttempt();answers={};marked={};cur=0;remaining=EXAM_SECONDS;examOn=true;document.body.style.overflow='hidden';const ov=document.createElement('div');ov.className='cb-exam-overlay';ov.id='cbExamOverlay';ov.innerHTML=`<div class="cb-exam-top"><div><div class="et-title">${esc(ROLE)} — Assessment</div><div class="et-sub">${EXAM_COUNT} questions · ${EXAM_MINUTES}-minute timer · one attempt</div></div><div class="cb-exam-timer" id="cbExamTimer">${fmt(remaining)}</div></div><div class="cb-exam-main"><div class="cb-exam-q-pane" id="cbExamQ"></div><div class="cb-exam-side"><div class="cb-count">Answered <b id="cbExamAnsN">0</b> / ${EXAM_COUNT}</div><h4 class="cb-side-title">Question palette</h4><div class="cb-palette" id="cbExamPal"></div><div class="cb-legend"><span><i style="background:#14213D;border-color:#14213D"></i> Answered</span><span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span><span><i></i> Not answered</span></div><button class="cb-btn submit" id="cbExamSubmit" style="width:100%">Submit Assessment</button></div></div>`;document.body.appendChild(ov);buildPalette();renderQ();timerId=setInterval(tick,1000);window.addEventListener('beforeunload',beforeUnload);startProctor();document.getElementById('cbExamSubmit').addEventListener('click',()=>submitExam(false))}
+  function beforeUnload(e){if(examOn){e.preventDefault();e.returnValue=''}}
+  function tick(){remaining--;const el=document.getElementById('cbExamTimer');if(el){el.textContent=fmt(Math.max(remaining,0));if(remaining<=300)el.classList.add('warn')}if(remaining<=0)submitExam(true)}
+  function buildPalette(){const pal=document.getElementById('cbExamPal');pal.innerHTML='';items.forEach((it,n)=>{const b=document.createElement('button');b.className='cb-pal';b.textContent=n+1;b.dataset.n=n;b.addEventListener('click',()=>{cur=n;renderQ()});pal.appendChild(b)});refreshPalette()}
+  function refreshPalette(){document.querySelectorAll('#cbExamPal .cb-pal').forEach(b=>{const n=+b.dataset.n,id=items[n].id;b.classList.toggle('answered',id in answers);b.classList.toggle('marked',!!marked[id]);b.classList.toggle('cur',n===cur)});const el=document.getElementById('cbExamAnsN');if(el)el.textContent=Object.keys(answers).length}
+  function renderQ(){const it=items[cur],id=it.id,pane=document.getElementById('cbExamQ');pane.innerHTML=`<div class="cb-qnum">Question ${cur+1} of ${items.length}</div><div class="cb-qtext">${esc(it.q)}${it.difficulty?`<span class="diff">${esc(it.difficulty)}</span>`:''}</div><div class="cb-opts" id="cbExamOpts">${it.options.map((o,i)=>`<div class="cb-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${esc(o)}</span></div>`).join('')}</div><div class="cb-actions"><button class="cb-btn nav" id="cbPrev" ${cur===0?'disabled':''}>← Previous</button><button class="cb-btn mark${marked[id]?' on':''}" id="cbMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button><button class="cb-btn nav" id="cbNext" ${cur===items.length-1?'disabled':''}>Next →</button></div>`;pane.querySelectorAll('.cb-opt').forEach(el=>el.addEventListener('click',()=>{answers[id]=+el.dataset.i;pane.querySelectorAll('.cb-opt').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');refreshPalette()}));document.getElementById('cbPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ()}});document.getElementById('cbNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ()}});document.getElementById('cbMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ()});refreshPalette()}
+  async function submitExam(auto){if(!examOn)return;const unanswered=items.length-Object.keys(answers).length;if(!auto){const ok=await confirmBox('Submit assessment?',unanswered?`You have ${unanswered} unanswered question(s). Once submitted, you cannot change your answers.`:'Once submitted, you cannot change your answers.','Submit Assessment');if(!ok)return}examOn=false;clearInterval(timerId);window.removeEventListener('beforeunload',beforeUnload);stopProctor();const score=items.reduce((n,it)=>n+(answers[it.id]===it.answer?1:0),0);saveScore(score,items.length);showResults(score)}
+  function saveScore(score,total){const a=JSON.parse(localStorage.getItem(LS_KEY)||'[]');a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,EXAM_COUNT)))}catch(e){}}
+  function showResults(score){const total=items.length,pct=Math.round(score/total*100);let msg='Keep practicing — review the questions you missed and try again.';if(pct>=85)msg='Outstanding — strong command of this topic.';else if(pct>=65)msg='Solid performance. Review the harder areas and try another attempt.';else if(pct>=50)msg='Borderline — revisit the course topics and retake the assessment.';const rev=items.map((it,n)=>{const you=answers[it.id],attempted=you!=null;const your=attempted?String.fromCharCode(65+you)+'. '+esc(it.options[you]):'<i>Not answered</i>';const cor=String.fromCharCode(65+it.answer)+'. '+esc(it.options[it.answer]);return `<div class="r ${attempted&&you===it.answer?'ok':'no'}"><div class="rq">Q${n+1}. ${esc(it.q)}</div><div class="ra ${attempted&&you===it.answer?'cor':'wrong'}">Your answer: ${your}</div>${attempted&&you!==it.answer?`<div class="ra cor">Correct: ${cor}</div>`:''}${it.explanation?`<div class="rx">${esc(it.explanation)}</div>`:''}</div>`}).join('');const ov=document.getElementById('cbExamOverlay');ov.innerHTML=`<div class="cb-exam-top"><div class="et-title">Result — ${esc(ROLE)} Assessment</div><button class="cb-btn" id="cbClose" style="background:rgba(255,255,255,.15);color:#fff">✕ Close</button></div><div class="cb-exam-q-pane" style="flex:1"><div class="cb-result"><div class="cb-score">${score} / ${total}</div><div class="cb-rmsg">${pct}% correct — ${msg}</div><div style="margin-top:16px"><button class="cb-btn primary" id="cbRetry">↻ Take another assessment</button></div><div class="cb-rev">${rev}</div></div></div>`;document.getElementById('cbRetry').addEventListener('click',()=>{ov.remove();enterExam()});document.getElementById('cbClose').addEventListener('click',()=>closeExam())}
+  function closeExam(){stopProctor();const ov=document.getElementById('cbExamOverlay');if(ov)ov.remove();document.body.style.overflow='';if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}
+  function warning(title,msg){if(!proctorOn||!examOn)return;const now=Date.now();if(now-lastWarn<1200)return;lastWarn=now;warns++;const cover=document.getElementById('cbExamCover')||document.createElement('div');cover.className='cb-cover';cover.id='cbExamCover';cover.style.display='flex';cover.innerHTML=`<div>⚠️ ${esc(title)}</div><small>${esc(msg)}</small><small>Warning ${warns} of 3</small><button class="cb-btn primary" id="cbResume">Return to assessment</button>`;document.body.appendChild(cover);document.getElementById('cbResume').onclick=()=>{cover.style.display='none';if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});if(warns>=3)submitExam(true)};if(warns>=3)setTimeout(()=>submitExam(true),500)}
+  function visHandler(){if(document.hidden)warning('Tab or window switch detected','Please stay on the assessment screen. Repeated violations will submit the assessment automatically.')}
+  function fsHandler(){if(examOn&&!document.fullscreenElement)warning('Fullscreen exited','The assessment must remain in fullscreen mode.')}
+  function blurHandler(){if(examOn)warning('Focus changed','Please keep the assessment window active.')}
+  function focusHandler(){}
+  function blockEvt(e){if(examOn){e.preventDefault();warning('Action blocked','Copy, cut and right-click are disabled during the assessment.')}}
+  function keyGuard(e){if(!examOn)return;const k=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&['c','x','p','s','u'].includes(k)){e.preventDefault();warning('Shortcut blocked','This assessment disables copy, print, save and source shortcuts.')}if(k==='f12'){e.preventDefault();warning('Developer tools shortcut blocked','This action is disabled during the assessment.')}}
+  function printGuard(e){if(examOn&&e.key==='PrintScreen'){e.preventDefault();warning('Screenshot action blocked','Screenshot capture is restricted during the assessment.')}}
+  function startProctor(){warns=0;lastWarn=0;proctorOn=true;document.addEventListener('visibilitychange',visHandler);document.addEventListener('fullscreenchange',fsHandler);window.addEventListener('blur',blurHandler);document.addEventListener('contextmenu',blockEvt,true);document.addEventListener('copy',blockEvt,true);document.addEventListener('cut',blockEvt,true);document.addEventListener('keydown',keyGuard,true);document.addEventListener('keyup',printGuard,true)}
+  function stopProctor(){proctorOn=false;document.removeEventListener('visibilitychange',visHandler);document.removeEventListener('fullscreenchange',fsHandler);window.removeEventListener('blur',blurHandler);document.removeEventListener('contextmenu',blockEvt,true);document.removeEventListener('copy',blockEvt,true);document.removeEventListener('cut',blockEvt,true);document.removeEventListener('keydown',keyGuard,true);document.removeEventListener('keyup',printGuard,true);const c=document.getElementById('cbExamCover');if(c)c.remove()}
+  document.addEventListener('click',function(e){const b=e.target.closest('#cbAssessStart');if(b){e.preventDefault();startEntry();}},true)
+  window.addEventListener('keydown',e=>{if(e.key==='Escape'&&examOn)e.preventDefault()});
+})();
+
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body>
+</html>

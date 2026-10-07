@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Basic Technical Verification — Manual QA Course</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff; --bg-soft:#f7f6f3; --bg-block:#f1f1ef;
+  --ink:#37352f; --ink-soft:#787774; --ink-mute:#9b9a97;
+  --line:#e9e9e7; --line-strong:#d3d3d0;
+  --accent:#14213D; --accent-soft:#eef1f7;
+  --green:#0f7b0f; --green-soft:#ddedea;
+  --orange:#d9730d; --orange-soft:#fadec9;
+  --red:#e03e3e; --red-soft:#ffe2dd;
+  --purple:#22345f; --purple-soft:#eef1f7;
+  --yellow:#dfab01; --yellow-soft:#fdecc8;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body,button,input,textarea,select,table,th,td,h1,h2,h3,h4,p,li,div,span,a,strong,em,small{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
+body{background:var(--bg);color:var(--ink);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+code,pre,pre *,code *{font-family:'Noto Sans Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+
+/* Header */
+.header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand-mark{width:34px;height:34px;display:grid;place-items:center;background:linear-gradient(135deg,#14213D 0%,#2f6fdb 100%);border-radius:8px;color:#fff;font-weight:800;font-size:13px;box-shadow:var(--shadow-sm)}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500;color:var(--ink-soft)}
+.progress-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-soft);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--bg-soft)}
+.tabbar{display:flex;gap:2px;padding:6px 24px;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--line);background:#fff}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{padding:9px 15px;background:transparent;border:none;border-radius:8px;font-size:13.5px;font-weight:500;color:#4a5568;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.tab:hover{background:var(--accent-soft);color:var(--accent)}
+.tab.active{background:var(--accent);color:#fff;font-weight:700}
+
+/* Layout */
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr)}
+@media (max-width:960px){.layout{grid-template-columns:1fr}.toc{display:none}}
+.toc{position:sticky;top:112px;align-self:start;height:calc(100vh - 124px);overflow-y:auto;padding:30px 16px 30px 28px;border-right:1px solid var(--line);scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);font-weight:700;margin-bottom:12px;padding-left:8px}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{display:block;padding:5px 10px;font-size:13px;color:var(--ink-soft);text-decoration:none;border-radius:4px;line-height:1.4}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{color:#fff;background:#16233f;font-weight:600;border-radius:12px;padding:9px 14px}
+.main{padding:44px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:28px 18px 60px}.header-top{padding:12px 16px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel-header{margin-bottom:34px}
+.panel-eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);margin:0 0 8px}
+.panel-title{font-size:38px;line-height:1.15;font-weight:700;letter-spacing:-.02em;margin:0 0 14px}
+.panel-subtitle{font-size:17px;color:var(--ink-soft);margin:0;max-width:760px;line-height:1.6}
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.level-tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.inter{background:#e3ecfb;color:#1d4f9f}
+.level-tag.adv{background:#f5e0e9;color:#8c1a63}
+
+.section{margin-top:46px;scroll-margin-top:140px}
+.section h2{font-size:27px;font-weight:700;letter-spacing:-.01em;margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.section h2 .sec-emoji{font-size:23px}
+.section h3{font-size:18px;font-weight:700;margin:26px 0 8px}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:5px 0}
+.lvl{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.03em;text-transform:uppercase}
+.lvl.b{background:var(--green-soft);color:#0a5f0a}
+.lvl.i{background:#e3ecfb;color:#1d4f9f}
+.lvl.e{background:#f5e0e9;color:#8c1a63}
+
+code{font-size:.87em;background:#f6f5f4;border:1px solid var(--line);padding:1px 6px;border-radius:4px;color:#c2410c}
+pre{background:#1f2430;color:#e6e6e3;padding:18px 20px;border-radius:var(--radius);overflow-x:auto;font-size:13px;line-height:1.65;margin:14px 0;box-shadow:var(--shadow-sm);position:relative}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{position:absolute;top:8px;right:12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9aa3b5;font-weight:700}
+.c{color:#7f8ba3;font-style:italic}
+
+.callout{display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start;background:var(--bg-block);border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout-icon{width:28px;height:28px;display:grid;place-items:center;background:#fff;border-radius:6px;font-size:16px;border:1px solid var(--line)}
+.callout-body{font-size:14.5px;line-height:1.6}
+.callout.tip{background:var(--accent-soft);border-color:#c7d2ea}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.card-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:8px;font-size:18px;margin-bottom:10px}
+.card-title{font-weight:700;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.55}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;border:1px solid var(--line)}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--bg-soft);font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+.table-wrap{overflow-x:auto}
+
+.diagram{background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin:18px 0;text-align:center}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{font-size:12px;color:var(--ink-soft);margin-top:10px;font-style:italic}
+
+.badge{display:inline-block;padding:2px 8px;font-size:11px;font-weight:700;border-radius:4px}
+.badge.blue{background:var(--accent-soft);color:#1d4f9f}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.red{background:var(--red-soft);color:#a82e2e}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:760px){.compare{grid-template-columns:1fr}}
+.compare-col{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.compare-col h4{margin:0 0 8px;font-size:15px;font-weight:700}
+.compare-col p{font-size:13.5px;margin:6px 0}
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{padding:4px 10px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500}
+
+/* stepper (flow list) */
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}
+.flow .st{background:var(--accent);color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600}
+.flow .ar{color:var(--ink-mute);font-weight:700}
+
+/* quiz */
+.quiz-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px 28px;box-shadow:var(--shadow-sm);margin-top:18px}
+.quiz-bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin:10px 0 20px}
+.quiz-bar>div{height:100%;width:0;background:var(--accent);transition:width .3s}
+.qmeta{font-size:12px;font-weight:700;color:var(--ink-soft);letter-spacing:.05em;text-transform:uppercase}
+.qtext{font-size:17px;font-weight:600;margin:6px 0 14px}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;gap:12px;align-items:center;padding:11px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg-soft);cursor:pointer;font-size:14.5px}
+.opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt .k{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0}
+.opt.correct{background:var(--green-soft);border-color:var(--green);font-weight:600}
+.opt.wrong{background:var(--red-soft);border-color:var(--red);font-weight:600}
+.opts.done .opt{pointer-events:none}
+.qexp{margin-top:14px;padding:12px 14px;border-radius:8px;background:var(--accent-soft);font-size:14px;display:none}
+.qbtn{margin-top:16px;background:var(--accent);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
+.qscore{font-size:44px;font-weight:800;text-align:center;margin:14px 0 4px}
+
+.ex{border:1px solid #c7d2ea;border-left:5px solid var(--accent);background:#fff;border-radius:var(--radius);padding:16px 18px;margin:18px 0;box-shadow:var(--shadow-sm)}
+.ex-h{font-weight:700;font-size:15.5px;margin-bottom:8px}
+.ex-tag{display:inline-block;background:var(--accent);color:#fff;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-right:8px;vertical-align:1px}
+.ex-b p,.ex-s p{margin:6px 0}
+.ex details{margin-top:10px;border-top:1px dashed var(--line-strong);padding-top:10px}
+.ex summary{cursor:pointer;font-weight:700;font-size:13.5px;color:var(--accent)}
+.ex-s{margin-top:8px;background:var(--green-soft);border-radius:8px;padding:10px 14px;font-size:14.5px}
+.ex-s ul,.ex-s ol{margin:6px 0}
+.tool{background:var(--bg-soft);border:1px solid var(--line-strong);border-radius:12px;padding:18px;margin:18px 0}
+.tool input[type=number],.tool input[type=text]{padding:7px 10px;border:1px solid var(--line-strong);border-radius:6px;font-size:14px;width:110px}
+.tool label{font-size:13px;font-weight:600;margin-right:6px}
+.tool .out{margin-top:12px}
+.sm td,.sm th{padding:7px 10px;font-size:13px}
+.kbd{font-family:'Noto Sans Mono',monospace;font-size:.85em;background:#fff;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;padding:0 5px}
+.ok{color:var(--green);font-weight:700}.no{color:var(--red);font-weight:700}
+.takeaway{background:linear-gradient(135deg,#14213D,#22345f);color:#fff;border-radius:var(--radius);padding:16px 20px;margin:20px 0}
+.takeaway strong{color:#fff}.takeaway ul{margin:6px 0;padding-left:20px;color:#fff}.takeaway li{color:#fff}
+@media print{.header,.toc{display:none}.panel{display:block!important}}
+
+/* ===== Secure assessment (AMCAT-style) ===== */
+.qz-hidden{display:none !important}
+.qz-btn{background:var(--accent);color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:14.5px;font-weight:700;cursor:pointer;font-family:inherit}
+.qz-btn:hover{filter:brightness(1.15)}
+.qz-btn.sec{background:var(--bg-soft);color:var(--ink);border:1px solid var(--line-strong)}
+.qz-btn:disabled{opacity:.5;cursor:not-allowed}
+.qz-center{text-align:center}
+.qz-list{list-style:none;padding:0;margin:14px 0}
+.qz-list li{display:flex;justify-content:space-between;padding:11px 14px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--bg-soft);font-size:14px}
+.qz-list li span{color:var(--ink-soft)}
+.qz-blk{margin:0 0 16px}
+.qz-blk h3{margin:0 0 6px;font-size:15px;color:var(--accent)}
+.qz-blk ul{margin:0;padding-left:20px;color:var(--ink-soft);font-size:14px;line-height:1.7}
+.qz-danger{background:var(--red-soft);border:1px solid #f5c2c2;border-radius:10px;padding:12px 14px;font-size:13.5px;color:#a12626;margin-bottom:16px}
+.qz-note{background:var(--yellow-soft);border:1px solid #f3d9a0;border-radius:10px;padding:12px 14px;font-size:13.5px;color:#7a5c00;margin-bottom:16px}
+.qz-agree{display:flex;gap:10px;align-items:flex-start;padding:14px;border:1px dashed var(--line-strong);border-radius:10px;background:var(--bg-soft);margin-bottom:18px}
+.qz-agree input{margin-top:4px;width:16px;height:16px;accent-color:var(--accent);flex-shrink:0}
+.qz-agree label{font-size:14px;cursor:pointer}
+#qzOverlay{position:fixed;inset:0;z-index:100000;background:var(--bg-soft);overflow-y:auto}
+#qzOverlay .qz-in{max-width:780px;margin:0 auto;padding:20px 16px 60px}
+.qz-exit-row{display:flex;justify-content:flex-end;margin-bottom:10px}
+.qz-exit{background:#fff;color:var(--ink-soft);border:1px solid var(--line-strong);border-radius:8px;padding:8px 14px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit}
+.qz-exit:hover{background:var(--red-soft);color:var(--red);border-color:var(--red)}
+.qz-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.qz-name{font-weight:800;font-size:17px;color:var(--accent)}
+.qz-timer{background:#0b1526;color:#fff;padding:8px 14px;border-radius:8px;font-weight:700;font-variant-numeric:tabular-nums;min-width:78px;text-align:center}
+.qz-timer.warn{background:var(--red);animation:qzp 1s infinite}
+@keyframes qzp{50%{opacity:.6}}
+.qz-bar{height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:18px}
+.qz-bar>div{height:100%;background:var(--accent);width:0;transition:width .2s}
+.qz-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px;box-shadow:var(--shadow-sm)}
+.qz-qn{font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.qz-qt{font-size:17px;font-weight:600;margin-bottom:14px;line-height:1.5}
+.qz-opts{display:flex;flex-direction:column;gap:9px}
+.qz-opt{display:flex;gap:12px;align-items:center;padding:11px 14px;border:1px solid var(--line);border-radius:9px;background:#fff;cursor:pointer;font-size:14.5px}
+.qz-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.qz-opt.sel{border-color:var(--accent);background:var(--yellow-soft);font-weight:600}
+.qz-opt .k{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0}
+.qz-jump{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0}
+.qz-jump span{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:12px;border:1px solid var(--line-strong);cursor:pointer;background:var(--bg-soft)}
+.qz-jump span.ans{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.qz-jump span.cur{outline:2px solid var(--accent)}
+.qz-nav{display:flex;justify-content:space-between;gap:10px;margin-top:20px}
+.qz-nav .r{display:flex;gap:8px}
+.qz-valid{display:none;background:var(--red-soft);color:var(--red);border:1px solid #f5c2c2;border-radius:8px;padding:10px 14px;font-size:13.5px;font-weight:700;margin-top:14px;text-align:center}
+.qz-valid.show{display:block}
+.qz-modal{position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;padding:20px}
+.qz-modal .bd{position:absolute;inset:0;background:rgba(11,21,38,.72)}
+.qz-modal .bx{position:relative;background:#fff;border-radius:14px;padding:30px 26px;max-width:420px;width:100%;text-align:center;box-shadow:var(--shadow-md)}
+.qz-modal h3{margin:8px 0 10px;font-size:17px;line-height:1.4}
+.qz-modal p{margin:0 0 14px;color:var(--ink-soft);font-size:14px}
+.qz-modal .cnt{font-size:13px;font-weight:700;color:var(--ink-soft);margin-bottom:16px}
+.qz-score{font-size:44px;font-weight:800;text-align:center;margin:10px 0 2px}
+.qz-rev{width:100%;border-collapse:collapse;margin-top:12px;font-size:13.5px}
+.qz-rev th,.qz-rev td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.qz-rev th{font-size:12px;color:var(--ink-soft)}
+.qz-tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11.5px;font-weight:700}
+.qz-tag.c{background:var(--green-soft);color:var(--green)}
+.qz-tag.w{background:var(--red-soft);color:var(--red)}
+.qz-tag.s{background:var(--yellow-soft);color:#7a5c00}
+.qz-exp{font-size:12.5px;color:var(--ink-soft);margin-top:4px}
+body.qz-nosel, body.qz-nosel *{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-top">
+    <div class="brand"><div class="brand-mark">TV</div><span>Technical Verification<span class="brand-sub"> · Manual QA course</span></span></div>
+    <div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 6</span></span><button class="btn" onclick="resetProgress()">↺ Reset</button></div>
+  </div>
+  <nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1">Foundations</button><button class="tab" data-tab="t2">SQL for QA</button><button class="tab" data-tab="t3">Browser DevTools</button><button class="tab" data-tab="t4">API Testing</button><button class="tab" data-tab="t5">Practice Lab</button><button class="tab" data-tab="t6">Assessment</button></nav>
+</header>
+<div class="layout">
+  <aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside>
+  <main class="main">
+<section class="panel active" id="t1" data-toc='[["s1-1", "Why manual testers need technical verification"], ["s1-2", "How the web works \u2014 the minimum you need"], ["s1-3", "What to verify where"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span></div><p class="panel-eyebrow">Module 01 · Foundations</p><h1 class="panel-title">Technical Verification Fundamentals</h1><p class="panel-subtitle">How a web application is layered, what each layer proves, and which tool inspects which layer.</p></div>
+<div class="section" id="s1-1"><h2><span class="sec-emoji">🧠</span> Why manual testers need technical verification <span class="lvl b">Basic</span></h2>
+<p>A screen can <em>look</em> right while the data behind it is wrong. A "Saved successfully" message means nothing if the database has no row. <strong>Technical verification</strong> lets you see below the user interface and prove what really happened — and report defects precisely enough that developers can fix them quickly.</p>
+<div class="callout tip"><div class="callout-icon">🏧</div><div class="callout-body"><strong>Analogy:</strong> an ATM receipt says "₹5,000 withdrawn". The bank statement (database) is the proof. A good tester checks both.</div></div>
+<div class="diagram"><svg viewBox="0 0 780 190" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans" font-size="12.5" font-weight="600">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs>
+<g fill="#eef1f7" stroke="#14213D" stroke-width="1.6"><rect x="10" y="50" width="160" height="70" rx="10"/><rect x="230" y="50" width="160" height="70" rx="10" fill="#fdecc8" stroke="#dfab01"/><rect x="450" y="50" width="150" height="70" rx="10" fill="#ddedea" stroke="#0f7b0f"/><rect x="650" y="50" width="120" height="70" rx="10" fill="#f5e0e9" stroke="#8c1a63"/></g>
+<g stroke="#37352f" stroke-width="1.6" marker-end="url(#ar)"><line x1="170" y1="75" x2="230" y2="75"/><line x1="390" y1="75" x2="450" y2="75"/><line x1="600" y1="75" x2="650" y2="75"/></g>
+<g stroke="#37352f" stroke-width="1.6" marker-end="url(#ar)" stroke-dasharray="4 3"><line x1="230" y1="100" x2="170" y2="100"/><line x1="450" y1="100" x2="390" y2="100"/><line x1="650" y1="100" x2="600" y2="100"/></g>
+<g text-anchor="middle" fill="#14213D"><text x="90" y="82">Browser / App</text><text x="90" y="100" font-weight="400">UI (DevTools)</text><text x="310" y="82">Web server</text><text x="310" y="100" font-weight="400">REST API (Postman)</text><text x="525" y="82">Business logic</text><text x="525" y="100" font-weight="400">services</text><text x="710" y="82">Database</text><text x="710" y="100" font-weight="400">SQL</text>
+<text x="200" y="62" font-weight="400" font-size="11">request</text><text x="200" y="118" font-weight="400" font-size="11">response</text><text x="390" y="160" fill="#787774" font-weight="400">A tester checks each layer: what the user sees, what travels, what is stored.</text></g></svg><div class="diagram-caption">Three tools, three layers: DevTools for the browser, Postman/Swagger for the API, SQL for the database.</div></div>
+<div class="table-wrap"><table class="sm"><tr><th>Layer</th><th>Question</th><th>Tool</th></tr><tr><td>UI</td><td>What does the user see? Does the page behave?</td><td>Browser DevTools — Elements, Console</td></tr><tr><td>Network / API</td><td>What was sent and received? Status, payload, speed?</td><td>DevTools Network tab, Postman, Swagger UI</td></tr><tr><td>Database</td><td>Was data stored, updated, deleted correctly?</td><td>SQL client (MySQL Workbench, DBeaver, pgAdmin, SSMS)</td></tr></table></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">🌐</span> How the web works — the minimum you need <span class="lvl b">Basic</span></h2>
+<ol><li>You type a URL or click; the <strong>browser</strong> (client) builds an <strong>HTTP request</strong>.</li><li>The <strong>server</strong> receives it, runs business logic and queries the <strong>database</strong>.</li><li>The server sends back an <strong>HTTP response</strong> (status + headers + body, often JSON or HTML).</li><li>The browser renders the response as the page.</li></ol>
+<div class="flow"><span class="st">Client</span><span class="ar">→</span><span class="st">HTTP request</span><span class="ar">→</span><span class="st">Server / API</span><span class="ar">→</span><span class="st">SQL query</span><span class="ar">→</span><span class="st">Database</span></div>
+<h3>Key vocabulary</h3>
+<div class="table-wrap"><table class="sm"><tr><th>Term</th><th>Meaning</th></tr><tr><td>URL</td><td>Address of a resource: <code>https://shop.test/api/orders/101</code></td></tr><tr><td>HTTP / HTTPS</td><td>Protocol for requests; HTTPS = encrypted</td></tr><tr><td>Client / Server</td><td>Asker / answerer</td></tr><tr><td>API</td><td>Interface letting programs talk to each other</td></tr><tr><td>JSON</td><td>Text data format: <code>{"id":101,"status":"PAID"}</code></td></tr><tr><td>Cookie / Session / Token</td><td>How the server remembers who you are</td></tr><tr><td>Database / Table / Row</td><td>Organised storage of data</td></tr></table></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">🧪</span> What to verify where <span class="lvl b">Basic</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Test action in UI</th><th>UI check</th><th>API check</th><th>DB check</th></tr><tr><td>Register user</td><td>Welcome page</td><td>POST /users → 201, id returned</td><td>Row in <code>users</code>, password hashed, <code>created_at</code> set</td></tr><tr><td>Place order</td><td>Confirmation text</td><td>POST /orders → 201</td><td>Row in <code>orders</code>, items in <code>order_items</code>, stock reduced</td></tr><tr><td>Cancel order</td><td>Status "Cancelled"</td><td>PATCH status → 200</td><td><code>status = 'CANCELLED'</code>, refund row created</td></tr><tr><td>Delete account</td><td>Logged out</td><td>DELETE /users/id → 204</td><td>Row removed or marked inactive; related data handled</td></tr></table></div><div class="takeaway"><strong>🎯 Key takeaways</strong><ul><li>UI, API and database can each be wrong independently — check them all.</li><li>Know the request/response cycle; most defects live in it.</li><li>Use the right tool per layer: DevTools, Postman/Swagger, SQL.</li></ul></div></div>
+</section>
+<section class="panel" id="t2" data-toc='[["s2-1", "What is a database and SQL?"], ["s2-2", "SELECT basics"], ["s2-3", "Aggregates, GROUP BY and HAVING"], ["s2-4", "JOINs \u2014 combining tables"], ["s2-5", "Data-validation queries every tester uses"], ["s2-6", "INSERT, UPDATE, DELETE and transactions"], ["s2-7", "Expert SQL for QA"], ["s2-8", "SQL practice"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 02 · Database verification</p><h1 class="panel-title">SQL for Database Verification</h1><p class="panel-subtitle">From your first SELECT to JOINs, integrity checks, safe data changes and expert queries.</p></div>
+<div class="section" id="s2-1"><h2><span class="sec-emoji">🗄️</span> What is a database and SQL? <span class="lvl b">Basic</span></h2>
+<p>A <strong>relational database</strong> stores data in <strong>tables</strong> (like spreadsheets) made of <strong>rows</strong> (records) and <strong>columns</strong> (fields). <strong>SQL</strong> (Structured Query Language) is the language to ask questions of the data and change it.</p>
+<div class="callout tip"><div class="callout-icon">📒</div><div class="callout-body"><strong>Analogy:</strong> Excel sheets that can be linked. "Orders" has a <code>customer_id</code> column that points to a row in "Customers" — that link is a <strong>foreign key</strong>.</div></div>
+<h3>Practice schema used in this course</h3>
+<pre><span class="pre-lang">schema</span><code>customers(customer_id PK, name, email, city, created_at)
+products (product_id PK, name, category, price, stock)
+orders   (order_id PK, customer_id FK, order_date, status, total)
+order_items(item_id PK, order_id FK, product_id FK, quantity, unit_price)</code></pre>
+<div class="table-wrap"><table class="sm"><tr><th>order_id</th><th>customer_id</th><th>order_date</th><th>status</th><th>total</th></tr><tr><td>101</td><td>1</td><td>2025-01-10</td><td>PAID</td><td>1200.00</td></tr><tr><td>102</td><td>1</td><td>2025-01-12</td><td>CANCELLED</td><td>450.00</td></tr><tr><td>103</td><td>2</td><td>2025-01-15</td><td>PAID</td><td>999.99</td></tr><tr><td>104</td><td>3</td><td>2025-01-20</td><td>NEW</td><td>75.50</td></tr></table></div>
+<h3>Vocabulary</h3>
+<div class="pill-row"><span class="pill">Table</span><span class="pill">Row / record</span><span class="pill">Column / field</span><span class="pill">Primary key (unique id)</span><span class="pill">Foreign key (link)</span><span class="pill">NULL (no value)</span><span class="pill">Index</span><span class="pill">Constraint</span><span class="pill">Transaction</span></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><strong>Safety first:</strong> run queries on the <em>test</em> database only. Use <code>SELECT</code> for verification. Never run <code>UPDATE</code> or <code>DELETE</code> without a <code>WHERE</code> clause and permission.</div></div></div><div class="section" id="s2-2"><h2><span class="sec-emoji">🔎</span> SELECT basics <span class="lvl b">Basic</span></h2>
+<pre><span class="pre-lang">SQL</span><code>SELECT * FROM orders;                                   <span class="c">-- every column, every row</span>
+SELECT order_id, status, total FROM orders;             <span class="c">-- chosen columns</span>
+SELECT DISTINCT status FROM orders;                     <span class="c">-- unique values only</span>
+SELECT * FROM orders WHERE status = 'PAID';             <span class="c">-- filter rows</span>
+SELECT * FROM orders WHERE total &gt; 500 AND status = 'PAID';
+SELECT * FROM orders ORDER BY order_date DESC;          <span class="c">-- newest first</span>
+SELECT * FROM orders ORDER BY total DESC LIMIT 5;       <span class="c">-- top 5 (MySQL/Postgres)</span>
+<span class="c">-- SQL Server uses: SELECT TOP 5 * FROM orders ORDER BY total DESC;</span></code></pre>
+<h3>WHERE operators</h3>
+<div class="table-wrap"><table class="sm"><tr><th>Operator</th><th>Example</th><th>Meaning</th></tr><tr><td>= &lt;&gt; &gt; &lt; &gt;= &lt;=</td><td>total &gt;= 1000</td><td>Comparison</td></tr><tr><td>AND / OR / NOT</td><td>status='PAID' AND total&gt;500</td><td>Combine conditions</td></tr><tr><td>IN</td><td>status IN ('NEW','PAID')</td><td>Match a list</td></tr><tr><td>BETWEEN</td><td>total BETWEEN 100 AND 500</td><td>Inclusive range</td></tr><tr><td>LIKE</td><td>name LIKE 'A%'</td><td>Pattern: % any chars, _ one char</td></tr><tr><td>IS NULL / IS NOT NULL</td><td>email IS NULL</td><td>Missing values — never use = NULL</td></tr></table></div><div class="callout note"><div class="callout-icon">📝</div><div class="callout-body">SQL keywords are not case-sensitive, but <strong>string values often are</strong> (depends on the database). Text goes in single quotes: <code>'PAID'</code>.</div></div></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🧮</span> Aggregates, GROUP BY and HAVING <span class="lvl i">Intermediate</span></h2>
+<pre><span class="pre-lang">SQL</span><code>SELECT COUNT(*) FROM orders;                               <span class="c">-- how many rows</span>
+SELECT COUNT(*) FROM orders WHERE status='PAID';
+SELECT SUM(total) AS revenue FROM orders WHERE status='PAID';
+SELECT AVG(total), MIN(total), MAX(total) FROM orders;
+
+SELECT status, COUNT(*) AS cnt                             <span class="c">-- rows per status</span>
+FROM orders
+GROUP BY status;
+
+SELECT customer_id, SUM(total) AS spent                    <span class="c">-- big spenders only</span>
+FROM orders
+GROUP BY customer_id
+HAVING SUM(total) &gt; 1000;</code></pre>
+<p><strong>WHERE</strong> filters rows <em>before</em> grouping; <strong>HAVING</strong> filters groups <em>after</em>.</p></div><div class="section" id="s2-4"><h2><span class="sec-emoji">🔗</span> JOINs — combining tables <span class="lvl i">Intermediate</span></h2>
+<div class="diagram"><svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans" font-size="13" font-weight="600"><circle cx="230" cy="70" r="55" fill="#eef1f7" stroke="#14213D" stroke-width="2"/><circle cx="330" cy="70" r="55" fill="#fdecc8" stroke="#dfab01" stroke-width="2" fill-opacity=".8"/><text x="195" y="75" text-anchor="middle">Only A</text><text x="365" y="75" text-anchor="middle">Only B</text><text x="280" y="75" text-anchor="middle" fill="#0a5f0a">Both</text><text x="230" y="20" text-anchor="middle">A: orders</text><text x="330" y="20" text-anchor="middle">B: customers</text><text x="480" y="60" fill="#37352f">INNER = Both</text><text x="480" y="80" fill="#37352f">LEFT = A + Both</text><text x="480" y="100" fill="#37352f">RIGHT = Both + B</text></svg></div>
+<pre><span class="pre-lang">SQL</span><code>SELECT o.order_id, c.name, o.total
+FROM orders o
+INNER JOIN customers c ON c.customer_id = o.customer_id;    <span class="c">-- only matching rows</span>
+
+SELECT c.name, o.order_id
+FROM customers c
+LEFT JOIN orders o ON o.customer_id = c.customer_id;        <span class="c">-- all customers, even with no orders</span>
+
+SELECT c.name
+FROM customers c
+LEFT JOIN orders o ON o.customer_id = c.customer_id
+WHERE o.order_id IS NULL;                                   <span class="c">-- customers with NO orders</span>
+
+SELECT o.order_id, p.name, i.quantity, i.unit_price
+FROM orders o
+JOIN order_items i ON i.order_id = o.order_id
+JOIN products p    ON p.product_id = i.product_id
+WHERE o.order_id = 101;                                     <span class="c">-- full order detail</span></code></pre></div><div class="section" id="s2-5"><h2><span class="sec-emoji">✅</span> Data-validation queries every tester uses <span class="lvl i">Intermediate</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Check</th><th>Query</th></tr><tr><td>Row created after UI action</td><td><code>SELECT * FROM users WHERE email='anita@test.com';</code></td></tr><tr><td>Duplicates</td><td><code>SELECT email, COUNT(*) FROM users GROUP BY email HAVING COUNT(*)&gt;1;</code></td></tr><tr><td>Mandatory field empty</td><td><code>SELECT * FROM users WHERE phone IS NULL OR phone='';</code></td></tr><tr><td>Orphan records (child without parent)</td><td><code>SELECT i.* FROM order_items i LEFT JOIN orders o ON o.order_id=i.order_id WHERE o.order_id IS NULL;</code></td></tr><tr><td>Total matches items</td><td><code>SELECT o.order_id, o.total, SUM(i.quantity*i.unit_price) calc FROM orders o JOIN order_items i ON i.order_id=o.order_id GROUP BY o.order_id, o.total HAVING o.total &lt;&gt; SUM(i.quantity*i.unit_price);</code></td></tr><tr><td>Count UI vs DB</td><td><code>SELECT COUNT(*) FROM orders WHERE status='PAID';</code> compare to UI count</td></tr><tr><td>Latest records</td><td><code>SELECT * FROM orders ORDER BY order_id DESC LIMIT 10;</code></td></tr><tr><td>Date range</td><td><code>SELECT * FROM orders WHERE order_date &gt;= '2025-01-01' AND order_date &lt; '2025-02-01';</code></td></tr><tr><td>Stock reduced</td><td><code>SELECT stock FROM products WHERE product_id=1001;</code> before/after order</td></tr></table></div></div><div class="section" id="s2-6"><h2><span class="sec-emoji">✏️</span> INSERT, UPDATE, DELETE and transactions <span class="lvl i">Intermediate</span></h2>
+<p>Testers sometimes prepare or reset test data. Do it carefully, only on test environments.</p>
+<pre><span class="pre-lang">SQL</span><code>INSERT INTO customers (name,email,city) VALUES ('Test User','t1@test.com','Hyderabad');
+UPDATE orders SET status='NEW' WHERE order_id = 104;      <span class="c">-- ALWAYS use WHERE</span>
+DELETE FROM customers WHERE email='t1@test.com';          <span class="c">-- ALWAYS use WHERE</span>
+
+<span class="c">-- Safe pattern: preview first</span>
+SELECT * FROM orders WHERE order_id = 104;                <span class="c">-- 1) see what will change</span>
+UPDATE orders SET status='NEW' WHERE order_id = 104;      <span class="c">-- 2) change</span>
+SELECT * FROM orders WHERE order_id = 104;                <span class="c">-- 3) confirm</span>
+
+BEGIN;                                                    <span class="c">-- transaction: can be undone</span>
+UPDATE products SET stock = 0 WHERE category='Toys';
+ROLLBACK;                                                 <span class="c">-- undo (COMMIT would save)</span></code></pre>
+<p><strong>ACID</strong> in one line: a transaction is Atomic (all or nothing), Consistent, Isolated and Durable. Test cases: payment fails halfway → no half-written order.</p></div><div class="section" id="s2-7"><h2><span class="sec-emoji">🚀</span> Expert SQL for QA <span class="lvl e">Expert</span></h2>
+<pre><span class="pre-lang">SQL</span><code><span class="c">-- Subquery: customers who spent more than the average order</span>
+SELECT name FROM customers
+WHERE customer_id IN (SELECT customer_id FROM orders WHERE total &gt; (SELECT AVG(total) FROM orders));
+
+<span class="c">-- Latest order per customer (window function)</span>
+SELECT * FROM (
+  SELECT o.*, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC) rn
+  FROM orders o) t
+WHERE rn = 1;
+
+<span class="c">-- Find duplicates and keep one (preview!)</span>
+SELECT email, MIN(customer_id) keep_id, COUNT(*) FROM customers GROUP BY email HAVING COUNT(*)&gt;1;
+
+<span class="c">-- CASE expression for status buckets</span>
+SELECT order_id,
+       CASE WHEN total &gt;= 1000 THEN 'LARGE' WHEN total &gt;= 100 THEN 'MEDIUM' ELSE 'SMALL' END AS size
+FROM orders;
+
+<span class="c">-- Reconciliation: orders paid but no payment record</span>
+SELECT o.order_id FROM orders o
+LEFT JOIN payments p ON p.order_id=o.order_id
+WHERE o.status='PAID' AND p.payment_id IS NULL;
+
+<span class="c">-- Query plan (is a query slow?)</span>
+EXPLAIN SELECT * FROM orders WHERE customer_id = 1;</code></pre>
+<h3>Verification mindset</h3>
+<ul><li><strong>Constraints:</strong> test NOT NULL, UNIQUE, foreign-key and CHECK rules via the UI and confirm DB errors are handled gracefully.</li><li><strong>Data types:</strong> rounding of decimals, time zones in timestamps, character encoding (emoji, Indian languages).</li><li><strong>Soft delete:</strong> row stays with <code>is_deleted = 1</code> — check UI hides it and reports exclude it.</li><li><strong>Audit columns:</strong> <code>created_at</code>, <code>updated_at</code>, <code>updated_by</code> change correctly.</li><li><strong>Migration testing:</strong> row counts and checksums before/after; sample rows compared field by field.</li></ul></div><div class="section" id="s2-8"><h2><span class="sec-emoji">🏋️</span> SQL practice <span class="lvl b">Basic</span></h2>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 2.1 — Basics</div><div class="ex-b"><p>Using the schema: (a) all PAID orders over 500; (b) number of orders per status; (c) names of customers from Hyderabad ordered A–Z.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><pre><code>(a) SELECT * FROM orders WHERE status='PAID' AND total&gt;500;
+(b) SELECT status, COUNT(*) FROM orders GROUP BY status;
+(c) SELECT name FROM customers WHERE city='Hyderabad' ORDER BY name;</code></pre></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 2.2 — Joins</div><div class="ex-b"><p>(a) Show each order with customer name. (b) List customers who never ordered. (c) Total spent per customer name, highest first.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><pre><code>(a) SELECT o.order_id, c.name FROM orders o JOIN customers c ON c.customer_id=o.customer_id;
+(b) SELECT c.name FROM customers c LEFT JOIN orders o ON o.customer_id=c.customer_id WHERE o.order_id IS NULL;
+(c) SELECT c.name, SUM(o.total) spent FROM customers c JOIN orders o ON o.customer_id=c.customer_id GROUP BY c.name ORDER BY spent DESC;</code></pre></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 2.3 — Verify a UI action</div><div class="ex-b"><p>A user cancels order 101 in the UI. Which queries prove it worked correctly?</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><pre><code>SELECT status FROM orders WHERE order_id=101;          -- expect CANCELLED
+SELECT stock FROM products p JOIN order_items i ON i.product_id=p.product_id WHERE i.order_id=101;  -- stock restored
+SELECT * FROM refunds WHERE order_id=101;              -- refund row exists, amount = 1200.00
+SELECT updated_at FROM orders WHERE order_id=101;      -- timestamp updated</code></pre></div></details></div></div>
+</section>
+<section class="panel" id="t3" data-toc='[["s3-1", "Meet browser DevTools"], ["s3-2", "Elements tab \u2014 inspecting the DOM"], ["s3-3", "Network tab \u2014 the tester&#39;s best friend"], ["s3-4", "Console tab"], ["s3-5", "Application tab, device mode and throttling"], ["s3-6", "Real-world debugging workflow"], ["s3-7", "DevTools practice"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 03 · Front-end & network</p><h1 class="panel-title">Browser DevTools</h1><p class="panel-subtitle">Inspect the DOM, read the Network tab, decode status codes and debug like a pro.</p></div>
+<div class="section" id="s3-1"><h2><span class="sec-emoji">🛠️</span> Meet browser DevTools <span class="lvl b">Basic</span></h2>
+<p><strong>DevTools</strong> is a toolbox built into the browser that lets you inspect what a page is made of and what it does. Open it with <span class="kbd">F12</span> or <span class="kbd">Ctrl+Shift+I</span> (Windows/Linux), <span class="kbd">Cmd+Option+I</span> (Mac), or right-click → <strong>Inspect</strong>.</p>
+<div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🧱</div><div class="card-title">Elements</div><div class="card-desc">View and edit the HTML (DOM) and CSS live.</div></div><div class="card"><div class="card-icon" style="background:var(--yellow-soft)">💬</div><div class="card-title">Console</div><div class="card-desc">JavaScript errors, warnings and messages.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft)">🌐</div><div class="card-title">Network</div><div class="card-desc">Every request and response; timing, status, payload.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft)">🗂️</div><div class="card-title">Application</div><div class="card-desc">Cookies, local/session storage, cache.</div></div><div class="card"><div class="card-icon" style="background:var(--red-soft)">📱</div><div class="card-title">Device toolbar</div><div class="card-desc">Emulate mobile screens and slow networks.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">⚡</div><div class="card-title">Lighthouse</div><div class="card-desc">Automatic performance, accessibility and SEO audit.</div></div></div></div><div class="section" id="s3-2"><h2><span class="sec-emoji">🧱</span> Elements tab — inspecting the DOM <span class="lvl b">Basic</span></h2>
+<p>The <strong>DOM</strong> (Document Object Model) is the page's structure as the browser sees it. Click the select-element icon (<span class="kbd">Ctrl+Shift+C</span>), click anything on the page and its HTML appears.</p>
+<h3>What testers do here</h3>
+<ul><li>Verify text, <code>id</code>, <code>class</code>, <code>placeholder</code>, <code>maxlength</code>, <code>required</code>, <code>disabled</code> attributes match the requirement.</li><li>Check <strong>input types</strong>: <code>type="email"</code>, <code>type="password"</code> (is a password masked?).</li><li>Temporarily edit text or styles to reproduce a visual issue (changes vanish on refresh).</li><li>Inspect <strong>styles</strong>: colour, font-size, margins; compare with the design.</li><li>Check accessibility attributes: <code>alt</code>, <code>aria-label</code>, label-for links.</li><li>Test client-side validation bypass: remove <code>disabled</code> / <code>maxlength</code> and check the <strong>server</strong> still validates — a classic defect.</li></ul>
+<pre><span class="pre-lang">HTML</span><code>&lt;input type="text" id="coupon" name="coupon" maxlength="10" placeholder="Enter coupon"&gt;
+&lt;button id="applyBtn" class="btn btn-primary" disabled&gt;Apply&lt;/button&gt;
+&lt;!-- Test idea: remove "disabled" and "maxlength", send 50 chars - does the server reject it? --&gt;</code></pre></div><div class="section" id="s3-3"><h2><span class="sec-emoji">🌐</span> Network tab — the tester's best friend <span class="lvl b">Basic</span></h2>
+<p>Open the <strong>Network</strong> tab <em>before</em> performing the action, tick <strong>Preserve log</strong>, then click through your scenario. Every request appears as a row.</p>
+<div class="table-wrap"><table class="sm"><tr><th>Column</th><th>Meaning</th></tr><tr><td>Name</td><td>Resource or endpoint called</td></tr><tr><td>Status</td><td>HTTP result code (200, 404, 500…)</td></tr><tr><td>Method</td><td>GET, POST, PUT, PATCH, DELETE</td></tr><tr><td>Type</td><td>document, xhr/fetch, script, image…</td></tr><tr><td>Size / Time</td><td>Download size and duration</td></tr><tr><td>Waterfall</td><td>Visual timeline of loading</td></tr></table></div>
+<p>Filter with <strong>Fetch/XHR</strong> to see only API calls. Click a request to see:</p>
+<div class="table-wrap"><table class="sm"><tr><th>Sub-tab</th><th>What you verify</th></tr><tr><td>Headers</td><td>URL, method, status, request headers (Authorization, Content-Type), response headers (Cache-Control, Set-Cookie)</td></tr><tr><td>Payload</td><td>Data sent — compare with what you typed</td></tr><tr><td>Preview / Response</td><td>Data returned — JSON body, error messages</td></tr><tr><td>Timing</td><td>Waiting (server) vs Download time</td></tr><tr><td>Cookies</td><td>Cookies sent and set</td></tr></table></div>
+<h3>HTTP status code cheat-sheet</h3>
+<div class="table-wrap"><table class="sm"><tr><th>Code</th><th>Meaning</th><th>Tester thinking</th></tr><tr><td>200 OK</td><td>Success</td><td>Check body is correct</td></tr><tr><td>201 Created</td><td>New resource created</td><td>POST worked; check Location/ID</td></tr><tr><td>204 No Content</td><td>Success, empty body</td><td>Common for DELETE</td></tr><tr><td>301/302</td><td>Redirect</td><td>Check target URL</td></tr><tr><td>304 Not Modified</td><td>Cached copy used</td><td>Caching works</td></tr><tr><td>400 Bad Request</td><td>Invalid input</td><td>Client sent wrong data — is the message helpful?</td></tr><tr><td>401 Unauthorized</td><td>Not logged in / bad token</td><td>Authentication problem</td></tr><tr><td>403 Forbidden</td><td>Logged in but not allowed</td><td>Permission check — expected for wrong role</td></tr><tr><td>404 Not Found</td><td>Resource doesn't exist</td><td>Broken link or wrong ID</td></tr><tr><td>409 Conflict</td><td>State conflict / duplicate</td><td>e.g. email already registered</td></tr><tr><td>422</td><td>Validation failed</td><td>Check field-level errors</td></tr><tr><td>429 Too Many Requests</td><td>Rate limited</td><td>Throttling works</td></tr><tr><td>500 Internal Server Error</td><td>Server crashed</td><td>Always a defect — capture request</td></tr><tr><td>502/503/504</td><td>Gateway/unavailable/timeout</td><td>Infrastructure problem</td></tr></table></div></div><div class="section" id="s3-4"><h2><span class="sec-emoji">💬</span> Console tab <span class="lvl i">Intermediate</span></h2>
+<ul><li><span style="color:#e03e3e;font-weight:700">Red errors</span> usually show JavaScript crashes: <code>Uncaught TypeError: Cannot read properties of undefined</code> — attach the message and file:line to bugs.</li><li><span style="color:#d9730d;font-weight:700">Yellow warnings</span>: deprecated APIs, mixed-content (http resources on https page).</li><li><strong>Failed resource</strong> messages: <code>Failed to load resource: 404</code> → missing image/script.</li><li><strong>CORS errors:</strong> <code>blocked by CORS policy</code> → browser refused cross-origin call; report with request URL and origin.</li></ul>
+<p>You can also run small commands:</p>
+<pre><span class="pre-lang">console</span><code>document.title                              <span class="c">// page title</span>
+document.querySelectorAll('img:not([alt])').length   <span class="c">// images missing alt text</span>
+localStorage.getItem('cart')                <span class="c">// read stored data</span>
+fetch('/api/orders/101').then(r=&gt;r.json()).then(console.log)   <span class="c">// call an API</span></code></pre></div><div class="section" id="s3-5"><h2><span class="sec-emoji">🗂️</span> Application tab, device mode and throttling <span class="lvl i">Intermediate</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Feature</th><th>Use</th></tr><tr><td>Cookies</td><td>Check name, value, expiry, <strong>HttpOnly</strong>, <strong>Secure</strong>, <strong>SameSite</strong>; verify cookie is removed on logout</td></tr><tr><td>Local / Session Storage</td><td>What the app stores in the browser; sensitive data (tokens, card numbers) should not appear in plain text</td></tr><tr><td>Cache / Service workers</td><td>Offline behaviour, stale data</td></tr><tr><td>Device toolbar (<span class="kbd">Ctrl+Shift+M</span>)</td><td>Test responsive layouts, touch, orientation, various phones</td></tr><tr><td>Network throttling</td><td>Simulate "Slow 3G" or Offline — check spinners, timeouts, retries</td></tr><tr><td>Disable cache</td><td>Test fresh loads</td></tr><tr><td>Lighthouse</td><td>Quick performance/accessibility/best-practice audit; note score and top issues</td></tr></table></div></div><div class="section" id="s3-6"><h2><span class="sec-emoji">🧑‍🔧</span> Real-world debugging workflow <span class="lvl e">Expert</span></h2>
+<div class="flow"><span class="st">Open DevTools + Preserve log</span><span class="ar">→</span><span class="st">Perform scenario</span><span class="ar">→</span><span class="st">Find failing request/error</span><span class="ar">→</span><span class="st">Inspect payload & response</span><span class="ar">→</span><span class="st">Compare with expectation</span><span class="ar">→</span><span class="st">Attach evidence to bug</span></div>
+<h3>Reading a failed request</h3>
+<pre><span class="pre-lang">analysis</span><code>POST /api/orders                      Status: 500 Internal Server Error
+Request payload: {"cartId":"c-77","coupon":"MOVIE10","qty":-1}
+Response:        {"error":"NullPointerException at OrderService.java:112","traceId":"a91f-33c"}
+
+Bug note: Negative quantity accepted by UI; server crashes with 500 instead of 400 validation.
+          Include traceId a91f-33c so developers can find logs.</code></pre>
+<h3>Advanced techniques</h3>
+<ul><li><strong>Copy as cURL / Copy as fetch</strong> (right-click request) — replay in terminal or Postman with modified data.</li><li><strong>Block request URL</strong> or <strong>override response</strong> to simulate API failure and see how UI reacts.</li><li><strong>Export HAR</strong> to attach a complete network recording to a bug (remove secrets first).</li><li><strong>Performance tab</strong> to find long tasks; <strong>Coverage</strong> to find unused code (for developers, but useful context).</li><li><strong>Check security headers</strong>: <code>Strict-Transport-Security</code>, <code>Content-Security-Policy</code>, <code>X-Content-Type-Options</code>.</li></ul></div><div class="section" id="s3-7"><h2><span class="sec-emoji">🏋️</span> DevTools practice <span class="lvl b">Basic</span></h2>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 3.1 — Find the API behind a button</div><div class="ex-b"><p>On any shopping site, open Network → Fetch/XHR, click "Add to cart". Record: method, URL, status, request payload keys, response keys.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>Typical result: <code>POST /api/cart/items</code>, 200/201, payload <code>{productId, quantity}</code>, response includes cart with updated total. Verify that quantity in payload equals what you chose, and the total in response equals the total on screen.</p></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 3.2 — Client-side validation bypass</div><div class="ex-b"><p>A form has <code>maxlength="10"</code> on "name". How do you test server-side validation?</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>In Elements, delete the attribute (or use Postman) and send 200 characters. Expected: server returns 400 with a message (or trims safely). If it returns 500 or stores 200 chars → defect.</p></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 3.3 — Interpret</div><div class="ex-b"><p>Request returned 403. User is logged in. What does it mean? Next step?</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>The server knows who you are but you lack permission. Check the user's role: if this role should have access → defect; if not → expected, and the UI should have hidden the action.</p></div></details></div></div>
+</section>
+<section class="panel" id="t4" data-toc='[["s4-1", "What is an API?"], ["s4-2", "HTTP requests and responses"], ["s4-3", "Authentication & authorisation"], ["s4-4", "Postman \u2014 hands-on"], ["s4-5", "Swagger / OpenAPI"], ["s4-6", "What to test in an API"], ["s4-7", "Expert API testing"], ["s4-8", "API practice"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 04 · API layer</p><h1 class="panel-title">API Testing with Postman &amp; Swagger</h1><p class="panel-subtitle">REST, HTTP, JSON, authentication, Postman collections and tests, Swagger, and expert chaining.</p></div>
+<div class="section" id="s4-1"><h2><span class="sec-emoji">🔌</span> What is an API? <span class="lvl b">Basic</span></h2>
+<p>An <strong>API</strong> (Application Programming Interface) lets one program ask another to do something. The web page, the mobile app and other systems all use the <strong>same API</strong> to talk to the backend.</p>
+<div class="callout tip"><div class="callout-icon">🍽️</div><div class="callout-body"><strong>Analogy:</strong> a restaurant. You (client) give an order to the waiter (API); the kitchen (server/DB) prepares the food; the waiter brings it back. You never walk into the kitchen. Testing the API is talking to the waiter directly, without the menu (UI) in between.</div></div>
+<p><strong>REST</strong> APIs use HTTP and treat things as <strong>resources</strong> with URLs (<code>/users</code>, <code>/orders/101</code>) and <strong>methods</strong> for actions.</p>
+<h3>Why test APIs manually?</h3>
+<ul><li>Earlier than the UI exists — shift-left.</li><li>Faster and more precise than clicking.</li><li>Test inputs the UI would block (negative, huge, malformed).</li><li>Find defects in the layer where they actually live.</li></ul></div><div class="section" id="s4-2"><h2><span class="sec-emoji">📨</span> HTTP requests and responses <span class="lvl b">Basic</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Method</th><th>Action</th><th>CRUD</th><th>Example</th></tr><tr><td>GET</td><td>Read</td><td>Read</td><td><code>GET /orders/101</code></td></tr><tr><td>POST</td><td>Create</td><td>Create</td><td><code>POST /orders</code> + body</td></tr><tr><td>PUT</td><td>Replace entire resource</td><td>Update</td><td><code>PUT /orders/101</code></td></tr><tr><td>PATCH</td><td>Partial update</td><td>Update</td><td><code>PATCH /orders/101</code> {"status":"CANCELLED"}</td></tr><tr><td>DELETE</td><td>Remove</td><td>Delete</td><td><code>DELETE /orders/101</code></td></tr></table></div>
+<h3>Anatomy</h3>
+<pre><span class="pre-lang">request</span><code>POST https://api.shop.test/v1/orders HTTP/1.1          &lt;-- method + URL
+Authorization: Bearer eyJhbGciOi...                    &lt;-- headers
+Content-Type: application/json
+Accept: application/json
+
+{                                                      &lt;-- body (JSON)
+  "customerId": 1,
+  "items": [ {"productId": 1001, "quantity": 2} ],
+  "coupon": "MOVIE10"
+}</code></pre>
+<pre><span class="pre-lang">response</span><code>HTTP/1.1 201 Created                                    &lt;-- status
+Content-Type: application/json
+Location: /v1/orders/105
+
+{ "orderId": 105, "status": "NEW", "total": 2160.00 }</code></pre>
+<h3>URL parts</h3>
+<p><code>https://api.shop.test/v1/orders/105?status=PAID&amp;page=2</code> → <strong>host</strong> · <strong>version</strong> <code>/v1</code> · <strong>path</strong> <code>/orders/105</code> · <strong>query parameters</strong> <code>status</code>, <code>page</code>.</p>
+<h3>JSON in 30 seconds</h3>
+<pre><span class="pre-lang">JSON</span><code>{
+  "name": "Anita",            <span class="c">// string</span>
+  "age": 28,                  <span class="c">// number</span>
+  "active": true,             <span class="c">// boolean</span>
+  "phone": null,              <span class="c">// empty value</span>
+  "address": { "city": "Hyderabad" },        <span class="c">// object</span>
+  "orders": [101, 103]        <span class="c">// array</span>
+}</code></pre></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🔐</span> Authentication & authorisation <span class="lvl i">Intermediate</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Type</th><th>How</th><th>Test</th></tr><tr><td>Basic Auth</td><td>Username:password (Base64) in header</td><td>Wrong/missing credentials → 401</td></tr><tr><td>API key</td><td>Key in header or query</td><td>Missing / revoked key</td></tr><tr><td>Bearer token (JWT)</td><td><code>Authorization: Bearer &lt;token&gt;</code></td><td>Expired token, tampered token, wrong audience</td></tr><tr><td>OAuth 2.0</td><td>Token from an auth server (client id/secret, scopes)</td><td>Insufficient scope → 403</td></tr><tr><td>Session cookie</td><td>Browser holds session id</td><td>Logout invalidates session</td></tr></table></div>
+<p><strong>Authentication</strong> = who are you? (401). <strong>Authorisation</strong> = what may you do? (403). Always test: no token, expired token, token of another user, token with a lower role.</p></div><div class="section" id="s4-4"><h2><span class="sec-emoji">📮</span> Postman — hands-on <span class="lvl b">Basic</span></h2>
+<p><strong>Postman</strong> is a desktop/web app to build, send and organise API requests without code.</p>
+<div class="flow"><span class="st">New request</span><span class="ar">→</span><span class="st">Choose method</span><span class="ar">→</span><span class="st">Enter URL</span><span class="ar">→</span><span class="st">Add headers/auth</span><span class="ar">→</span><span class="st">Add body</span><span class="ar">→</span><span class="st">Send</span><span class="ar">→</span><span class="st">Inspect response</span></div>
+<h3>Key concepts</h3>
+<div class="table-wrap"><table class="sm"><tr><th>Concept</th><th>What it is</th></tr><tr><td>Collection</td><td>Folder of saved requests (e.g. "Shop API")</td></tr><tr><td>Environment</td><td>Set of variables per system: <code>{{baseUrl}}</code> for QA vs Staging</td></tr><tr><td>Variables</td><td>Reusable values: <code>{{token}}</code>, <code>{{orderId}}</code></td></tr><tr><td>Params / Headers / Body / Auth tabs</td><td>Where you build each part</td></tr><tr><td>Tests tab</td><td>JavaScript assertions run after the response</td></tr><tr><td>Pre-request Script</td><td>Code that runs before sending (create timestamps, tokens)</td></tr><tr><td>Collection Runner</td><td>Runs a whole collection in order, with data files</td></tr><tr><td>Newman</td><td>Command-line runner for CI</td></tr></table></div>
+<h3>Your first tests</h3>
+<pre><span class="pre-lang">Postman test</span><code><span class="c">// Tests tab</span>
+pm.test("Status is 201", () =&gt; pm.response.to.have.status(201));
+pm.test("Response time &lt; 800ms", () =&gt; pm.expect(pm.response.responseTime).to.be.below(800));
+pm.test("Content-Type is JSON", () =&gt; pm.response.to.have.header("Content-Type", /json/));
+
+const body = pm.response.json();
+pm.test("Order has id and status NEW", () =&gt; {
+  pm.expect(body.orderId).to.be.a("number");
+  pm.expect(body.status).to.eql("NEW");
+});
+pm.environment.set("orderId", body.orderId);   <span class="c">// save for the next request</span></code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Name requests as <code>POST Create order – valid</code>, <code>POST Create order – missing customerId</code> so the collection reads like a test suite.</div></div></div><div class="section" id="s4-5"><h2><span class="sec-emoji">📘</span> Swagger / OpenAPI <span class="lvl b">Basic</span></h2>
+<p><strong>OpenAPI</strong> is a standard way to describe an API (endpoints, parameters, responses). <strong>Swagger UI</strong> turns that description into an interactive web page where you can read and <em>try</em> each endpoint.</p>
+<ol><li>Open the Swagger URL (often <code>/swagger-ui</code> or <code>/docs</code>).</li><li>Click <strong>Authorize</strong> and paste a token if needed.</li><li>Expand an endpoint → <strong>Try it out</strong> → fill parameters/body → <strong>Execute</strong>.</li><li>Read the actual curl, URL, response code and body.</li></ol>
+<pre><span class="pre-lang">OpenAPI (YAML)</span><code>paths:
+  /orders/{id}:
+    get:
+      summary: Get order by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { description: OK }
+        "404": { description: Order not found }</code></pre>
+<p><strong>Tester use:</strong> the spec is a <em>requirement document</em> — check every documented response code and field type; report mismatches between spec and real behaviour. Import the spec into Postman to auto-create a collection.</p></div><div class="section" id="s4-6"><h2><span class="sec-emoji">🎯</span> What to test in an API <span class="lvl i">Intermediate</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Category</th><th>Examples (POST /orders)</th></tr><tr><td>Happy path</td><td>Valid body → 201, correct fields, DB row created</td></tr><tr><td>Status codes</td><td>404 for unknown id, 400 for bad body, 401/403 for auth issues</td></tr><tr><td>Required fields</td><td>Remove each mandatory field one at a time → 400 with clear message</td></tr><tr><td>Data types</td><td>String in numeric field, null, array instead of object</td></tr><tr><td>Boundaries</td><td>quantity 0, 1, max, max+1, negative</td></tr><tr><td>Business rules</td><td>Duplicate coupon, out-of-stock product, closed store</td></tr><tr><td>Schema</td><td>Field names, types, no extra/missing fields, date formats (ISO 8601)</td></tr><tr><td>Idempotency</td><td>Same PUT/DELETE twice; retry of POST creating duplicates?</td></tr><tr><td>Pagination / filtering / sorting</td><td><code>?page=2&amp;limit=10</code>, invalid page, sort order</td></tr><tr><td>Security</td><td>No token, other user's data (IDOR), injection strings, sensitive data in response</td></tr><tr><td>Performance</td><td>Response time, big payloads</td></tr><tr><td>Error format</td><td>Consistent error JSON; no stack traces leaked</td></tr></table></div></div><div class="section" id="s4-7"><h2><span class="sec-emoji">🚀</span> Expert API testing <span class="lvl e">Expert</span></h2>
+<h3>1. Chaining requests</h3>
+<pre><span class="pre-lang">Postman</span><code><span class="c">// Request 1: POST /login  (Tests tab)</span>
+pm.environment.set("token", pm.response.json().accessToken);
+
+<span class="c">// Request 2: POST /orders   Header:  Authorization: Bearer {{token}}</span>
+pm.environment.set("orderId", pm.response.json().orderId);
+
+<span class="c">// Request 3: GET /orders/{{orderId}}   -&gt; verify, then DELETE /orders/{{orderId}} to clean up</span></code></pre>
+<h3>2. Data-driven runs</h3>
+<p>Use Collection Runner with a CSV/JSON file: each row is one iteration — perfect for boundary values.</p>
+<pre><span class="pre-lang">data.csv</span><code>quantity,expectedStatus
+0,400
+1,201
+99,201
+100,201
+101,400</code></pre><pre><span class="pre-lang">Postman test</span><code>pm.test("Status matches expected", () =&gt; {
+  pm.expect(pm.response.code).to.eql(parseInt(pm.iterationData.get("expectedStatus")));
+});</code></pre>
+<h3>3. Schema validation</h3>
+<pre><span class="pre-lang">Postman test</span><code>const schema = { type:"object", required:["orderId","status","total"],
+  properties:{ orderId:{type:"number"}, status:{type:"string"}, total:{type:"number"} } };
+pm.test("Schema valid", () =&gt; pm.response.to.have.jsonSchema(schema));</code></pre>
+<h3>4. UI ↔ API ↔ DB end-to-end verification</h3>
+<div class="flow"><span class="st">Create order in UI</span><span class="ar">→</span><span class="st">Capture request in DevTools</span><span class="ar">→</span><span class="st">Replay / GET in Postman</span><span class="ar">→</span><span class="st">Run SQL to confirm rows</span><span class="ar">→</span><span class="st">Compare all three</span></div>
+<h3>5. Other advanced topics</h3>
+<ul><li><strong>Newman</strong> in CI: <code>newman run collection.json -e qa.json --reporters cli,html</code>.</li><li><strong>Mock servers</strong> in Postman to test the front-end when the backend isn't ready.</li><li><strong>CORS & caching headers</strong>: <code>Access-Control-Allow-Origin</code>, <code>Cache-Control</code>, <code>ETag</code>.</li><li><strong>Rate limiting</strong>: send many requests, expect 429 and a <code>Retry-After</code> header.</li><li><strong>OWASP API Top 10</strong> awareness: broken object-level authorisation, excessive data exposure, mass assignment, security misconfiguration.</li><li><strong>curl</strong>:</li></ul>
+<pre><span class="pre-lang">curl</span><code>curl -X POST https://api.shop.test/v1/orders \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"customerId":1,"items":[{"productId":1001,"quantity":2}]}' -i</code></pre></div><div class="section" id="s4-8"><h2><span class="sec-emoji">🏋️</span> API practice <span class="lvl b">Basic</span></h2>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 4.1 — Design API tests</div><div class="ex-b"><p>Endpoint: <code>POST /users</code> with <code>name</code> (required, max 50), <code>email</code> (required, unique, valid format), <code>age</code> (18–60). Write 10 tests.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><ol><li>Valid body → 201, id returned</li><li>Missing name → 400</li><li>Missing email → 400</li><li>Invalid email "abc@" → 400/422</li><li>Duplicate email → 409</li><li>Name 50 chars → 201; 51 → 400</li><li>Age 17 → 400; 18 → 201; 60 → 201; 61 → 400</li><li>Age "abc" → 400</li><li>No token → 401</li><li>Verify DB row, password/PII not returned in response</li></ol></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 4.2 — Pick the status code</div><div class="ex-b"><p>(a) Create resource OK. (b) Delete OK, nothing to return. (c) Order id not found. (d) Valid user without admin rights. (e) Server bug. (f) Email already registered.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>(a) 201 · (b) 204 · (c) 404 · (d) 403 · (e) 500 · (f) 409</p></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 4.3 — Write Postman tests</div><div class="ex-b"><p>For <code>GET /orders/101</code> expect 200, JSON, <code>status</code> in [NEW, PAID, CANCELLED], <code>total</code> a positive number.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><pre><code>pm.test("200", () =&gt; pm.response.to.have.status(200));
+const b = pm.response.json();
+pm.test("status valid", () =&gt; pm.expect(["NEW","PAID","CANCELLED"]).to.include(b.status));
+pm.test("total &gt; 0", () =&gt; pm.expect(b.total).to.be.above(0));</code></pre></div></details></div></div>
+</section>
+<section class="panel" id="t5" data-toc='[["s5-1", "Capstone \u2014 verify \"Place order\" across UI, API and DB"], ["s5-2", "Self-check"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 05 · Hands-on</p><h1 class="panel-title">Practice Lab</h1><p class="panel-subtitle">Verify one business action through the UI, the API and the database.</p></div>
+<div class="section" id="s5-1"><h2><span class="sec-emoji">🧪</span> Capstone — verify "Place order" across UI, API and DB <span class="lvl e">Expert</span></h2>
+<p>Scenario: a customer buys 2 × product 1001 (₹600 each) with coupon <code>MOVIE10</code> (10%, min ₹1,000).</p>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Step 1 — UI + DevTools</div><div class="ex-b"><p>What do you capture in DevTools?</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><ul><li>Network: <code>POST /api/orders</code> — payload (<code>productId</code>, <code>quantity=2</code>, <code>coupon</code>), status 201, response with <code>orderId</code> and <code>total</code>.</li><li>Console: no red errors.</li><li>Elements: displayed total = 1,080.00 (1,200 − 10%).</li></ul></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Step 2 — API with Postman</div><div class="ex-b"><p>Which extra checks?</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><ul><li><code>GET /orders/{id}</code> → same total and items.</li><li>Repeat POST with quantity 0, 99999, missing coupon, invalid coupon.</li><li>Call without token → 401; with other user's token → 403/404.</li><li>Replay POST twice → duplicate order created? (idempotency risk)</li></ul></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Step 3 — SQL</div><div class="ex-b"><p>Write the queries.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><pre><code>SELECT * FROM orders WHERE order_id = :id;                  -- total = 1080.00, status NEW/PAID
+SELECT * FROM order_items WHERE order_id = :id;            -- product 1001, qty 2, unit_price 600
+SELECT stock FROM products WHERE product_id=1001;          -- reduced by 2
+SELECT * FROM coupon_usage WHERE order_id = :id;           -- one record for MOVIE10
+SELECT order_id, COUNT(*) FROM orders GROUP BY order_id HAVING COUNT(*)&gt;1;  -- no duplicates</code></pre></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Step 4 — Write the bug</div><div class="ex-b"><p>Suppose the UI shows ₹1,080 but the DB has total = 1200 and no coupon_usage row. Draft the bug summary.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p><strong>Title:</strong> Order total in DB ignores coupon: UI shows 1,080.00, <code>orders.total</code> = 1200.00 (order 105). <strong>Evidence:</strong> UI screenshot, API response (<code>total</code>: 1200), SQL result, request payload. <strong>Severity:</strong> High — financial mismatch, wrong invoice. <strong>Hint for dev:</strong> UI calculates discount client-side; server does not apply it.</p></div></details></div></div><div class="section" id="s5-2"><h2><span class="sec-emoji">📝</span> Self-check <span class="lvl b">Basic</span></h2>
+<ul><li>☐ I can write SELECT with WHERE, ORDER BY, GROUP BY, HAVING and JOIN.</li><li>☐ I can verify a UI action with at least two SQL queries.</li><li>☐ I can find, read and explain a failing request in the Network tab.</li><li>☐ I know the common status codes and what they imply.</li><li>☐ I can build, parameterise and test a Postman collection.</li><li>☐ I can read a Swagger page and test endpoints from it.</li></ul></div>
+</section>
+<section class="panel" id="t6" data-toc='[["sq", "Knowledge check"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 06 · Assessment</p><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">20 timed multiple-choice questions in a secured full-screen test. Answers and explanations are shown after submission.</p></div>
+<div class="section" id="sq"><div class="quiz-card" id="quizRoot"></div></div>
+</section>
+  </main>
+</div>
+<script>
+/* ---------- Tabs, TOC, scroll spy ---------- */
+(function(){
+  const tabs=document.querySelectorAll('.tab'), panels=document.querySelectorAll('.panel');
+  const tocEl=document.getElementById('toc'), total=tabs.length, pt=document.getElementById('progressText');
+  function buildToc(panel){
+    const data=JSON.parse(panel.getAttribute('data-toc')||'[]');
+    tocEl.innerHTML=data.map(([id,l])=>`<li><a href="#${id}" data-target="${id}">${l}</a></li>`).join('');
+    const f=tocEl.querySelector('a'); if(f)f.classList.add('active');
+  }
+  let manual=null;
+  function activate(i){
+    tabs.forEach((t,k)=>t.classList.toggle('active',k===i));
+    panels.forEach((p,k)=>p.classList.toggle('active',k===i));
+    manual=null; buildToc(panels[i]); pt.textContent=`Tab ${i+1} of ${total}`;
+    window.scrollTo({top:0,behavior:'instant'});
+    tabs[i].scrollIntoView({inline:'center',block:'nearest'});
+  }
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('.toc-list a'); if(!a)return; e.preventDefault();
+    const el=document.getElementById(a.dataset.target);
+    manual=a.dataset.target; tocEl.querySelectorAll('a').forEach(x=>x.classList.toggle('active',x===a));
+    if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});
+  });
+  let tick=false;
+  function spy(){
+    if(manual){tick=false;return;}
+    const p=document.querySelector('.panel.active'); if(!p){tick=false;return;}
+    let cur=null; const secs=[...p.querySelectorAll('.section')];
+    secs.forEach(s=>{ if(s.getBoundingClientRect().top-180<0)cur=s.id; });
+    if(secs.length && window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-4) cur=secs[secs.length-1].id;
+    if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));
+    tick=false;
+  }
+  window.addEventListener('scroll',()=>{ if(!tick){requestAnimationFrame(spy);tick=true;} },{passive:true});
+  ['wheel','touchstart','keydown','pointerdown'].forEach(ev=>window.addEventListener(ev,e=>{ if(e.target&&e.target.closest&&e.target.closest('.toc-list a'))return; manual=null; },{passive:true}));
+  window.resetProgress=()=>activate(0);
+  activate(0);
+})();
+
+
+const __root=document.getElementById('quizRoot');
+if(__root){__root.innerHTML='<div class="qz-card"><h2 style="margin-top:0">Basic Technical Verification — Final Assessment</h2>'
++'<p style="color:var(--ink-soft);font-size:14px;line-height:1.6">A timed, proctored, exam-style assessment. Questions are shuffled on every attempt and answers with explanations are shown only after you submit.</p>'
++'<ul class="qz-list"><li><b>Questions</b><span>20 multiple-choice</span></li><li><b>Time limit</b><span>30 min</span></li><li><b>Secure mode</b><span>Fullscreen · 3 warnings → auto-submit</span></li></ul>'
++'<div class="qz-center"><button class="qz-btn" id="assessStartBtn" type="button">▶ Start Assessment</button></div></div><div id="scoreBoard" class="score-board" style="display:none"></div>';}
+window.MT_EXAM = {"slug": "4_basic_technical_verification", "title": "Basic Technical Verification · Manual Testing", "minPerQ": 1.5, "assess": [{"q": "Which tool is best to see the HTTP requests a page makes?", "options": ["Elements tab", "Network tab", "Console tab", "Lighthouse"], "answer": 1, "exp": "The Network tab lists all requests with headers, payloads, timing and status."}, {"q": "HTTP status 403 means:", "options": ["Not found", "Authenticated but not permitted", "Server crashed", "Created"], "answer": 1, "exp": "401 = not authenticated; 403 = authenticated but forbidden."}, {"q": "Which status code is correct for successfully creating a resource via POST?", "options": ["200 or 201 (201 preferred)", "301", "404", "500"], "answer": 0, "exp": "201 Created is the standard for new resources; many APIs return 200."}, {"q": "A 500 response to invalid user input usually indicates:", "options": ["Correct validation", "A server-side defect — should be a 4xx", "A network issue", "Caching"], "answer": 1, "exp": "Invalid input should be handled with a 400/422, not crash the server."}, {"q": "Which SQL statement retrieves rows?", "options": ["INSERT", "SELECT", "DROP", "COMMIT"], "answer": 1, "exp": "SELECT reads data without changing it — the main verification command."}, {"q": "Which query finds the number of orders per status?", "options": ["SELECT status, COUNT(*) FROM orders GROUP BY status;", "SELECT COUNT(status) FROM orders WHERE status;", "SELECT * FROM status;", "COUNT orders BY status;"], "answer": 0, "exp": "Aggregate with COUNT and GROUP BY."}, {"q": "How do you test for NULL values in SQL?", "options": ["= NULL", "IS NULL", "== NULL", "EQUALS NULL"], "answer": 1, "exp": "NULL is unknown; comparison with = never matches. Use IS NULL / IS NOT NULL."}, {"q": "Which JOIN returns all customers, even those without orders?", "options": ["INNER JOIN orders → customers", "customers LEFT JOIN orders", "orders INNER JOIN customers", "CROSS JOIN"], "answer": 1, "exp": "A LEFT JOIN keeps all rows from the left table; combine with WHERE o.id IS NULL to find those with no orders."}, {"q": "HAVING differs from WHERE because it:", "options": ["Filters groups after aggregation", "Filters before reading data", "Sorts rows", "Joins tables"], "answer": 0, "exp": "WHERE filters rows; HAVING filters aggregated groups."}, {"q": "Before running UPDATE on a test database you should:", "options": ["Run without WHERE", "Preview with SELECT using the same WHERE", "Use production", "Skip checks"], "answer": 1, "exp": "Preview which rows are affected, then update, then re-check."}, {"q": "An orphan record in order_items is one where:", "options": ["quantity is 0", "order_id has no matching row in orders", "price is high", "product is deleted"], "answer": 1, "exp": "A child row refers to a missing parent — an integrity defect."}, {"q": "In DevTools, which option helps simulate a slow mobile connection?", "options": ["Network throttling (e.g. Slow 3G)", "Disable JavaScript", "Console clear", "Elements edit"], "answer": 0, "exp": "Throttling reveals spinner, timeout and retry behaviour."}, {"q": "You remove the 'maxlength' attribute in Elements and send 200 chars to test:", "options": ["Server-side validation", "CSS", "Cookies", "Caching"], "answer": 0, "exp": "Client-side limits can be bypassed; the server must enforce rules too."}, {"q": "Which HTTP method is used to partially update a resource?", "options": ["GET", "POST", "PATCH", "TRACE"], "answer": 2, "exp": "PATCH updates part of a resource; PUT replaces it entirely."}, {"q": "In Postman, {{baseUrl}} refers to:", "options": ["A comment", "An environment/collection variable", "A header", "A response code"], "answer": 1, "exp": "Double-curly braces insert variable values."}, {"q": "Which Postman snippet checks the status code is 200?", "options": ["pm.test('ok', ()=>pm.response.to.have.status(200))", "assert(200)", "check status = 200", "pm.status(200)"], "answer": 0, "exp": "pm.test with pm.response.to.have.status."}, {"q": "Swagger UI is mostly used to:", "options": ["Draw diagrams", "Read API docs and try endpoints interactively", "Edit databases", "Measure CPU"], "answer": 1, "exp": "It renders an OpenAPI spec as an interactive page."}, {"q": "A request with a valid token but accessing another user's order returns 200 with data. This is:", "options": ["Fine", "A serious authorisation (IDOR) defect", "A caching feature", "A UI bug"], "answer": 1, "exp": "Broken object-level authorisation exposes other users' data."}, {"q": "UI shows 'Saved!' but SELECT finds no row. What happened?", "options": ["UI and DB can disagree — report as a defect with evidence", "Nothing; trust the UI", "DB is always wrong", "Normal behaviour"], "answer": 0, "exp": "Verification across layers catches false success messages."}, {"q": "Which cookie flags improve security?", "options": ["HttpOnly, Secure, SameSite", "Large, Fast", "Public, Global", "Open, Free"], "answer": 0, "exp": "They reduce XSS/CSRF and plain-text transmission risks."}]};
+/* =====================================================================
+   Final assessment — full-screen, timed mock exam (graded in-browser)
+   ===================================================================== */
+(function(){
+  const C = window.MT_EXAM;
+  const BANK = C.assess.map((q,i)=>Object.assign({id:'q'+i}, q));
+  const EXAM_MIN = Math.max(5, Math.ceil(C.assess.length*C.minPerQ));
+  const EXAM_SECONDS = EXAM_MIN*60;
+  const LS_KEY = 'manualtesting_scores_' + C.slug;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash .card:hover{transform:none}
+  .exam-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9;padding:0}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-fswarn{position:fixed;inset:0;z-index:100003;background:rgba(15,23,42,.92);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#fff;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fswarn .fw-box{max-width:520px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .exam-fswarn h3{font-size:30px;font-weight:800;margin:0;display:flex;align-items:center;gap:12px;color:#fff}
+  .exam-fswarn p{margin:0;font-size:16px;color:#e2e8f0;line-height:1.5}
+  .exam-fswarn .fw-count{font-size:16px;font-weight:600;color:#fff}
+  .exam-fswarn .fw-btn{margin-top:6px;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:15px 26px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+  .exam-fswarn .fw-btn:hover{background:#000}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}.exam-q-pane{padding:20px}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+  function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function examDialog(title,msg,okLabel,cancel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">${cancel?'<button class="exam-btn nav" data-a="0">Cancel</button>':''}<button class="exam-btn primary" data-a="1">${okLabel||'OK'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d && cancel){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores(); a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: tab-switch / fullscreen-exit warnings (3 strikes -> auto-submit) ---- */
+  let warns=0, lastWarn=0, proctorOn=false;
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function hideFsWarn(){ const w=document.getElementById('examFsWarn'); if(w)w.remove(); }
+  function showFsWarn(n){
+    injectCss(); hideFsWarn();
+    const w=document.createElement('div'); w.className='exam-fswarn'; w.id='examFsWarn';
+    w.innerHTML='<div class="fw-box"><h3><span>&#9888;&#65039;</span> Fullscreen exited</h3>'+
+      '<p>The assessment must remain in fullscreen mode.</p>'+
+      '<div class="fw-count">Warning '+n+' of 3</div>'+
+      '<button class="fw-btn" id="examFsReturn">Return to assessment</button></div>';
+    document.body.appendChild(w);
+    const btn=document.getElementById('examFsReturn');
+    btn.addEventListener('click',()=>{
+      const el=document.documentElement;
+      const done=()=>{ fsWanted=true; hideFsWarn(); };
+      if(el.requestFullscreen){ el.requestFullscreen().then(done).catch(()=>{}); } else { done(); }
+    });
+    try{btn.focus();}catch(e){}
+  }
+  function countWarn(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<1500)return; lastWarn=now;
+    warns++;
+    if(warns>=3){ hideFsWarn(); examDialog('Test submitted','You left the test 3 times. It has been auto-submitted.'); submitExam(true); }
+    else if(kind==='fs'){ showFsWarn(warns); }
+    else { examDialog('Warning '+warns+' of 3','Switching tabs or leaving the window is not allowed. After 3 warnings the test is auto-submitted.'); }
+  }
+  function fsHandler(){
+    if(!examOn)return;
+    if(document.fullscreenElement){ hideFsWarn(); return; }
+    if(fsWanted){ countWarn('fs'); }
+  }
+  function visHandler(){ if(document.hidden){ showCover(); countWarn(); } else { hideCover(); } }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function keyGuard(e){ const k=(e.key||'').toLowerCase(); if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; } }
+  let fsWanted=false;
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+  }
+  function stopProctor(){
+    proctorOn=false; hideFsWarn();
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    hideCover();
+  }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; ${C.title} &mdash; Final Assessment</h2>
+      <p>A timed, proctored, exam-style assessment for the Manual Testing track.</p>
+      <ul>
+        <li><b>${BANK.length} questions</b>, shuffled every attempt</li>
+        <li><b>${EXAM_MIN}-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Correct answers and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> where your browser allows it</li>
+        <li><b>No tab / window switching</b> and <b>no exiting fullscreen (Esc)</b> &mdash; 3 warnings and the test <b>auto-submits</b></li>
+        <li>Copy and right-click are disabled during the test</li>
+      </ul>
+      <div style="display:flex;gap:10px"><button class="exam-btn nav" id="examCancel" style="flex:0 0 auto">Cancel</button>
+      <button class="exam-btn primary" id="examBegin" style="flex:1;padding:14px">Start Test &rarr;</button></div>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examCancel').addEventListener('click',()=>sp.remove());
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      fsWanted=false;
+      if(document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().then(()=>{fsWanted=true;}).catch(()=>{}); }
+      sp.remove(); enterExam();
+    });
+  }
+
+  function enterExam(){
+    injectCss();
+    items = shuffle(BANK);
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    const ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">${C.title} &mdash; Final Assessment</div><div class="et-sub">${items.length} questions &middot; one attempt &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}</div>
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}" tabindex="0"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>{
+      const pick=()=>{ answers[id]=+el.dataset.i; pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); refreshPalette(); };
+      el.addEventListener('click',pick);
+      el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();} });
+    });
+    document.getElementById('examPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    document.getElementById('examNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();});
+    refreshPalette();
+    pane.scrollTop=0;
+  }
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examDialog('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test', true);
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    let score=0; items.forEach(it=>{ if(answers[it.id]===it.answer) score++; });
+    showResults(score);
+  }
+  function showResults(score){
+    const total=items.length; saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below, revisit the modules and try again.';
+    if(pct>=85)msg='Outstanding &mdash; you have expert-level command of this topic.';
+    else if(pct>=65)msg='Solid pass. Review the questions you missed and you are interview-ready.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the modules you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const you=answers[it.id], attempted=(you!=null), ok=attempted&&you===it.answer;
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      inner+= attempted ? '<div class="ra '+(ok?'cor':'wrong')+'">Your answer: '+String.fromCharCode(65+you)+'. '+it.options[you]+'</div>' : '<div class="ra wrong">Your answer: <i>Not answered</i></div>';
+      if(!ok) inner+='<div class="ra cor">Correct: '+String.fromCharCode(65+it.answer)+'. '+it.options[it.answer]+'</div>';
+      if(it.exp) inner+='<div class="rx">'+it.exp+'</div>';
+      return '<div class="r '+(ok?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; ${C.title}</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another attempt</button></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    document.getElementById('examRetry').addEventListener('click',()=>{ closeExam(); showSplash(); });
+    document.getElementById('examClose').addEventListener('click',closeExam);
+  }
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',showSplash);
+  renderScoreboard();
+})();
+
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solutions Architecture (Post-Sales) — Customer Success Engineer (CSE)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============= Notion-inspired theme ============= */
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#ad1a72 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans';font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'JetBrains Mono',monospace;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans';font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'JetBrains Mono',monospace;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'JetBrains Mono',monospace;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'JetBrains Mono',monospace;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'JetBrains Mono',monospace;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'JetBrains Mono',monospace;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+</style>
+<!-- ── Global theme overlay (DESIGN-CBuddy.md) ── -->
+<link rel="stylesheet" href="/theme-cbuddy.css">
+<style>
+/* CareerBuddy: sticky sidebar visible scrollbar */
+.toc,.sidebar,.sidenav{scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc::-webkit-scrollbar,.sidebar::-webkit-scrollbar,.sidenav::-webkit-scrollbar{width:9px;height:9px}
+.toc::-webkit-scrollbar-thumb,.sidebar::-webkit-scrollbar-thumb,.sidenav::-webkit-scrollbar-thumb{background:#cbd2e0;border-radius:8px}
+.toc::-webkit-scrollbar-thumb:hover,.sidebar::-webkit-scrollbar-thumb:hover,.sidenav::-webkit-scrollbar-thumb:hover{background:#9aa4b8}
+.toc::-webkit-scrollbar-track,.sidebar::-webkit-scrollbar-track,.sidenav::-webkit-scrollbar-track{background:transparent}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@100..900&display=swap">
+<style>
+/* -- Unify typography: Noto Sans everywhere (CareerBuddy) -- */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,dl,dt,dd,td,th,div,section,article,header,footer,nav,aside,main,label,button,input,select,textarea,blockquote,figcaption,small,strong,b,em,i{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif !important}
+.material-symbols-outlined,.material-icons{font-family:'Material Symbols Outlined','Material Icons' !important}
+code,pre,kbd,samp,tt,.mono,[class*="mono"],[class*="Mono"],[class*="code"],[class*="Code"],[class*="tok"],[class*="hljs"]{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+
+<style>
+/* Practice + quick-check additions (same visual language as the reference) */
+.practice-label{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:#0a5f0a;background:var(--green-soft);padding:3px 9px;border-radius:5px;margin-bottom:6px}
+.saq-scenario{font-size:14px;color:var(--ink-soft);margin:0 0 10px;line-height:1.55}
+.mcq-reset{margin-top:6px}
+.steps{counter-reset:st;list-style:none;padding-left:0 !important}
+.steps>li{counter-increment:st;position:relative;padding-left:40px;margin:12px 0 !important}
+.steps>li::before{content:counter(st);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;
+  background:#14213D;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}
+.script{background:var(--bg-soft);border-left:3px solid #14213D;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:14.5px}
+.script.bad{border-left-color:var(--red)}
+.script.good{border-left-color:var(--green)}
+.script b{display:block;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:2px}
+</style>
+
+<style>
+/* Visible, thin navbar scrollbar */
+.tabbar{overflow-x:auto !important;scrollbar-width:thin !important;scrollbar-color:#000000 #e2e8f0 !important;padding-bottom:4px}
+.tabbar::-webkit-scrollbar{display:block !important;height:8px}
+.tabbar::-webkit-scrollbar-track{background:#e2e8f0;border-radius:8px}
+.tabbar::-webkit-scrollbar-thumb{background:#000000;border-radius:8px}
+.tabbar::-webkit-scrollbar-thumb:hover{background:#333333}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<!-- ============= STICKY HEADER ============= -->
+<header class="header"><div class="header-top"><div class="brand"><div class="brand-mark">SA</div><span>Solutions Architecture (Post-Sales)<span class="brand-sub"> · Customer Success Engineer (CSE)</span></span></div><div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 12</span></span><button class="btn" onclick="resetProgress()">↻ Reset</button></div></div><nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Fundamentals</button><button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> Discovery</button><button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> Workflow Design Patterns</button><button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> Webhooks Deep Dive</button><button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> Building the Receiver</button><button class="tab" data-tab="t6" role="tab"><span class="tab-num">06</span> Data Mapping & Integration</button><button class="tab" data-tab="t7" role="tab"><span class="tab-num">07</span> Security & Authentication</button><button class="tab" data-tab="t8" role="tab"><span class="tab-num">08</span> Reliability & Error Handling</button><button class="tab" data-tab="t9" role="tab"><span class="tab-num">09</span> Documentation & Handover</button><button class="tab" data-tab="t10" role="tab"><span class="tab-num">10</span> Real-World Scenarios</button><button class="tab" data-tab="t11" role="tab"><span class="tab-num">11</span> Interview Prep</button><button class="tab" data-tab="t12" role="tab"><span class="tab-num">12</span> Assessment</button></nav></header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside><main class="main">
+<section class="panel active" id="t1" data-toc="[[&quot;s1-1&quot;, &quot;What Post-Sales Architecture Means&quot;], [&quot;s1-2&quot;, &quot;The Delivery Lifecycle&quot;], [&quot;s1-3&quot;, &quot;Typical Deliverables&quot;], [&quot;s1-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Basic</span><span class="level-tag inter">Intermediate</span></div><div class="panel-eyebrow">Module 01 · Foundations</div><h1 class="panel-title">Post-Sales Solutions Architecture</h1><p class="panel-subtitle">How a CSE designs custom workflows, scripts and webhook automations so that your product fits a specific client's real-world ecosystem after the sale.</p></div>
+<div class="section" id="s1-1"><h2><span class="sec-emoji">🏛️</span> What Post-Sales Architecture Means</h2><p><strong>Solutions architecture</strong> is the discipline of designing how separate systems work together to solve a business problem. <strong>Post-sales</strong> means the contract is signed and the customer now needs the product to work inside their world: their CRM, ERP, identity provider, data warehouse and internal tools. A CSE designs and often builds that glue.</p><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> adding a new room to an existing house. The architect must respect the current plumbing, wiring and walls (the client's ecosystem) instead of drawing on an empty plot.</div></div><div style="overflow-x:auto"><table><thead><tr><th></th><th>Pre-sales architecture</th><th>Post-sales architecture (CSE)</th></tr></thead><tbody><tr><td>Goal</td><td>Prove it can work</td><td>Make it actually work in production</td></tr><tr><td>Detail</td><td>Diagrams and demos</td><td>Real data, credentials, volumes, edge cases</td></tr><tr><td>Output</td><td>Proposal, proof of concept</td><td>Working integration, runbook, handover</td></tr><tr><td>Risk</td><td>Over-promising</td><td>Silent failures, adoption gaps</td></tr></tbody></table></div></div>
+<div class="section" id="s1-2"><h2><span class="sec-emoji">🔁</span> The Delivery Lifecycle</h2><ol class="steps"><li><b>Discover</b> the client's systems, data flows and constraints.</li><li><b>Design</b> the target workflow and agree it in a short design document.</li><li><b>Build</b> scripts, webhooks and configuration in small increments.</li><li><b>Validate</b> with real sample data, error cases and a user acceptance test.</li><li><b>Deploy</b> with monitoring and a rollback plan.</li><li><b>Hand over</b> documentation and training, then monitor the account's health.</li></ol></div>
+<div class="section" id="s1-3"><h2><span class="sec-emoji">📦</span> Typical Deliverables</h2><div style="overflow-x:auto"><table><thead><tr><th>Deliverable</th><th>Purpose</th><th>Audience</th></tr></thead><tbody><tr><td>Solution design doc</td><td>Agreed scope, flow, data mapping, risks</td><td>Client IT, product owner</td></tr><tr><td>Architecture diagram</td><td>One-page picture of systems and arrows</td><td>Everyone</td></tr><tr><td>Scripts / webhook receiver</td><td>The automation itself, in version control</td><td>Client developers, you</td></tr><tr><td>Runbook</td><td>How to monitor, troubleshoot, redeploy</td><td>Client ops, support</td></tr><tr><td>Test evidence</td><td>Sample inputs, outputs, UAT sign-off</td><td>Client sponsor</td></tr></tbody></table></div></div>
+<div class="section" id="s1-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>List three differences between pre-sales and post-sales solution work.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Pre-sales proves feasibility with demos and diagrams; post-sales delivers production-ready work with real data, security and volumes; post-sales also owns handover, monitoring and long-term adoption.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>The main goal of a CSE in post-sales architecture is to…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Win the deal</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Make the product work in the client's real environment</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Write marketing material</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Replace the client's systems</li></ul><div class="mcq-feedback" data-expl="Delivery in the client&#x27;s ecosystem."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t2" data-toc="[[&quot;s2-1&quot;, &quot;Systems and Data Flow Inventory&quot;], [&quot;s2-2&quot;, &quot;Discovery Questionnaire&quot;], [&quot;s2-3&quot;, &quot;Current State vs Target State&quot;], [&quot;s2-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Basic</span><span class="level-tag inter">Intermediate</span></div><div class="panel-eyebrow">Module 02 · Discovery</div><h1 class="panel-title">Discovering the Client's Ecosystem</h1><p class="panel-subtitle">You cannot design what you do not understand. Map systems, data flows and constraints before drawing a single arrow.</p></div>
+<div class="section" id="s2-1"><h2><span class="sec-emoji">🗺️</span> Systems and Data Flow Inventory</h2><p>Start by listing every system the workflow will touch and, for each one, <strong>who owns it, how you connect to it, what data lives there and how often it changes</strong>. Then draw the data flows: which system is the source of truth for which data?</p><div style="overflow-x:auto"><table><thead><tr><th>Question area</th><th>Examples</th><th>Why it matters</th></tr></thead><tbody><tr><td>Systems</td><td>CRM, ERP, billing, ticketing, data warehouse</td><td>Defines integration endpoints</td></tr><tr><td>APIs and access</td><td>REST, SOAP, SFTP, database only, no API</td><td>Decides the technique</td></tr><tr><td>Data</td><td>Volume per day, peak, key fields, formats</td><td>Sizing and mapping</td></tr><tr><td>Triggers</td><td>Real time event or nightly batch?</td><td>Webhook vs scheduled job</td></tr><tr><td>Constraints</td><td>Firewall rules, VPN, data residency, change freeze</td><td>Often decide feasibility</td></tr><tr><td>People</td><td>Who approves, who maintains, who is on call</td><td>Ownership after handover</td></tr></tbody></table></div><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> a doctor taking a history before treating. Ten minutes of questions prevents the wrong treatment.</div></div></div>
+<div class="section" id="s2-2"><h2><span class="sec-emoji">📝</span> Discovery Questionnaire</h2><pre><span class="pre-lang">checklist</span><code>BUSINESS   What problem are we solving? How is it done today? What does success look like?
+SYSTEMS    Which systems are involved? Versions? Who owns each? Sandbox available?
+DATA       Source of truth per entity? Sample records? Volume per day / peak? Sensitive fields?
+TRIGGER    Real-time events or scheduled? Acceptable delay (seconds, minutes, hours)?
+ACCESS     Auth type? Allow-listed IPs? VPN? Rate limits? Service account available?
+FAILURE    What if it breaks? Who is told? Is manual fallback possible?
+TIMELINE   Go-live date, change freeze windows, approval steps</code></pre><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Always ask for <b>real sample data</b> before design. Documentation says one thing; production data (nulls, odd encodings, duplicates) says another.</div></div></div>
+<div class="section" id="s2-3"><h2><span class="sec-emoji">🎯</span> Current State vs Target State</h2><div style="overflow-x:auto"><table><thead><tr><th></th><th>Current state</th><th>Target state</th></tr></thead><tbody><tr><td>Process</td><td>Order emailed as a spreadsheet, keyed in by hand</td><td>Order created in the product, synced to the ERP automatically</td></tr><tr><td>Delay</td><td>Up to 1 business day</td><td>Under 2 minutes</td></tr><tr><td>Errors</td><td>About 3% typing errors</td><td>Validated automatically, exceptions flagged</td></tr><tr><td>Owner</td><td>Operations analyst</td><td>Integration monitored by the client's IT team</td></tr></tbody></table></div><p>Writing both states side by side makes the value measurable and gives you acceptance criteria for the project.</p></div>
+<div class="section" id="s2-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>A client says 'just connect our CRM to your product'. Write five discovery questions.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">1) Which CRM and version, and is a sandbox available? 2) Which objects and fields must sync, and which system is the source of truth? 3) Real time or batch, and what delay is acceptable? 4) What auth, firewall or VPN rules apply? 5) What volume per day and at peak, and what should happen when it fails?</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Why ask for real sample data during discovery?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> To fill the ticket</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Production data has quirks that documentation hides</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> It is a legal requirement</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> It speeds up the CPU</li></ul><div class="mcq-feedback" data-expl="Edge cases live in real data."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t3" data-toc="[[&quot;s3-1&quot;, &quot;Choosing the Interaction Style&quot;], [&quot;s3-2&quot;, &quot;Anatomy of a Good Workflow&quot;], [&quot;s3-3&quot;, &quot;Orchestration vs Choreography&quot;], [&quot;s3-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 03 · Design</div><h1 class="panel-title">Designing Workflows: Patterns That Work</h1><p class="panel-subtitle">Choose the right interaction style, ordering and error path before writing code.</p></div>
+<div class="section" id="s3-1"><h2><span class="sec-emoji">🧭</span> Choosing the Interaction Style</h2><div style="overflow-x:auto"><table><thead><tr><th>Style</th><th>How it works</th><th>Best when</th><th>Watch out for</th></tr></thead><tbody><tr><td>Request/response (sync)</td><td>Caller waits for the answer</td><td>Instant user feedback needed</td><td>Timeouts, tight coupling</td></tr><tr><td>Event-driven (webhooks)</td><td>System pushes events when something happens</td><td>Near real-time sync</td><td>Duplicates, ordering, retries</td></tr><tr><td>Polling</td><td>You ask 'anything new?' on a schedule</td><td>No webhook available</td><td>Wasted calls, delay, rate limits</td></tr><tr><td>Batch / scheduled</td><td>Process many records at set times</td><td>Large volumes, nightly loads</td><td>Big failures, stale data</td></tr></tbody></table></div><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> a restaurant. A waiter waiting at your table for every dish is request/response; the kitchen ringing a bell when a dish is ready is event-driven; checking the pass every 5 minutes is polling.</div></div></div>
+<div class="section" id="s3-2"><h2><span class="sec-emoji">🔧</span> Anatomy of a Good Workflow</h2><pre><span class="pre-lang">workflow (pseudo-YAML)</span><code>trigger:   webhook order.created from Product
+validate:  required fields present, currency in [USD, EUR, INR]
+transform: map product.order -&gt; erp.sales_order (see mapping table)
+act:       POST /erp/sales-orders  (idempotency key = product order id)
+onSuccess: write erp_id back to product order; log success
+onRetryable (429, 5xx, timeout): retry with backoff, max 5 times
+onFatal (400, mapping error):   send to dead-letter queue, alert integration owner</code></pre><p>Every workflow has the same five parts: <strong>trigger, validate, transform, act, and an explicit error path</strong>. The error path is the part beginners skip; in production it is the part that decides whether the client trusts your solution.</p></div>
+<div class="section" id="s3-3"><h2><span class="sec-emoji">🎼</span> Orchestration vs Choreography</h2><div style="overflow-x:auto"><table><thead><tr><th></th><th>Orchestration</th><th>Choreography</th></tr></thead><tbody><tr><td>Control</td><td>One coordinator calls each step</td><td>Each system reacts to events on its own</td></tr><tr><td>Visibility</td><td>Easy: one place to see the flow</td><td>Harder: spread across systems</td></tr><tr><td>Coupling</td><td>Coordinator knows all steps</td><td>Loose</td></tr><tr><td>Good for</td><td>Multi-step business processes with rollbacks</td><td>Simple notifications and fan-out</td></tr></tbody></table></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Start simple: one trigger and one action. Add complexity only when a real requirement demands it. Every extra step is another thing that can fail at 3 am.</div></div></div>
+<div class="section" id="s3-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Why must every workflow have an explicit error path?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">In production, failures such as timeouts, rate limits and bad data will happen. Without a defined path (retry, dead-letter, alert) records are lost silently and nobody knows until a customer complains.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Which style fits 'tell me immediately when an order is created' best?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Nightly batch</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Event-driven webhook</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Manual export</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Polling once a day</li></ul><div class="mcq-feedback" data-expl="Push events give near real-time updates."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t4" data-toc="[[&quot;s4-1&quot;, &quot;What Is a Webhook?&quot;], [&quot;s4-2&quot;, &quot;Verifying the Signature&quot;], [&quot;s4-3&quot;, &quot;Delivery Behaviour You Must Design For&quot;], [&quot;s4-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 04 · Webhooks</div><h1 class="panel-title">Webhooks: Anatomy, Security and Delivery</h1><p class="panel-subtitle">The most common integration building block a CSE designs and supports.</p></div>
+<div class="section" id="s4-1"><h2><span class="sec-emoji">🔔</span> What Is a Webhook?</h2><p>A <strong>webhook</strong> is an HTTP request that a system sends to a URL you provide when an event happens. Instead of repeatedly asking, you are told.</p><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> a doorbell versus checking the mailbox every five minutes. The doorbell rings only when there is something, so you react immediately and waste no effort.</div></div><pre><span class="pre-lang">json (payload example)</span><code>{
+  &quot;id&quot;: &quot;evt_8f31c2&quot;,
+  &quot;type&quot;: &quot;order.created&quot;,
+  &quot;created_at&quot;: &quot;2026-10-06T09:14:03Z&quot;,
+  &quot;data&quot;: { &quot;order_id&quot;: &quot;ord_1042&quot;, &quot;amount&quot;: 4999, &quot;currency&quot;: &quot;INR&quot; }
+}</code></pre><p>The payload has an <code>id</code> (unique per event, used for de-duplication), a <code>type</code> (what happened), a timestamp and the <code>data</code>. Always design around the event <code>id</code>.</p></div>
+<div class="section" id="s4-2"><h2><span class="sec-emoji">🔐</span> Verifying the Signature</h2><pre><span class="pre-lang">python</span><code>import hmac, hashlib
+
+def is_valid(secret: bytes, raw_body: bytes, signature_header: str) -&gt; bool:
+    expected = hmac.new(secret, raw_body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature_header)   # constant-time compare</code></pre><p>The sender signs the <strong>raw body</strong> with a shared secret (HMAC-SHA256) and sends the result in a header. Your receiver recomputes it and compares. If they match, the request really came from the sender and was not changed. Use the <em>raw</em> bytes, because re-serialising JSON changes spacing and breaks the signature, and use <code>compare_digest</code> to avoid timing attacks.</p><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Also check the timestamp (reject events older than about 5 minutes) to stop replay attacks, and accept requests only over HTTPS.</div></div></div>
+<div class="section" id="s4-3"><h2><span class="sec-emoji">📬</span> Delivery Behaviour You Must Design For</h2><div style="overflow-x:auto"><table><thead><tr><th>Behaviour</th><th>What happens</th><th>Your design answer</th></tr></thead><tbody><tr><td>At-least-once delivery</td><td>The same event may arrive twice</td><td>Idempotent handling using the event id</td></tr><tr><td>Retries</td><td>Non-2xx or timeout triggers resend, often with backoff</td><td>Return 2xx fast, process later</td></tr><tr><td>Out-of-order delivery</td><td>Update may arrive before create</td><td>Use timestamps or fetch latest state from the API</td></tr><tr><td>Bursts</td><td>Bulk import sends thousands of events</td><td>Queue and rate-limit your processing</td></tr><tr><td>Endpoint down</td><td>Sender retries then gives up (often after hours or days)</td><td>Replay tool or reconciliation job</td></tr></tbody></table></div></div>
+<div class="section" id="s4-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Why should a webhook receiver return 2xx quickly and process the event asynchronously?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Senders time out and retry if the response is slow, causing duplicates and load. Acknowledge immediately after verifying and queuing, then process in a worker.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>The webhook signature must be computed over…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> The parsed JSON re-serialised</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> The raw request body bytes</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Only the headers</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> The URL only</li></ul><div class="mcq-feedback" data-expl="Re-serialising changes the bytes and breaks verification."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t5" data-toc="[[&quot;s5-1&quot;, &quot;A Minimal Receiver in Node.js&quot;], [&quot;s5-2&quot;, &quot;The Architecture&quot;], [&quot;s5-3&quot;, &quot;Testing the Receiver&quot;], [&quot;s5-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 05 · Build</div><h1 class="panel-title">Building a Reliable Webhook Receiver</h1><p class="panel-subtitle">A production-grade receiver verifies, de-duplicates, queues and acknowledges. Code and architecture side by side.</p></div>
+<div class="section" id="s5-1"><h2><span class="sec-emoji">💻</span> A Minimal Receiver in Node.js</h2><pre><span class="pre-lang">javascript</span><code>const express = require(&#x27;express&#x27;);
+const crypto = require(&#x27;crypto&#x27;);
+const app = express();
+
+app.post(&#x27;/webhooks/orders&#x27;, express.raw({ type: &#x27;application/json&#x27; }), async (req, res) =&gt; {
+  const sig = req.get(&#x27;X-Signature&#x27;) || &#x27;&#x27;;
+  const expected = crypto.createHmac(&#x27;sha256&#x27;, process.env.WEBHOOK_SECRET)
+                         .update(req.body).digest(&#x27;hex&#x27;);
+  if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return res.sendStatus(401);
+
+  const event = JSON.parse(req.body);
+  if (await seen(event.id)) return res.sendStatus(200);   // duplicate: acknowledge, do nothing
+  await queue.add(&#x27;order-events&#x27;, event);                  // hand off to a worker
+  await markSeen(event.id);
+  res.sendStatus(202);                                     // accepted, processing later
+});</code></pre><p>Step by step: <code>express.raw</code> keeps the raw bytes for the signature; invalid signatures get 401 and are never processed; the <code>seen</code> check makes the handler <strong>idempotent</strong>; the event goes on a queue; and the reply is sent within milliseconds.</p></div>
+<div class="section" id="s5-2"><h2><span class="sec-emoji">🏗️</span> The Architecture</h2><pre><span class="pre-lang">flow</span><code>Sender --HTTPS--&gt; API gateway --&gt; Receiver (verify, dedupe, enqueue)
+                                        |
+                                        v
+                                     Queue --&gt; Worker (transform, call target API, retry)
+                                        |                    |
+                                        |                    +--&gt; Dead-letter queue --&gt; Alert + replay tool
+                                        v
+                                  Store: event id, status, attempts, last error</code></pre><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> a post office. The front desk accepts and stamps the parcel (receiver), sorting staff deliver it (worker), and undeliverable parcels go to a lost-and-found shelf (dead-letter queue) where someone can look at them later.</div></div></div>
+<div class="section" id="s5-3"><h2><span class="sec-emoji">🧪</span> Testing the Receiver</h2><pre><span class="pre-lang">bash</span><code># Send a signed test event
+BODY=&#x27;{&quot;id&quot;:&quot;evt_test1&quot;,&quot;type&quot;:&quot;order.created&quot;,&quot;data&quot;:{&quot;order_id&quot;:&quot;ord_1&quot;}}&#x27;
+SIG=$(printf &#x27;%s&#x27; &quot;$BODY&quot; | openssl dgst -sha256 -hmac &quot;$WEBHOOK_SECRET&quot; | awk &#x27;{print $2}&#x27;)
+curl -i -X POST http://localhost:3000/webhooks/orders -H &quot;X-Signature: $SIG&quot; -H &quot;Content-Type: application/json&quot; -d &quot;$BODY&quot;
+# Send it twice: second call must be 200 and must not create a second record</code></pre><p>Test three cases every time: a valid signature, an invalid signature (expect 401) and a duplicate (expect no second effect). Use tools like ngrok to receive real webhooks on your laptop during development.</p></div>
+<div class="section" id="s5-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Explain what 'idempotent' means for a webhook handler and give one way to achieve it.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Processing the same event more than once has the same effect as processing it once. Achieve it by storing each event id and skipping ids already processed, or by using an idempotency key when calling the target API.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>A dead-letter queue is used to…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Delete failed events</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Hold events that could not be processed so they can be inspected and replayed</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Speed up processing</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Store passwords</li></ul><div class="mcq-feedback" data-expl="Failures are kept, not lost."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t6" data-toc="[[&quot;s6-1&quot;, &quot;Field Mapping&quot;], [&quot;s6-2&quot;, &quot;Identity, Upserts and Limits&quot;], [&quot;s6-3&quot;, &quot;Build vs Buy: iPaaS or Custom Code?&quot;], [&quot;s6-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 06 · Integration</div><h1 class="panel-title">Integration Patterns and Data Mapping</h1><p class="panel-subtitle">Moving data between systems with different shapes, IDs and rules.</p></div>
+<div class="section" id="s6-1"><h2><span class="sec-emoji">🔀</span> Field Mapping</h2><p>Two systems describe the same thing differently. A <strong>mapping</strong> says exactly how each source field becomes a target field, including transformations.</p><div style="overflow-x:auto"><table><thead><tr><th>Source (product)</th><th>Target (ERP)</th><th>Transformation</th><th>Note</th></tr></thead><tbody><tr><td>order.id</td><td>external_ref</td><td>Copy</td><td>Keeps traceability</td></tr><tr><td>order.amount (cents)</td><td>total</td><td>Divide by 100</td><td>Integer to decimal</td></tr><tr><td>customer.email</td><td>contact.email</td><td>Lowercase, trim</td><td>Match key</td></tr><tr><td>order.created_at (UTC)</td><td>order_date</td><td>Convert to local date</td><td>Time zone rule agreed with client</td></tr><tr><td>order.status = paid</td><td>state = CONFIRMED</td><td>Lookup table</td><td>Document unmapped statuses</td></tr></tbody></table></div><pre><span class="pre-lang">yaml</span><code>mapping:
+  total:        { from: order.amount, op: divide, by: 100 }
+  external_ref: { from: order.id }
+  state:        { from: order.status, lookup: { paid: CONFIRMED, refunded: CANCELLED }, default: REVIEW }</code></pre></div>
+<div class="section" id="s6-2"><h2><span class="sec-emoji">🔗</span> Identity, Upserts and Limits</h2><div style="overflow-x:auto"><table><thead><tr><th>Topic</th><th>Practice</th></tr></thead><tbody><tr><td>Matching records</td><td>Store the other system's ID (external ID) on both sides; never match on names</td></tr><tr><td>Create vs update</td><td>Use <b>upsert</b> (update if exists, else create) keyed on external ID</td></tr><tr><td>Pagination</td><td>Loop through pages with cursors; never assume all data fits one response</td></tr><tr><td>Rate limits</td><td>Respect <code>429</code> and <code>Retry-After</code>; batch where supported</td></tr><tr><td>Partial failure</td><td>Process records individually; one bad record must not block 999 good ones</td></tr></tbody></table></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Keep a <b>sync log</b> table: record id, source id, target id, status, error. It is the first thing you open when the client says 'order 1042 is missing'.</div></div></div>
+<div class="section" id="s6-3"><h2><span class="sec-emoji">⚖️</span> Build vs Buy: iPaaS or Custom Code?</h2><div style="overflow-x:auto"><table><thead><tr><th></th><th>iPaaS (Zapier, Make, Workato, MuleSoft)</th><th>Custom scripts / service</th></tr></thead><tbody><tr><td>Speed to first version</td><td>Fast</td><td>Slower</td></tr><tr><td>Complex logic and volume</td><td>Limited, costly at scale</td><td>Full control</td></tr><tr><td>Ownership</td><td>Business or IT users can edit</td><td>Needs developers</td></tr><tr><td>Monitoring</td><td>Built-in dashboards</td><td>You must build it</td></tr><tr><td>Best for</td><td>Simple, low-volume, many standard connectors</td><td>Complex, high-volume, custom rules</td></tr></tbody></table></div><p>There is no universal answer: choose based on volume, complexity, who will maintain it, and the client's existing tools.</p></div>
+<div class="section" id="s6-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>A sync creates duplicate customers every time a record is edited. What is the likely mapping mistake and the fix?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">The integration creates instead of upserting and does not store the external ID. Store the target system's ID on the source record and use an upsert keyed on the external ID.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Why must one bad record not block the rest of a batch?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> It is faster to ignore errors</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Processing records individually isolates failures so good data still flows</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Batches cannot have errors</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> The API forbids it</li></ul><div class="mcq-feedback" data-expl="Isolate failures, report them, continue."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t7" data-toc="[[&quot;s7-1&quot;, &quot;Authentication Methods&quot;], [&quot;s7-2&quot;, &quot;Principles to Apply&quot;], [&quot;s7-3&quot;, &quot;Compliance Questions to Raise Early&quot;], [&quot;s7-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 07 · Security</div><h1 class="panel-title">Auth, Secrets and Compliance in Integrations</h1><p class="panel-subtitle">Every integration is a door into two systems. Design it so only the right visitors get through.</p></div>
+<div class="section" id="s7-1"><h2><span class="sec-emoji">🔑</span> Authentication Methods</h2><div style="overflow-x:auto"><table><thead><tr><th>Method</th><th>How it works</th><th>Use for</th></tr></thead><tbody><tr><td>API key</td><td>Static secret in a header</td><td>Simple server-to-server calls</td></tr><tr><td>OAuth 2.0 client credentials</td><td>App exchanges ID and secret for a short-lived token</td><td>Machine-to-machine integrations</td></tr><tr><td>OAuth 2.0 authorization code</td><td>User consents, app receives a token</td><td>Acting on behalf of a user</td></tr><tr><td>Basic auth</td><td>Username and password</td><td>Legacy systems only, over HTTPS</td></tr><tr><td>Mutual TLS / IP allow-list</td><td>Certificates or fixed addresses</td><td>High-security environments</td></tr></tbody></table></div><pre><span class="pre-lang">bash</span><code>curl -X POST https://auth.example.com/oauth/token \
+  -d grant_type=client_credentials -d client_id=$CLIENT_ID -d client_secret=$CLIENT_SECRET -d scope=orders.read
+# -&gt; {&quot;access_token&quot;:&quot;eyJ...&quot;,&quot;expires_in&quot;:3600}   Use it as: Authorization: Bearer &lt;token&gt;</code></pre></div>
+<div class="section" id="s7-2"><h2><span class="sec-emoji">🛡️</span> Principles to Apply</h2><ol class="steps"><li><b>Least privilege:</b> request only the scopes the workflow needs (read vs write).</li><li><b>Secrets management:</b> keep keys in a vault or environment variables, never in code or tickets.</li><li><b>Rotate:</b> plan for key rotation without downtime (support two active keys).</li><li><b>Encrypt:</b> HTTPS everywhere; verify certificates.</li><li><b>Minimise data:</b> send only fields needed; mask personal data in logs.</li><li><b>Audit:</b> log who called what, never the secret itself.</li></ol><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">If a secret is pasted into a ticket, chat or Git commit, treat it as leaked: rotate it immediately, even if you deleted the message.</div></div></div>
+<div class="section" id="s7-3"><h2><span class="sec-emoji">📜</span> Compliance Questions to Raise Early</h2><div style="overflow-x:auto"><table><thead><tr><th>Topic</th><th>Question</th></tr></thead><tbody><tr><td>Data residency</td><td>May data leave the client's country or region?</td></tr><tr><td>Personal data</td><td>Which fields are personal or regulated (GDPR, DPDP, HIPAA, PCI)?</td></tr><tr><td>Retention</td><td>How long may logs and queued events be stored?</td></tr><tr><td>Approvals</td><td>Does the client's security team need to review the design?</td></tr></tbody></table></div><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> a building's security desk. Visitors need the right badge for the right floor (scopes), badges expire (tokens), and every entry is logged.</div></div></div>
+<div class="section" id="s7-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Why is OAuth client credentials usually better than a long-lived API key shared in an email?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Tokens are short-lived and scoped, the client secret can be rotated centrally, and access can be revoked or audited. A shared static key can leak and stay valid indefinitely.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>A secret was pasted into a support ticket. What should you do?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Delete the ticket and carry on</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Rotate the secret immediately</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Ignore it</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Tell the client to be careful</li></ul><div class="mcq-feedback" data-expl="Assume it is compromised once exposed."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t8" data-toc="[[&quot;s8-1&quot;, &quot;Retries with Backoff and Jitter&quot;], [&quot;s8-2&quot;, &quot;Failure Patterns&quot;], [&quot;s8-3&quot;, &quot;Observability for Integrations&quot;], [&quot;s8-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 08 · Reliability</div><h1 class="panel-title">Making Automations Reliable</h1><p class="panel-subtitle">Networks fail, APIs throttle and data is dirty. Design for it from day one.</p></div>
+<div class="section" id="s8-1"><h2><span class="sec-emoji">🔁</span> Retries with Backoff and Jitter</h2><pre><span class="pre-lang">python</span><code>import random, time
+
+RETRYABLE = {429, 500, 502, 503, 504}
+
+def call_with_retry(send, max_attempts=5):
+    for attempt in range(max_attempts):
+        resp = send()
+        if resp.status_code not in RETRYABLE:
+            return resp                            # success or a non-retryable error (400, 404)
+        wait = min(60, 2 ** attempt) + random.random()   # 1s, 2s, 4s, 8s... plus jitter
+        time.sleep(float(resp.headers.get(&#x27;Retry-After&#x27;, wait)))
+    raise RuntimeError(&#x27;gave up after retries&#x27;)</code></pre><p><strong>Exponential backoff</strong> waits longer after each failure so a struggling system can recover; <strong>jitter</strong> (a random addition) stops thousands of clients retrying at the same instant. Retry only <em>transient</em> errors: a 400 will fail the same way forever.</p><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> a crowd leaving a stadium. If everyone rushes the gate together, nobody gets through; staggering the exits (jitter) clears it faster.</div></div></div>
+<div class="section" id="s8-2"><h2><span class="sec-emoji">🧯</span> Failure Patterns</h2><div style="overflow-x:auto"><table><thead><tr><th>Failure</th><th>Pattern</th><th>Effect</th></tr></thead><tbody><tr><td>Dependency slow or down</td><td>Timeout + circuit breaker</td><td>Fail fast instead of hanging threads</td></tr><tr><td>Duplicate delivery</td><td>Idempotency key</td><td>No double charges or records</td></tr><tr><td>Bad record</td><td>Dead-letter queue</td><td>Others keep flowing</td></tr><tr><td>Missed events</td><td>Reconciliation job (compare both systems daily)</td><td>Self-healing drift</td></tr><tr><td>Traffic burst</td><td>Queue + rate limit</td><td>Smooth load on target</td></tr></tbody></table></div></div>
+<div class="section" id="s8-3"><h2><span class="sec-emoji">📈</span> Observability for Integrations</h2><ol class="steps"><li>Log every event with its id, status and timing (structured JSON).</li><li>Expose metrics: events received, succeeded, retried, dead-lettered, processing lag.</li><li>Alert on <b>symptoms</b>: dead-letter queue growing, lag over 5 minutes, error rate above 2%.</li><li>Provide a dashboard and a replay tool the client can use.</li><li>Run a daily reconciliation report: counts in source versus target.</li></ol><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">The best integrations tell you they are broken <b>before</b> the customer does. Alerting on a growing dead-letter queue is usually the highest-value alert you can add.</div></div></div>
+<div class="section" id="s8-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Why add jitter to exponential backoff?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Without jitter many clients retry at the same moments and create synchronised bursts that keep the target overloaded. Random variation spreads the retries out.</div></div><div class="mcq" data-answer="2"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Which error should NOT be retried automatically?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> 503 Service Unavailable</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> 429 Too Many Requests</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> 400 Bad Request (invalid data)</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Network timeout</li></ul><div class="mcq-feedback" data-expl="A bad request fails every time until the data is fixed."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t9" data-toc="[[&quot;s9-1&quot;, &quot;Solution Design Document&quot;], [&quot;s9-2&quot;, &quot;UAT and Go-Live&quot;], [&quot;s9-3&quot;, &quot;Runbook for the Client&#x27;s Team&quot;], [&quot;s9-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Basic</span><span class="level-tag inter">Intermediate</span></div><div class="panel-eyebrow">Module 09 · Handover</div><h1 class="panel-title">Documenting and Handing Over the Solution</h1><p class="panel-subtitle">A solution nobody understands is a liability. Finish the project with documents, tests and training.</p></div>
+<div class="section" id="s9-1"><h2><span class="sec-emoji">📄</span> Solution Design Document</h2><pre><span class="pre-lang">template</span><code>1. Business goal and success metrics
+2. Scope: in / out
+3. Architecture diagram (systems, arrows, auth, protocols)
+4. Data flow and field mapping table
+5. Triggers, schedules, volumes, expected latency
+6. Error handling: retries, dead-letter, alerts, reconciliation
+7. Security: auth, scopes, secrets, data residency
+8. Environments and deployment steps; rollback plan
+9. Test plan and UAT acceptance criteria
+10. Ownership: who monitors, who is on call, escalation path
+11. Assumptions, risks, open questions</code></pre><p>Keep it short (3 to 6 pages). A diagram plus a mapping table communicates more than pages of prose, and it becomes the basis of acceptance.</p></div>
+<div class="section" id="s9-2"><h2><span class="sec-emoji">✅</span> UAT and Go-Live</h2><ol class="steps"><li>Prepare test cases from the target state: happy path, edge cases and failure cases.</li><li>Run them in the client's sandbox with their real sample data and get written sign-off.</li><li>Plan the cut-over: freeze window, data backfill, rollback.</li><li>Go live with extra monitoring for the first days.</li><li>Hold a short review after 2 weeks: volumes, errors, adoption.</li></ol></div>
+<div class="section" id="s9-3"><h2><span class="sec-emoji">📘</span> Runbook for the Client's Team</h2><pre><span class="pre-lang">runbook</span><code>SYMPTOM: Orders not appearing in ERP
+1. Check dashboard &#x27;orders-sync&#x27;: events received vs processed in last hour
+2. Dead-letter queue size &gt; 0?  -&gt; open record, read error, fix data, click Replay
+3. Auth errors (401)?           -&gt; rotate token in vault, restart worker
+4. Target API 5xx/429?          -&gt; wait; retries are automatic; escalate if &gt; 30 min
+ESCALATE: integration-owner@client.com, then CSE team (support portal, severity 2)</code></pre><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Handover is complete only when the client can <b>operate and troubleshoot</b> the solution without you, and knows exactly when to call you.</div></div></div>
+<div class="section" id="s9-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>What must be in place before you can say a project is handed over successfully?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Signed-off UAT, design document and runbook, working monitoring and alerts, a named owner on the client's side who has been trained, and an agreed escalation path.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>The best way to prove an integration meets requirements is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> A verbal promise</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> UAT with real sample data and written sign-off</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> A demo video</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Fewer tests</li></ul><div class="mcq-feedback" data-expl="Evidence against agreed acceptance criteria."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t10" data-toc="[[&quot;s10-1&quot;, &quot;Scenario: Order sync from product to ERP&quot;], [&quot;s10-2&quot;, &quot;Scenario: Ticket automation to chat&quot;], [&quot;s10-3&quot;, &quot;Scenario: Legacy SFTP batch to API&quot;], [&quot;s10-4&quot;, &quot;Scenario: Webhook storm during a bulk import&quot;], [&quot;s10-5&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 10 · Scenarios</div><h1 class="panel-title">Solutions Architecture Scenarios</h1><p class="panel-subtitle">Four realistic post-sales engagements and the design decisions behind them.</p></div>
+<div class="section" id="s10-1"><h2><span class="sec-emoji">🛒</span> Scenario: Order sync from product to ERP</h2><ul><li><b>Need:</b> every paid order must appear in the client's ERP within 2 minutes.</li><li><b>Design:</b> webhook <code>order.paid</code> to a receiver, queue, worker mapping fields and calling the ERP sales-order API with the order id as idempotency key.</li><li><b>Pitfall:</b> ERP accepts 5 requests per second; the worker rate-limits and the queue absorbs end-of-month bursts.</li><li><b>Safety net:</b> nightly reconciliation compares order counts and re-sends missing ones.</li></ul></div>
+<div class="section" id="s10-2"><h2><span class="sec-emoji">💬</span> Scenario: Ticket automation to chat</h2><ul><li>Notify a team channel when a high-priority ticket is created or breaches SLA.</li><li>Use a webhook from the ticketing system and a small script to post a formatted message through the chat tool's incoming webhook.</li><li>Rate limit and group alerts (digest every 5 minutes) to avoid noisy channels.</li></ul></div>
+<div class="section" id="s10-3"><h2><span class="sec-emoji">📁</span> Scenario: Legacy SFTP batch to API</h2><ul><li>The client's old system can only drop a CSV on SFTP nightly and has no API.</li><li>Design: scheduled job downloads the file, validates each row, upserts through the API, writes a result file back, and sends a summary email.</li><li>Key decision: process rows individually, report row-level errors, move the file to an archive folder so it is never processed twice.</li></ul></div>
+<div class="section" id="s10-4"><h2><span class="sec-emoji">🌩️</span> Scenario: Webhook storm during a bulk import</h2><ul><li>A client imports 200,000 records and the product sends 200,000 webhooks in 10 minutes. The receiver falls over and events are lost.</li><li>Fix: receiver only verifies and enqueues; workers scale on queue depth; backpressure and rate limiting protect the target; replay from the sender's event log fills any gap.</li><li>Lesson: design for the burst, not the average.</li></ul></div>
+<div class="section" id="s10-5"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>A client asks for real-time sync, but their ERP API allows only 2 requests per second. How do you respond?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Explain the constraint and propose a queue with rate-limited workers, giving near-real-time for normal load and controlled catch-up during bursts. Agree an acceptable maximum delay, batch where the API supports it, and add monitoring for queue lag.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>The safest way to handle a sudden burst of events is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Process them all instantly in the receiver</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Queue them and process at a controlled rate</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Drop the extras</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Ask the sender to stop</li></ul><div class="mcq-feedback" data-expl="Decouple receiving from processing."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t11" data-toc="[[&quot;s11-1&quot;, &quot;Concept Questions&quot;], [&quot;s11-2&quot;, &quot;How to Answer Scenario Questions&quot;], [&quot;s11-3&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span></div><div class="panel-eyebrow">Module 11 · Interviews</div><h1 class="panel-title">Interview Prep: Solutions Architecture (Post-Sales)</h1><p class="panel-subtitle">Questions you are likely to be asked, with model answers.</p></div>
+<div class="section" id="s11-1"><h2><span class="sec-emoji">🎤</span> Concept Questions</h2><div style="overflow-x:auto"><table><thead><tr><th>Question</th><th>Model answer</th></tr></thead><tbody><tr><td>How do you start a new integration project?</td><td>Discovery: systems, data, triggers, constraints and success criteria, with real sample data; then a short design doc agreed with the client.</td></tr><tr><td>Webhooks vs polling?</td><td>Webhooks push events and give low latency with less waste but need security, idempotency and retry handling; polling is simpler to receive but wasteful and delayed, so use it when no webhook exists.</td></tr><tr><td>How do you make an integration reliable?</td><td>Idempotency, retries with backoff and jitter, dead-letter queue, reconciliation, monitoring and alerts, and a tested runbook.</td></tr><tr><td>How do you secure it?</td><td>Least-privilege scopes, short-lived tokens, secrets in a vault, HTTPS, signature verification and minimal personal data in logs.</td></tr><tr><td>Client wants a custom feature the product lacks. What do you do?</td><td>Understand the underlying need, propose a supported workaround or integration, document the gap and take it to Product as technical advocacy with the business case.</td></tr><tr><td>Zapier or custom code?</td><td>Depends on volume, complexity, maintainability and the client's skills; iPaaS for simple low-volume flows, code for complex or high-volume ones.</td></tr></tbody></table></div></div>
+<div class="section" id="s11-2"><h2><span class="sec-emoji">🧠</span> How to Answer Scenario Questions</h2><ol class="steps"><li>Restate the business goal in one sentence.</li><li>Ask 2 to 3 clarifying questions (volume, latency, source of truth).</li><li>Sketch the flow: trigger, validate, transform, act, error path.</li><li>Name the risks: duplicates, ordering, rate limits, security.</li><li>Close with monitoring and handover.</li></ol></div>
+<div class="section" id="s11-3"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Design, in five sentences, an integration that sends new CRM contacts to a marketing tool.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Trigger: CRM webhook contact.created with signature verification. Receiver queues the event; worker validates required fields and maps them to the marketing tool's contact schema. Worker upserts by email with an idempotency key and retries transient errors with backoff. Failed records go to a dead-letter queue with an alert, and a daily job reconciles contact counts. Secrets stay in a vault with least-privilege API scopes.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Which opening move shows the strongest engineering judgement in a design interview?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Start coding immediately</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Clarify the goal, volume and constraints first</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Pick a tool</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Ask for a break</li></ul><div class="mcq-feedback" data-expl="Understand before building."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t12" data-toc='[["s12-1","Take the Assessment"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">→ Intermediate</span></div>
+        <p class="panel-eyebrow">Module 12</p>
+        <h1 class="panel-title">Assessment</h1>
+        <p class="panel-subtitle">Test yourself on everything covered in this course — 50 multiple-choice questions drawn at random from a bank of 50, so every attempt is a little different.</p>
+      </div>
+      <div class="section" id="s12-1">
+        <div class="assess-start-card">
+          <div class="assess-intro-title">Test what you've learned</div>
+          <div class="assess-intro-text">A timed, exam-style mock test. Questions are scenario-based: what you would do, which tool applies, or what went wrong.</div>
+          <ul class="assess-intro-list">
+            <li><strong>50 multiple-choice questions</strong> picked at random from 50</li>
+            <li><strong>50-minute</strong> timer (1 minute per question), with mark-for-review and a question palette</li>
+            <li>Covers every module in this course</li>
+            <li>Answers and explanations are shown after you submit</li>
+          </ul>
+          <button class="assess-start-btn" id="assessStartBtn">▶ Start Assessment</button>
+        </div>
+      </div>
+      <div class="assess-modal-overlay" id="assessModal">
+        <div class="assess-modal-box">
+          <div class="assess-sticky-header">
+            <div class="assess-modal-head">
+              <div class="assess-modal-title">Assessment</div>
+              <button class="assess-modal-close" id="assessModalClose">✕</button>
+            </div>
+            <div class="quiz-progress" id="assessProgressWrap" style="display:none">
+              <span class="quiz-score" id="assessProgressLabel">Question 1</span>
+              <div class="quiz-bar-track"><div class="quiz-bar-fill" id="assessProgressFill" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div id="assessStage"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+/* =========================================================
+   Tab switching, dynamic TOC, scroll-spy, progress pill
+   ========================================================= */
+(function(){
+  const tabs   = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel');
+  const tocEl  = document.getElementById('toc');
+  const total  = tabs.length;
+  const progressText = document.getElementById('progressText');
+
+  function buildToc(panel){
+    const data = JSON.parse(panel.getAttribute('data-toc') || '[]');
+    tocEl.innerHTML = data.map(([id,label]) =>
+      `<li><a href="#${id}" data-target="${id}">${label}</a></li>`
+    ).join('');
+    // first link active by default
+    const first = tocEl.querySelector('a');
+    if(first) first.classList.add('active');
+  }
+
+  function activate(idx){
+    tabs.forEach((t,i)=>t.classList.toggle('active', i===idx));
+    panels.forEach((p,i)=>p.classList.toggle('active', i===idx));
+    buildToc(panels[idx]);
+    progressText.textContent = `Tab ${idx+1} of ${total}`;
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+
+  tabs.forEach((t,i)=>{
+    t.addEventListener('click', ()=> activate(i));
+  });
+
+  // Smooth scroll inside the active tab
+  document.addEventListener('click', (e)=>{
+    const a = e.target.closest('.toc-list a');
+    if(!a) return;
+    e.preventDefault();
+    const id = a.getAttribute('data-target');
+    const el = document.getElementById(id);
+    if(el){
+      window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 130, behavior:'smooth'});
+    }
+  });
+
+  // Scroll spy — highlight the nearest visible section
+  let ticking = false;
+  function spy(){
+    const activePanel = document.querySelector('.panel.active');
+    if(!activePanel) return;
+    const sections = activePanel.querySelectorAll('.section');
+    const trigger  = 180; // px from top
+    let current = null;
+    sections.forEach(sec=>{
+      const rect = sec.getBoundingClientRect();
+      if(rect.top - trigger < 0) current = sec.id;
+    });
+    if(current){
+      tocEl.querySelectorAll('a').forEach(a=>{
+        a.classList.toggle('active', a.dataset.target === current);
+      });
+    }
+    ticking = false;
+  }
+  window.addEventListener('scroll', ()=>{
+    if(!ticking){ requestAnimationFrame(spy); ticking = true; }
+  }, {passive:true});
+
+  // Reset
+  window.resetProgress = function(){ activate(0); };
+
+  // Init
+  activate(0);
+})();
+
+/* =========================================================
+   Assessment modal — legacy modal (unused)
+   ========================================================= */
+(function(){
+  const assessItems = [];
+  const mcqTotal = assessItems.length;
+
+  let idx=0, score=0, answered=false;
+
+  function openAssess(){document.getElementById('assessModal').classList.add('open');showIntroStage()}
+  function closeAssess(){document.getElementById('assessModal').classList.remove('open')}
+
+  function showIntroStage(){
+    idx=0; score=0; answered=false;
+    renderItem();
+  }
+
+  function renderItem(){
+    answered=false;
+    const item=assessItems[idx];
+    const stage=document.getElementById('assessStage');
+    const pct=Math.round((idx/assessItems.length)*100);
+    document.getElementById('assessProgressWrap').style.display='flex';
+    document.getElementById('assessProgressLabel').textContent=`Question ${idx+1} / ${assessItems.length}`;
+    document.getElementById('assessProgressFill').style.width=pct+'%';
+    let inner=`
+      <div class="assess-q-wrap">
+        <div class="assess-q">${item.q}</div>
+        ${item.code?`<pre><code>${item.code}</code></pre>`:''}
+        <div id="assessBody"></div>
+        <div id="assessFeedback"></div>
+      </div>`;
+    stage.innerHTML=inner;
+    const body=document.getElementById('assessBody');
+    body.innerHTML=`<ul class="mcq-opts" id="assessOpts">${item.options.map((o,i)=>`<li class="mcq-opt" data-i="${i}"><span class="opt-letter">${String.fromCharCode(65+i)}</span> ${o}</li>`).join('')}</ul>`;
+    body.querySelectorAll('.mcq-opt').forEach(opt=>opt.addEventListener('click',()=>answerMCQ(opt,item)));
+  }
+
+  function showNextButton(){
+    const fb=document.getElementById('assessFeedback');
+    const btn=document.createElement('button');
+    btn.className='assess-next-btn';
+    btn.textContent = idx<assessItems.length-1 ? 'Next Question →' : 'See Results →';
+    btn.addEventListener('click',()=>{
+      if(idx<assessItems.length-1){idx++;renderItem()}else{showResults()}
+    });
+    fb.appendChild(btn);
+  }
+
+  function answerMCQ(optEl,item){
+    if(answered)return;
+    answered=true;
+    const chosen=parseInt(optEl.getAttribute('data-i'),10);
+    const correct=chosen===item.answer;
+    if(correct)score++;
+    document.querySelectorAll('#assessOpts .mcq-opt').forEach(opt=>{opt.style.pointerEvents='none'});
+    const fb=document.getElementById('assessFeedback');
+    if(correct){
+      optEl.classList.add('correct');
+      fb.innerHTML=`<div class="assess-fb-banner ok"><span>✅</span> Correct!</div>`;
+    }else{
+      optEl.classList.add('incorrect');
+      fb.innerHTML=`<div class="assess-fb-answer ok"><span>✅</span> ${item.options[item.answer]}</div>`;
+    }
+    showNextButton();
+  }
+
+  function showResults(){
+    const stage=document.getElementById('assessStage');
+    const pct=Math.round((score/mcqTotal)*100);
+    document.getElementById('assessProgressLabel').textContent='Completed';
+    document.getElementById('assessProgressFill').style.width='100%';
+    let msg='Keep practicing — revisit the tabs above and try again.';
+    if(pct>=85)msg='Outstanding! You have a strong command of this role.';
+    else if(pct>=65)msg="Great job! A little more practice with the harder questions and you'll be set.";
+    stage.innerHTML=`
+      <div class="assess-q-wrap">
+        <div class="assess-result-score">${score} / ${mcqTotal}</div>
+        <div class="assess-result-msg">${pct}% correct — ${msg}</div>
+        <button class="assess-retry-btn" id="assessRetryBtn">↻ Try Again</button>
+      </div>`;
+    document.getElementById('assessRetryBtn').addEventListener('click',showIntroStage);
+  }
+
+  document.getElementById('__disabledAssess')?.addEventListener('click',openAssess);
+  document.getElementById('assessModalClose').addEventListener('click',closeAssess);
+  document.getElementById('assessModal').addEventListener('click',e=>{if(e.target.id==='assessModal')closeAssess()});
+})();
+</script>
+
+<div id="scoreBoard" class="score-board" style="display:none;max-width:820px;margin:18px auto;padding:0 16px"></div>
+
+
+<script>
+/* Inline quick checks + practice model answers */
+document.addEventListener('click',function(e){
+  const opt=e.target.closest('.mcq .mcq-opt');
+  if(opt){
+    const box=opt.closest('.mcq'); if(box.classList.contains('answered'))return;
+    const ans=+box.dataset.answer, i=+opt.dataset.i;
+    box.classList.add('answered');
+    box.querySelectorAll('.mcq-opt').forEach(o=>{ if(+o.dataset.i===ans)o.classList.add('correct'); });
+    if(i!==ans)opt.classList.add('incorrect');
+    const fb=box.querySelector('.mcq-feedback');
+    fb.classList.add(i===ans?'ok':'bad');
+    fb.innerHTML=(i===ans?'✅ Correct. ':'❌ Not quite. ')+fb.dataset.expl;
+    return;
+  }
+  const rs=e.target.closest('.mcq-reset');
+  if(rs){
+    const box=rs.closest('.mcq'); box.classList.remove('answered');
+    box.querySelectorAll('.mcq-opt').forEach(o=>o.classList.remove('correct','incorrect'));
+    const fb=box.querySelector('.mcq-feedback'); fb.classList.remove('ok','bad'); fb.innerHTML='';
+    return;
+  }
+  const tg=e.target.closest('.saq-toggle');
+  if(tg){
+    const m=tg.closest('.saq').querySelector('.saq-model');
+    m.classList.toggle('show');
+    tg.textContent=m.classList.contains('show')?'Hide model answer':'Show model answer';
+  }
+});
+</script>
+<script>
+(function(){
+  /* =====================================================================
+     Solutions Architecture (Post-Sales) -- full-screen, timed mock exam (MNC style).
+     All 50 questions of the bank, shuffled, none repeated.
+     Grading: all answers submitted at the end (server-side).
+     ===================================================================== */
+  const BANK=[{"id": "q1", "q": "A post-sales solutions architect mainly…", "options": ["Sells licences", "Hires staff", "Writes press releases", "Makes the product work in the client's ecosystem"], "answer": 3, "explanation": "Delivery and integration.", "difficulty": "Medium"}, {"id": "q2", "q": "The first phase of the delivery lifecycle is…", "options": ["Hand over", "Discover", "Deploy", "Monitor"], "answer": 1, "explanation": "Understand the ecosystem first.", "difficulty": "Medium"}, {"id": "q3", "q": "Why ask for real sample data in discovery?", "options": ["It is cheaper", "It is required by law", "Real data reveals edge cases", "It is faster to type"], "answer": 2, "explanation": "Production data differs from documentation.", "difficulty": "Medium"}, {"id": "q4", "q": "Webhooks are best described as…", "options": ["Scheduled downloads", "Email newsletters", "Database backups", "Events pushed to your URL"], "answer": 3, "explanation": "Push instead of poll.", "difficulty": "Medium"}, {"id": "q5", "q": "Polling is typically used when…", "options": ["You have no API", "Data never changes", "No webhook is available", "You need instant events"], "answer": 2, "explanation": "Fallback when push is unavailable.", "difficulty": "Medium"}, {"id": "q6", "q": "An idempotent handler…", "options": ["Gives the same result if run multiple times with the same event", "Deletes events", "Runs only once per day", "Needs no database"], "answer": 0, "explanation": "Duplicates are harmless.", "difficulty": "Medium"}, {"id": "q7", "q": "Webhook signatures are verified over…", "options": ["The IP address", "The raw request body", "A re-serialised JSON", "The user agent"], "answer": 1, "explanation": "Raw bytes avoid mismatches.", "difficulty": "Medium"}, {"id": "q8", "q": "HMAC compare should use…", "options": ["Lowercasing only", "A plain == string compare", "A constant-time comparison", "Sorting"], "answer": 2, "explanation": "Prevents timing attacks.", "difficulty": "Medium"}, {"id": "q9", "q": "A receiver should respond…", "options": ["Only after 30 seconds", "Quickly with 2xx, then process asynchronously", "After finishing all work", "With 500 on success"], "answer": 1, "explanation": "Prevents sender timeouts and retries.", "difficulty": "Medium"}, {"id": "q10", "q": "Dead-letter queue stores…", "options": ["Successful events", "Passwords", "Events that failed processing", "Logs only"], "answer": 2, "explanation": "For inspection and replay.", "difficulty": "Medium"}, {"id": "q11", "q": "Exponential backoff means…", "options": ["Retrying only once", "Never retrying", "Retrying instantly", "Waiting longer after each failed attempt"], "answer": 3, "explanation": "Gives the target time to recover.", "difficulty": "Medium"}, {"id": "q12", "q": "Jitter is added to…", "options": ["Encrypt data", "Avoid synchronised retry bursts", "Speed up requests", "Reduce code size"], "answer": 1, "explanation": "Randomises timing.", "difficulty": "Medium"}, {"id": "q13", "q": "Which status code is usually retryable?", "options": ["429", "400", "401", "404"], "answer": 0, "explanation": "Rate limit: wait and retry.", "difficulty": "Medium"}, {"id": "q14", "q": "OAuth client credentials is used for…", "options": ["Machine-to-machine access", "Email", "Logging in a person", "Password reset"], "answer": 0, "explanation": "No user involved.", "difficulty": "Medium"}, {"id": "q15", "q": "Least privilege means…", "options": ["Granting only the permissions needed", "Granting admin to all", "No permissions", "Sharing one key"], "answer": 0, "explanation": "Reduces blast radius.", "difficulty": "Medium"}, {"id": "q16", "q": "Where should secrets be stored?", "options": ["In source code", "In a vault or environment variables", "In chat", "In tickets"], "answer": 1, "explanation": "Never in code or messages.", "difficulty": "Medium"}, {"id": "q17", "q": "Upsert means…", "options": ["Only create", "Update if exists, else create", "Delete and recreate", "Only read"], "answer": 1, "explanation": "Avoids duplicates.", "difficulty": "Medium"}, {"id": "q18", "q": "External ID is stored to…", "options": ["Compress data", "Look pretty", "Encrypt data", "Match records across systems reliably"], "answer": 3, "explanation": "Stable cross-system key.", "difficulty": "Medium"}, {"id": "q19", "q": "A reconciliation job…", "options": ["Restarts servers", "Compares systems and fixes drift", "Deletes logs", "Renames fields"], "answer": 1, "explanation": "Catches missed events.", "difficulty": "Medium"}, {"id": "q20", "q": "Orchestration means…", "options": ["No control", "One coordinator controls the steps", "Random order", "Only batch jobs"], "answer": 1, "explanation": "Central flow control.", "difficulty": "Medium"}, {"id": "q21", "q": "Best protection against a webhook burst:", "options": ["Queue and rate-limited workers", "Turn off webhooks", "Larger receiver only", "Ignore events"], "answer": 0, "explanation": "Decouple receive from process.", "difficulty": "Medium"}, {"id": "q22", "q": "Which belongs in a solution design document?", "options": ["Salary data", "Architecture diagram and field mapping", "Marketing slogans", "Passwords"], "answer": 1, "explanation": "Core design artefacts.", "difficulty": "Medium"}, {"id": "q23", "q": "UAT stands for…", "options": ["Unified API test", "User acceptance testing", "User account type", "Universal auth token"], "answer": 1, "explanation": "Client verifies against criteria.", "difficulty": "Medium"}, {"id": "q24", "q": "A runbook helps the client to…", "options": ["Replace monitoring", "Troubleshoot without you", "Hide errors", "Skip testing"], "answer": 1, "explanation": "Operational independence.", "difficulty": "Medium"}, {"id": "q25", "q": "Replay attacks are limited by…", "options": ["Using HTTP", "Longer URLs", "Checking the event timestamp", "Disabling logs"], "answer": 2, "explanation": "Reject old signed events.", "difficulty": "Medium"}, {"id": "q26", "q": "iPaaS tools are strongest for…", "options": ["Very high-volume custom logic", "Simple, low-volume integrations with standard connectors", "Hardware repair", "Database storage"], "answer": 1, "explanation": "Speed over flexibility.", "difficulty": "Medium"}, {"id": "q27", "q": "A batch job should process rows…", "options": ["All or nothing always", "Only the first row", "Individually so one bad row does not block others", "Randomly"], "answer": 2, "explanation": "Isolate failures.", "difficulty": "Medium"}, {"id": "q28", "q": "Current vs target state helps to…", "options": ["Replace testing", "Delay the project", "Define measurable value and acceptance criteria", "Hide risk"], "answer": 2, "explanation": "Shows what changes.", "difficulty": "Medium"}, {"id": "q29", "q": "Rate limit headers like Retry-After tell you…", "options": ["The author", "Server colour", "How long to wait before retrying", "Your password"], "answer": 2, "explanation": "Respect the target's limits.", "difficulty": "Medium"}, {"id": "q30", "q": "Alert on a growing dead-letter queue because…", "options": ["It signals failing integrations early", "It deletes errors", "It speeds code", "It saves money"], "answer": 0, "explanation": "Detect before the customer does.", "difficulty": "Medium"}, {"id": "q31", "q": "The error path in a workflow is…", "options": ["Essential for production reliability", "Optional", "Only for logs", "Only for tests"], "answer": 0, "explanation": "Failures are certain.", "difficulty": "Medium"}, {"id": "q32", "q": "Compliance question to raise early:", "options": ["Logo colours", "Holiday dates", "Office furniture", "Data residency and personal data handling"], "answer": 3, "explanation": "Can block or reshape the design.", "difficulty": "Medium"}, {"id": "q33", "q": "Choreography in workflows means…", "options": ["No events", "One coordinator controls everything", "Only batch", "Systems react to events independently"], "answer": 3, "explanation": "Loose coupling through events.", "difficulty": "Medium"}, {"id": "q34", "q": "If a sender stops retrying after a long outage, you need…", "options": ["Nothing", "More emojis", "A new logo", "A replay tool or reconciliation job"], "answer": 3, "explanation": "Fill the gap from the source of truth.", "difficulty": "Medium"}, {"id": "q35", "q": "Cursor-based pagination is used to…", "options": ["Sort files", "Encrypt data", "Delete records", "Fetch large result sets page by page"], "answer": 3, "explanation": "Never assume everything fits in one response.", "difficulty": "Medium"}, {"id": "q36", "q": "A default value like 'REVIEW' in a status mapping…", "options": ["Handles unmapped values safely", "Deletes data", "Speeds up code", "Is decoration"], "answer": 0, "explanation": "Unknown inputs get flagged, not lost.", "difficulty": "Medium"}, {"id": "q37", "q": "ngrok is used during development to…", "options": ["Store secrets", "Back up databases", "Compile code", "Expose a local server so it can receive webhooks"], "answer": 3, "explanation": "Gives a public URL to localhost.", "difficulty": "Medium"}, {"id": "q38", "q": "HTTP 202 Accepted means…", "options": ["Request accepted, processing will happen later", "Not found", "Request failed", "Processing finished"], "answer": 0, "explanation": "Ideal for queue-based receivers.", "difficulty": "Medium"}, {"id": "q39", "q": "Mutual TLS adds…", "options": ["Better colours", "Certificate-based authentication of both sides", "Faster images", "Cheaper hosting"], "answer": 1, "explanation": "Both client and server prove identity.", "difficulty": "Medium"}, {"id": "q40", "q": "When an access token expires, the integration should…", "options": ["Stop forever", "Obtain a new token (refresh or re-authenticate)", "Use the old token", "Email the client"], "answer": 1, "explanation": "Handle expiry automatically, including 401 responses.", "difficulty": "Medium"}, {"id": "q41", "q": "Reverse ETL is…", "options": ["Deleting tables", "Pushing warehouse data back into operational tools", "A kind of backup", "A password reset"], "answer": 1, "explanation": "Activates analytics data in CRM or support tools.", "difficulty": "Medium"}, {"id": "q42", "q": "An idempotency key on a POST request…", "options": ["Encrypts the body", "Sorts results", "Lets the server safely ignore duplicates", "Speeds up the network"], "answer": 2, "explanation": "Prevents double creates on retry.", "difficulty": "Medium"}, {"id": "q43", "q": "A 'source of truth' is…", "options": ["Any spreadsheet", "The cheapest system", "The system whose data wins when systems disagree", "The newest log"], "answer": 2, "explanation": "Defined per entity in discovery.", "difficulty": "Medium"}, {"id": "q44", "q": "A circuit breaker in an integration…", "options": ["Stops calling a failing dependency for a while", "Creates records", "Generates tokens", "Encrypts traffic"], "answer": 0, "explanation": "Fail fast and protect resources.", "difficulty": "Medium"}, {"id": "q45", "q": "Handover is complete when…", "options": ["The invoice is paid", "A trained client owner can operate the solution with a runbook", "The code is merged", "The demo ends"], "answer": 1, "explanation": "Operational independence.", "difficulty": "Medium"}, {"q": "A statement of work in post-sales delivery defines…", "options": ["Scope, deliverables and responsibilities", "Only pricing", "Only logos", "User passwords"], "answer": 0, "explanation": "Sets agreed scope.", "difficulty": "Easy", "id": "qx46"}, {"q": "Why define an integration's success criteria up front?", "options": ["To lengthen the project", "So everyone agrees what 'done' means", "To avoid testing", "To remove owners"], "answer": 1, "explanation": "Clear acceptance criteria.", "difficulty": "Easy", "id": "qx47"}, {"q": "A sandbox environment is used to…", "options": ["Store backups", "Bill customers", "Test safely before production", "Host DNS"], "answer": 2, "explanation": "Safe testing.", "difficulty": "Easy", "id": "qx48"}, {"q": "Data mapping in a solution design lists…", "options": ["Office seating", "Meeting times", "Server colours", "How source fields map to target fields"], "answer": 3, "explanation": "Field-level mapping.", "difficulty": "Easy", "id": "qx49"}, {"q": "A solution architect should document assumptions because…", "options": ["Unstated assumptions cause surprises later", "It looks formal", "It avoids workshops", "It replaces testing"], "answer": 0, "explanation": "Assumptions drive risk.", "difficulty": "Easy", "id": "qx50"}];
+  const EXAM_N=50;
+  function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  const EXAM_SECONDS=50*60; /* 1 minute per question */
+  const inIframe = window.self!==window.top;
+
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash h2{font-size:25px;font-weight:800;margin-bottom:8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin-bottom:12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:ecpop .18s ease}
+  @keyframes ecpop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+
+  .exam-fsprompt{position:fixed;inset:0;z-index:100003;background:rgba(20,33,61,.93);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fsprompt .box{background:transparent;color:#fff;max-width:640px;width:100%;padding:0;text-align:center;box-shadow:none}
+  .exam-fsprompt h3{font-size:34px;font-weight:700;margin:0 0 22px;color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;line-height:1.2}
+  .exam-fsprompt h3 .wi{font-size:32px;line-height:1}
+  .exam-fsprompt p{font-size:17px;color:#fff;line-height:1.6;margin:0 0 16px}
+  .exam-fsprompt .wcount{font-size:17px;color:#fff;margin:0 0 18px}
+  .exam-fsprompt .rbtn{background:#0f1a2e;color:#fff;border:none;border-radius:12px;padding:15px 26px;font-weight:700;font-size:17px;font-family:inherit;cursor:pointer;transition:.12s}
+  .exam-fsprompt .rbtn:hover{background:#0a1220}
+  .exam-fsprompt .rbtn:focus-visible{outline:2px solid #FCA311;outline-offset:2px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+
+  function examConfirm(title,msg,okLabel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">
+        <button class="exam-btn nav" data-a="0">Cancel</button>
+        <button class="exam-btn primary" data-a="1">${okLabel||'Submit'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  /* ---- score history (localStorage, shared across the exam tab + guide) ---- */
+  const LS_KEY='SAScores';
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores();
+    a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: exactly 3 violation warnings (tab switch, fullscreen exit, screenshot attempt); 3 strikes -> auto-submit ---- */
+  let warns=0, lastWarn=0, lastType='', proctorOn=false;
+  const MAX_WARN=3;
+  const VIOL={
+    tab:{icon:'&#9888;&#65039;',title:'Tab switch detected',msg:'The assessment must stay in this tab and window.'},
+    fs:{icon:'&#9888;&#65039;',title:'Fullscreen exited',msg:'The assessment must remain in fullscreen mode.'},
+    shot:{icon:'&#9888;&#65039;',title:'Screenshot attempt detected',msg:'Screenshots and screen recordings are not permitted during the assessment.'}
+  };
+  function examWarn(title,msg){
+    injectCss();
+    const d=document.createElement('div'); d.className='exam-confirm';
+    d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row"><button class="exam-btn primary" data-a="1">OK</button></div></div>`;
+    document.body.appendChild(d);
+    d.addEventListener('click',e=>{ if(e.target.closest('[data-a]'))d.remove(); });
+  }
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function removeFsPrompt(){ const p=document.getElementById('examFsPrompt'); if(p)p.remove(); }
+  function removeViolPop(){ const p=document.getElementById('examViolPop'); if(p)p.remove(); }
+  function goFullscreen(){
+    try{ const re=document.documentElement.requestFullscreen?document.documentElement.requestFullscreen():Promise.resolve(); return Promise.resolve(re).catch(()=>{}); }
+    catch(_){ return Promise.resolve(); }
+  }
+  /* One popup at a time. kind = tab | fs | shot. n = strike number (null = no strike, e.g. entering fullscreen at start). */
+  function showViolation(kind,n){
+    if(!examOn)return;
+    injectCss(); hideCover(); removeViolPop(); removeFsPrompt();
+    const v=VIOL[kind]; const needFs=!document.fullscreenElement;
+    const title=(!n&&kind==='fs')?'Fullscreen required':v.title;
+    const wline=n?'<div class="wcount">Warning '+n+' of '+MAX_WARN+'</div>':'';
+    const d=document.createElement('div'); d.className='exam-fsprompt'; d.id=(kind==='fs'||needFs)?'examFsPrompt':'examViolPop';
+    d.setAttribute('role','alertdialog'); d.setAttribute('aria-modal','true');
+    d.innerHTML='<div class="box"><h3><span class="wi">'+v.icon+'</span><span>'+title+'</span></h3><p>'+v.msg+'</p>'+wline+'<button class="rbtn" id="examContinue">Return to assessment</button></div>';
+    document.body.appendChild(d);
+    const cb=document.getElementById('examContinue'); try{cb.focus();}catch(_){}
+    cb.addEventListener('click',()=>{
+      const go=document.fullscreenElement?Promise.resolve():goFullscreen();
+      go.then(()=>{ d.remove(); hideCover(); renderQ(); });
+    });
+  }
+  function violation(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now();
+    /* same incident (e.g. tab switch firing blur + visibilitychange together) counts once */
+    const fresh = now-lastWarn >= (kind===lastType?1500:800);
+    if(!fresh){ if(!document.fullscreenElement && !document.getElementById('examFsPrompt')) showViolation(kind,Math.min(warns,MAX_WARN)); return; }
+    lastWarn=now; lastType=kind; warns++;
+    if(warns>=MAX_WARN){
+      removeFsPrompt(); removeViolPop(); hideCover();
+      examWarn('Test submitted','You reached '+MAX_WARN+' warnings ('+VIOL[kind].title.toLowerCase()+'). The test has been auto-submitted.');
+      submitExam(true); return;
+    }
+    showViolation(kind,warns);
+  }
+  function fsHandler(){ if(examOn && !document.fullscreenElement){ violation('fs'); } }
+  function visHandler(){ if(document.hidden){ showCover(); violation('tab'); } else { hideCover(); } }
+  function blurHandler(){ if(!examOn)return; showCover(); violation('tab'); }
+  function focusHandler(){ hideCover(); }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function shotWarn(){ try{navigator.clipboard.writeText('');}catch(_){} violation('shot'); }
+  function keyGuard(e){
+    const k=(e.key||'').toLowerCase(), c=e.code||'';
+    if(k==='printscreen'||(e.metaKey&&e.shiftKey&&k==='s')||(e.metaKey&&e.shiftKey&&['Digit3','Digit4','Digit5'].includes(c))){ e.preventDefault(); shotWarn(); return false; }
+    if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; }
+  }
+  function printGuard(e){ if((e.key||'')==='PrintScreen'){ shotWarn(); } }
+  function startProctor(){
+    warns=0; lastWarn=0; lastType=''; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    window.addEventListener('blur',blurHandler);
+    window.addEventListener('focus',focusHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('cut',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keyup',printGuard,true);
+    /* if fullscreen could not be entered at start, ask for it (no strike) */
+    setTimeout(()=>{ if(examOn && proctorOn && !document.fullscreenElement) showViolation('fs',null); },700);
+  }
+  function stopProctor(){
+    proctorOn=false;
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    window.removeEventListener('blur',blurHandler);
+    window.removeEventListener('focus',focusHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('cut',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keyup',printGuard,true);
+    hideCover(); removeViolPop();
+  }
+
+  function startEntry(){
+    if(inIframe){ window.open(location.pathname+'?mode=exam','_blank'); return; }
+    showSplash();
+  }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; Solutions Architecture (Post-Sales) &mdash; Mock Test</h2>
+      <p>A timed, exam-style assessment modelled on real technical screening tests.</p>
+      <ul>
+        <li><b>50 questions</b> to attempt</li>
+        <li><b>50-minute</b> timer (1 min per question) &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Results and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> &mdash; stay in fullscreen the whole time</li>
+        <li>Exactly <b>3 things trigger a warning</b>: (1) <b>switching tab / window</b>, (2) <b>exiting fullscreen</b>, (3) <b>attempting a screenshot</b> (PrintScreen / Win+Shift+S / Cmd+Shift+3-5)</li>
+        <li>Each warning shows a popup with a <b>Continue Test</b> button that resumes where you left off &mdash; the timer keeps running</li>
+        <li><b>3 warnings in total</b> &rarr; the test <b>auto-submits</b>. Copy and right-click are also disabled</li>
+      </ul>
+      <button class="exam-btn primary" id="examBegin" style="width:100%;padding:14px">Start Test &rarr;</button>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      if(document.documentElement.requestFullscreen){document.documentElement.requestFullscreen().catch(()=>{});}
+      sp.remove(); enterExam();
+    });
+  }
+
+  async function enterExam(){
+    injectCss();
+    let ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Loading your test&hellip;</div>';
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    items=shuffle(BANK).slice(0,EXAM_N).map(b=>({id:b.id,q:b.q,code:b.code,options:b.options,difficulty:b.difficulty}));
+    if(!items.length){ ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center">Could not load the test. Close and try again.</div>'; return; }
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">Solutions Architecture (Post-Sales) &mdash; Mock Test</div><div class="et-sub">50 questions &middot; one attempt &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}${it.difficulty?`<span class="diff">${it.difficulty}</span>`:''}</div>
+      ${it.code?`<pre><code>${it.code}</code></pre>`:''}
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>el.addEventListener('click',()=>{
+      answers[id]=+el.dataset.i;
+      pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel'));
+      el.classList.add('sel'); refreshPalette();
+    }));
+    const prev=document.getElementById('examPrev'), next=document.getElementById('examNext');
+    if(prev)prev.addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    if(next)next.addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();refreshPalette();});
+    refreshPalette();
+  }
+
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examConfirm('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test');
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId); removeFsPrompt();
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    const payload={answers:{}};
+    items.forEach(it=>{ payload.answers[it.id] = (it.id in answers)?answers[it.id]:-1; });
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Grading your test&hellip;</div>';
+    const byId={}; BANK.forEach(b=>byId[b.id]=b);
+    let sc=0; const results={};
+    items.forEach(it=>{ const b=byId[it.id], you=payload.answers[it.id];
+      const ok=(you===b.answer); if(ok)sc++;
+      results[it.id]={correct:ok,answer:b.answer,explanation:b.explanation}; });
+    showResults({score:sc,results:results});
+  }
+
+  function showResults(data){
+    const results=data.results||{}, total=items.length, score=data.score||0;
+    saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below and try again.';
+    if(pct>=85)msg='Outstanding &mdash; strong command of this module.';
+    else if(pct>=65)msg='Solid pass. A little more practice on the tricky ones and you are set.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the topics you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const r=results[it.id]||{}; const you=answers[it.id];
+      const attempted=(you!=null);
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      if(!attempted){
+        // Not attempted: reveal nothing (answer stays protected)
+        inner+='<div class="ra">Your answer: <i>Not answered</i></div>';
+        return '<div class="r no">'+inner+'</div>';
+      }
+      const youTxt=String.fromCharCode(65+you)+'. '+it.options[you];
+      const cor=(r.answer!=null&&r.answer>=0)?(String.fromCharCode(65+r.answer)+'. '+it.options[r.answer]):'';
+      inner+='<div class="ra '+(r.correct?'cor':'wrong')+'">Your answer: '+youTxt+'</div>'
+        +(r.correct?'':'<div class="ra cor">Correct: '+cor+'</div>')
+        +(r.explanation?'<div class="rx">'+r.explanation+'</div>':'');
+      return '<div class="r '+(r.correct?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; Solutions Architecture (Post-Sales) Mock Test</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another test</button></div>
+          <div class="exam-rmsg" id="examRedirect" style="margin-top:8px;color:#94a3b8"></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    let left=30;
+    const rd=document.getElementById('examRedirect');
+    const setTxt=()=>{ if(rd)rd.textContent='Returning to the assessment page in '+left+'s…'; };
+    setTxt();
+    const rt=setInterval(()=>{ left--; setTxt(); if(left<=0){ clearInterval(rt); goBack(); } },1000);
+    function goBack(){
+      if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); }
+      if(window.opener){ try{ window.close(); }catch(_){} }
+      location.href=location.pathname;   // fallback: reload guide (assessment) page
+    }
+    document.getElementById('examRetry').addEventListener('click',()=>{ clearInterval(rt); document.getElementById('examOverlay').remove(); enterExam(); });
+    document.getElementById('examClose').addEventListener('click',()=>{ clearInterval(rt); goBack(); });
+  }
+
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',startEntry);
+  window.__mockExamStart=startEntry;
+  renderScoreboard();
+  window.addEventListener('storage',e=>{ if(e.key===LS_KEY)renderScoreboard(); });
+  if(new URLSearchParams(location.search).get('mode')==='exam'){ showSplash(); }
+})();
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body>
+</html>

@@ -563,6 +563,8 @@ button.cp-back{border:0;background:none;cursor:pointer;padding:0;font:inherit;fo
 .skill-card .chips{padding:1rem 1.1rem 1.15rem}
 @media(max-width:1000px){.skill-list{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.skill-list{grid-template-columns:1fr}}
+.sk-cta{display:flex;justify-content:center;margin-top:2rem}
+.sk-cta .btn{padding:.85rem 2rem;font-size:1rem}
 #ntDeptView{animation:cpIn .25s ease}
 .rm-body [hidden]{display:none}
 .rm-body.solo{grid-template-columns:1fr}
@@ -1037,7 +1039,7 @@ header, header a, header button, header span, nav.main-nav, nav.main-nav a, nav.
   {% else %}
   <p class="cp-sub-t">Pick a department to see its roles, then pick a role to see the skills it needs and how your profile matches.</p>
   {% endif %}
-  {% if track == 'it' %}<div class="cp-panel" id="panelIt" data-src="{% static 'data/it_departments.json' %}" data-art="{% static 'img/roles/' %}"><div class="role-grid2"></div></div>{% endif %}
+  {% if track == 'it' %}<div class="cp-panel" id="panelIt" data-src="{% static 'data/it_departments.json' %}" data-art="{% static 'img/roles/' %}" data-learn="{% url 'skill_up' %}"><div class="role-grid2"></div></div>{% endif %}
   {% if track == 'non-it' or track == 'technical' %}<div class="cp-panel" id="panelTech"><h3 class="cp-ph">Non-IT Technical</h3><div class="role-grid2"></div></div>{% endif %}
   {% if track == 'non-it' or track == 'non-technical' %}<div class="cp-panel" id="panelNt"><h3 class="cp-ph">Non-IT Non-Technical</h3><div class="role-grid2"></div></div>{% endif %}
 {% else %}
@@ -1808,7 +1810,7 @@ var DEPTS=[
 ['Payroll Operations Manager','End-to-end payroll governance, SLA accountability, banking integration for disbursements, SOX compliance management']]},
 {c:'nt',i:'crown',n:'Executive Search & Leadership Hiring',r:[
 ['Executive Search Partner (C-Suite & Board)','Board-level advisory, CEO/CTO/COO search execution, confidential headhunting, leadership assessment methodologies'],
-['Executive Talent Mapping & Research Specialist','Deep org-chart reverse-engineering, competitive intelligence, executive talent ecosystem tracking, Boolean/X-ray search'],
+['Executive Talent Mapping & Research Specialist','Deep org-chart reverse engineering, competitive intelligence, executive talent ecosystem tracking, Boolean/X-ray search'],
 ['Leadership Assessment & Profiling Consultant','Psychometric testing (Hogan, SHL), behavioral event interviewing, leadership competency framework benchmarking'],
 ['Executive Compensation & Offer Negotiator','Long-term incentive plans (LTIP), equity and carried-interest design, executive sign-on bonuses, restrictive covenant negotiations'],
 ['Executive Candidate Experience Lead','White-glove concierge scheduling, executive travel logistics, confidential communications governance, high-touch follow-through'],
@@ -1816,7 +1818,7 @@ var DEPTS=[
 ['Executive Search Client Partner','Retained search sales, leadership consultation, board committee presentation, corporate client retainers'],
 ['Leadership Onboarding & Executive Coach','Executive first-90-days planning, leadership assimilation programs, stakeholder 360 review facilitate'],
 ['Confidential Reference Auditor','360-degree discrete referencing, deep reputation audits, credential and background forensic checks'],
-['Managing Director / Head of Executive Search','Retained search practice P&L management, key-client senior advisor, strategic mandate closure, firm brand positioning']]},
+['Managing Director / Head of Executive Search','Retained search practice for P&L management, key-client senior advisor, strategic mandate closure, firm brand positioning']]},
 {c:'nt',i:'trend',n:'Skill Development & Workforce Readiness',r:[
 ['Workforce Capability Architect','Industrial competency mapping, organizational skills gap analysis, readiness roadmap design, career pathway architecture'],
 ['Technical Curriculum & Instructional Designer','ADDIE model, technical course authoring (SCORM/xAPI), engineering simulator workflow creation, rapid microlearning authoring'],
@@ -1977,7 +1979,8 @@ var itSkills=null,itRole=null;
       + '<button type="button" class="cp-back" data-back="deptRolesView">&larr; <span id="skillsBack"></span></button>'
       + '<h3 class="cp-ph" id="skillTitle"></h3>'
       + '<p class="cp-sub-t">Skills this role requires.</p>'
-      + '<div class="skill-list" id="skillList"></div></div>';
+      + '<div class="skill-list" id="skillList"></div>'
+      + '<div class="sk-cta"><a class="btn btn-primary" id="skillLearn" href="#">Start Learning &rarr;</a></div></div>';
     panel.innerHTML = html;
   }
 
@@ -2020,6 +2023,8 @@ var itSkills=null,itRole=null;
   itSkills = function (i) {
       var role = curDept[2][i];
       document.getElementById('skillTitle').textContent = role[0];
+      // Opens this role in the Skill Up Tech Center (same id scheme: #role-tech-<dept>--<role>).
+      document.getElementById('skillLearn').href = panel.dataset.learn + '?section=role-tech-' + slug(curDept[0]) + '--' + slug(role[0]);
       document.getElementById('skillsBack').textContent = curDept[0];
       // Each line reads "Category: skill, skill, ..." - the label heads the card and the
       // skills become chips. A line without a colon becomes a card with no label.

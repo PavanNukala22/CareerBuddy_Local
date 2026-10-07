@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Objection Handling — SDR / BDR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============= Notion-inspired theme ============= */
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:none;
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Fraunces',serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#3776ab 0%,#ffd43b 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Inter';font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:1px;
+  padding:8px 24px 6px;
+  overflow-x:scroll;
+  overflow-y:hidden;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{height:5px;display:block}
+.tabbar::-webkit-scrollbar-button:horizontal{display:none}
+.tabbar::-webkit-scrollbar-button:horizontal:start:decrement,.tabbar::-webkit-scrollbar-button:horizontal:end:increment{display:block;width:12px;height:5px;background-color:var(--line);background-repeat:no-repeat;background-position:center;background-size:6px 5px}
+.tabbar::-webkit-scrollbar-button:horizontal:start:decrement{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='5' viewBox='0 0 6 5'%3E%3Cpath d='M0 2.5 6 0v5z' fill='%2316233f'/%3E%3C/svg%3E")}
+.tabbar::-webkit-scrollbar-button:horizontal:end:increment{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='5' viewBox='0 0 6 5'%3E%3Cpath d='M6 2.5 0 0v5z' fill='%2316233f'/%3E%3C/svg%3E")}
+.tabbar::-webkit-scrollbar-track{background:var(--line)}
+.tabbar::-webkit-scrollbar-thumb{background:#16233f;border-radius:4px}
+.tabbar::-webkit-scrollbar-thumb:hover{background:#16233f}
+@supports (-moz-appearance:none){.tabbar{scrollbar-width:thin;scrollbar-color:#16233f var(--line)}}
+.tab{
+  position:relative;
+  padding:9px 14px;
+  border:none;
+  background:transparent;
+  border-radius:12px;
+  flex:0 0 auto;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:all .15s ease;
+}
+.tab .tab-num{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{background:var(--bg-soft);color:var(--ink)}
+.tab + .tab::before{content:"";position:absolute;left:-1px;top:26%;bottom:26%;width:1px;background:var(--line-strong)}
+.tab.active::before,.tab.active + .tab::before,.tab:hover::before,.tab:hover + .tab::before{opacity:0}
+.tab.active{
+  color:#fff;
+  background:#16233f;
+  font-weight:600;
+}
+.tab.active .tab-num{color:#fff}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Fraunces',serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Fraunces',serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Inter',sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'JetBrains Mono',monospace;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Inter';font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'JetBrains Mono',monospace;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'JetBrains Mono',monospace;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'JetBrains Mono',monospace;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'JetBrains Mono',monospace;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Inter',sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Fraunces',serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'JetBrains Mono',monospace;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+
+/* ---- assessment extras ---- */
+.assess-meta{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.assess-diff{font-size:11px;font-weight:700;padding:2px 10px;border-radius:999px;letter-spacing:.03em}
+.assess-diff.simple{background:var(--green-soft);color:#0a5f0a}
+.assess-diff.medium{background:var(--yellow-soft);color:#8a6500}
+.assess-diff.hard{background:var(--pink-soft);color:#8c1a63}
+.assess-mod{font-size:12px;color:var(--ink-mute);font-weight:500}
+.assess-exp{margin-top:10px;font-size:14px;color:var(--ink-soft);line-height:1.6;padding:0 4px}
+.assess-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:6px}
+.assess-grid .cell{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--bg)}
+.assess-grid .cell b{display:block;font-size:14px;color:var(--ink)}
+.assess-grid .cell span{font-size:12.5px;color:var(--ink-soft)}
+.assess-levels{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.assess-levels .lv{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.assess-levels .lv p{margin:0;font-size:13.5px;color:var(--ink-soft)}
+</style>
+<!-- ── Global theme overlay (DESIGN-CBuddy.md) ── -->
+<link rel="stylesheet" href="/theme-cbuddy.css">
+<style>
+/* CareerBuddy: sticky sidebar visible scrollbar */
+.toc,.sidebar,.sidenav{scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc::-webkit-scrollbar,.sidebar::-webkit-scrollbar,.sidenav::-webkit-scrollbar{width:9px;height:9px}
+.toc::-webkit-scrollbar-thumb,.sidebar::-webkit-scrollbar-thumb,.sidenav::-webkit-scrollbar-thumb{background:#cbd2e0;border-radius:8px}
+.toc::-webkit-scrollbar-thumb:hover,.sidebar::-webkit-scrollbar-thumb:hover,.sidenav::-webkit-scrollbar-thumb:hover{background:#9aa4b8}
+.toc::-webkit-scrollbar-track,.sidebar::-webkit-scrollbar-track,.sidenav::-webkit-scrollbar-track{background:transparent}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap">
+<style>
+/* -- Unify typography: Outfit everywhere (CareerBuddy) -- */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,dl,dt,dd,td,th,div,section,article,header,footer,nav,aside,main,label,button,input,select,textarea,blockquote,figcaption,small,strong,b,em,i{font-family:'Outfit',system-ui,-apple-system,'Segoe UI',sans-serif !important}
+.material-symbols-outlined,.material-icons{font-family:'Material Symbols Outlined','Material Icons' !important}
+code,pre,kbd,samp,tt,.mono,[class*="mono"],[class*="Mono"],[class*="code"],[class*="Code"],[class*="tok"],[class*="hljs"]{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:12px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#f7f6f3 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#16233f !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#16233f !important;color:#fff !important;border-radius:12px !important;
+  border-bottom-color:transparent !important;font-weight:600 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:1px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* Force Noto Sans everywhere, including headings */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,dl,dt,dd,td,th,div,section,article,header,footer,nav,aside,main,label,button,input,select,textarea,blockquote,figcaption,small,strong,b,em,i{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif !important}
+code,pre,kbd,samp,tt,.mono,[class*="mono"],[class*="Mono"],[class*="code"],[class*="Code"],[class*="tok"]{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+</style>
+<style id="refNav">
+/* navbar + scrollbar: synced from Lead BA M1 reference */
+.header{border-bottom:1px solid var(--line,#e9e9e7) !important}
+.tabbar{display:flex !important;gap:6px !important;margin:10px 24px 12px !important;padding:8px 8px 12px !important;overflow-x:auto !important;overflow-y:hidden !important;background:#fff !important;border:1px solid var(--line,#e9e9e7) !important;border-radius:14px !important;box-shadow:0 1px 3px rgba(20,33,61,.08) !important;position:static !important;scrollbar-width:thin !important;scrollbar-color:#14213D #e8ebf2 !important;scroll-behavior:smooth}
+.tabbar::-webkit-scrollbar{display:block;height:8px}
+.tabbar::-webkit-scrollbar-button{display:none !important;width:0 !important;height:0 !important}
+.tabbar::-webkit-scrollbar-track{background:#e8ebf2;border-radius:8px;margin:0 10px}
+.tabbar::-webkit-scrollbar-thumb{background:#14213D;border-radius:8px}
+.tabbar::-webkit-scrollbar-thumb:hover{background:#fca311}
+.tabbar .tab{position:relative;flex:0 0 auto;padding:9px 16px !important;background:transparent !important;border:none !important;border-radius:9px !important;font-size:13.5px;font-weight:500 !important;color:var(--ink-soft,var(--ink2,#787774)) !important;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:7px;transition:background .15s ease,color .15s ease,box-shadow .15s ease}
+.tabbar .tab .tab-num{display:none !important}
+.tabbar .tab::before{display:none !important}
+.tabbar .tab:hover:not(.active){background:#e8ecf5 !important;color:#14213D !important}
+.tabbar .tab:focus-visible{outline:2px solid #fca311;outline-offset:1px}
+.tabbar .tab.active,.tabbar .tab.active:hover{background:#14213D !important;color:#fff !important;font-weight:700 !important;box-shadow:0 2px 6px rgba(20,33,61,.35)}
+.toc{top:var(--hh,118px) !important;height:calc(100vh - var(--hh,118px) - 12px) !important}
+.section{scroll-margin-top:calc(var(--hh,118px) + 16px) !important}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+
+<body><header class="header"><div class="header-top"><div class="brand"><div class="brand-mark" style="font-size:12px;letter-spacing:-.02em">SDR</div><span>Objection Handling</span></div><div class="header-actions"><span class="progress-pill" id="progressPill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 8</span></span><button class="btn" onclick="resetProgress()" title="Reset to first tab">Reset</button></div></div><nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Mindset &amp; Anatomy</button><button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> Cold Call Objections</button><button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> De-escalation</button><button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> Reframing &amp; Booking</button><button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> Email &amp; LinkedIn</button><button class="tab" data-tab="t6" role="tab"><span class="tab-num">06</span> Gatekeepers &amp; Hard Cases</button><button class="tab" data-tab="t7" role="tab"><span class="tab-num">07</span> Advanced Playbook</button><button class="tab" data-tab="t8" role="tab"><span class="tab-num">08</span> Assessment</button></nav></header><div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside><main class="main"><section class="panel active" id="t1" data-toc='[["s1-1", "Why Objections Happen"], ["s1-2", "Reflex vs Real Objection"], ["s1-3", "The Core Pattern"], ["s1-4", "Six Types of Objection"], ["s1-5", "The Objection Mindset"]]'><div class="panel-header"><h1 class="panel-title">Objection Handling</h1><p class="panel-subtitle">Quick-thinking de-escalation and reframing skills to turn cold friction into booked discovery calls.</p></div><div class="section" id="s1-1"><h2><span class="sec-emoji">🧱</span> Why Objections Happen</h2><p>An objection is a prospect’s <strong>first reaction to an interruption</strong>, not a verdict on your product. They were mid-task, they don’t know you, and a stranger just asked for their time. Most “no” responses on a cold call are <strong>reflexes</strong> that fade when you stay calm and curious.</p><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d6bbf">🛡️</div><div class="card-title">Self-protection</div><div class="card-desc">“Not interested” often means “I don’t know why you’re calling yet.”</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">⏱️</div><div class="card-title">Bad timing</div><div class="card-desc">“I’m busy” is about the moment, not the problem you solve.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#73508c">🧩</div><div class="card-title">Missing context</div><div class="card-desc">They can’t see relevance until you tie it to something real in their world.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🚧</div><div class="card-title">Real blocker</div><div class="card-desc">Sometimes it is genuine — a contract, a freeze, the wrong person. Learn to tell the difference.</div></div></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><strong>Friction is normal.</strong> A cold call that meets zero resistance usually means the prospect isn’t paying attention. Treat the objection as the start of the conversation.</div></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">🔍</span> Reflex vs Real Objection</h2><p>Your reply depends on which kind you are hearing. Listen for <strong>speed, tone and specificity</strong>.</p><div class="compare"><div class="compare-col"><h4>⚡ Reflex</h4><p style="font-size:13.5px;color:var(--ink-soft);margin:0 0 8px">Fast, vague, automatic.</p><pre><code>“Not interested.”
+“Send me something.”
+“Call me later.”
+→ Respond with one light question.</code></pre></div><div class="compare-col"><h4>🎯 Real</h4><p style="font-size:13.5px;color:var(--ink-soft);margin:0 0 8px">Slower, specific, reasoned.</p><pre><code>“We signed a 2-year deal in May.”
+“Budget is frozen till Q3.”
+→ Respect it, learn it, set a follow-up.</code></pre></div></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body"><strong>Never treat a real objection like a reflex.</strong> Pushing past a genuine blocker burns the account; acknowledging it and scheduling a revisit keeps it alive.</div></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">🔁</span> The Core Pattern</h2><p>Almost every objection reply follows the same three beats: <strong>Acknowledge → Ask → Advance</strong>.</p><div class="diagram"><svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="arrO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs>
+<text x="350" y="26" text-anchor="middle" font-weight="600" font-size="17" fill="#37352f">The three-beat objection reply</text>
+<rect x="30" y="60" width="180" height="80" rx="12" fill="#14213D"/><text x="120" y="95" text-anchor="middle" fill="#fff" font-weight="700" font-size="14">Acknowledge</text><text x="120" y="115" text-anchor="middle" fill="#9fb0d6" font-size="10">“Fair enough.”</text>
+<line x1="210" y1="100" x2="250" y2="100" stroke="#37352f" stroke-width="2" marker-end="url(#arrO)"/>
+<rect x="255" y="60" width="190" height="80" rx="12" fill="#2383e2"/><text x="350" y="95" text-anchor="middle" fill="#fff" font-weight="700" font-size="14">Ask</text><text x="350" y="115" text-anchor="middle" fill="#dceaf7" font-size="10">One curious question</text>
+<line x1="445" y1="100" x2="485" y2="100" stroke="#37352f" stroke-width="2" marker-end="url(#arrO)"/>
+<rect x="490" y="60" width="180" height="80" rx="12" fill="#0f7b0f"/><text x="580" y="95" text-anchor="middle" fill="#fff" font-weight="700" font-size="14">Advance</text><text x="580" y="115" text-anchor="middle" fill="#cdeccd" font-size="10">Small, specific next step</text>
+<text x="350" y="175" text-anchor="middle" font-style="italic" font-size="12" fill="#787774">Short, calm, curious — then stop talking and listen.</text>
+</svg><div class="diagram-caption">Figure · Acknowledge → Ask → Advance</div></div><ol><li><strong>Acknowledge</strong> — show you heard it, in a few calm words (“Fair enough.”).</li><li><strong>Ask</strong> — one short, curious question that moves the talk to their situation.</li><li><strong>Advance</strong> — propose a small, specific next step, not a big commitment.</li></ol><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><strong>Don’t argue, don’t over-explain.</strong> If you win the debate you lose the meeting. One acknowledgement, one question, one ask — then stop talking.</div></div></div><div class="section" id="s1-4"><h2><span class="sec-emoji">🗂️</span> Six Types of Objection</h2><table><thead><tr><th>Type</th><th>Sounds Like</th><th>What’s Underneath</th></tr></thead><tbody><tr><td><strong>Timing</strong></td><td>“I’m busy.” “Not now.”</td><td>The moment is wrong, not the topic</td></tr><tr><td><strong>Relevance</strong></td><td>“Not interested.” “We don’t need it.”</td><td>They don’t yet see why it matters</td></tr><tr><td><strong>Trust</strong></td><td>“Who are you?” “Who gave you my number?”</td><td>You’re a stranger; they want a reason to listen</td></tr><tr><td><strong>Authority</strong></td><td>“I’d need to ask my boss.”</td><td>They may not own the decision</td></tr><tr><td><strong>Budget</strong></td><td>“No money for this.”</td><td>No urgency, or value not yet clear</td></tr><tr><td><strong>Incumbent</strong></td><td>“We already use X.”</td><td>Comfortable with the status quo</td></tr></tbody></table><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><strong>Name the type in your head first.</strong> The right question for a timing objection is different from the right question for a trust objection.</div></div></div><div class="section" id="s1-5"><h2><span class="sec-emoji">🧠</span> The Objection Mindset</h2><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d6bbf">🧘</div><div class="card-title">Stay calm</div><div class="card-desc">A steady voice signals confidence. Panic shows up as rushing and over-talking.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🔎</div><div class="card-title">Stay curious</div><div class="card-desc">Treat every objection as information about their situation, not an attack.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#73508c">🎲</div><div class="card-title">Expect “no”</div><div class="card-desc">Most calls end without a meeting. A “no” costs nothing; a defensive reaction costs trust.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🎯</div><div class="card-title">Keep the goal small</div><div class="card-desc">You’re not winning the sale — you’re earning the next 15 minutes.</div></div></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body"><strong>Detach from the outcome.</strong> Reps who take every objection personally dial less, and sound tense when they do.</div></div></div></section><section class="panel" id="t2" data-toc='[["s2-1", "The Big Five"], ["s2-2", "A Live Example"], ["s2-3", "The Next Five"], ["s2-4", "Voice, Pace &amp; Silence"], ["s2-5", "Bridge Phrases"]]'><div class="panel-header"><h1 class="panel-title">Cold Call Objections</h1><p class="panel-subtitle">The objections you will hear every day, what they usually mean, and a clean first reply for each.</p></div><div class="section" id="s2-1"><h2><span class="sec-emoji">📞</span> The Big Five</h2><table><thead><tr><th>They say</th><th>Often means</th><th>First reply</th></tr></thead><tbody><tr><td>“Not interested.”</td><td>Reflex — no relevance yet</td><td>“Totally fair — I haven’t told you why I called. Can I ask one quick question?”</td></tr><tr><td>“Send me an email.”</td><td>Brush-off, or mild curiosity</td><td>“Happy to. So it’s useful, what should it cover? I’ll send it today and check in Thursday.”</td></tr><tr><td>“We already use [vendor].”</td><td>Comfortable, no urgency</td><td>“Makes sense, most teams do. What’s working well, and what would you change?”</td></tr><tr><td>“I’m busy right now.”</td><td>Bad timing, not a no</td><td>“No problem — is tomorrow 10 or Thursday 3 better for a quick two minutes?”</td></tr><tr><td>“No budget.”</td><td>No priority or unclear value</td><td>“Understood. What does the problem cost you today? Worth revisiting when planning opens?”</td></tr></tbody></table><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><strong>Keep replies under ten seconds.</strong> Short answers sound confident; long ones sound defensive.</div></div></div><div class="section" id="s2-2"><h2><span class="sec-emoji">🎙️</span> A Live Example</h2><pre><span class="pre-lang">objection-call.txt</span><code>Them: Not interested.
+You:  Totally fair — I haven’t said why I called. Quick one:
+      how are you handling rep ramp-up right now?
+Them: Honestly, it’s slow. Takes months.
+You:  That’s what we hear. Worth 15 minutes Thursday to see
+      how similar teams cut it — 2 p.m. or 4 p.m.?</code></pre><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body"><strong>Notice the shape:</strong> agree, one question tied to a likely pain, then a specific time. The objection was never argued with.</div></div></div><div class="section" id="s2-3"><h2><span class="sec-emoji">➕</span> The Next Five</h2><table><thead><tr><th>They say</th><th>Often means</th><th>First reply</th></tr></thead><tbody><tr><td>“Who gave you my number?”</td><td>Trust — they want to know why you’re calling</td><td>Answer honestly and briefly (for example, public business listings or professional data), then state why you called</td></tr><tr><td>“What does your company do?”</td><td>Mild interest, or a test</td><td>Give one plain sentence about the problem you solve, then ask a question</td></tr><tr><td>“We tried something like this before.”</td><td>A past bad experience</td><td>“Sorry to hear that — what went wrong?” Then listen</td></tr><tr><td>“I’m not the right person.”</td><td>Authority, or a brush-off</td><td>“Thanks — who usually looks after this?” and ask for a warm intro</td></tr><tr><td>“Call me next quarter.”</td><td>A soft delay</td><td>“Happy to. Is early or late in the quarter better?” and log a dated follow-up</td></tr></tbody></table></div><div class="section" id="s2-4"><h2><span class="sec-emoji">🎚️</span> Voice, Pace &amp; Silence</h2><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d6bbf">🐢</div><div class="card-title">Slow down</div><div class="card-desc">Rushing signals fear. A calm, slightly slower pace lowers the prospect’s guard.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🙂</div><div class="card-title">Smile in your voice</div><div class="card-desc">Warmth is audible. Sound curious, not scripted.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#73508c">🤫</div><div class="card-title">Use the pause</div><div class="card-desc">After your question, wait. Silence makes them fill the gap with real information.</div></div></div></div><div class="section" id="s2-5"><h2><span class="sec-emoji">🌉</span> Bridge Phrases</h2><p>Short phrases that acknowledge without agreeing to the rejection.</p><div class="compare"><div class="compare-col"><h4>✅ Bridges</h4><p style="font-size:13.5px;color:var(--ink-soft);margin:0 0 8px">Calm and curious.</p><pre><code>“Fair enough.”
+“That makes sense.”
+“I appreciate you being direct.”
+“Good to know.”</code></pre></div><div class="compare-col"><h4>❌ Pushback</h4><p style="font-size:13.5px;color:var(--ink-soft);margin:0 0 8px">Starts an argument.</p><pre><code>“But you haven’t even heard…”
+“Actually, you’re wrong.”
+“Everyone needs this.”
+“Let me just explain…”</code></pre></div></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><strong>Acknowledge the feeling, not the objection.</strong> “Makes sense” doesn’t mean you agree you’re not a fit — it means you heard them.</div></div></div></section><section class="panel" id="t3" data-toc='[["s3-1", "Reading the Temperature"], ["s3-2", "The Four-Step Reset"], ["s3-3", "Words That Cool vs Heat"], ["s3-4", "Opt-Outs &amp; Compliance"], ["s3-5", "Resetting After a Rough Call"]]'><div class="panel-header"><h1 class="panel-title">De-escalation</h1><p class="panel-subtitle">Staying calm when a prospect is irritated, rude, or shuts the call down — and knowing when to simply let go.</p></div><div class="section" id="s3-1"><h2><span class="sec-emoji">🌡️</span> Reading the Temperature</h2><table><thead><tr><th>Level</th><th>What you hear</th><th>Your move</th></tr></thead><tbody><tr><td>Cool</td><td>Curt, distracted, “not now”</td><td>Be brief; offer a specific later time</td></tr><tr><td>Warm</td><td>Irritated: “Why are you calling me?”</td><td>Lower your pace, take responsibility, explain in one line</td></tr><tr><td>Hot</td><td>Angry, sarcastic, raised voice</td><td>Don’t match energy; apologise for the interruption and offer a clean exit</td></tr><tr><td>Stop</td><td>“Remove me / do not call again”</td><td>Comply immediately, confirm, log it</td></tr></tbody></table></div><div class="section" id="s3-2"><h2><span class="sec-emoji">🧯</span> The Four-Step Reset</h2><ol><li><strong>Pause</strong> — breathe; don’t rush to fill the silence.</li><li><strong>Lower</strong> — drop your volume and pace; a quiet voice cools a loud one.</li><li><strong>Label</strong> — name it: “I hear you — I called out of the blue.”</li><li><strong>Offer a choice</strong> — “Want me to try another time, or take you off my list?”</li></ol><pre><span class="pre-lang">de-escalation.txt</span><code>Them: Why are you bothering me at work?
+You:  That’s fair — I did call out of the blue, and I
+      apologise. Would you prefer I try another time, or
+      leave you alone?</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><strong>Giving control calms people.</strong> A real choice often turns a hostile call into a neutral — sometimes even a curious — one.</div></div></div><div class="section" id="s3-3"><h2><span class="sec-emoji">🔥</span> Words That Cool vs Heat</h2><div class="compare"><div class="compare-col"><h4>🧊 Cools</h4><p style="font-size:13.5px;color:var(--ink-soft);margin:0 0 8px">Takes responsibility, stays short.</p><pre><code>“That’s fair.”
+“I hear you.”
+“Sorry to catch you at a bad time.”
+“Would another time be better?”</code></pre></div><div class="compare-col"><h4>🔥 Heats</h4><p style="font-size:13.5px;color:var(--ink-soft);margin:0 0 8px">Defends, corrects, or pushes.</p><pre><code>“Calm down.”
+“You didn’t let me finish.”
+“It’ll only take a minute.”
+“You’re missing out.”</code></pre></div></div></div><div class="section" id="s3-4"><h2><span class="sec-emoji">⚖️</span> Opt-Outs &amp; Compliance</h2><p>If someone clearly asks not to be contacted, <strong>that is the end of outreach on that channel</strong> — not an objection to overcome.</p><ul><li>Say thanks, confirm you’ll remove them, and end politely.</li><li>Log the request in the CRM and add them to your suppression list straight away.</li><li>Rules differ by country and channel (for example do-not-call lists and email opt-out laws) — follow your company’s compliance guidance.</li></ul><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><strong>Never “reframe” a clear stop request.</strong> It damages trust, can breach regulations, and puts your company at risk.</div></div></div><div class="section" id="s3-5"><h2><span class="sec-emoji">🔋</span> Resetting After a Rough Call</h2><ol><li><strong>Breathe and shake it off</strong> — take a few slow breaths before the next dial.</li><li><strong>Log it factually</strong> — what happened, nothing more.</li><li><strong>Take a short break</strong> after a run of hard calls: stand up, drink water, walk.</li><li><strong>Remember the odds</strong> — one angry call says little about the next one.</li><li><strong>Share a tough call</strong> with your manager or team; they’ve heard worse.</li></ol><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body"><strong>Carry nothing to the next call.</strong> Prospects can hear lingering frustration in your first sentence.</div></div></div></section><section class="panel" id="t4" data-toc='[["s4-1", "Four Reframes"], ["s4-2", "Before &amp; After"], ["s4-3", "Cost-of-Inaction Questions"], ["s4-4", "Turning \u201cSend Info\u201d into a Meeting"], ["s4-5", "Booking the Discovery Call"]]'><div class="panel-header"><h1 class="panel-title">Reframing &amp; Booking</h1><p class="panel-subtitle">Shifting the conversation from “why not” to “what if” — then asking for a small, specific discovery call.</p></div><div class="section" id="s4-1"><h2><span class="sec-emoji">🔄</span> Four Reframes</h2><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d6bbf">🎯</div><div class="card-title">Product → Problem</div><div class="card-desc">Move from “we have a tool” to “are you seeing this issue?”</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">💸</div><div class="card-title">Price → Cost of Inaction</div><div class="card-desc">“What does it cost you each month if this stays as is?”</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#73508c">🔭</div><div class="card-title">Pitch → Curiosity</div><div class="card-desc">Replace claims with one honest question they can answer.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🤝</div><div class="card-title">Commitment → Small Step</div><div class="card-desc">Ask for 15 minutes to compare notes, not a purchase.</div></div></div></div><div class="section" id="s4-2"><h2><span class="sec-emoji">✍️</span> Before &amp; After</h2><div class="compare"><div class="compare-col"><h4>❌ Defensive</h4><p style="font-size:13.5px;color:var(--ink-soft);margin:0 0 8px">Triggers more resistance.</p><pre><code>“But our platform is actually
+really different, and we have
+the best reviews in the industry…”</code></pre></div><div class="compare-col"><h4>✅ Reframed</h4><p style="font-size:13.5px;color:var(--ink-soft);margin:0 0 8px">Curious, short, specific.</p><pre><code>“Fair — most teams say that. What’s
+the one thing you’d fix if you
+could?”</code></pre></div></div></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🧮</span> Cost-of-Inaction Questions</h2><p>These questions help the prospect <strong>say the cost out loud</strong> instead of hearing it from you.</p><ul><li>“What happens if this stays the same another six months?”</li><li>“How much time does your team lose to this each week?”</li><li>“What’s that costing you in missed meetings or deals?”</li><li>“Who else feels this pain besides you?”</li></ul><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><strong>Ask, don’t invent numbers.</strong> Use their figures, not made-up statistics, and never exaggerate the problem.</div></div></div><div class="section" id="s4-4"><h2><span class="sec-emoji">📬</span> Turning “Send Info” into a Meeting</h2><pre><span class="pre-lang">send-info.txt</span><code>Them: Just send me some info.
+You:  Happy to. So it’s actually useful — what’s the main
+      thing you’d want it to cover?
+Them: How other teams handle onboarding.
+You:  Perfect. I’ll send two short examples today. Can we
+      grab 10 minutes Thursday at 2 to walk through them?</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><strong>Never send and wait.</strong> Agree, learn what they care about, and book the follow-up before you hang up.</div></div></div><div class="section" id="s4-5"><h2><span class="sec-emoji">📅</span> Booking the Discovery Call</h2><p>Once the prospect engages, <strong>close with a specific, low-effort step</strong>.</p><ul><li>Offer two time options: “Thursday at 2 or 4?”</li><li>State the purpose: “15 minutes to see if it’s relevant.”</li><li>Confirm and send the invite while you’re still on the call.</li><li>Hand the AE the pain, in the prospect’s own words.</li></ul><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><strong>Specific beats vague.</strong> “Worth a chat sometime?” invites “maybe later”; “Thursday 2 or 4?” invites a yes or a real counter.</div></div></div></section><section class="panel" id="t5" data-toc='[["s5-1", "Common Written Replies"], ["s5-2", "Writing Short Replies"], ["s5-3", "LinkedIn Reply Handling"], ["s5-4", "Silence Is Not \u201cNo\u201d"], ["s5-5", "Written Opt-Outs"]]'><div class="panel-header"><h1 class="panel-title">Email &amp; LinkedIn Objections</h1><p class="panel-subtitle">Objections don’t only come by phone — here is how to reply in writing, briefly and without pressure.</p></div><div class="section" id="s5-1"><h2><span class="sec-emoji">✉️</span> Common Written Replies</h2><table><thead><tr><th>They write</th><th>Often means</th><th>Better response</th></tr></thead><tbody><tr><td>“Not interested.”</td><td>Reflex, or a real no</td><td>Thank them briefly; if appropriate, one short question; accept a clear no</td></tr><tr><td>“Wrong person.”</td><td>Not their area</td><td>Thank them and ask who handles it</td></tr><tr><td>“Send pricing.”</td><td>Early curiosity</td><td>Follow company pricing guidance, ask one or two scoping questions, propose a short call</td></tr><tr><td>“We already have a vendor.”</td><td>Status quo</td><td>Ask what works and what doesn’t; position as a complement</td></tr><tr><td>“Unsubscribe / remove me.”</td><td>A clear stop</td><td>Remove, confirm, and log immediately</td></tr></tbody></table></div><div class="section" id="s5-2"><h2><span class="sec-emoji">✍️</span> Writing Short Replies</h2><p>Written replies should be <strong>shorter than the message you received</strong>.</p><pre><span class="pre-lang">reply-wrong-person.txt</span><code>Hi Priya,
+
+Thanks for letting me know. Who on your team usually
+owns SDR tooling? Happy to reach out directly.
+
+Best,
+Sam</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><strong>Reply fast to positive replies.</strong> Interest cools quickly — respond the same day if you can.</div></div></div><div class="section" id="s5-3"><h2><span class="sec-emoji">💼</span> LinkedIn Reply Handling</h2><ul><li><strong>Connected but silent:</strong> a lack of reply isn’t an objection. Follow up lightly, or move to another channel.</li><li><strong>“Not interested”:</strong> thank them and leave the door open.</li><li><strong>“Send me details”:</strong> ask what’s most useful, then share one short resource.</li><li><strong>Don’t paste your pitch</strong> in a reply; keep it conversational.</li></ul></div><div class="section" id="s5-4"><h2><span class="sec-emoji">🤫</span> Silence Is Not “No”</h2><p>Most prospects never reply at all. That is rarely a rejection — it usually means <strong>busy, not relevant yet, or buried in the inbox</strong>.</p><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d6bbf">📆</div><div class="card-title">Space your follow-ups</div><div class="card-desc">Spread touches over days, not hours.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🔀</div><div class="card-title">Change channel</div><div class="card-desc">Try a call or LinkedIn after emails go unanswered.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#73508c">🚪</div><div class="card-title">Send a breakup email</div><div class="card-desc">A polite final note often earns the reply the earlier ones didn’t.</div></div></div></div><div class="section" id="s5-5"><h2><span class="sec-emoji">⚖️</span> Written Opt-Outs</h2><ul><li>Treat “unsubscribe,” “remove me” and similar as a stop request.</li><li>Remove them from every active sequence and add them to suppression.</li><li>Reply with a brief confirmation only if your process says to.</li><li>Never argue or ask “are you sure?”</li></ul><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><strong>Compliance rules vary by region.</strong> Follow your company’s guidance on opt-outs and record-keeping.</div></div></div></section><section class="panel" id="t6" data-toc='[["s6-1", "Gatekeeper Objections"], ["s6-2", "Wrong Person \u2192 Warm Referral"], ["s6-3", "Sarcasm &amp; Hostility"], ["s6-4", "Past Bad Experiences"], ["s6-5", "When to Walk Away"]]'><div class="panel-header"><h1 class="panel-title">Gatekeepers &amp; Hard Cases</h1><p class="panel-subtitle">Assistants, wrong numbers, sarcasm and past bad experiences — the situations that test your composure.</p></div><div class="section" id="s6-1"><h2><span class="sec-emoji">🛡️</span> Gatekeeper Objections</h2><table><thead><tr><th>They say</th><th>Better response</th></tr></thead><tbody><tr><td>“What’s this regarding?”</td><td>Give a brief, honest reason: “It’s about how your team handles SDR onboarding.”</td></tr><tr><td>“He’s in a meeting.”</td><td>Ask the best time to reach them, or leave a short voicemail</td></tr><tr><td>“Send an email to info@.”</td><td>Ask for the right person’s name or direct email; if not, send it and note it</td></tr><tr><td>“He doesn’t take sales calls.”</td><td>Stay polite, ask who does, and try another channel</td></tr></tbody></table><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><strong>Never pretend to know the prospect</strong> to get past a gatekeeper. Be honest and ask for help.</div></div></div><div class="section" id="s6-2"><h2><span class="sec-emoji">🧭</span> Wrong Person → Warm Referral</h2><pre><span class="pre-lang">referral.txt</span><code>Them: I’m not the right person for this.
+You:  Thanks for telling me — who usually owns it?
+Them: That would be Dev in Sales Ops.
+You:  Great. Is it okay if I mention you gave me his
+      name when I reach out?</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><strong>A referral is a win.</strong> “Priya suggested I reach out” gets far more attention than a cold approach.</div></div></div><div class="section" id="s6-3"><h2><span class="sec-emoji">😤</span> Sarcasm &amp; Hostility</h2><pre><span class="pre-lang">sarcasm.txt</span><code>Them: Oh great, another salesperson.
+You:  Ha — fair. I’m Sam from Acme, calling about rep
+      ramp-up. Want me to take 20 seconds, or try later?</code></pre><ul><li>Stay light, don’t get defensive.</li><li>Give one honest line about why you called.</li><li>Offer an easy exit.</li><li>If they say stop, stop.</li></ul></div><div class="section" id="s6-4"><h2><span class="sec-emoji">📉</span> Past Bad Experiences</h2><div class="compare"><div class="compare-col"><h4>✅ Curious</h4><p style="font-size:13.5px;color:var(--ink-soft);margin:0 0 8px">Lets them vent, learns the real issue.</p><pre><code>“Sorry to hear that. What
+went wrong last time?”</code></pre></div><div class="compare-col"><h4>❌ Defensive</h4><p style="font-size:13.5px;color:var(--ink-soft);margin:0 0 8px">Dismisses their experience.</p><pre><code>“We’re completely different,
+that won’t happen with us.”</code></pre></div></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body"><strong>Listen to the story.</strong> Their past failure tells you exactly what to prove — and what to avoid promising.</div></div></div><div class="section" id="s6-5"><h2><span class="sec-emoji">🚶</span> When to Walk Away</h2><ul><li>They’ve clearly said no twice, politely or otherwise.</li><li>They ask you to stop contacting them.</li><li>The conversation turns abusive or threatening.</li><li>The account is genuinely locked in or out of scope.</li></ul><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><strong>Leave on a good note.</strong> “Thanks for your time, I’ll leave you be” keeps your name clean for future roles and companies.</div></div></div></section><section class="panel" id="t7" data-toc='[["s7-1", "Stacked Objections"], ["s7-2", "Objection Log &amp; Pattern Review"], ["s7-3", "Building a Talk-Track Library"], ["s7-4", "Roleplay Drills"], ["s7-5", "Call Review &amp; Coaching"]]'><div class="panel-header"><h1 class="panel-title">Advanced Playbook</h1><p class="panel-subtitle">Handling stacked objections, tracking what you hear, and drilling until the replies feel natural.</p></div><div class="section" id="s7-1"><h2><span class="sec-emoji">🧗</span> Stacked Objections</h2><p>Prospects often chain reasons: “We’re busy, we have a vendor, send info.” Don’t answer all of them. <strong>Isolate the real one</strong>.</p><pre><span class="pre-lang">stacked.txt</span><code>Them: We use a competitor, and I’m slammed — email me.
+You:  Understood. If timing weren’t an issue, is the main
+      thing that you’re happy with your current setup?</code></pre><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body"><strong>Ask which matters most</strong> and address that one. Each extra rebuttal sounds like pressure.</div></div></div><div class="section" id="s7-2"><h2><span class="sec-emoji">📊</span> Objection Log &amp; Pattern Review</h2><table><thead><tr><th>Track</th><th>Why</th></tr></thead><tbody><tr><td>Objection type and exact wording</td><td>Spot patterns and refine replies</td></tr><tr><td>Reply used and outcome</td><td>See what turns into a booked call</td></tr><tr><td>Meetings booked per 100 connects</td><td>Measures the skill, not just effort</td></tr></tbody></table><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><strong>Review weekly.</strong> If one objection dominates, the problem may be your opener or your targeting, not your rebuttal.</div></div></div><div class="section" id="s7-3"><h2><span class="sec-emoji">📚</span> Building a Talk-Track Library</h2><ol><li>Write your own reply for each common objection in your own words.</li><li>Keep each one under ten seconds.</li><li>Add a follow-up question to every reply.</li><li>Retire lines that never work; keep the ones that book meetings.</li><li>Share winners with the team.</li></ol></div><div class="section" id="s7-4"><h2><span class="sec-emoji">🎭</span> Roleplay Drills</h2><ol><li>Record yourself answering the Big Five until each takes under ten seconds.</li><li>Practise with a teammate playing a hot prospect; rehearse the four-step reset.</li><li>Listen to calls from top reps and note how they acknowledge before asking.</li><li>Rotate scenarios: wrong person, bad timing, existing vendor, real blocker.</li></ol></div><div class="section" id="s7-5"><h2><span class="sec-emoji">🎧</span> Call Review &amp; Coaching</h2><ul><li>Listen back for talk time — aim to ask more than you tell.</li><li>Spot where you rushed or argued.</li><li>Note which acknowledgements landed.</li><li>Ask your manager for one specific thing to practise each week.</li></ul><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body"><strong>Coaching beats scripts.</strong> A short weekly review of real calls improves reply quality faster than any list of rebuttals.</div></div></div></section><section class="panel" id="t8" data-toc='[["s8-1", "Mock test"]]'><div class="panel-header"><div class="panel-eyebrow">Objection Handling</div><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">A timed, exam-style test covering everything in this module, with scenario-based questions and full explanations after you submit.</p></div><div class="section" id="s8-1"><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div><div class="assess-intro-text">Fullscreen, timed mock test with a question palette and mark-for-review.</div><ul class="assess-intro-list"><li><strong>50 multiple-choice questions</strong>, 45 minutes</li><li><strong>3 warnings</strong> for tab-switching or leaving fullscreen, then auto-submit</li><li>Results and explanations shown after submission</li></ul><button class="assess-start-btn" id="assessStartBtn">▶ Start Assessment</button></div></div></section></main></div>
+<script>
+/* =========================================================
+   Tab switching, dynamic TOC, scroll-spy, progress pill
+   ========================================================= */
+(function(){
+  const tabs   = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel');
+  const tocEl  = document.getElementById('toc');
+  const total  = tabs.length;
+  const progressText = document.getElementById('progressText');
+
+  function buildToc(panel){
+    const data = JSON.parse(panel.getAttribute('data-toc') || '[]');
+    tocEl.innerHTML = data.map(([id,label]) =>
+      `<li><a href="#${id}" data-target="${id}">${label}</a></li>`
+    ).join('');
+    const first = tocEl.querySelector('a');
+    if(first) first.classList.add('active');
+  }
+
+  function activate(idx){
+    tabs.forEach((t,i)=>t.classList.toggle('active', i===idx));
+    panels.forEach((p,i)=>p.classList.toggle('active', i===idx));
+    buildToc(panels[idx]);
+    progressText.textContent = `Tab ${idx+1} of ${total}`;
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+
+  tabs.forEach((t,i)=>{
+    t.addEventListener('click', ()=> activate(i));
+  });
+
+  document.addEventListener('click', (e)=>{
+    const a = e.target.closest('.toc-list a');
+    if(!a) return;
+    e.preventDefault();
+    const id = a.getAttribute('data-target');
+    const el = document.getElementById(id);
+    if(el){
+      window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - (document.querySelector('.header').offsetHeight+12), behavior:'smooth'});
+    }
+  });
+
+  let ticking = false;
+  function spy(){
+    const activePanel = document.querySelector('.panel.active');
+    if(!activePanel) return;
+    const sections = activePanel.querySelectorAll('.section');
+    const trigger  = 180;
+    let current = null;
+    sections.forEach(sec=>{
+      const rect = sec.getBoundingClientRect();
+      if(rect.top - trigger < 0) current = sec.id;
+    });
+    if(current){
+      tocEl.querySelectorAll('a').forEach(a=>{
+        a.classList.toggle('active', a.dataset.target === current);
+      });
+    }
+    ticking = false;
+  }
+  window.addEventListener('scroll', ()=>{
+    if(!ticking){ requestAnimationFrame(spy); ticking = true; }
+  }, {passive:true});
+
+  window.resetProgress = function(){ activate(0); };
+
+  activate(0);
+})();
+</script><div id="scoreBoard" class="score-board" style="display:none;max-width:820px;margin:18px auto;padding:0 16px"></div><script>
+var __src='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+window.__openExamTab=function(){ try{ var u=URL.createObjectURL(new Blob([__src],{type:'text/html'}))+'#autoexam'; var w=window.open(u,'_blank'); if(!w){ alert('Popup blocked. Allow popups for this page, or download the file and open it in Chrome/Edge.'); } }catch(e){ alert('Could not open a new tab. Download the file and open it in Chrome/Edge.'); } };
+
+(function(){
+  /* =====================================================================
+     Objection Handling -- full-screen, timed mock exam (MNC style).
+     Question bank embedded in the page; 50 questions per attempt, shuffled.
+     Grading: all answers are submitted and graded at the end.
+     ===================================================================== */
+  const Q=[{"q": "What is an objection on a cold call, most often?", "options": ["A final decision to reject the product", "A first reaction to an unexpected interruption", "A legal complaint", "A pricing negotiation"], "a": 1, "e": "Most cold-call objections are reflexes to being interrupted, not verdicts."}, {"q": "Which pattern is the core of objection handling in this module?", "options": ["Acknowledge \u2192 Ask \u2192 Advance", "Argue \u2192 Prove \u2192 Close", "Pitch \u2192 Pitch \u2192 Pitch", "Wait \u2192 Hang up \u2192 Retry"], "a": 0, "e": "Agree it\u2019s fair, ask one question, then propose a small next step."}, {"q": "\u201cNot interested\u201d often means\u2026", "options": ["They hate your company", "They want a discount", "They haven\u2019t yet seen why it\u2019s relevant", "They are a competitor"], "a": 2, "e": "The prospect usually hasn\u2019t heard why you\u2019re calling yet."}, {"q": "Which signals a reflex objection rather than a real one?", "options": ["Specific contract dates", "Naming a budget freeze", "Fast, vague, automatic wording", "A detailed reason"], "a": 2, "e": "Reflexes are quick and vague; real objections are specific."}, {"q": "Which is typically a sign of a real objection?", "options": ["A one-word answer", "Hanging up", "Silence", "A specific, reasoned explanation"], "a": 3, "e": "Real objections come with concrete reasons or dates."}, {"q": "Why shouldn\u2019t you argue with an objection?", "options": ["Prospects enjoy debate", "Winning the argument usually loses the meeting", "Arguments are against the law", "Scripts forbid it"], "a": 1, "e": "Debate creates resistance; curiosity keeps the conversation open."}, {"q": "\u201cI\u2019d need to run this by my boss\u201d is mainly which type of objection?", "options": ["Timing", "Trust", "Authority", "Budget"], "a": 2, "e": "It signals the person may not own the decision."}, {"q": "A prospect says they signed a contract through next year. Best long-term move?", "options": ["Push for a demo anyway", "Acknowledge it, ask about renewal timing, and set a dated follow-up", "Criticise the vendor", "Never call again"], "a": 1, "e": "Real blockers are respected and revisited at the right time."}, {"q": "Why should replies to objections be short?", "options": ["Short replies sound confident", "Prospects dislike questions", "Scripts must be memorised", "Calls are billed per word"], "a": 0, "e": "Long rebuttals sound defensive and feel like pressure."}, {"q": "\u201cJust send me some info.\u201d Which reply is strongest?", "options": ["\u201cSure, bye!\u201d", "Agree, ask what would be useful, and lock a follow-up time", "\u201cNo, let\u2019s talk now.\u201d", "Send nothing"], "a": 1, "e": "You agree, gather context, and secure a specific next touch."}, {"q": "\u201cWe already use a competitor.\u201d What should you do first?", "options": ["Criticise it", "Offer a lower price", "Ask what works well and what they would change", "End the call"], "a": 2, "e": "Curiosity reveals gaps without attacking their choice."}, {"q": "\u201cI\u2019m busy \u2014 call me later.\u201d Best response?", "options": ["Offer two specific times", "\u201cOK, I\u2019ll call sometime.\u201d", "Keep pitching", "Argue about priorities"], "a": 0, "e": "Specific times turn a vague brush-off into a commitment."}, {"q": "After asking your question, you should\u2026", "options": ["Fill the silence immediately", "Pause and let them answer", "Hang up", "Repeat the pitch"], "a": 1, "e": "Silence prompts the prospect to share real information."}, {"q": "\u201cNo budget.\u201d A good reply explores\u2026", "options": ["Your discount options", "Whether they\u2019re lying", "The cost of the problem today and when to revisit", "Your commission"], "a": 2, "e": "Linking to the cost of inaction reveals priority and timing."}, {"q": "A prospect asks \u201cWho gave you my number?\u201d Best approach?", "options": ["Refuse to answer", "Answer honestly and briefly, then state why you called", "Make up a source", "Hang up"], "a": 1, "e": "Honesty builds trust; keep it short and return to your reason."}, {"q": "\u201cWe tried something like this and it failed.\u201d Best first response?", "options": ["\u201cOurs is totally different.\u201d", "Offer a discount", "Move straight to booking", "Acknowledge it and ask what went wrong"], "a": 3, "e": "Listening to their story shows what to prove and what not to promise."}, {"q": "A prospect is angry and raising their voice. What first?", "options": ["Match their volume", "Pause, lower your pace, and label the situation", "Argue the facts", "Hang up silently"], "a": 1, "e": "Mirroring energy escalates; a calm label cools it."}, {"q": "Offering \u201ctry another time or take you off my list?\u201d works because\u2026", "options": ["It gives the prospect control", "It tricks them", "It ends calls faster", "It avoids logging"], "a": 0, "e": "Choice restores a sense of control and lowers hostility."}, {"q": "The prospect says \u201cDo not call me again.\u201d You should\u2026", "options": ["Reframe to keep them engaged", "Call back next week", "Comply, confirm, and log the opt-out", "Ask for a referral"], "a": 2, "e": "A clear stop request must be honoured and recorded."}, {"q": "Why is reframing a clear stop request risky?", "options": ["It damages trust and may breach regulations", "It lowers connect rates", "It helps the prospect", "It is encouraged by law"], "a": 0, "e": "Pushing past explicit opt-outs creates compliance and reputation risk."}, {"q": "Which change in your voice helps cool a loud caller?", "options": ["Speak louder", "Lower volume and pace", "Speak faster", "Use more jargon"], "a": 1, "e": "A quiet, steady voice tends to cool a tense conversation."}, {"q": "After a rough call, what is the best next step?", "options": ["Dial immediately in anger", "Skip logging", "Breathe, log it factually, and reset before the next dial", "Quit calling for the day"], "a": 2, "e": "A short reset keeps frustration out of the next call."}, {"q": "\u201cI hear you \u2014 I called out of the blue\u201d is an example of\u2026", "options": ["Labelling the situation", "Closing", "Pitching", "Arguing"], "a": 0, "e": "Labelling acknowledges what the prospect feels without defending."}, {"q": "A prospect says \u201cOh great, another salesperson.\u201d Best reply?", "options": ["\u201cCalm down.\u201d", "\u201cYou\u2019re missing out.\u201d", "Hang up", "A light acknowledgement, one honest line, and an easy exit"], "a": 3, "e": "Staying light and giving a way out defuses sarcasm."}, {"q": "Which reframe moves from price to value?", "options": ["\u201cWe\u2019re cheaper.\u201d", "\u201cWhat does this problem cost you each month?\u201d", "\u201cTrust us.\u201d", "\u201cEveryone buys it.\u201d"], "a": 1, "e": "Cost of inaction reframes the discussion around impact."}, {"q": "Which closing ask is most effective?", "options": ["\u201cThursday at 2 or 4?\u201d", "\u201cWant to learn more?\u201d", "\u201cLet me know.\u201d", "\u201cMaybe sometime?\u201d"], "a": 0, "e": "Specific, low-effort options are easier to accept."}, {"q": "What does \u201cproduct \u2192 problem\u201d mean as a reframe?", "options": ["Dropping the product", "Selling harder", "Asking whether they face the issue instead of describing the tool", "Skipping qualification"], "a": 2, "e": "Starting with their problem gives the conversation a reason to exist."}, {"q": "Why ask for 15 minutes instead of a full demo?", "options": ["It earns more commission", "A smaller commitment is easier to accept", "Demos are illegal", "AEs prefer short calls only"], "a": 1, "e": "Small steps lower resistance."}, {"q": "A cost-of-inaction question is meant to\u2026", "options": ["Get the prospect to state the cost of the problem themselves", "Scare the prospect", "Insert statistics", "End the call"], "a": 0, "e": "Hearing the cost in their own words is more persuasive than hearing yours."}, {"q": "After the prospect agrees to a call, you should\u2026", "options": ["Wait for them to email", "Hang up quickly", "Send the calendar invite while still on the call", "Call again later"], "a": 2, "e": "Confirming and sending the invite immediately reduces no-shows."}, {"q": "A prospect says \u201cSounds interesting, send info and we\u2019ll see.\u201d Best response?", "options": ["Send and wait", "Agree, ask what to include, and book a specific follow-up time", "Say nothing", "Send a long deck"], "a": 1, "e": "You agree, tailor the info, and secure the next step before hanging up."}, {"q": "A prospect replies \u201cNot interested\u201d to a cold email. Best response?", "options": ["Send three more emails", "Ignore it", "Argue the point", "Thank them, optionally ask one short question, and accept a clear no"], "a": 3, "e": "Be brief and respectful; don\u2019t push past a clear refusal."}, {"q": "A prospect replies \u201cWrong person.\u201d What should you do?", "options": ["Thank them and ask who handles it", "Delete the record", "Resend the same email", "Reply with a long pitch"], "a": 0, "e": "A referral is a useful outcome from a wrong-person reply."}, {"q": "Why reply quickly to positive email replies?", "options": ["Rules require it", "Replies expire", "Interest cools fast", "It improves open rates"], "a": 2, "e": "Speed keeps momentum while interest is high."}, {"q": "A LinkedIn connection accepts but never replies to your message. This is\u2026", "options": ["A formal objection", "Not an objection \u2014 follow up lightly or switch channels", "A reason to delete them", "A sign to message daily"], "a": 1, "e": "Silence isn\u2019t a no; vary the channel and spacing."}, {"q": "A prospect writes \u201cremove me from your list.\u201d You should\u2026", "options": ["Remove, confirm, and log immediately", "Ask if they\u2019re sure", "Send one more email", "Ignore it"], "a": 0, "e": "A written opt-out is a stop request."}, {"q": "No reply to your emails most likely means\u2026", "options": ["They love your product", "You should email daily", "They\u2019ve complained", "Busy, not relevant yet, or buried \u2014 not necessarily a no"], "a": 3, "e": "Silence is usually inattention, not rejection."}, {"q": "A prospect replies \u201cSend pricing.\u201d Best approach?", "options": ["Ignore it", "Send a long deck", "Follow company guidance, ask one or two scoping questions, and propose a short call", "Refuse to share anything"], "a": 2, "e": "You respond promptly while learning enough to make the next step useful."}, {"q": "A gatekeeper asks \u201cWhat\u2019s this regarding?\u201d Best answer?", "options": ["\u201cIt\u2019s personal.\u201d", "A brief, honest reason", "\u201cI\u2019m an old friend.\u201d", "Hang up"], "a": 1, "e": "Honesty and brevity build credibility with gatekeepers."}, {"q": "A gatekeeper says \u201cHe\u2019s in a meeting.\u201d Best move?", "options": ["Ask the best time to reach him or leave a short voicemail", "Insist on being transferred", "Hang up and never call again", "Argue"], "a": 0, "e": "You turn a block into a scheduled attempt."}, {"q": "Is it acceptable to pretend to be a friend of the prospect to reach them?", "options": ["Yes, if it works", "Only for senior contacts", "No \u2014 be honest and ask for help", "Only by email"], "a": 2, "e": "Deception damages trust and your reputation."}, {"q": "Someone says \u201cI\u2019m not the right person.\u201d Best response?", "options": ["End the call", "Ask who usually handles it, and whether you can mention their name", "Pitch anyway", "Argue"], "a": 1, "e": "Referrals open doors that cold approaches can\u2019t."}, {"q": "A gatekeeper says \u201cSend an email to info@.\u201d Best response?", "options": ["Agree and stop", "Argue", "Hang up", "Ask for the right person\u2019s name or direct email; if not available, send it and note it"], "a": 3, "e": "Try for a named contact first; the generic inbox is a fallback."}, {"q": "A prospect had a bad past experience with a vendor. Best response?", "options": ["Ask what went wrong and listen", "Say you\u2019re completely different", "Skip it", "Offer a discount"], "a": 0, "e": "Their story shows what to prove and what not to promise."}, {"q": "A prospect gives three stacked objections. What do you do?", "options": ["Rebut every one", "Isolate the real objection and address that", "Hang up", "Repeat your pitch"], "a": 1, "e": "Answering all of them sounds like pressure; isolate what matters most."}, {"q": "If one objection dominates your log, the cause may be\u2026", "options": ["Your opener or targeting", "Prospect rudeness", "The weather", "Quota size"], "a": 0, "e": "Patterns often point to upstream issues, not just weak rebuttals."}, {"q": "What should an objection log include?", "options": ["Only your mood", "Only successful calls", "Objection type and wording, reply used, and outcome", "Nothing"], "a": 2, "e": "Structured records reveal patterns and improve replies."}, {"q": "Why do roleplay drills help?", "options": ["They replace real calls", "They build fluency so replies feel natural", "They are required by law", "They increase dials"], "a": 1, "e": "Practice makes calm, short replies automatic."}, {"q": "Which metric shows objection-handling skill rather than raw effort?", "options": ["Number of dials", "Hours at desk", "Emails sent", "Meetings booked per 100 connects"], "a": 3, "e": "Outcome per connect isolates how well you handle conversations."}, {"q": "\u201cWe already use X\u201d appears on about 60% of your calls. Best response?", "options": ["Rebut harder", "Call fewer people", "Review your targeting and opener, test a new approach, and refine the reply", "Ignore the pattern"], "a": 2, "e": "A dominant objection often signals an upstream problem worth testing."}];
+  const API_Q='';
+  const API_S='';
+  const EXAM_SECONDS=60*45;                 // 45 minutes
+  const inIframe = window.self!==window.top;
+
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash h2{font-size:25px;font-weight:800;margin-bottom:8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin-bottom:12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:ecpop .18s ease}
+  @keyframes ecpop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  .exam-warnov{position:fixed;inset:0;z-index:100003;background:rgba(20,33,61,.94);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif;color:#fff;text-align:center;animation:ecpop .18s ease}
+  .exam-warnov .wbox{max-width:760px;width:100%}
+  .exam-warnov h3{font-size:clamp(24px,3.2vw,34px);font-weight:800;margin:0 0 22px;display:flex;align-items:center;justify-content:center;gap:12px;color:#fff;line-height:1.2}
+  .exam-warnov h3 .wi{font-size:.95em;line-height:1}
+  .exam-warnov p{font-size:clamp(15px,1.5vw,17px);color:#fff;margin:0 0 22px;line-height:1.5}
+  .exam-warnov .wc{font-size:clamp(15px,1.5vw,17px);color:#fff;margin:0 0 16px}
+  .exam-warnov .wbtn{background:#0d1830;color:#fff;border:none;border-radius:12px;padding:0 25px;height:52px;font-size:17px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s ease}
+  .exam-warnov .wbtn:hover{background:#0a1224}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+
+  function examConfirm(title,msg,okLabel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">
+        <button class="exam-btn nav" data-a="0">Cancel</button>
+        <button class="exam-btn primary" data-a="1">${okLabel||'Submit'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  /* ---- score history (localStorage, shared across the exam tab + guide) ---- */
+  const LS_KEY='sdr_objection_handling_scores';
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores();
+    a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: 3 warnings (tab switch / ESC fullscreen exit / screenshot) -> auto-submit ---- */
+  let warns=0, lastWarn=0, proctorOn=false;
+  function examWarn(title,msg,resume,count){
+    injectCss();
+    document.querySelectorAll('.exam-warn').forEach(x=>x.remove());
+    hideCover();
+    const d=document.createElement('div'); d.className='exam-warnov exam-warn';
+    d.innerHTML='<div class="wbox"><h3><span class="wi">&#9888;&#65039;</span><span>'+title+'</span></h3><p>'+msg+'</p>'+(count?'<div class="wc">'+count+'</div>':'')+'<button class="wbtn" data-a="1">'+(resume?'Return to assessment':'OK')+'</button></div>';
+    document.body.appendChild(d);
+    d.addEventListener('click',e=>{ if(e.target.closest('[data-a]')){ d.remove(); if(resume&&examOn){ hideCover(); if(!document.fullscreenElement){ reqFS(); } } } });
+  }
+  function showCover(){
+    if(!examOn||document.querySelector('.exam-warn'))return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  var lastShot=0;
+  function countWarn(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<800)return; lastWarn=now;
+    warns++;
+    const M={
+      screenshot:['Screenshot detected','Screenshots are not allowed during the assessment.'],
+      fullscreen:['Fullscreen exited','The assessment must remain in fullscreen mode.'],
+      tab:['Tab switch detected','Switching tabs or windows is not allowed during the assessment.']
+    }[kind||'tab'];
+    if(warns>=3){ examWarn('Assessment submitted','You received 3 warnings (last: '+M[0].toLowerCase()+'). The assessment has been auto-submitted.',false,'Warning 3 of 3'); submitExam(true); }
+    else { examWarn(M[0],M[1],true,'Warning '+warns+' of 3'); }
+  }
+  var lastMeta=0;
+  function shotWarn(){ lastShot=Date.now(); showCover(); countWarn('screenshot'); }
+  function fsHandler(){ if(examOn && !document.fullscreenElement){ showCover(); countWarn('fullscreen'); } }
+  function visHandler(){ if(document.hidden){ if(Date.now()-lastShot<1500)return; showCover(); countWarn('tab'); } else { hideCover(); } }
+  function blurHandler(){ if(Date.now()-lastShot<1500)return; showCover(); setTimeout(function(){ if(Date.now()-lastShot<1500)return; if(Date.now()-lastMeta<2500){ shotWarn(); return; } countWarn((!document.fullscreenElement&&!fsFail)?'fullscreen':'tab'); },150); }
+  function focusHandler(){ if(!document.querySelector('.exam-warn')) hideCover(); }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function keyGuard(e){
+    const k=(e.key||'').toLowerCase();
+    if(e.metaKey&&e.shiftKey){ lastMeta=Date.now(); }
+    if(e.shiftKey&&(e.metaKey||e.getModifierState&&e.getModifierState('OS'))&&(e.code==='KeyS'||/^Digit[345]$/.test(e.code||''))){ e.preventDefault(); shotWarn(); return false; }
+    if(e.metaKey&&e.shiftKey&&['KeyS','Digit3','Digit4','Digit5'].includes(e.code)){ e.preventDefault(); shotWarn(); return false; }
+    if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; }
+    if(k==='printscreen'){ e.preventDefault(); shotWarn(); return false; }
+  }
+  function printGuard(e){
+    if((e.key||'')==='PrintScreen'){
+      if(Date.now()-lastShot>1500) shotWarn(); }
+  }
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    window.addEventListener('blur',blurHandler);
+    window.addEventListener('focus',focusHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('cut',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keyup',printGuard,true);
+  }
+  function stopProctor(){
+    proctorOn=false;
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    window.removeEventListener('blur',blurHandler);
+    window.removeEventListener('focus',focusHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('cut',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keyup',printGuard,true);
+    hideCover();
+  }
+
+  function startEntry(){ reqFS(); showSplash(); }
+  var fsFail=false;
+  function reqFS(){ try{ var r=document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen(); if(r&&r.catch){ r.catch(function(){ fsFail=true; var n=document.getElementById('fsNote'); if(n)n.style.display='block'; }); } else { fsFail=true; } }catch(e){ fsFail=true; } }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; Objection Handling &mdash; Mock Test</h2>
+      <p>A timed, exam-style assessment on handling sales objections, modelled on real SDR / BDR screening tests.</p>
+      <ul>
+        <li><b>${Q.length} questions</b> to attempt</li>
+        <li><b>45-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Results and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> &mdash; stay in fullscreen the whole time</li>
+        <li><b>No tab / window switching</b> and <b>no exiting fullscreen</b></li>
+        <li><b>3 warnings</b> (tab-switch, fullscreen-exit or screenshot) &rarr; the test <b>auto-submits</b></li>
+        <li><b>Screenshots, copy and right-click are disabled</b></li>
+      </ul>
+      
+      <button class="exam-btn primary" id="examBegin" style="width:100%;padding:14px">Start Test &rarr;</button><button class="exam-btn nav" id="examCancel" style="width:100%;margin-top:8px">Cancel</button>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      reqFS();
+      sp.remove(); enterExam();
+    });
+    document.getElementById('examCancel').addEventListener('click',()=>{ sp.remove(); if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); } });
+  }
+
+  async function enterExam(){
+    injectCss();
+    let ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Loading your test&hellip;</div>';
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    items=Q.map((x,n)=>({id:n,q:x.q,options:x.options})).sort(()=>Math.random()-.5);
+    if(!items.length){ ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center">Could not load the test. Close and try again.</div>'; return; }
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">Objection Handling &mdash; Mock Test</div><div class="et-sub">${Q.length} questions &middot; one attempt &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}${it.difficulty?`<span class="diff">${it.difficulty}</span>`:''}</div>
+      ${it.code?`<pre><code>${it.code}</code></pre>`:''}
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>el.addEventListener('click',()=>{
+      answers[id]=+el.dataset.i;
+      pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel'));
+      el.classList.add('sel'); refreshPalette();
+    }));
+    const prev=document.getElementById('examPrev'), next=document.getElementById('examNext');
+    if(prev)prev.addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    if(next)next.addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();refreshPalette();});
+    refreshPalette();
+  }
+
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examConfirm('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test');
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    const payload={answers:{}};
+    items.forEach(it=>{ payload.answers[it.id] = (it.id in answers)?answers[it.id]:-1; });
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Grading your test&hellip;</div>';
+    let sc=0,rs={}; items.forEach(it=>{const x=Q[it.id],ok=answers[it.id]===x.a; if(ok)sc++; rs[it.id]={correct:ok,answer:x.a,explanation:x.e};}); const data={score:sc,results:rs};
+    showResults(data);
+  }
+
+  function showResults(data){
+    const results=data.results||{}, total=items.length, score=data.score||0;
+    saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below and try again.';
+    if(pct>=85)msg='Outstanding &mdash; strong command of this module.';
+    else if(pct>=65)msg='Solid pass. A little more practice on the tricky ones and you are set.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the topics you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const r=results[it.id]||{}; const you=answers[it.id];
+      const attempted=(you!=null);
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      if(!attempted){
+        // Not attempted: reveal nothing (answer stays protected)
+        inner+='<div class="ra">Your answer: <i>Not answered</i></div>';
+        return '<div class="r no">'+inner+'</div>';
+      }
+      const youTxt=String.fromCharCode(65+you)+'. '+it.options[you];
+      const cor=(r.answer!=null&&r.answer>=0)?(String.fromCharCode(65+r.answer)+'. '+it.options[r.answer]):'';
+      inner+='<div class="ra '+(r.correct?'cor':'wrong')+'">Your answer: '+youTxt+'</div>'
+        +(r.correct?'':'<div class="ra cor">Correct: '+cor+'</div>')
+        +(r.explanation?'<div class="rx">'+r.explanation+'</div>':'');
+      return '<div class="r '+(r.correct?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; Objection Handling Mock Test</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another test</button></div>
+          <div class="exam-rmsg" id="examRedirect" style="margin-top:8px;color:#94a3b8"></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    let left=30;
+    const rd=document.getElementById('examRedirect');
+    const setTxt=()=>{ if(rd)rd.textContent='Returning to the assessment page in '+left+'s…'; };
+    setTxt();
+    const rt=setInterval(()=>{ left--; setTxt(); if(left<=0){ clearInterval(rt); goBack(); } },1000);
+    function goBack(){
+      if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); }
+      closeExam();
+    }
+    document.getElementById('examRetry').addEventListener('click',()=>{ clearInterval(rt); document.getElementById('examOverlay').remove(); enterExam(); });
+    document.getElementById('examClose').addEventListener('click',()=>{ clearInterval(rt); goBack(); });
+  }
+
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',startEntry);
+  window.__mockExamStart=startEntry;
+  if(location.hash==='#autoexam'){ document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active')}); showSplash(); }
+  renderScoreboard();
+  window.addEventListener('storage',e=>{ if(e.key===LS_KEY)renderScoreboard(); });
+  
+})();
+</script>
+
+<script id="refNavHH">(function(){var h=document.querySelector('.header');if(!h)return;var s=function(){document.documentElement.style.setProperty('--hh',h.offsetHeight+'px')};s();window.addEventListener('resize',s);window.addEventListener('load',s);})();</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body>
+</html>

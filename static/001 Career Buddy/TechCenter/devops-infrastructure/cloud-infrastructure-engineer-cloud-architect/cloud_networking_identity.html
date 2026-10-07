@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Networking & Identity — A Visual Course for SREs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff; --bg-soft:#f7f6f3; --bg-block:#f1f1ef;
+  --ink:#37352f; --ink-soft:#787774; --ink-mute:#9b9a97;
+  --line:#e9e9e7; --line-strong:#d3d3d0;
+  --accent:#14213D; --accent-soft:#eef1f7;
+  --green:#0f7b0f; --green-soft:#ddedea;
+  --orange:#d9730d; --orange-soft:#fadec9;
+  --red:#e03e3e; --red-soft:#ffe2dd;
+  --purple:#22345f; --purple-soft:#eef1f7;
+  --yellow:#dfab01; --yellow-soft:#fdecc8;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body,button,input,textarea,select,table,th,td,h1,h2,h3,h4,p,li,div,span,a,strong,em,small{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
+body{background:var(--bg);color:var(--ink);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+code,pre,pre *,code *{font-family:'Noto Sans Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+
+/* Header */
+.header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand-mark{width:34px;height:34px;display:grid;place-items:center;background:linear-gradient(135deg,#14213D 0%,#2f6fdb 100%);border-radius:8px;color:#fff;font-weight:800;font-size:13px;box-shadow:var(--shadow-sm)}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500;color:var(--ink-soft)}
+.progress-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-soft);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--bg-soft)}
+.tabbar{display:flex;gap:2px;padding:6px 24px;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--line);background:#fff}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{padding:9px 15px;background:transparent;border:none;border-radius:8px;font-size:13.5px;font-weight:500;color:#4a5568;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.tab:hover{background:var(--accent-soft);color:var(--accent)}
+.tab.active{background:var(--accent);color:#fff;font-weight:700}
+
+/* Layout */
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr)}
+@media (max-width:960px){.layout{grid-template-columns:1fr}.toc{display:none}}
+.toc{position:sticky;top:112px;align-self:start;height:calc(100vh - 124px);overflow-y:auto;padding:30px 16px 30px 28px;border-right:1px solid var(--line);scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);font-weight:700;margin-bottom:12px;padding-left:8px}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{display:block;padding:5px 10px;font-size:13px;color:var(--ink-soft);text-decoration:none;border-radius:4px;line-height:1.4}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{color:#fff;background:#16233f;font-weight:600;border-radius:12px;padding:9px 14px}
+.main{padding:44px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:28px 18px 60px}.header-top{padding:12px 16px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel-header{margin-bottom:34px}
+.panel-eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);margin:0 0 8px}
+.panel-title{font-size:38px;line-height:1.15;font-weight:700;letter-spacing:-.02em;margin:0 0 14px}
+.panel-subtitle{font-size:17px;color:var(--ink-soft);margin:0;max-width:760px;line-height:1.6}
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.level-tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.inter{background:#e3ecfb;color:#1d4f9f}
+.level-tag.adv{background:#f5e0e9;color:#8c1a63}
+
+.section{margin-top:46px;scroll-margin-top:140px}
+.section h2{font-size:27px;font-weight:700;letter-spacing:-.01em;margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.section h2 .sec-emoji{font-size:23px}
+.section h3{font-size:18px;font-weight:700;margin:26px 0 8px}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:5px 0}
+.lvl{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.03em;text-transform:uppercase}
+.lvl.b{background:var(--green-soft);color:#0a5f0a}
+.lvl.i{background:#e3ecfb;color:#1d4f9f}
+.lvl.e{background:#f5e0e9;color:#8c1a63}
+
+code{font-size:.87em;background:#f6f5f4;border:1px solid var(--line);padding:1px 6px;border-radius:4px;color:#c2410c}
+pre{background:#1f2430;color:#e6e6e3;padding:18px 20px;border-radius:var(--radius);overflow-x:auto;font-size:13px;line-height:1.65;margin:14px 0;box-shadow:var(--shadow-sm);position:relative}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{position:absolute;top:8px;right:12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9aa3b5;font-weight:700}
+.c{color:#7f8ba3;font-style:italic}
+
+.callout{display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start;background:var(--bg-block);border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout-icon{width:28px;height:28px;display:grid;place-items:center;background:#fff;border-radius:6px;font-size:16px;border:1px solid var(--line)}
+.callout-body{font-size:14.5px;line-height:1.6}
+.callout.tip{background:var(--accent-soft);border-color:#c7d2ea}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.card-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:8px;font-size:18px;margin-bottom:10px}
+.card-title{font-weight:700;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.55}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;border:1px solid var(--line)}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--bg-soft);font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+.table-wrap{overflow-x:auto}
+
+.diagram{background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin:18px 0;text-align:center}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{font-size:12px;color:var(--ink-soft);margin-top:10px;font-style:italic}
+
+.badge{display:inline-block;padding:2px 8px;font-size:11px;font-weight:700;border-radius:4px}
+.badge.blue{background:var(--accent-soft);color:#1d4f9f}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.red{background:var(--red-soft);color:#a82e2e}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:760px){.compare{grid-template-columns:1fr}}
+.compare-col{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.compare-col h4{margin:0 0 8px;font-size:15px;font-weight:700}
+.compare-col p{font-size:13.5px;margin:6px 0}
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{padding:4px 10px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500}
+
+/* stepper (flow list) */
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}
+.flow .st{background:var(--accent);color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600}
+.flow .ar{color:var(--ink-mute);font-weight:700}
+
+/* quiz */
+.quiz-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px 28px;box-shadow:var(--shadow-sm);margin-top:18px}
+.quiz-bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin:10px 0 20px}
+.quiz-bar>div{height:100%;width:0;background:var(--accent);transition:width .3s}
+.qmeta{font-size:12px;font-weight:700;color:var(--ink-soft);letter-spacing:.05em;text-transform:uppercase}
+.qtext{font-size:17px;font-weight:600;margin:6px 0 14px}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;gap:12px;align-items:center;padding:11px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg-soft);cursor:pointer;font-size:14.5px}
+.opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt .k{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0}
+.opt.correct{background:var(--green-soft);border-color:var(--green);font-weight:600}
+.opt.wrong{background:var(--red-soft);border-color:var(--red);font-weight:600}
+.opts.done .opt{pointer-events:none}
+.qexp{margin-top:14px;padding:12px 14px;border-radius:8px;background:var(--accent-soft);font-size:14px;display:none}
+.qbtn{margin-top:16px;background:var(--accent);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
+.qscore{font-size:44px;font-weight:800;text-align:center;margin:14px 0 4px}
+
+/* ===== Final assessment start card (same pattern as Royal HRMS) ===== */
+.assess-start-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px}
+.assess-intro-title{font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;border:none;padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease}
+.assess-start-btn:hover{opacity:.9}
+@media print{.exam-overlay,.exam-splash,.exam-cover{display:none!important}}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header"><div class="header-top"><div class="brand"><div class="brand-mark">NI</div><span>Networking & Identity<span class="brand-sub"> · Cloud Architect course</span></span></div>
+<div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 6</span></span><button class="btn" onclick="resetProgress()">↺ Reset</button></div></div>
+<nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1">Fundamentals</button><button class="tab" data-tab="t2">VPC Design</button><button class="tab" data-tab="t3">Connectivity</button><button class="tab" data-tab="t4">IAM Role Design</button><button class="tab" data-tab="t5">Least Privilege</button><button class="tab" data-tab="t6">Assessment</button></nav></header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside><main class="main">
+<section class="panel" id="t1" data-toc='[["s1-1", "Your private network in the cloud"], ["s1-2", "Terms in the three big clouds"], ["s1-3", "Authentication vs authorization"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span></div><p class="panel-eyebrow">Module 01 · Foundations</p><h1 class="panel-title">Cloud Networking & Identity Basics</h1><p class="panel-subtitle">Two questions decide whether a cloud workload is safe: <em>who can reach it</em> (networking) and <em>who is allowed to act on it</em> (identity).</p></div><div class="section" id="s1-1"><h2><span class="sec-emoji">☁️</span> Your private network in the cloud <span class="lvl b">Basic</span></h2><p>A <strong>VPC</strong> (Virtual Private Cloud; called VNet in Azure and VPC in GCP) is an isolated, software-defined network you own inside a provider. You choose its IP range, split it into subnets and control traffic with routes and firewalls.</p><div class="callout tip"><div class="callout-icon">🏢</div><div class="callout-body"><strong>Analogy:</strong> a VPC is an office building. Subnets are floors, route tables are the signs that say where each corridor leads, security groups are the door locks on each room, and IAM is the badge system that decides who may open which door.</div></div><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🌐</div><div class="card-title">VPC / VNet</div><div class="card-desc">Isolated virtual network with your own CIDR range</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft)">🧱</div><div class="card-title">Subnet</div><div class="card-desc">A slice of the VPC inside one Availability Zone</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft)">🧭</div><div class="card-title">Route table</div><div class="card-desc">Rules that decide where packets go next</div></div><div class="card"><div class="card-icon" style="background:var(--yellow-soft)">🛡️</div><div class="card-title">Security group</div><div class="card-desc">Stateful firewall attached to a resource</div></div></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">🔤</span> Terms in the three big clouds <span class="lvl b">Basic</span></h2><p>Same ideas, different names:</p><div class="table-wrap"><table><tr><th>Concept</th><th>AWS</th><th>Azure</th><th>Google Cloud</th></tr><tr><td>Private network</td><td>VPC</td><td>Virtual Network (VNet)</td><td>VPC (global)</td></tr><tr><td>Hub routing</td><td>Transit Gateway</td><td>Virtual WAN / hub VNet</td><td>Network Connectivity Center</td></tr><tr><td>Private link to services</td><td>PrivateLink</td><td>Private Link</td><td>Private Service Connect</td></tr><tr><td>Dedicated line</td><td>Direct Connect</td><td>ExpressRoute</td><td>Cloud Interconnect</td></tr><tr><td>Identity</td><td>IAM</td><td>Entra ID + Azure RBAC</td><td>Cloud IAM</td></tr></table></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">🔑</span> Authentication vs authorization <span class="lvl b">Basic</span></h2><ul><li><strong>Authentication (AuthN)</strong>: proving who you are (password, MFA, certificate, token).</li><li><strong>Authorization (AuthZ)</strong>: deciding what you may do once known (policies).</li></ul><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Default in every cloud is <strong>deny</strong>. Access exists only when a policy explicitly allows it.</div></div></div></section><section class="panel" id="t2" data-toc='[["s2-1", "CIDR in 60 seconds"], ["s2-2", "Public, private and isolated tiers"], ["s2-3", "Example: 3-AZ layout and Terraform"], ["s2-4", "Security groups vs NACLs"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 02 · Design</p><h1 class="panel-title">VPC and Subnet Design</h1><p class="panel-subtitle">A good network layout is hard to change later, so plan CIDR ranges and tiers before the first resource exists.</p></div><div class="section" id="s2-1"><h2><span class="sec-emoji">🔢</span> CIDR in 60 seconds <span class="lvl b">Basic</span></h2><p>A CIDR block such as <code>10.0.0.0/16</code> means the first 16 bits are fixed; the remaining 16 bits give 65,536 addresses. A bigger number after the slash means a smaller network.</p><div class="table-wrap"><table><tr><th>CIDR</th><th>Addresses</th><th>Typical use</th></tr><tr><td>/16</td><td>65,536</td><td>Whole VPC</td></tr><tr><td>/20</td><td>4,096</td><td>Large subnet (e.g. Kubernetes pods)</td></tr><tr><td>/24</td><td>256</td><td>Standard subnet</td></tr><tr><td>/28</td><td>16</td><td>Tiny subnet (AWS minimum)</td></tr></table></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Use <strong>RFC 1918</strong> private ranges (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16) and <strong>never overlap</strong> ranges between VPCs or with on-premises. Overlaps block peering and VPN later.</div></div></div><div class="section" id="s2-2"><h2><span class="sec-emoji">🏗️</span> Public, private and isolated tiers <span class="lvl b">Basic</span></h2><div class="table-wrap"><table><tr><th>Tier</th><th>Route to internet</th><th>Holds</th><th>Example</th></tr><tr><td>Public</td><td>Internet Gateway (IGW)</td><td>Load balancers, bastion</td><td>ALB, NAT gateway</td></tr><tr><td>Private (app)</td><td>Outbound only via NAT</td><td>App servers, containers</td><td>EC2, EKS nodes</td></tr><tr><td>Isolated (data)</td><td>None</td><td>Databases</td><td>RDS, ElastiCache</td></tr></table></div><div class="flow"><span class="st">Internet</span><span class="ar">→</span><span class="st">IGW</span><span class="ar">→</span><span class="st">Public subnet (ALB)</span><span class="ar">→</span><span class="st">Private subnet (app)</span><span class="ar">→</span><span class="st">Isolated subnet (DB)</span></div></div><div class="section" id="s2-3"><h2><span class="sec-emoji">📐</span> Example: 3-AZ layout and Terraform <span class="lvl i">Intermediate</span></h2><p>Spread each tier across <strong>three Availability Zones</strong> so one zone failure does not take you down.</p><div class="table-wrap"><table><tr><th>Tier</th><th>AZ-a</th><th>AZ-b</th><th>AZ-c</th></tr><tr><td>Public</td><td>10.0.0.0/24</td><td>10.0.1.0/24</td><td>10.0.2.0/24</td></tr><tr><td>Private</td><td>10.0.10.0/24</td><td>10.0.11.0/24</td><td>10.0.12.0/24</td></tr><tr><td>Data</td><td>10.0.20.0/24</td><td>10.0.21.0/24</td><td>10.0.22.0/24</td></tr></table></div><pre><span class="pre-lang">hcl</span><code>resource "aws_vpc" "main" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+}
+
+resource "aws_subnet" "private" {
+  count             = 3
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 8, 10 + count.index)
+  availability_zone = data.aws_availability_zones.az.names[count.index]
+}</code></pre></div><div class="section" id="s2-4"><h2><span class="sec-emoji">🧱</span> Security groups vs NACLs <span class="lvl i">Intermediate</span></h2><div class="table-wrap"><table><tr><th></th><th>Security group</th><th>Network ACL</th></tr><tr><td>Level</td><td>Resource (ENI / instance)</td><td>Subnet</td></tr><tr><td>State</td><td>Stateful (replies auto-allowed)</td><td>Stateless (allow both directions)</td></tr><tr><td>Rules</td><td>Allow only</td><td>Allow and deny, numbered order</td></tr><tr><td>Use for</td><td>Primary day-to-day control</td><td>Coarse guardrail, block bad CIDRs</td></tr></table></div><pre><span class="pre-lang">hcl</span><code>resource "aws_security_group_rule" "app_from_alb" {
+  type                     = "ingress"
+  from_port                = 8080
+  to_port                  = 8080
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.app.id
+  source_security_group_id = aws_security_group.alb.id   # reference a group, not an IP
+}</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Reference <em>security groups</em> instead of IP ranges: the rule keeps working as instances scale and change IPs.</div></div></div></section><section class="panel" id="t3" data-toc='[["s3-1", "Ways to connect networks"], ["s3-2", "Peering mesh vs Transit Gateway"], ["s3-3", "Expert: segmentation and resilient hybrid links"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 03 · Connect</p><h1 class="panel-title">Peering, Transit Gateway & Direct Connect</h1><p class="panel-subtitle">Once you have many VPCs and offices, how you connect them decides cost, complexity and blast radius.</p></div><div class="section" id="s3-1"><h2><span class="sec-emoji">🔗</span> Ways to connect networks <span class="lvl b">Basic</span></h2><div class="table-wrap"><table><tr><th>Option</th><th>What it does</th><th>Good for</th><th>Limits</th></tr><tr><td>VPC peering</td><td>Direct 1-to-1 link between two VPCs</td><td>A few VPCs</td><td>Not transitive; N×(N-1)/2 links</td></tr><tr><td>Transit Gateway (TGW)</td><td>Central hub, VPCs and VPNs attach to it</td><td>Many VPCs, hub-and-spoke</td><td>Per-attachment and data cost</td></tr><tr><td>PrivateLink / endpoints</td><td>Expose one service privately, no routing of whole networks</td><td>SaaS, shared services, S3 access</td><td>One direction, per service</td></tr><tr><td>Site-to-site VPN</td><td>Encrypted IPsec tunnel over internet</td><td>Quick or backup link</td><td>Internet jitter, ~1.25 Gbps per tunnel</td></tr><tr><td>Direct Connect</td><td>Dedicated private fibre to AWS</td><td>Steady, high bandwidth, low latency</td><td>Weeks to provision, needs a backup</td></tr></table></div></div><div class="section" id="s3-2"><h2><span class="sec-emoji">🕸️</span> Peering mesh vs Transit Gateway <span class="lvl i">Intermediate</span></h2><p>Peering is not transitive: if A↔B and B↔C, A still cannot reach C. With 10 VPCs a full mesh needs 45 peerings; a Transit Gateway needs 10 attachments.</p><pre><span class="pre-lang">python</span><code>def peerings(n):  return n * (n - 1) // 2
+def attachments(n): return n
+
+for n in (5, 10, 20):
+    print(n, "VPCs -&gt; mesh:", peerings(n), " TGW:", attachments(n))
+# 5 -&gt; 10 vs 5, 10 -&gt; 45 vs 10, 20 -&gt; 190 vs 20</code></pre><pre><span class="pre-lang">hcl</span><code>resource "aws_ec2_transit_gateway" "hub" {
+  description                     = "company hub"
+  default_route_table_association = "disable"   # use explicit route tables
+  default_route_table_propagation = "disable"
+}
+resource "aws_ec2_transit_gateway_vpc_attachment" "prod" {
+  transit_gateway_id = aws_ec2_transit_gateway.hub.id
+  vpc_id             = aws_vpc.prod.id
+  subnet_ids         = aws_subnet.tgw[*].id
+}</code></pre></div><div class="section" id="s3-3"><h2><span class="sec-emoji">🔌</span> Expert: segmentation and resilient hybrid links <span class="lvl e">Expert</span></h2><ul><li><strong>Separate TGW route tables</strong>: prod, non-prod and shared-services so dev can never route to prod.</li><li><strong>Direct Connect resiliency</strong>: two connections at two locations, plus a VPN as backup (BGP prefers Direct Connect via higher local preference).</li><li><strong>Inspection VPC</strong>: send traffic through a firewall (AWS Network Firewall or a third-party appliance) before it crosses zones.</li><li><strong>DNS</strong>: Route 53 Resolver inbound/outbound endpoints so cloud and on-prem resolve each other.</li></ul><div class="flow"><span class="st">On-prem</span><span class="ar">→</span><span class="st">Direct Connect (x2) + VPN</span><span class="ar">→</span><span class="st">Transit Gateway</span><span class="ar">→</span><span class="st">Inspection VPC</span><span class="ar">→</span><span class="st">Prod / Dev VPCs</span></div></div></section><section class="panel" id="t4" data-toc='[["s4-1", "Identity types"], ["s4-2", "Policy types"], ["s4-3", "Example: role for an application"], ["s4-4", "Expert: multi-account role strategy"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 04 · Identity</p><h1 class="panel-title">IAM Roles and Policies</h1><p class="panel-subtitle">IAM answers: <strong>who</strong> (principal) can do <strong>what</strong> (action) on <strong>which resource</strong> under <strong>which conditions</strong>.</p></div><div class="section" id="s4-1"><h2><span class="sec-emoji">🪪</span> Identity types <span class="lvl b">Basic</span></h2><div class="table-wrap"><table><tr><th>Identity</th><th>What it is</th><th>Credentials</th><th>Use for</th></tr><tr><td>Root account</td><td>Owner of the account</td><td>Email + password</td><td>Almost never; lock away with MFA</td></tr><tr><td>IAM user</td><td>Named person or app</td><td>Long-lived keys</td><td>Avoid; prefer SSO and roles</td></tr><tr><td>IAM group</td><td>Collection of users</td><td>None</td><td>Attach policies once, many users</td></tr><tr><td><strong>IAM role</strong></td><td>Identity you <em>assume</em></td><td>Temporary tokens (STS)</td><td>Services, cross-account, humans via SSO</td></tr><tr><td>Federated identity</td><td>Login via Okta, Entra ID, Google</td><td>SAML / OIDC</td><td>Workforce SSO, CI/CD (GitHub OIDC)</td></tr></table></div><div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Golden rule: <strong>roles over users, temporary over permanent</strong>. A leaked 1-hour token is far less harmful than a leaked access key.</div></div></div><div class="section" id="s4-2"><h2><span class="sec-emoji">📜</span> Policy types <span class="lvl i">Intermediate</span></h2><div class="table-wrap"><table><tr><th>Policy type</th><th>Attached to</th><th>Effect</th></tr><tr><td>Identity-based</td><td>User, group or role</td><td>Grants permissions</td></tr><tr><td>Resource-based</td><td>Resource (S3 bucket, KMS key)</td><td>Grants access, can allow other accounts</td></tr><tr><td>Permission boundary</td><td>User or role</td><td>Sets the maximum a role can ever have</td></tr><tr><td>Service Control Policy (SCP)</td><td>Org / OU / account</td><td>Maximum for whole accounts; never grants</td></tr><tr><td>Session policy</td><td>A temporary session</td><td>Narrows the session further</td></tr></table></div><div class="pill-row"><span class="pill">Explicit Deny always wins</span><span class="pill">No Allow = implicit Deny</span><span class="pill">Effective access = intersection of limits</span></div></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🎭</span> Example: role for an application <span class="lvl i">Intermediate</span></h2><p>Two documents: a <strong>trust policy</strong> (who may assume the role) and a <strong>permissions policy</strong> (what the role may do).</p><pre><span class="pre-lang">json</span><code>// Trust policy: only EC2 can assume
+{ "Version": "2012-10-17",
+  "Statement": [{ "Effect": "Allow",
+    "Principal": { "Service": "ec2.amazonaws.com" },
+    "Action": "sts:AssumeRole" }] }</code></pre><pre><span class="pre-lang">json</span><code>// Permissions policy: read one bucket prefix only
+{ "Version": "2012-10-17",
+  "Statement": [{ "Effect": "Allow",
+    "Action": ["s3:GetObject"],
+    "Resource": "arn:aws:s3:::acme-reports/invoices/*" }] }</code></pre></div><div class="section" id="s4-4"><h2><span class="sec-emoji">🏛️</span> Expert: multi-account role strategy <span class="lvl e">Expert</span></h2><p>Use many AWS accounts (prod, dev, security, logging) and let people <em>assume roles</em> into them from a central identity.</p><div class="flow"><span class="st">Okta / Entra ID</span><span class="ar">→</span><span class="st">IAM Identity Center</span><span class="ar">→</span><span class="st">Permission set</span><span class="ar">→</span><span class="st">Role in target account</span></div><pre><span class="pre-lang">json</span><code>// Cross-account trust: only the tooling account, only with MFA
+{ "Effect": "Allow",
+  "Principal": { "AWS": "arn:aws:iam::111111111111:role/Admins" },
+  "Action": "sts:AssumeRole",
+  "Condition": { "Bool": { "aws:MultiFactorAuthPresent": "true" } } }</code></pre></div></section><section class="panel" id="t5" data-toc='[["s5-1", "Too broad vs just right"], ["s5-2", "Conditions as extra locks"], ["s5-3", "Expert: finding the right permissions"]]'><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 05 · Tighten</p><h1 class="panel-title">Least-Privilege Policies</h1><p class="panel-subtitle">Least privilege: grant the <em>minimum</em> actions, on the <em>minimum</em> resources, for the <em>minimum</em> time.</p></div><div class="section" id="s5-1"><h2><span class="sec-emoji">❌✅</span> Too broad vs just right <span class="lvl i">Intermediate</span></h2><p></p><div class="compare"><div class="compare-col" style="background:var(--red-soft);border-color:#f5b8b0"><h4>❌ Over-permissive</h4><p>• <code>"Action": "*"</code>, <code>"Resource": "*"</code></p><p>• Developers share the admin role</p><p>• Long-lived access keys in repos</p><p>• Everything allowed "to make it work"</p></div><div class="compare-col" style="background:var(--green-soft);border-color:#bdd9d2"><h4>✅ Least privilege</h4><p>• Only named actions on named ARNs</p><p>• Role per workload, split by duty</p><p>• Short-lived credentials</p><p>• Start narrow, add on evidence</p></div></div><pre><span class="pre-lang">json</span><code>// Wildcards are the red flag
+{ "Effect": "Allow", "Action": "s3:*", "Resource": "*" }
+
+// Better: precise action, precise bucket
+{ "Effect": "Allow",
+  "Action": ["s3:GetObject", "s3:PutObject"],
+  "Resource": "arn:aws:s3:::acme-uploads/app1/*" }</code></pre></div><div class="section" id="s5-2"><h2><span class="sec-emoji">🧷</span> Conditions as extra locks <span class="lvl i">Intermediate</span></h2><ul><li><code>aws:SourceIp</code>: only from the office or VPN range</li><li><code>aws:RequestedRegion</code>: restrict to approved regions</li><li><code>aws:PrincipalTag</code> / resource tags: attribute-based access control (ABAC)</li><li><code>aws:SecureTransport</code>: deny non-TLS requests</li></ul><pre><span class="pre-lang">json</span><code>{ "Effect": "Deny",
+  "Action": "*",
+  "Resource": "*",
+  "Condition": { "StringNotEquals": {
+      "aws:RequestedRegion": ["eu-west-1", "eu-central-1"] } } }</code></pre></div><div class="section" id="s5-3"><h2><span class="sec-emoji">🔍</span> Expert: finding the right permissions <span class="lvl e">Expert</span></h2><ol><li>Start from a narrow role in a <strong>dev account</strong>.</li><li>Run the app; read denied calls in <strong>CloudTrail</strong>.</li><li>Use <strong>IAM Access Analyzer policy generation</strong> to draft a policy from real activity.</li><li>Review <strong>last-accessed data</strong> and remove unused services.</li><li>Enforce with permission boundaries and SCPs; re-check every quarter.</li></ol><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Test policies safely with the <strong>IAM Policy Simulator</strong> before rollout, and block dangerous actions org-wide with an SCP (for example deny <code>iam:CreateUser</code> and leaving the Organization).</div></div></div></section><section class="panel" id="t6" data-toc='[["t6-1","Final Assessment"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 06</p><h1 class="panel-title">Final Assessment</h1><p class="panel-subtitle">15 multiple-choice questions on this course &mdash; timed, proctored and graded in your browser.</p></div><div class="section" id="t6-1"><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div><div class="assess-intro-text">A timed, exam-style final assessment for the Networking & Identity module. Questions and options are shuffled on every attempt.</div><ul class="assess-intro-list"><li><strong>15 Multiple-Choice questions</strong> &mdash; concept checks and scenario-based judgement calls</li><li>Difficulty ranges from <strong>Basic</strong> to <strong>Expert</strong></li><li>Timer, question palette, mark-for-review, full explanations after you submit</li><li>Runs in <strong>fullscreen</strong> &mdash; 3 tab/window-switch warnings auto-submit the test</li><li>Your attempts and top score are saved in this browser</li></ul><button class="assess-start-btn" id="assessStartBtn" type="button">&#9654; Start Assessment</button></div><div id="scoreBoard" class="score-board"></div></div></section>
+</main></div>
+<script>
+/* ---------- Tabs, TOC, scroll spy ---------- */
+(function(){
+  const tabs=document.querySelectorAll('.tab'), panels=document.querySelectorAll('.panel');
+  const tocEl=document.getElementById('toc'), total=tabs.length, pt=document.getElementById('progressText');
+  function buildToc(panel){
+    const data=JSON.parse(panel.getAttribute('data-toc')||'[]');
+    tocEl.innerHTML=data.map(([id,l])=>`<li><a href="#${id}" data-target="${id}">${l}</a></li>`).join('');
+    const f=tocEl.querySelector('a'); if(f)f.classList.add('active');
+  }
+  let manual=null;
+  function activate(i){
+    tabs.forEach((t,k)=>t.classList.toggle('active',k===i));
+    panels.forEach((p,k)=>p.classList.toggle('active',k===i));
+    manual=null; buildToc(panels[i]); pt.textContent=`Tab ${i+1} of ${total}`;
+    window.scrollTo({top:0,behavior:'instant'});
+    tabs[i].scrollIntoView({inline:'center',block:'nearest'});
+  }
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('.toc-list a'); if(!a)return; e.preventDefault();
+    const el=document.getElementById(a.dataset.target);
+    manual=a.dataset.target; tocEl.querySelectorAll('a').forEach(x=>x.classList.toggle('active',x===a));
+    if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});
+  });
+  let tick=false;
+  function spy(){
+    if(manual){tick=false;return;}
+    const p=document.querySelector('.panel.active'); if(!p){tick=false;return;}
+    let cur=null; const secs=[...p.querySelectorAll('.section')];
+    secs.forEach(s=>{ if(s.getBoundingClientRect().top-180<0)cur=s.id; });
+    if(secs.length && window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-4) cur=secs[secs.length-1].id;
+    if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));
+    tick=false;
+  }
+  window.addEventListener('scroll',()=>{ if(!tick){requestAnimationFrame(spy);tick=true;} },{passive:true});
+  ['wheel','touchstart','keydown','pointerdown'].forEach(ev=>window.addEventListener(ev,e=>{if(e.target&&e.target.closest&&e.target.closest('.toc-list a'))return;manual=null},{passive:true}));
+  window.resetProgress=()=>activate(0);
+  activate(0);
+})();
+
+
+
+/* =====================================================================
+   Final assessment — proctored, timed, full-screen (graded in-browser)
+   Anti-malpractice model copied from the Royal HRMS assessment:
+   fullscreen, tab/window-switch strikes (3 -> auto-submit), copy / right-click
+   blocked, shuffled questions, answers revealed only after submit.
+   ===================================================================== */
+(function(){
+  const C = {title:"Networking & Identity", slug:"cloud_networking_identity"};
+  const RAW = [{"q": "Which CIDR gives the most addresses?", "o": ["10.0.0.0/24", "10.0.0.0/20", "10.0.0.0/28", "10.0.0.0/26"], "a": "MTpjbG91ZF9uZXR3b3JraW5nX2lkZW50aXR5OjA=", "e": "A smaller prefix number means more addresses: /20 has 4,096."}, {"q": "Why is VPC peering a poor fit for 20 VPCs?", "o": ["Peering is slow", "It is not transitive and needs up to 190 links", "It cannot use private IPs", "It only works in one region"], "a": "MTpjbG91ZF9uZXR3b3JraW5nX2lkZW50aXR5OjE=", "e": "Full mesh grows as N×(N-1)/2. Use a Transit Gateway for many VPCs."}, {"q": "Security groups differ from NACLs because they are:", "o": ["Stateless and subnet-level", "Stateful and resource-level", "Deny-only", "Only for Azure"], "a": "MTpjbG91ZF9uZXR3b3JraW5nX2lkZW50aXR5OjI=", "e": "Security groups are stateful and attached to resources; NACLs are stateless at subnet level."}, {"q": "A databases subnet should normally have:", "o": ["A route to the Internet Gateway", "No direct internet route", "A public IP", "An open 0.0.0.0/0 rule"], "a": "MTpjbG91ZF9uZXR3b3JraW5nX2lkZW50aXR5OjM=", "e": "Data tier is isolated: no route to the internet."}, {"q": "What does an IAM role use instead of long-lived keys?", "o": ["Passwords", "Temporary credentials from STS", "SSH keys", "Root account"], "a": "MTpjbG91ZF9uZXR3b3JraW5nX2lkZW50aXR5OjQ=", "e": "Assumed roles issue short-lived tokens."}, {"q": "What does a Service Control Policy do?", "o": ["Grants permissions", "Sets maximum permissions for accounts, never grants", "Encrypts data", "Creates users"], "a": "MTpjbG91ZF9uZXR3b3JraW5nX2lkZW50aXR5OjU=", "e": "SCPs are guardrails; permissions must still be granted by IAM policies."}, {"q": "If one policy Allows and another explicitly Denies the same action:", "o": ["Allow wins", "Deny wins", "Newest wins", "It is random"], "a": "MTpjbG91ZF9uZXR3b3JraW5nX2lkZW50aXR5OjY=", "e": "Explicit Deny always overrides Allow."}, {"q": "Best first step to tighten an over-broad role?", "o": ["Add more wildcards", "Use CloudTrail and Access Analyzer to see real usage", "Share keys", "Delete the role"], "a": "MTpjbG91ZF9uZXR3b3JraW5nX2lkZW50aXR5Ojc=", "e": "Base permissions on observed activity, then remove the rest."}, {"q": "How many addresses does a /24 CIDR block provide?", "o": ["256", "16", "4,096", "65,536"], "a": "MDpjbG91ZF9uZXR3b3JraW5nX2lkZW50aXR5Ojg=", "e": "A bigger number after the slash means a smaller network; /24 is a standard subnet."}, {"q": "Which subnet tier normally holds databases?", "o": ["Isolated, with no route to the internet", "Public with an internet gateway", "Public with a NAT gateway", "Any tier"], "a": "MDpjbG91ZF9uZXR3b3JraW5nX2lkZW50aXR5Ojk=", "e": "Data tiers should have no direct internet route."}, {"q": "Why reference a security group instead of an IP range in a rule?", "o": ["IP rules are not supported", "It disables logging", "The rule keeps working as instances scale and change IPs", "It makes the rule stateless"], "a": "MjpjbG91ZF9uZXR3b3JraW5nX2lkZW50aXR5OjEw", "e": "Group references follow membership rather than addresses."}, {"q": "Is VPC peering transitive?", "o": ["No: if A-B and B-C are peered, A still cannot reach C", "Yes, always", "Only inside one region", "Only with Direct Connect"], "a": "MDpjbG91ZF9uZXR3b3JraW5nX2lkZW50aXR5OjEx", "e": "That is why large estates use a Transit Gateway instead of a mesh."}, {"q": "How many peering links does a full mesh of 10 VPCs need?", "o": ["10", "20", "90", "45"], "a": "MzpjbG91ZF9uZXR3b3JraW5nX2lkZW50aXR5OjEy", "e": "n x (n-1) / 2 = 10 x 9 / 2 = 45; a Transit Gateway needs 10 attachments."}, {"q": "Which policy type sets the maximum permissions a role can ever have?", "o": ["Permission boundary", "Resource-based policy", "Session tag", "Trust policy only"], "a": "MDpjbG91ZF9uZXR3b3JraW5nX2lkZW50aXR5OjEz", "e": "Boundaries and SCPs cap permissions; they do not grant access themselves."}, {"q": "Which IAM Access Analyzer feature helps create least-privilege policies?", "o": ["Policy generation from real CloudTrail activity", "Automatic root access", "Public bucket creation", "Key rotation only"], "a": "MDpjbG91ZF9uZXR3b3JraW5nX2lkZW50aXR5OjE0", "e": "Start narrow, read denied calls, then generate a policy from real usage."}];
+  const dec = s => { try{ return parseInt(atob(s).split(':')[0],10); }catch(e){ return -1; } };
+  const BANK = RAW.map((q,i)=>({id:'q'+i, q:q.q, options:q.o, ans:q.a, exp:q.e}));
+  delete window.__BANK; 
+  const EXAM_SECONDS = 1125;
+  const MAX_WARN = 3;
+  const LS_KEY = 'cicd_scores_' + C.slug;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-right{display:flex;align-items:center;gap:12px}
+  .exam-strikes{font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);padding:6px 10px;border-radius:8px}
+  .exam-strikes.hot{background:#e53e3e}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif;overflow:auto}
+  .exam-splash .xcard{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash h2{font-size:24px;font-weight:800;margin:0 0 8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9;padding:0}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-fswarn{position:fixed;inset:0;z-index:100003;background:rgba(15,23,42,.92);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#fff;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fswarn .fw-box{max-width:520px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .exam-fswarn h3{font-size:30px;font-weight:800;margin:0;display:flex;align-items:center;gap:12px;color:#fff}
+  .exam-fswarn p{margin:0;font-size:16px;color:#e2e8f0;line-height:1.5}
+  .exam-fswarn .fw-count{font-size:16px;font-weight:600;color:#fff}
+  .exam-fswarn .fw-btn{margin-top:6px;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:15px 26px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+  .exam-fswarn .fw-btn:hover{background:#000}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  .exam-sb{display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:14px}
+  .exam-sb .best{flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:16px 22px;text-align:center}
+  .exam-sb .best .l{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311}
+  .exam-sb .best .v{font-size:32px;font-weight:800;line-height:1.1;margin-top:4px}
+  .exam-sb .best .v span{font-size:17px;color:#cdd5e5}
+  .exam-sb .hist{flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px 18px}
+  .exam-sb .hist .l{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px}
+  .exam-sb .hist div.row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px}
+  .assess-start{margin-top:14px}
+  .assess-rules{margin:10px 0 0 18px;font-size:14px;line-height:1.8;color:var(--ink2)}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}.exam-q-pane{padding:20px}}
+  @media print{.exam-overlay,.exam-splash,.exam-cover{display:none!important}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){t=Math.max(t,0);const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+  function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function examDialog(title,msg,okLabel,cancel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">${cancel?'<button class="exam-btn nav" data-a="0">Cancel</button>':''}<button class="exam-btn primary" data-a="1">${okLabel||'OK'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d && cancel){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total,warnCount,auto){
+    const a=loadScores(); a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now(),warns:warnCount,auto:!!auto});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.innerHTML=''; return; }
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`<div class="exam-sb">
+      <div class="best"><div class="l">Top score</div><div class="v">${best.score}<span>/${best.total}</span></div><div style="font-size:12px;color:#cdd5e5">${best.pct}%</div></div>
+      <div class="hist"><div class="l">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+      ${last5.map(x=>`<div class="row"><span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%${x.warns?' &middot; '+x.warns+' warning'+(x.warns>1?'s':''):''}${x.auto?' &middot; auto-submitted':''}</span></span><span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}</div></div>`;
+  }
+
+  /* ---- proctoring: tab-switch / window-blur / fullscreen-exit strikes (3 -> auto-submit) ---- */
+  let warns=0, lastWarn=0, proctorOn=false, fsWanted=false;
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function updStrikes(){ const s=document.getElementById('examStrikes'); if(s){ s.textContent='Warnings '+warns+'/'+MAX_WARN; s.classList.toggle('hot',warns>0); } }
+  function hideFsWarn(){ const w=document.getElementById('examFsWarn'); if(w)w.remove(); }
+  function showFsWarn(n){
+    injectCss(); hideFsWarn();
+    const w=document.createElement('div'); w.className='exam-fswarn'; w.id='examFsWarn';
+    w.innerHTML='<div class="fw-box"><h3><span>&#9888;&#65039;</span> Fullscreen exited</h3>'+
+      '<p>The assessment must remain in fullscreen mode.</p>'+
+      '<div class="fw-count">Warning '+n+' of '+MAX_WARN+'</div>'+
+      '<button class="fw-btn" id="examFsReturn">Return to assessment</button></div>';
+    document.body.appendChild(w);
+    const btn=document.getElementById('examFsReturn');
+    btn.addEventListener('click',()=>{
+      const el=document.documentElement;
+      const done=()=>{ fsWanted=true; hideFsWarn(); hideCover(); };
+      if(el.requestFullscreen){ el.requestFullscreen().then(done).catch(()=>{}); } else { done(); }
+    });
+    try{btn.focus();}catch(e){}
+  }
+  function countWarn(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<1500)return; lastWarn=now;
+    warns++; updStrikes();
+    if(warns>=MAX_WARN){ hideFsWarn(); examDialog('Test submitted','You left the test '+MAX_WARN+' times. It has been auto-submitted.'); submitExam(true); }
+    else if(kind==='fs'){ showFsWarn(warns); }
+    else { examDialog('Warning '+warns+' of '+MAX_WARN,'Switching tabs or leaving the window is not allowed. After '+MAX_WARN+' warnings the test is auto-submitted.'); }
+  }
+  function fsHandler(){
+    if(!examOn)return;
+    if(document.fullscreenElement){ hideFsWarn(); hideCover(); return; }
+    if(fsWanted){ countWarn('fs'); }
+  }
+  function visHandler(){ if(document.hidden){ showCover(); countWarn(); } else { hideCover(); } }
+  function blurHandler(){ if(examOn && !document.hidden){ showCover(); countWarn(); } }
+  function focusHandler(){ if(!document.hidden && (document.fullscreenElement||!fsWanted)) hideCover(); }
+  function blockEvt(e){ e.preventDefault(); e.stopPropagation(); return false; }
+  function keyGuard(e){
+    const k=(e.key||'').toLowerCase(), mod=e.ctrlKey||e.metaKey;
+    const bad = (mod && ['c','x','v','a','s','p','u','f','g'].includes(k))
+             || (mod && e.shiftKey && ['i','j','c','k'].includes(k))
+             || k==='f12' || k==='printscreen' || k==='f5' || (mod && k==='r');
+    if(bad){ e.preventDefault(); e.stopPropagation(); if(k==='printscreen'){ try{navigator.clipboard.writeText('');}catch(_){} } return false; }
+  }
+  const EVTS=['contextmenu','copy','cut','paste','selectstart','dragstart','drop'];
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true; updStrikes();
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    window.addEventListener('blur',blurHandler);
+    window.addEventListener('focus',focusHandler);
+    EVTS.forEach(n=>document.addEventListener(n,blockEvt,true));
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keyup',keyGuard,true);
+  }
+  function stopProctor(){
+    proctorOn=false; hideFsWarn();
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    window.removeEventListener('blur',blurHandler);
+    window.removeEventListener('focus',focusHandler);
+    EVTS.forEach(n=>document.removeEventListener(n,blockEvt,true));
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keyup',keyGuard,true);
+    hideCover();
+  }
+
+  function showSplash(){
+    injectCss();
+    if(document.getElementById('examSplash'))return;
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="xcard">
+      <h2>&#127919; ${C.title} &mdash; Final Assessment</h2>
+      <p>A timed, proctored assessment on this module.</p>
+      <ul>
+        <li><b>${BANK.length} questions</b>, questions and options shuffled every attempt</li>
+        <li><b>${Math.round(EXAM_SECONDS/60)}-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Correct answers and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> where your browser allows it</li>
+        <li><b>No tab / window switching</b> and <b>no exiting fullscreen (Esc)</b> &mdash; ${MAX_WARN} warnings and the test <b>auto-submits</b></li>
+        <li>Copy, paste, right-click, select, print and developer shortcuts are disabled during the test</li>
+        <li>Refreshing or closing the page abandons the attempt</li>
+      </ul>
+      <div style="display:flex;gap:10px"><button class="exam-btn nav" id="examCancel" style="flex:0 0 auto">Cancel</button>
+      <button class="exam-btn primary" id="examBegin" style="flex:1;padding:14px">Start Test &rarr;</button></div>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examCancel').addEventListener('click',()=>sp.remove());
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      fsWanted=false;
+      if(document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().then(()=>{fsWanted=true;}).catch(()=>{}); }
+      sp.remove(); enterExam();
+    });
+  }
+
+  function enterExam(){
+    injectCss();
+    // shuffle questions AND options; keep track of the correct option after shuffling
+    items = shuffle(BANK).map(b=>{
+      const correct = b.options[dec(b.ans)];
+      const opts = shuffle(b.options);
+      return {id:b.id, q:b.q, options:opts, answer:opts.indexOf(correct), exp:b.exp};
+    });
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    const ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">${C.title} &mdash; Final Assessment</div><div class="et-sub">${items.length} questions &middot; one sitting &middot; good luck</div></div>
+        <div class="exam-right"><div class="exam-strikes" id="examStrikes">Warnings 0/${MAX_WARN}</div><div class="exam-timer" id="examTimer">${fmt(remaining)}</div></div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(remaining); if(remaining<=60)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}</div>
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}" tabindex="0"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>{
+      const pick=()=>{ answers[id]=+el.dataset.i; pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); refreshPalette(); };
+      el.addEventListener('click',pick);
+      el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();} });
+    });
+    document.getElementById('examPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    document.getElementById('examNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();});
+    refreshPalette();
+    pane.scrollTop=0;
+  }
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examDialog('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test', true);
+      if(!ok)return;
+    }
+    if(!examOn)return;
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    const usedWarns=warns;
+    stopProctor();
+    let score=0; items.forEach(it=>{ if(answers[it.id]===it.answer) score++; });
+    showResults(score,usedWarns,auto);
+  }
+  function showResults(score,usedWarns,auto){
+    const total=items.length; saveScore(score,total,usedWarns,auto);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below, revisit the module and try again.';
+    if(pct>=85)msg='Outstanding &mdash; you are operating at an expert level.';
+    else if(pct>=65)msg='Solid pass. Review the questions you missed and you are interview-ready.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the sections you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const you=answers[it.id], attempted=(you!=null), ok=attempted&&you===it.answer;
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      inner+= attempted ? '<div class="ra '+(ok?'cor':'wrong')+'">Your answer: '+String.fromCharCode(65+you)+'. '+it.options[you]+'</div>' : '<div class="ra wrong">Your answer: <i>Not answered</i></div>';
+      if(!ok) inner+='<div class="ra cor">Correct: '+String.fromCharCode(65+it.answer)+'. '+it.options[it.answer]+'</div>';
+      if(it.exp) inner+='<div class="rx">'+it.exp+'</div>';
+      return '<div class="r '+(ok?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; ${C.title}</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1;flex:1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          ${auto&&usedWarns>=MAX_WARN?'<div class="exam-rmsg" style="color:#c53030;font-weight:700">Auto-submitted after '+MAX_WARN+' warnings.</div>':''}
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another attempt</button></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    document.getElementById('examRetry').addEventListener('click',()=>{ closeExam(); showSplash(); });
+    document.getElementById('examClose').addEventListener('click',closeExam);
+  }
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',showSplash);
+  renderScoreboard();
+})();
+
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body>
+</html>

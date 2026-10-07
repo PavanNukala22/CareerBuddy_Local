@@ -1,0 +1,620 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Branching & Versioning — Git workflows, SemVer, changelogs, governance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--soft:#f7f6f3;--block:#f1f1ef;--ink:#37352f;--ink2:#787774;--mute:#9b9a97;--line:#e9e9e7;--line2:#d3d3d0;
+--accent:#14213D;--asoft:#eef1f7;--green:#0f7b0f;--gsoft:#ddedea;--orange:#d9730d;--osoft:#fadec9;--red:#e03e3e;--rsoft:#ffe2dd;--ysoft:#fdecc8;--psoft:#f5e0e9;
+--sh:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);--sh2:0 4px 14px rgba(15,15,15,.08);--r:10px}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{font-family:'Noto Sans',-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:12px 32px;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand-mark{width:34px;height:34px;display:grid;place-items:center;background:linear-gradient(135deg,#14213D,#3b5bdb);border-radius:9px;color:#fff;font-family:'Noto Sans Mono',monospace;font-weight:700;font-size:13px}
+.brand-sub{color:var(--ink2);font-weight:400;font-size:13px;margin-left:4px}
+.pill-prog{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:var(--block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500;color:var(--ink2)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--gsoft)}
+.btn{padding:6px 12px;background:#fff;border:1px solid var(--line2);border-radius:6px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--soft)}
+.hr{display:flex;align-items:center;gap:10px}
+.tabbar{display:flex;gap:2px;padding:6px 24px;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--line)}.tabbar::-webkit-scrollbar{display:none}
+.tab{padding:9px 16px;background:transparent;border:none;border-radius:8px;font-family:inherit;font-size:13.5px;font-weight:500;color:#4a5568;cursor:pointer;white-space:nowrap;display:flex;gap:7px;transition:background .15s,color .15s}
+.tab .n{font-family:'Noto Sans Mono',monospace;font-size:11px;color:var(--mute);font-weight:600}
+.tab:hover{background:#eef1f7;color:#14213D}.tab.active{background:#14213D;color:#fff;font-weight:700}.tab.active .n{color:#FCA311}
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr);max-width:1400px;margin:0 auto}
+@media(max-width:960px){.layout{grid-template-columns:1fr}.toc{display:none}}
+.toc{position:sticky;top:104px;align-self:start;height:calc(100vh - 116px);overflow-y:auto;padding:32px 16px 32px 32px;border-right:1px solid var(--line)}
+.toc-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:600;margin:0 0 12px 8px}
+.toc ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:2px}
+.toc a{display:block;padding:6px 10px;font-size:13px;color:var(--ink2);text-decoration:none;border-radius:4px;line-height:1.4}
+.toc a:hover{background:var(--soft);color:var(--ink)}
+.toc a.active{color:#fff;background:#16233f;font-weight:600;border-radius:12px;padding:9px 14px}
+.main{padding:48px 56px 80px;min-width:0}@media(max-width:720px){.main{padding:32px 20px 60px}}
+.panel{display:none}.panel.active{display:block;animation:fi .35s ease}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
+.title{font-size:38px;line-height:1.15;font-weight:700;letter-spacing:-.02em;margin:0 0 14px}
+.subtitle{font-size:17px;color:var(--ink2);margin:0 0 8px;max-width:700px}
+.section{margin-top:48px;scroll-margin-top:130px}
+.section h2{font-size:26px;font-weight:700;letter-spacing:-.01em;margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.section h3{font-size:18px;font-weight:600;margin:26px 0 8px}
+.section p{margin:10px 0;color:#3a3833}.section ul,.section ol{margin:10px 0;padding-left:22px}.section li{margin:5px 0}
+code{font-family:'Noto Sans Mono',monospace;font-size:.86em;background:#f6f5f4;border:1px solid var(--line);padding:1px 6px;border-radius:4px;color:#c2410c}
+pre{font-family:'Noto Sans Mono',monospace;background:#2b2a28;color:#e6e6e3;padding:20px 20px 16px;border-radius:var(--r);overflow-x:auto;font-size:13px;line-height:1.6;margin:14px 0;position:relative;box-shadow:var(--sh)}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.lang{position:absolute;top:6px;right:12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9b9a97;font-weight:600}
+.callout{display:grid;grid-template-columns:32px 1fr;gap:12px;background:var(--block);border-radius:var(--r);padding:14px 16px;margin:16px 0;border:1px solid var(--line);font-size:14.5px}
+.callout .ic{width:28px;height:28px;display:grid;place-items:center;background:#fff;border-radius:6px;border:1px solid var(--line)}
+.callout.tip{background:var(--asoft);border-color:#c9d3ea}.callout.warn{background:var(--osoft);border-color:#f5cc9c}.callout.success{background:var(--gsoft);border-color:#bdd9d2}.callout.note{background:var(--ysoft);border-color:#f0d889}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px;transition:.2s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
+.card .ci{width:36px;height:36px;display:grid;place-items:center;border-radius:8px;font-size:18px;margin-bottom:10px}
+.card b{display:block;font-size:15px;margin-bottom:4px}.card span{font-size:13px;color:var(--ink2);line-height:1.5;display:block}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;border:1px solid var(--line)}
+.tw{overflow-x:auto}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--soft);font-weight:600;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2)}
+tr:last-child td{border-bottom:none}
+.lv{font-family:'Noto Sans Mono',monospace;font-size:11px;font-weight:600;padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase}
+.lv.b{background:var(--gsoft);color:#0a5f0a}.lv.i{background:var(--asoft);color:#1d4ed8}.lv.e{background:var(--psoft);color:#8c1a63}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;background:linear-gradient(180deg,#fafaf8,#f4f3ef);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin:18px 0}
+.flow .st{background:#fff;border:1px solid var(--line2);border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;box-shadow:var(--sh)}
+.flow .st small{display:block;font-weight:400;color:var(--ink2);font-size:11px}
+.flow .st.hl{background:var(--accent);color:#fff;border-color:var(--accent)}.flow .st.hl small{color:#cdd5e5}
+.flow .ar{color:var(--mute);font-weight:700}
+.cap{font-size:12px;color:var(--ink2);font-style:italic;margin:-8px 0 14px}
+.mcq{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin:16px 0;box-shadow:var(--sh)}
+.mcq-q{font-weight:600;margin-bottom:10px}.mcq-q i{font-style:normal;font-family:'Noto Sans Mono',monospace;color:#3b5bdb;margin-right:8px}
+.opt{display:block;width:100%;text-align:left;padding:10px 14px;margin:6px 0;border:1px solid var(--line);border-radius:8px;cursor:pointer;font:inherit;font-size:14px;background:var(--soft)}
+.opt:hover{border-color:var(--accent);background:var(--asoft)}
+.mcq.done .opt{pointer-events:none;opacity:.75}.mcq.done .opt.ok{background:var(--gsoft);border-color:var(--green);opacity:1;font-weight:600}
+.mcq.done .opt.no{background:var(--rsoft);border-color:var(--red);opacity:1}
+.fb{display:none;margin-top:10px;padding:10px 14px;border-radius:8px;font-size:13.5px;background:var(--block)}.mcq.done .fb{display:block}
+.score{display:flex;align-items:center;gap:14px;background:var(--block);border:1px solid var(--line);border-radius:var(--r);padding:14px 18px;margin:18px 0}
+.bar{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+</style><style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head><body>
+<header class="header"><div class="header-top"><div class="brand"><div class="brand-mark">BV</div><span>Branching & Versioning<span class="brand-sub"> · Git workflows, SemVer, changelogs, governance</span></span></div>
+<div class="hr"><span class="pill-prog"><span class="dot"></span><span id="pt"></span></span><button class="btn" onclick="resetProgress()">↺ Reset</button></div></div>
+<nav class="tabbar"><button class="tab active"><span class="n">01</span> Git Workflows</button><button class="tab"><span class="n">02</span> Semantic Versioning</button><button class="tab"><span class="n">03</span> Changelogs</button><button class="tab"><span class="n">04</span> Release Governance</button><button class="tab"><span class="n">05</span> Practice</button></nav></header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul id="toc"></ul></aside><main class="main"><section class="panel active" data-toc='[["s1-1", "Why branching strategy matters"], ["s1-2", "Common models"], ["s1-3", "Essential commands"]]'><div class="eyebrow">Module 01 · Branching</div><h1 class="title">Git Branching Workflows</h1><p class="subtitle">Choose a branching model that fits your release cadence and team size.</p><div class="section" id="s1-1"><h2><span>🌿</span> Why branching strategy matters</h2><span class="lv b">Basic</span><p>A branching strategy defines <b>where work happens, how it is integrated and how releases are cut</b>. Short-lived branches and frequent integration reduce merge pain and speed delivery.</p>
+<div class="flow"><div class="st">feature/login</div><span class="ar">→</span><div class="st">PR + review</div><span class="ar">→</span><div class="st">CI checks</div><span class="ar">→</span><div class="st hl">Merge to main</div><span class="ar">→</span><div class="st">Tag release</div></div><div class="cap">The simplest healthy flow.</div></div><div class="section" id="s1-2"><h2><span>🗺️</span> Common models</h2><div class="tw"><table><tr><th>Model</th><th>Branches</th><th>Best for</th><th>Trade-off</th></tr><tr><td>GitHub Flow</td><td><code>main</code> + short feature branches</td><td>SaaS, continuous deploy</td><td>No explicit release branches</td></tr><tr><td>Trunk-Based</td><td>Everyone commits to <code>main</code> daily; flags hide WIP</td><td>High-performing CD teams</td><td>Needs strong tests + flags</td></tr><tr><td>Gitflow</td><td><code>main</code>, <code>develop</code>, feature, release, hotfix</td><td>Versioned products, scheduled releases</td><td>Heavy, long-lived branches</td></tr><tr><td>Release branches</td><td><code>release/1.4</code> cut from main</td><td>Supporting multiple versions</td><td>Back-porting effort</td></tr><tr><td>GitLab Flow</td><td>Env branches (<code>staging</code>, <code>prod</code>)</td><td>Env-gated deploys</td><td>Branch drift if neglected</td></tr></table></div></div><div class="section" id="s1-3"><h2><span>💻</span> Essential commands</h2><span class="lv i">Intermediate</span><pre><span class="lang">bash</span><code>git switch -c feature/login             # start work
+git rebase origin/main                  # keep history linear before PR
+git switch -c release/1.4 main          # cut a release branch
+git cherry-pick -x &lt;sha&gt;                # backport a fix, -x records origin
+git tag -s v1.4.0 -m &quot;Release 1.4.0&quot;    # signed annotated tag
+git push origin v1.4.0</code></pre><div class="callout tip"><div class="ic">💡</div><div><b>Merge strategy:</b> squash merge = clean history; rebase merge = linear but keeps commits; merge commit = preserves context. Pick one per repo and enforce it.</div></div></div></section><section class="panel" data-toc='[["s2-1", "MAJOR.MINOR.PATCH"], ["s2-2", "Precedence and ranges"], ["s2-3", "SemVer vs CalVer & expert notes"]]'><div class="eyebrow">Module 02 · Versioning</div><h1 class="title">Semantic Versioning (SemVer)</h1><p class="subtitle">A contract that tells consumers what changed, in three numbers.</p><div class="section" id="s2-1"><h2><span>🔢</span> MAJOR.MINOR.PATCH</h2><span class="lv b">Basic</span><div class="cards"><div class="card"><div class="ci" style="background:#eef1f7;color:#1d4ed8">💥</div><b>MAJOR</b><span>Breaking change. 1.x → 2.0.0</span></div><div class="card"><div class="ci" style="background:#ddedea;color:#0a5f0a">✨</div><b>MINOR</b><span>New backward-compatible feature. 1.4.0 → 1.5.0</span></div><div class="card"><div class="ci" style="background:#f5e0e9;color:#8c1a63">🐞</div><b>PATCH</b><span>Backward-compatible bug fix. 1.4.2 → 1.4.3</span></div><div class="card"><div class="ci" style="background:#fadec9;color:#a85a08">🧪</div><b>Pre-release</b><span><code>2.0.0-alpha.1</code>, <code>-beta.2</code>, <code>-rc.1</code></span></div></div>
+<p>Build metadata (<code>1.4.2+build.742</code>) is ignored for precedence. Version <code>0.y.z</code> means “initial development, anything may change”.</p></div><div class="section" id="s2-2"><h2><span>⚖️</span> Precedence and ranges</h2><span class="lv i">Intermediate</span><pre><span class="lang">text</span><code>1.0.0-alpha &lt; 1.0.0-alpha.1 &lt; 1.0.0-beta &lt; 1.0.0-rc.1 &lt; 1.0.0 &lt; 1.0.1 &lt; 1.1.0 &lt; 2.0.0
+^1.4.2  → &gt;=1.4.2 &lt;2.0.0   (npm caret: accept minor + patch)
+~1.4.2  → &gt;=1.4.2 &lt;1.5.0   (tilde: patch only)</code></pre><div class="tw"><table><tr><th>Change</th><th>Bump</th><th>Why</th></tr><tr><td>Remove a public API field</td><td>MAJOR</td><td>Consumers can break</td></tr><tr><td>Add optional API field</td><td>MINOR</td><td>Old clients still work</td></tr><tr><td>Fix null-pointer bug</td><td>PATCH</td><td>Behaviour corrected, no API change</td></tr><tr><td>Deprecate (not remove) an endpoint</td><td>MINOR</td><td>Still compatible, signals future removal</td></tr></table></div></div><div class="section" id="s2-3"><h2><span>📅</span> SemVer vs CalVer & expert notes</h2><span class="lv e">Expert</span><div class="tw"><table><tr><th>Scheme</th><th>Example</th><th>Use when</th></tr><tr><td>SemVer</td><td>3.2.1</td><td>Libraries/APIs with compatibility contracts</td></tr><tr><td>CalVer</td><td>2026.10.1</td><td>Time-based products, OS, frequent releases</td></tr><tr><td>Hybrid</td><td>2026.10.0+hotfix2</td><td>Apps where date matters more than API shape</td></tr></table></div><ul><li>Automate bumps from commits; never hand-edit versions in many files.</li><li>Container tags: publish <code>1.4.2</code>, <code>1.4</code> and <code>1</code> as moving pointers; keep <code>1.4.2</code> immutable.</li><li>Monorepos: version per package (Lerna, Changesets, nx release) or per product.</li></ul></div></section><section class="panel" data-toc='[["s3-1", "Conventional Commits"], ["s3-2", "Tools that automate it"], ["s3-3", "Resulting changelog"]]'><div class="eyebrow">Module 03 · Automation</div><h1 class="title">Conventional Commits & Changelog Generation</h1><p class="subtitle">Structured commit messages let tools calculate versions and write release notes.</p><div class="section" id="s3-1"><h2><span>✉️</span> Conventional Commits</h2><span class="lv b">Basic</span><p>Format: <code>type(scope): description</code></p>
+<pre><span class="lang">text</span><code>feat(cart): add coupon support              -&gt; MINOR
+fix(auth): handle expired refresh token     -&gt; PATCH
+feat(api)!: remove v1 /orders endpoint      -&gt; MAJOR  (the ! marks a break)
+docs, chore, refactor, test, ci, perf       -&gt; no release by default
+
+BREAKING CHANGE: orders v1 removed, use v2</code></pre></div><div class="section" id="s3-2"><h2><span>🤖</span> Tools that automate it</h2><span class="lv i">Intermediate</span><div class="tw"><table><tr><th>Tool</th><th>Approach</th></tr><tr><td>semantic-release</td><td>Fully automatic: analyse commits → version → tag → publish → notes</td></tr><tr><td>release-please</td><td>Opens a “release PR”; merging it tags and releases (human review point)</td></tr><tr><td>git-cliff</td><td>Highly customisable changelog generator</td></tr><tr><td>changesets</td><td>Contributors add intent files; great for monorepos</td></tr><tr><td>GitHub auto release notes</td><td>Groups merged PRs by label</td></tr></table></div><pre><span class="lang">json</span><code>// .releaserc.json
+{ &quot;branches&quot;: [&quot;main&quot;, {&quot;name&quot;: &quot;next&quot;, &quot;prerelease&quot;: true}],
+  &quot;plugins&quot;: [&quot;@semantic-release/commit-analyzer&quot;, &quot;@semantic-release/release-notes-generator&quot;,
+              &quot;@semantic-release/changelog&quot;, &quot;@semantic-release/github&quot;, &quot;@semantic-release/git&quot;] }</code></pre></div><div class="section" id="s3-3"><h2><span>📰</span> Resulting changelog</h2><span class="lv e">Expert</span><pre><span class="lang">markdown</span><code>## [1.5.0] - 2026-10-05
+### Features
+- cart: add coupon support (#412)
+### Bug Fixes
+- auth: handle expired refresh token (#418)
+### BREAKING CHANGES
+- none</code></pre><div class="callout tip"><div class="ic">💡</div><div>Enforce commit format with <b>commitlint</b> in CI and PR-title checks so the automation can trust the history.</div></div></div></section><section class="panel" data-toc='[["s4-1", "Guardrails on the repository"], ["s4-2", "Release process"], ["s4-3", "Expert: auditable, automated governance"]]'><div class="eyebrow">Module 04 · Governance</div><h1 class="title">Release Governance</h1><p class="subtitle">Controls that keep releases safe, auditable and repeatable.</p><div class="section" id="s4-1"><h2><span>🛂</span> Guardrails on the repository</h2><span class="lv i">Intermediate</span><div class="cards"><div class="card"><div class="ci" style="background:#eef1f7;color:#1d4ed8">🔒</div><b>Branch protection</b><span>Require PR, reviews, passing checks; block force-push.</span></div><div class="card"><div class="ci" style="background:#ddedea;color:#0a5f0a">👥</div><b>CODEOWNERS</b><span>Auto-request reviews from owning teams.</span></div><div class="card"><div class="ci" style="background:#f5e0e9;color:#8c1a63">🏷️</div><b>Protected tags</b><span>Only release managers can create <code>v*</code> tags.</span></div><div class="card"><div class="ci" style="background:#fadec9;color:#a85a08">🚦</div><b>Merge queue</b><span>Tests the merge result so main never goes red.</span></div></div><pre><span class="lang">text</span><code># .github/CODEOWNERS
+/infra/        @acme/platform
+/payments/     @acme/payments-leads
+*.tf           @acme/security</code></pre></div><div class="section" id="s4-2"><h2><span>📋</span> Release process</h2><span class="lv b">Basic</span><div class="flow"><div class="st">Plan scope</div><span class="ar">→</span><div class="st">Code freeze<small>cut release/x.y</small></div><span class="ar">→</span><div class="st">Release candidate<small>rc.1</small></div><span class="ar">→</span><div class="st">Verify<small>tests, scans, UAT</small></div><span class="ar">→</span><div class="st hl">Approve<small>CAB / owners</small></div><span class="ar">→</span><div class="st">Tag + publish</div><span class="ar">→</span><div class="st">Monitor + retro</div></div><div class="tw"><table><tr><th>Release type</th><th>Rules</th></tr><tr><td>Standard</td><td>Full pipeline, scheduled window, approvals</td></tr><tr><td>Hotfix</td><td>Branch from tag, minimal fix, expedited approval, merge back to main</td></tr><tr><td>Emergency rollback</td><td>Redeploy last good artifact or flip flag; post-incident review</td></tr></table></div></div><div class="section" id="s4-3"><h2><span>🧾</span> Expert: auditable, automated governance</h2><span class="lv e">Expert</span><ul><li><b>Policy as code</b> (OPA, GitHub rulesets) validates that tags, approvals and scans exist before promotion.</li><li><b>Signed tags/commits</b> and provenance prove who released what.</li><li><b>Release trains:</b> fixed cadence; features that miss the train wait.</li><li><b>Backport policy:</b> which fixes go to which supported versions, and who approves.</li><li>Evidence for SOC2/ISO: PR approvals, pipeline logs and change IDs linked automatically from the release record.</li></ul>
+<div class="callout success"><div class="ic">✅</div><div><b>Metric to watch:</b> change failure rate and lead time. Strong governance should speed releases by removing manual debate, not add queues.</div></div></div></section><section class="panel" data-toc='[["s5-1", "Quiz"]]'><div class="eyebrow">Module 05 · Assessment</div><h1 class="title">Final Assessment</h1><p class="subtitle">Timed, proctored final assessment for this module.</p><div class="section" id="s5-1"><h2><span>📝</span> Quiz</h2><p>This module ends with a <b>timed, proctored assessment</b>. Questions and options are shuffled, answers and explanations appear only after you submit.</p><ul class="assess-rules"><li>Runs in <b>fullscreen</b> &mdash; leaving it, switching tabs or windows gives a warning; <b>3 warnings auto-submit</b></li><li>Copy, paste, right-click, select, print and developer shortcuts are disabled</li><li>Refreshing or closing the page abandons the attempt</li></ul><button class="btn assess-start" id="assessStartBtn" style="background:#14213D;color:#fff;border-color:#14213D;padding:12px 22px;font-weight:700">Start Final Assessment &rarr;</button><div id="scoreBoard"></div></div></section></main></div>
+<script>
+(function(){
+let manual=null;const tabs=[...document.querySelectorAll('.tab')],panels=[...document.querySelectorAll('.panel')],toc=document.getElementById('toc'),pt=document.getElementById('pt');
+function act(i){tabs.forEach((t,j)=>t.classList.toggle('active',i===j));panels.forEach((p,j)=>p.classList.toggle('active',i===j));
+const d=JSON.parse(panels[i].dataset.toc||'[]');toc.innerHTML=d.map(([id,l])=>'<li><a href="#'+id+'" data-t="'+id+'">'+l+'</a></li>').join('');
+manual=null;const f=toc.querySelector('a');if(f)f.classList.add('active');pt.textContent='Tab '+(i+1)+' of '+tabs.length;window.scrollTo(0,0)}
+tabs.forEach((t,i)=>t.onclick=()=>act(i));
+document.addEventListener('click',e=>{const a=e.target.closest('.toc a');if(!a)return;e.preventDefault();const el=document.getElementById(a.dataset.t);manual=a.dataset.t;toc.querySelectorAll('a').forEach(x=>x.classList.toggle('active',x===a));if(el)window.scrollTo({top:el.getBoundingClientRect().top+scrollY-120,behavior:'smooth'})});
+addEventListener('scroll',()=>{if(manual)return;const p=document.querySelector('.panel.active');if(!p)return;let c=null;const ss=[...p.querySelectorAll('.section')];ss.forEach(s=>{if(s.getBoundingClientRect().top-170<0)c=s.id});if(ss.length&&innerHeight+scrollY>=document.documentElement.scrollHeight-4)c=ss[ss.length-1].id;
+if(c)toc.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.t===c))},{passive:true});
+['wheel','touchstart','keydown','pointerdown'].forEach(ev=>window.addEventListener(ev,e=>{if(e.target&&e.target.closest&&e.target.closest('.toc a'))return;manual=null},{passive:true}));
+window.resetProgress=()=>act(0);
+act(0)})();
+
+/* =====================================================================
+   Final assessment — proctored, timed, full-screen (graded in-browser)
+   Anti-malpractice model copied from the Royal HRMS assessment:
+   fullscreen, tab/window-switch strikes (3 -> auto-submit), copy / right-click
+   blocked, shuffled questions, answers revealed only after submit.
+   ===================================================================== */
+(function(){
+  const C = {title:"Branching & Versioning", slug:"branching_versioning"};
+  const RAW = [{"q": "Which change requires a MAJOR bump?", "o": ["Add optional field", "Fix typo", "Remove a public API", "Update docs"], "a": "MjpicmFuY2hpbmdfdmVyc2lvbmluZzow", "e": "Removing public API breaks compatibility."}, {"q": "<code>^1.4.2</code> allows…", "o": [">=1.4.2 <2.0.0", ">=1.4.2 <1.5.0", "Only 1.4.2", "Any version"], "a": "MDpicmFuY2hpbmdfdmVyc2lvbmluZzox", "e": "Caret accepts minor and patch updates."}, {"q": "Which commit triggers a MINOR release?", "o": ["fix: ...", "feat: ...", "docs: ...", "chore: ..."], "a": "MTpicmFuY2hpbmdfdmVyc2lvbmluZzoy", "e": "<code>feat</code> maps to MINOR."}, {"q": "Which workflow relies on feature flags and daily merges to main?", "o": ["Gitflow", "Trunk-based", "Env branches", "Fork only"], "a": "MTpicmFuY2hpbmdfdmVyc2lvbmluZzoz", "e": "Trunk-based development hides WIP behind flags."}, {"q": "Purpose of CODEOWNERS?", "o": ["Auto-assign reviewers by path", "Store secrets", "Run tests", "Tag releases"], "a": "MDpicmFuY2hpbmdfdmVyc2lvbmluZzo0", "e": "It requests reviews from owning teams."}, {"q": "What defines trunk-based development?", "o": ["Long-lived develop and release branches", "Everyone integrates into main at least daily, with flags hiding unfinished work", "One branch per environment", "Only release managers commit"], "a": "MTpicmFuY2hpbmdfdmVyc2lvbmluZzo1", "e": "It needs strong tests and feature flags to stay releasable."}, {"q": "Which model best suits versioned products with scheduled releases?", "o": ["Trunk-based", "Gitflow", "GitHub Flow", "Shadow branching"], "a": "MTpicmFuY2hpbmdfdmVyc2lvbmluZzo2", "e": "Gitflow uses develop, release and hotfix branches for scheduled, versioned releases."}, {"q": "What does git cherry-pick -x add?", "o": ["A note recording the original commit SHA", "A GPG signature", "A merge commit", "A new tag"], "a": "MDpicmFuY2hpbmdfdmVyc2lvbmluZzo3", "e": "-x appends the source commit, which helps trace back-ports."}, {"q": "Removing a public API field requires which version bump?", "o": ["MINOR", "PATCH", "MAJOR", "No bump"], "a": "MjpicmFuY2hpbmdfdmVyc2lvbmluZzo4", "e": "Removing public API can break consumers, so it is a breaking change."}, {"q": "Adding an optional API field is which bump?", "o": ["MINOR", "MAJOR", "PATCH", "Pre-release"], "a": "MDpicmFuY2hpbmdfdmVyc2lvbmluZzo5", "e": "It is a backward-compatible feature; old clients keep working."}, {"q": "What range does the caret range ^1.4.2 accept?", "o": ["&gt;=1.4.2 and &lt;2.0.0", "&gt;=1.4.2 and &lt;1.5.0", "Exactly 1.4.2", "&gt;=1.0.0 and &lt;3.0.0"], "a": "MDpicmFuY2hpbmdfdmVyc2lvbmluZzoxMA==", "e": "Caret accepts minor and patch updates but not a new major."}, {"q": "What range does the tilde range ~1.4.2 accept?", "o": ["&gt;=1.4.2 and &lt;2.0.0", "Any 1.x release", "Only 1.4.2", "&gt;=1.4.2 and &lt;1.5.0"], "a": "MzpicmFuY2hpbmdfdmVyc2lvbmluZzoxMQ==", "e": "Tilde accepts patch updates only."}, {"q": "Which version has the lowest precedence?", "o": ["1.0.0-alpha.1", "1.0.0", "1.0.0-rc.1", "1.0.1"], "a": "MDpicmFuY2hpbmdfdmVyc2lvbmluZzoxMg==", "e": "Pre-releases sort below the corresponding release, and alpha comes before rc."}, {"q": "How does SemVer treat build metadata such as 1.4.2+build.742?", "o": ["It is ignored when determining precedence", "It makes the version a pre-release", "It raises the MAJOR number", "It must be unique per version"], "a": "MDpicmFuY2hpbmdfdmVyc2lvbmluZzoxMw==", "e": "Build metadata does not affect ordering."}, {"q": "Which commit message triggers a MAJOR bump?", "o": ["fix(auth): handle expired token", "docs: update README", "chore: bump deps", "feat(api)!: remove v1 /orders endpoint"], "a": "MzpicmFuY2hpbmdfdmVyc2lvbmluZzoxNA==", "e": "The ! (or a BREAKING CHANGE footer) marks a breaking change."}, {"q": "Which commit types normally trigger no release by default?", "o": ["feat", "docs, chore, refactor, test, ci", "fix", "feat with !"], "a": "MTpicmFuY2hpbmdfdmVyc2lvbmluZzoxNQ==", "e": "Only feat, fix and breaking changes alter the version by default."}, {"q": "How does release-please differ from semantic-release?", "o": ["It opens a release PR; merging it tags and releases", "It never creates tags", "It requires Gitflow", "It only works for monorepos"], "a": "MDpicmFuY2hpbmdfdmVyc2lvbmluZzoxNg==", "e": "release-please adds a human review point; semantic-release is fully automatic."}, {"q": "What does commitlint enforce in CI?", "o": ["Code coverage", "Conventional Commit message format", "Branch naming only", "Docker image size"], "a": "MTpicmFuY2hpbmdfdmVyc2lvbmluZzoxNw==", "e": "Automation can trust the history only if message format is enforced."}, {"q": "What is the purpose of CODEOWNERS?", "o": ["Sign commits", "Create release tags", "Merge pull requests", "Automatically request reviews from owning teams"], "a": "MzpicmFuY2hpbmdfdmVyc2lvbmluZzoxOA==", "e": "Paths map to teams who must review changes to them."}, {"q": "What is the correct hotfix flow?", "o": ["Commit directly to develop and wait for the next train", "Branch from the released tag, make a minimal fix, expedite approval, merge back to main", "Rebuild the previous release locally", "Force-push to main"], "a": "MTpicmFuY2hpbmdfdmVyc2lvbmluZzoxOQ==", "e": "Hotfixes start from what is in production and must also land in main."}];
+  const dec = s => { try{ return parseInt(atob(s).split(':')[0],10); }catch(e){ return -1; } };
+  const BANK = RAW.map((q,i)=>({id:'q'+i, q:q.q, options:q.o, ans:q.a, exp:q.e}));
+  delete window.__BANK; 
+  const EXAM_SECONDS = 1500;
+  const MAX_WARN = 3;
+  const LS_KEY = 'cicd_scores_' + C.slug;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-right{display:flex;align-items:center;gap:12px}
+  .exam-strikes{font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);padding:6px 10px;border-radius:8px}
+  .exam-strikes.hot{background:#e53e3e}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif;overflow:auto}
+  .exam-splash .xcard{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash h2{font-size:24px;font-weight:800;margin:0 0 8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9;padding:0}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-fswarn{position:fixed;inset:0;z-index:100003;background:rgba(15,23,42,.92);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#fff;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fswarn .fw-box{max-width:520px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .exam-fswarn h3{font-size:30px;font-weight:800;margin:0;display:flex;align-items:center;gap:12px;color:#fff}
+  .exam-fswarn p{margin:0;font-size:16px;color:#e2e8f0;line-height:1.5}
+  .exam-fswarn .fw-count{font-size:16px;font-weight:600;color:#fff}
+  .exam-fswarn .fw-btn{margin-top:6px;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:15px 26px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+  .exam-fswarn .fw-btn:hover{background:#000}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  .exam-sb{display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:14px}
+  .exam-sb .best{flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:16px 22px;text-align:center}
+  .exam-sb .best .l{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311}
+  .exam-sb .best .v{font-size:32px;font-weight:800;line-height:1.1;margin-top:4px}
+  .exam-sb .best .v span{font-size:17px;color:#cdd5e5}
+  .exam-sb .hist{flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px 18px}
+  .exam-sb .hist .l{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px}
+  .exam-sb .hist div.row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px}
+  .assess-start{margin-top:14px}
+  .assess-rules{margin:10px 0 0 18px;font-size:14px;line-height:1.8;color:var(--ink2)}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}.exam-q-pane{padding:20px}}
+  @media print{.exam-overlay,.exam-splash,.exam-cover{display:none!important}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){t=Math.max(t,0);const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+  function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function examDialog(title,msg,okLabel,cancel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">${cancel?'<button class="exam-btn nav" data-a="0">Cancel</button>':''}<button class="exam-btn primary" data-a="1">${okLabel||'OK'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d && cancel){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total,warnCount,auto){
+    const a=loadScores(); a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now(),warns:warnCount,auto:!!auto});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.innerHTML=''; return; }
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`<div class="exam-sb">
+      <div class="best"><div class="l">Top score</div><div class="v">${best.score}<span>/${best.total}</span></div><div style="font-size:12px;color:#cdd5e5">${best.pct}%</div></div>
+      <div class="hist"><div class="l">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+      ${last5.map(x=>`<div class="row"><span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%${x.warns?' &middot; '+x.warns+' warning'+(x.warns>1?'s':''):''}${x.auto?' &middot; auto-submitted':''}</span></span><span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}</div></div>`;
+  }
+
+  /* ---- proctoring: tab-switch / window-blur / fullscreen-exit strikes (3 -> auto-submit) ---- */
+  let warns=0, lastWarn=0, proctorOn=false, fsWanted=false;
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function updStrikes(){ const s=document.getElementById('examStrikes'); if(s){ s.textContent='Warnings '+warns+'/'+MAX_WARN; s.classList.toggle('hot',warns>0); } }
+  function hideFsWarn(){ const w=document.getElementById('examFsWarn'); if(w)w.remove(); }
+  function showFsWarn(n){
+    injectCss(); hideFsWarn();
+    const w=document.createElement('div'); w.className='exam-fswarn'; w.id='examFsWarn';
+    w.innerHTML='<div class="fw-box"><h3><span>&#9888;&#65039;</span> Fullscreen exited</h3>'+
+      '<p>The assessment must remain in fullscreen mode.</p>'+
+      '<div class="fw-count">Warning '+n+' of '+MAX_WARN+'</div>'+
+      '<button class="fw-btn" id="examFsReturn">Return to assessment</button></div>';
+    document.body.appendChild(w);
+    const btn=document.getElementById('examFsReturn');
+    btn.addEventListener('click',()=>{
+      const el=document.documentElement;
+      const done=()=>{ fsWanted=true; hideFsWarn(); hideCover(); };
+      if(el.requestFullscreen){ el.requestFullscreen().then(done).catch(()=>{}); } else { done(); }
+    });
+    try{btn.focus();}catch(e){}
+  }
+  function countWarn(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<1500)return; lastWarn=now;
+    warns++; updStrikes();
+    if(warns>=MAX_WARN){ hideFsWarn(); examDialog('Test submitted','You left the test '+MAX_WARN+' times. It has been auto-submitted.'); submitExam(true); }
+    else if(kind==='fs'){ showFsWarn(warns); }
+    else { examDialog('Warning '+warns+' of '+MAX_WARN,'Switching tabs or leaving the window is not allowed. After '+MAX_WARN+' warnings the test is auto-submitted.'); }
+  }
+  function fsHandler(){
+    if(!examOn)return;
+    if(document.fullscreenElement){ hideFsWarn(); hideCover(); return; }
+    if(fsWanted){ countWarn('fs'); }
+  }
+  function visHandler(){ if(document.hidden){ showCover(); countWarn(); } else { hideCover(); } }
+  function blurHandler(){ if(examOn && !document.hidden){ showCover(); countWarn(); } }
+  function focusHandler(){ if(!document.hidden && (document.fullscreenElement||!fsWanted)) hideCover(); }
+  function blockEvt(e){ e.preventDefault(); e.stopPropagation(); return false; }
+  function keyGuard(e){
+    const k=(e.key||'').toLowerCase(), mod=e.ctrlKey||e.metaKey;
+    const bad = (mod && ['c','x','v','a','s','p','u','f','g'].includes(k))
+             || (mod && e.shiftKey && ['i','j','c','k'].includes(k))
+             || k==='f12' || k==='printscreen' || k==='f5' || (mod && k==='r');
+    if(bad){ e.preventDefault(); e.stopPropagation(); if(k==='printscreen'){ try{navigator.clipboard.writeText('');}catch(_){} } return false; }
+  }
+  const EVTS=['contextmenu','copy','cut','paste','selectstart','dragstart','drop'];
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true; updStrikes();
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    window.addEventListener('blur',blurHandler);
+    window.addEventListener('focus',focusHandler);
+    EVTS.forEach(n=>document.addEventListener(n,blockEvt,true));
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keyup',keyGuard,true);
+  }
+  function stopProctor(){
+    proctorOn=false; hideFsWarn();
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    window.removeEventListener('blur',blurHandler);
+    window.removeEventListener('focus',focusHandler);
+    EVTS.forEach(n=>document.removeEventListener(n,blockEvt,true));
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keyup',keyGuard,true);
+    hideCover();
+  }
+
+  function showSplash(){
+    injectCss();
+    if(document.getElementById('examSplash'))return;
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="xcard">
+      <h2>&#127919; ${C.title} &mdash; Final Assessment</h2>
+      <p>A timed, proctored assessment on this module.</p>
+      <ul>
+        <li><b>${BANK.length} questions</b>, questions and options shuffled every attempt</li>
+        <li><b>${Math.round(EXAM_SECONDS/60)}-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Correct answers and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> where your browser allows it</li>
+        <li><b>No tab / window switching</b> and <b>no exiting fullscreen (Esc)</b> &mdash; ${MAX_WARN} warnings and the test <b>auto-submits</b></li>
+        <li>Copy, paste, right-click, select, print and developer shortcuts are disabled during the test</li>
+        <li>Refreshing or closing the page abandons the attempt</li>
+      </ul>
+      <div style="display:flex;gap:10px"><button class="exam-btn nav" id="examCancel" style="flex:0 0 auto">Cancel</button>
+      <button class="exam-btn primary" id="examBegin" style="flex:1;padding:14px">Start Test &rarr;</button></div>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examCancel').addEventListener('click',()=>sp.remove());
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      fsWanted=false;
+      if(document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().then(()=>{fsWanted=true;}).catch(()=>{}); }
+      sp.remove(); enterExam();
+    });
+  }
+
+  function enterExam(){
+    injectCss();
+    // shuffle questions AND options; keep track of the correct option after shuffling
+    items = shuffle(BANK).map(b=>{
+      const correct = b.options[dec(b.ans)];
+      const opts = shuffle(b.options);
+      return {id:b.id, q:b.q, options:opts, answer:opts.indexOf(correct), exp:b.exp};
+    });
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    const ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">${C.title} &mdash; Final Assessment</div><div class="et-sub">${items.length} questions &middot; one sitting &middot; good luck</div></div>
+        <div class="exam-right"><div class="exam-strikes" id="examStrikes">Warnings 0/${MAX_WARN}</div><div class="exam-timer" id="examTimer">${fmt(remaining)}</div></div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(remaining); if(remaining<=60)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}</div>
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}" tabindex="0"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>{
+      const pick=()=>{ answers[id]=+el.dataset.i; pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); refreshPalette(); };
+      el.addEventListener('click',pick);
+      el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();} });
+    });
+    document.getElementById('examPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    document.getElementById('examNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();});
+    refreshPalette();
+    pane.scrollTop=0;
+  }
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examDialog('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test', true);
+      if(!ok)return;
+    }
+    if(!examOn)return;
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    const usedWarns=warns;
+    stopProctor();
+    let score=0; items.forEach(it=>{ if(answers[it.id]===it.answer) score++; });
+    showResults(score,usedWarns,auto);
+  }
+  function showResults(score,usedWarns,auto){
+    const total=items.length; saveScore(score,total,usedWarns,auto);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below, revisit the module and try again.';
+    if(pct>=85)msg='Outstanding &mdash; you are operating at an expert level.';
+    else if(pct>=65)msg='Solid pass. Review the questions you missed and you are interview-ready.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the sections you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const you=answers[it.id], attempted=(you!=null), ok=attempted&&you===it.answer;
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      inner+= attempted ? '<div class="ra '+(ok?'cor':'wrong')+'">Your answer: '+String.fromCharCode(65+you)+'. '+it.options[you]+'</div>' : '<div class="ra wrong">Your answer: <i>Not answered</i></div>';
+      if(!ok) inner+='<div class="ra cor">Correct: '+String.fromCharCode(65+it.answer)+'. '+it.options[it.answer]+'</div>';
+      if(it.exp) inner+='<div class="rx">'+it.exp+'</div>';
+      return '<div class="r '+(ok?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; ${C.title}</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1;flex:1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          ${auto&&usedWarns>=MAX_WARN?'<div class="exam-rmsg" style="color:#c53030;font-weight:700">Auto-submitted after '+MAX_WARN+' warnings.</div>':''}
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another attempt</button></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    document.getElementById('examRetry').addEventListener('click',()=>{ closeExam(); showSplash(); });
+    document.getElementById('examClose').addEventListener('click',closeExam);
+  }
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',showSplash);
+  renderScoreboard();
+})();
+</script><script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body></html>
