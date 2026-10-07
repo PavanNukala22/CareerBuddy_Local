@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build Tools & Language Runtime — Java Developer Learning Module</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Noto+Sans+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#d9730d 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans',system-ui,sans-serif;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans',system-ui,sans-serif;font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'Noto Sans',system-ui,sans-serif;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'Noto Sans',system-ui,sans-serif;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'Noto Sans',system-ui,sans-serif;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'Noto Sans',system-ui,sans-serif;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'Noto Sans',system-ui,sans-serif;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'Noto Sans',system-ui,sans-serif;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+
+/* ============= Module additions (same visual language) ============= */
+.table-wrap{overflow-x:auto;margin:16px 0;-webkit-overflow-scrolling:touch}
+.table-wrap table{margin:0;min-width:560px}
+.formula{display:inline-block;font-size:12.5px;background:var(--bg-code);border:1px solid var(--line);padding:2px 8px;border-radius:4px;color:#14213D;font-weight:500}
+.saq-toggle{margin-top:10px}
+.mcq-opt:focus-visible,.btn:focus-visible,.tab:focus-visible,.assess-start-btn:focus-visible,.saq textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.example{border:1px solid var(--line);border-left:4px solid var(--orange);border-radius:var(--radius);padding:14px 18px;margin:16px 0;background:#fffdf9}
+.example-title{font-weight:700;font-size:13px;color:#a85a08;margin-bottom:6px;letter-spacing:.02em}
+.example p,.example ul{margin:6px 0;font-size:14.5px}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.expert{background:#14213D;color:#fff}
+.term{display:grid;grid-template-columns:190px 1fr;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.term:last-child{border-bottom:none}
+details{border:1px solid var(--line);border-radius:var(--radius);margin:10px 0;background:#fff}
+summary{cursor:pointer;padding:11px 16px;font-weight:600;font-size:15px}details[open] summary{border-bottom:1px solid var(--line)}details>div{padding:10px 16px 12px;font-size:14.5px;line-height:1.6;color:#3a3833}
+.term b{color:#14213D}
+.terms{border:1px solid var(--line);border-radius:var(--radius);padding:4px 16px;margin:16px 0;background:#fff}
+@media (max-width:720px){
+  .header-top{padding:12px 16px;flex-wrap:wrap}
+  .brand{font-size:14px;line-height:1.35}
+  .brand-sub{display:block;margin-left:0}
+  .panel-title{font-size:30px}
+  .section h2{font-size:22px}
+  .assess-modal-box{padding:0 18px 40px}
+  .term{grid-template-columns:1fr;gap:2px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+<style>
+/* CareerBuddy: nav + scrollbar parity with dpm_portfolio_strategy */
+/* -- Unify typography: Outfit everywhere (CareerBuddy) -- */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,dl,dt,dd,td,th,div,section,article,header,footer,nav,aside,main,label,button,input,select,textarea,blockquote,figcaption,small,strong,b,em,i{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
+.material-symbols-outlined,.material-icons{font-family:'Material Symbols Outlined','Material Icons' !important}
+code,pre,kbd,samp,tt,.mono,[class*="mono"],[class*="Mono"],[class*="code"],[class*="Code"],[class*="tok"],[class*="hljs"]{font-family:'Noto Sans Mono',ui-monospace,SFMono-Regular,Consolas,monospace}
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+
+/* ===== Nav / scrollbar parity with reference ===== */
+html{scroll-behavior:auto}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+.tabbar{scrollbar-width:none !important}
+.tabbar::-webkit-scrollbar{display:none !important}
+.toc{scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+.toc-list a.active{color:#fff;background:#16233f;border-left-color:transparent;font-weight:600;border-radius:12px;padding:10px 14px}
+.section{scroll-margin-top:140px}
+.tab .tab-done{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--green);color:#fff;font-size:10px;font-weight:700;margin-left:2px}
+:focus-visible{outline:2px solid #FCA311;outline-offset:2px}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header"><div class="header-top"><div class="brand"><div class="brand-mark">JD</div><span>Backend / Java | Java Developer<span class="brand-sub"> · Build Tools &amp; Language Runtime</span></span></div><div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 8</span></span><button class="btn" onclick="resetProgress()" title="Reset to first tab"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9"/><path d="M2 4v3.5h3.5"/></svg>
+        Reset</button></div></div><nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Foundations</button><button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> Maven</button><button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> Gradle</button><button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> Language Fundamentals</button><button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> Core APIs & Modern Java</button><button class="tab" data-tab="t6" role="tab"><span class="tab-num">06</span> JVM & Runtime</button><button class="tab" data-tab="t7" role="tab"><span class="tab-num">07</span> Practice</button><button class="tab" data-tab="t8" role="tab"><span class="tab-num">08</span> Assessment</button></nav></header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside><main class="main">
+<section class="panel active" id="t1" data-toc='[["s1-1", "What is a Build Tool?"], ["s1-2", "Types of Build Tools"], ["s1-3", "Key Terms"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span></div><div class="panel-eyebrow">Module 01 · Foundations</div><h1 class="panel-title">Build & Dependency Tools</h1><p class="panel-subtitle">Start from zero: what a build tool is, why Java projects need one, and the main types.</p></div><div class="section" id="s1-1"><h2><span class="sec-emoji">🧭</span> What is a Build Tool?</h2><p>A <strong>build tool</strong> automates everything between your source code and a runnable product: downloading libraries, compiling, testing, packaging (JAR/WAR) and publishing. A <strong>dependency manager</strong> fetches the libraries you use — and the libraries <em>they</em> use — at the right versions.</p><div class="compare"><div class="compare-col"><h4>🔴 Without a build tool</h4><p style="font-size:14px;color:var(--ink-soft);margin:0">Copy JARs by hand, run <code>javac</code> and <code>jar</code> manually, "works on my machine", version clashes.</p></div><div class="compare-col"><h4>🟢 With a build tool</h4><p style="font-size:14px;color:var(--ink-soft);margin:0">One command builds, tests and packages. Same result on every laptop and CI server.</p></div></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">🏛️</span> Types of Build Tools</h2><div class="table-wrap"><table><tr><th>Tool</th><th>Config</th><th>Model</th><th>Best for</th></tr><tr><td><b>Ant</b></td><td>XML (build.xml)</td><td>Imperative targets, no built-in dependency management</td><td>Legacy projects</td></tr><tr><td><b>Maven</b></td><td>XML (pom.xml)</td><td>Declarative, fixed lifecycle, convention over configuration</td><td>Enterprise, predictable builds</td></tr><tr><td><b>Gradle</b></td><td>Kotlin/Groovy DSL</td><td>Task graph (DAG), incremental, cached</td><td>Large/multi-module, Android</td></tr><tr><td><b>Bazel</b></td><td>Starlark</td><td>Hermetic, remote-cached</td><td>Huge monorepos</td></tr></table></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Today ~everything in the Java ecosystem is <b>Maven or Gradle</b>. Both use Maven Central as the main repository.</div></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">📖</span> Key Terms</h2><div class="terms"><div class="term"><b>Artifact</b><span>A built output: JAR, WAR, POM.</span></div><div class="term"><b>Coordinates (GAV)</b><span>groupId : artifactId : version — unique address, e.g. <code>org.slf4j:slf4j-api:2.0.13</code>.</span></div><div class="term"><b>Repository</b><span>Server holding artifacts: Maven Central, company Nexus/Artifactory, local <code>~/.m2</code>.</span></div><div class="term"><b>Transitive dependency</b><span>A dependency of your dependency, pulled in automatically.</span></div><div class="term"><b>Scope / Configuration</b><span>When a dependency is needed: compile, test, runtime…</span></div><div class="term"><b>SNAPSHOT</b><span>Unreleased, changing version (<code>1.0-SNAPSHOT</code>).</span></div><div class="term"><b>BOM</b><span>Bill of Materials: a POM that fixes compatible versions for a family of libraries.</span></div><div class="term"><b>Plugin</b><span>Adds capability (compile, test, package, Docker image).</span></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> What does the coordinate groupId:artifactId:version identify?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> A Git commit</li><li class="mcq-opt"><span class="opt-letter">B</span> A unique artifact in a repository</li><li class="mcq-opt"><span class="opt-letter">C</span> A Java package</li><li class="mcq-opt"><span class="opt-letter">D</span> A JVM flag</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — GAV is the unique address of an artifact."></div></div></div></section><section class="panel" id="t2" data-toc='[["s2-1", "What is Maven?"], ["s2-2", "The POM \u2014 Your First pom.xml"], ["s2-3", "Lifecycle, Phases & Goals"], ["s2-4", "Dependencies, Scopes & Conflicts"], ["s2-5", "Expert: Multi-module, Profiles & Plugins"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">→ Intermediate</span></div><div class="panel-eyebrow">Module 02 · Maven</div><h1 class="panel-title">Apache Maven</h1><p class="panel-subtitle">Convention over configuration: the POM, the lifecycle, dependency management and multi-module builds.</p></div><div class="section" id="s2-1"><h2><span class="sec-emoji">🧰</span> What is Maven?</h2><p><strong>Maven</strong> is a declarative build and dependency tool. You describe <em>what</em> the project is in a <b>POM</b> (Project Object Model, <code>pom.xml</code>); Maven follows a fixed <b>lifecycle</b> and standard directory layout to do the rest.</p><pre><span class="pre-lang">layout</span><code>my-app/
+├─ pom.xml
+└─ src/
+   ├─ main/java        production code
+   ├─ main/resources   config, templates
+   ├─ test/java        tests
+   └─ test/resources</code></pre></div><div class="section" id="s2-2"><h2><span class="sec-emoji">📄</span> The POM — Your First pom.xml</h2><pre><span class="pre-lang">xml</span><code>&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;&gt;
+  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+  &lt;groupId&gt;com.acme&lt;/groupId&gt;
+  &lt;artifactId&gt;orders&lt;/artifactId&gt;
+  &lt;version&gt;1.0.0-SNAPSHOT&lt;/version&gt;
+  &lt;packaging&gt;jar&lt;/packaging&gt;
+  &lt;properties&gt;
+    &lt;maven.compiler.release&gt;21&lt;/maven.compiler.release&gt;
+    &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+  &lt;/properties&gt;
+  &lt;dependencies&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;com.google.guava&lt;/groupId&gt;
+      &lt;artifactId&gt;guava&lt;/artifactId&gt;
+      &lt;version&gt;33.2.1-jre&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.junit.jupiter&lt;/groupId&gt;
+      &lt;artifactId&gt;junit-jupiter&lt;/artifactId&gt;
+      &lt;version&gt;5.10.2&lt;/version&gt;
+      &lt;scope&gt;test&lt;/scope&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+&lt;/project&gt;</code></pre><p>Every POM inherits from the <b>Super POM</b>; a <code>&lt;parent&gt;</code> element adds your own inheritance. <b>Effective POM</b> (<code>mvn help:effective-pom</code>) shows the final merged result.</p></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🔄</span> Lifecycle, Phases & Goals</h2><p>A <b>lifecycle</b> is an ordered list of <b>phases</b>; plugins bind <b>goals</b> to phases. Running a phase runs all earlier phases.</p><div class="table-wrap"><table><tr><th>Phase</th><th>What happens</th></tr><tr><td><code>validate</code></td><td>Check project is correct</td></tr><tr><td><code>compile</code></td><td>Compile main sources</td></tr><tr><td><code>test</code></td><td>Run unit tests (Surefire)</td></tr><tr><td><code>package</code></td><td>Create JAR/WAR</td></tr><tr><td><code>verify</code></td><td>Run integration tests (Failsafe), checks</td></tr><tr><td><code>install</code></td><td>Copy artifact to local <code>~/.m2</code></td></tr><tr><td><code>deploy</code></td><td>Publish to remote repository</td></tr></table></div><p>Three built-in lifecycles: <b>clean</b>, <b>default</b>, <b>site</b>.</p><pre><span class="pre-lang">shell</span><code>mvn clean package           # clean + build + test + JAR
+mvn -DskipTests package      # skip tests
+mvn dependency:tree          # see transitive graph
+mvn -pl core -am test        # one module + what it needs</code></pre></div><div class="section" id="s2-4"><h2><span class="sec-emoji">🔗</span> Dependencies, Scopes & Conflicts</h2><div class="table-wrap"><table><tr><th>Scope</th><th>Compile</th><th>Test</th><th>Runtime / packaged</th></tr><tr><td><code>compile</code> (default)</td><td>✔</td><td>✔</td><td>✔</td></tr><tr><td><code>provided</code></td><td>✔</td><td>✔</td><td>✘ (server supplies it)</td></tr><tr><td><code>runtime</code></td><td>✘</td><td>✔</td><td>✔</td></tr><tr><td><code>test</code></td><td>✘</td><td>✔</td><td>✘</td></tr><tr><td><code>import</code></td><td>BOM only, inside dependencyManagement</td><td></td><td></td></tr></table></div><ul><li><b>Nearest-wins</b>: with two versions of a library, the one closest to your project in the tree wins.</li><li><b>Exclusions</b> cut an unwanted transitive dependency.</li><li><b>dependencyManagement</b> pins versions without adding the dependency.</li></ul><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Never depend on <code>LATEST</code> or version ranges in production — builds stop being reproducible.</div></div></div><div class="section" id="s2-5"><h2><span class="sec-emoji">🚀</span> Expert: Multi-module, Profiles & Plugins</h2><pre><span class="pre-lang">xml</span><code>&lt;!-- parent pom.xml: multi-module + central version control --&gt;
+&lt;packaging&gt;pom&lt;/packaging&gt;
+&lt;modules&gt;&lt;module&gt;core&lt;/module&gt;&lt;module&gt;api&lt;/module&gt;&lt;/modules&gt;
+&lt;dependencyManagement&gt;
+  &lt;dependencies&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+      &lt;artifactId&gt;spring-boot-dependencies&lt;/artifactId&gt;
+      &lt;version&gt;3.3.0&lt;/version&gt;
+      &lt;type&gt;pom&lt;/type&gt;&lt;scope&gt;import&lt;/scope&gt;   &lt;!-- BOM import --&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;
+&lt;profiles&gt;
+  &lt;profile&gt;&lt;id&gt;ci&lt;/id&gt;
+    &lt;properties&gt;&lt;skipITs&gt;false&lt;/skipITs&gt;&lt;/properties&gt;
+  &lt;/profile&gt;
+&lt;/profiles&gt;</code></pre><ul><li><b>Plugins to know:</b> compiler, surefire/failsafe, jar, shade/assembly (fat JAR), spring-boot, jacoco, enforcer (ban duplicate classes/versions), versions, release.</li><li><b>Profiles</b> switch behaviour per environment (<code>-Pci</code>).</li><li><b>Speed:</b> <code>mvn -T 1C</code> parallel builds, <code>mvnd</code> daemon, Maven Wrapper (<code>./mvnw</code>) pins the Maven version.</li><li><b>Quality gates:</b> enforcer rules, dependency:analyze, OWASP dependency-check, SBOM (CycloneDX).</li></ul><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which command copies your built JAR into the local ~/.m2 repository?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> mvn package</li><li class="mcq-opt"><span class="opt-letter">B</span> mvn install</li><li class="mcq-opt"><span class="opt-letter">C</span> mvn deploy</li><li class="mcq-opt"><span class="opt-letter">D</span> mvn verify</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — install = local repo, deploy = remote."></div></div><div class="mcq" data-answer="2"><div class="mcq-q"><span class="mcq-qnum">Q.</span> A dependency is supplied by the application server at runtime. Best scope?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> compile</li><li class="mcq-opt"><span class="opt-letter">B</span> test</li><li class="mcq-opt"><span class="opt-letter">C</span> provided</li><li class="mcq-opt"><span class="opt-letter">D</span> import</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — provided is on the compile classpath but not packaged."></div></div></div></section><section class="panel" id="t3" data-toc='[["s3-1", "What is Gradle?"], ["s3-2", "Your First build.gradle.kts"], ["s3-3", "Dependency Configurations"], ["s3-4", "How Gradle Runs: 3 Phases"], ["s3-5", "Expert: Catalogs, Custom Tasks, Convention Plugins"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 03 · Gradle</div><h1 class="panel-title">Gradle</h1><p class="panel-subtitle">A flexible, fast, task-graph build tool with a Kotlin/Groovy DSL.</p></div><div class="section" id="s3-1"><h2><span class="sec-emoji">🐘</span> What is Gradle?</h2><p><strong>Gradle</strong> models a build as a <b>directed acyclic graph (DAG) of tasks</b>. Build files are real code (Kotlin DSL <code>build.gradle.kts</code> or Groovy <code>build.gradle</code>), so logic is easy to express. It is the default for Android and widely used for large Java/Kotlin systems.</p><div class="terms"><div class="term"><b>Project</b><span>One buildable unit; a build may have many (multi-project).</span></div><div class="term"><b>Task</b><span>Smallest unit of work: <code>compileJava</code>, <code>test</code>, <code>jar</code>.</span></div><div class="term"><b>Plugin</b><span>Adds tasks and conventions (<code>java</code>, <code>java-library</code>, <code>application</code>).</span></div><div class="term"><b>Configuration</b><span>Named group of dependencies: <code>implementation</code>, <code>api</code>…</span></div><div class="term"><b>Wrapper</b><span><code>./gradlew</code> downloads the exact Gradle version.</span></div><div class="term"><b>Daemon</b><span>Long-lived JVM that makes repeat builds fast.</span></div></div></div><div class="section" id="s3-2"><h2><span class="sec-emoji">📄</span> Your First build.gradle.kts</h2><pre><span class="pre-lang">kotlin</span><code>plugins {
+    java
+    application
+}
+group = &quot;com.acme&quot;; version = &quot;1.0.0&quot;
+
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+repositories { mavenCentral() }
+
+dependencies {
+    implementation(&quot;com.google.guava:guava:33.2.1-jre&quot;)
+    api(&quot;org.apache.commons:commons-lang3:3.14.0&quot;)   // java-library only
+    runtimeOnly(&quot;org.postgresql:postgresql:42.7.3&quot;)
+    testImplementation(platform(&quot;org.junit:junit-bom:5.10.2&quot;))
+    testImplementation(&quot;org.junit.jupiter:junit-jupiter&quot;)
+}
+application { mainClass = &quot;com.acme.Main&quot; }
+tasks.test { useJUnitPlatform() }</code></pre><pre><span class="pre-lang">shell</span><code>./gradlew build        # compile + test + jar
+./gradlew test --tests &quot;*OrderTest&quot;
+./gradlew dependencies --configuration runtimeClasspath
+./gradlew build --scan      # build scan report</code></pre></div><div class="section" id="s3-3"><h2><span class="sec-emoji">🔗</span> Dependency Configurations</h2><div class="table-wrap"><table><tr><th>Configuration</th><th>Meaning</th></tr><tr><td><code>implementation</code></td><td>Needed to compile &amp; run; <b>not exposed</b> to consumers (faster rebuilds)</td></tr><tr><td><code>api</code></td><td>Exposed to consumers (java-library plugin)</td></tr><tr><td><code>compileOnly</code></td><td>Compile only (like Maven provided)</td></tr><tr><td><code>runtimeOnly</code></td><td>Runtime only (JDBC drivers)</td></tr><tr><td><code>testImplementation</code></td><td>Tests only</td></tr></table></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Prefer <code>implementation</code> over <code>api</code>: when an internal library changes, fewer modules recompile.</div></div></div><div class="section" id="s3-4"><h2><span class="sec-emoji">🔄</span> How Gradle Runs: 3 Phases</h2><ol><li><b>Initialization</b> — read <code>settings.gradle.kts</code>, decide which projects exist.</li><li><b>Configuration</b> — evaluate build scripts and build the task graph.</li><li><b>Execution</b> — run only the tasks needed, skipping ones whose inputs/outputs are unchanged (<b>UP-TO-DATE</b>) or restored from the <b>build cache</b>.</li></ol></div><div class="section" id="s3-5"><h2><span class="sec-emoji">🚀</span> Expert: Catalogs, Custom Tasks, Convention Plugins</h2><pre><span class="pre-lang">kotlin</span><code>// gradle/libs.versions.toml  (version catalog)
+[versions]
+guava = &quot;33.2.1-jre&quot;
+[libraries]
+guava = { module = &quot;com.google.guava:guava&quot;, version.ref = &quot;guava&quot; }
+
+// build.gradle.kts
+dependencies { implementation(libs.guava) }
+
+// custom task with inputs/outputs =&gt; incremental + cacheable
+abstract class Hello : DefaultTask() {
+    @get:Input abstract val who: Property&lt;String&gt;
+    @TaskAction fun run() = println(&quot;Hello ${who.get()}&quot;)
+}
+tasks.register&lt;Hello&gt;(&quot;hello&quot;) { who = &quot;LMS&quot; }</code></pre><ul><li><b>Convention plugins</b> (<code>buildSrc</code> or <code>build-logic</code>) share config across modules.</li><li><b>Toolchains</b> download and use the exact JDK required.</li><li><b>Performance:</b> enable <code>org.gradle.caching</code>, <code>parallel</code>, configuration cache; avoid work in configuration phase.</li><li><b>Composite builds</b> (<code>includeBuild</code>) develop libraries and apps together.</li></ul><h3>Maven vs Gradle</h3><div class="table-wrap"><table><tr><th></th><th>Maven</th><th>Gradle</th></tr><tr><td>Style</td><td>Declarative XML</td><td>Scripted DSL</td></tr><tr><td>Flexibility</td><td>Low, very predictable</td><td>High, needs discipline</td></tr><tr><td>Speed</td><td>Good, mvnd helps</td><td>Often faster (incremental, cache)</td></tr><tr><td>Learning curve</td><td>Gentle</td><td>Steeper</td></tr></table></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which configuration hides a dependency from consumers of your library?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> api</li><li class="mcq-opt"><span class="opt-letter">B</span> implementation</li><li class="mcq-opt"><span class="opt-letter">C</span> compileOnly</li><li class="mcq-opt"><span class="opt-letter">D</span> testImplementation</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — implementation keeps it internal; api exposes it."></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> A task shows "UP-TO-DATE". What happened?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> It failed</li><li class="mcq-opt"><span class="opt-letter">B</span> It was skipped because inputs and outputs were unchanged</li><li class="mcq-opt"><span class="opt-letter">C</span> It ran twice</li><li class="mcq-opt"><span class="opt-letter">D</span> It downloaded updates</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — Gradle skips work whose inputs/outputs did not change."></div></div></div></section><section class="panel" id="t4" data-toc='[["s4-1", "What is Java?"], ["s4-2", "Data Types"], ["s4-3", "Control Flow, Arrays & Strings"], ["s4-4", "Object-Oriented Programming"], ["s4-5", "Exceptions"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">→ Intermediate</span></div><div class="panel-eyebrow">Module 04 · Language & Runtime</div><h1 class="panel-title">Java Language Fundamentals</h1><p class="panel-subtitle">What Java is, its types, and the core syntax every developer must master.</p></div><div class="section" id="s4-1"><h2><span class="sec-emoji">☕</span> What is Java?</h2><p><strong>Java</strong> is a statically typed, object-oriented, general-purpose language. Source (<code>.java</code>) is compiled by <code>javac</code> into platform-neutral <b>bytecode</b> (<code>.class</code>) that any JVM runs — <em>"write once, run anywhere"</em>.</p><div class="table-wrap"><table><tr><th>Term</th><th>Meaning</th></tr><tr><td><b>JVM</b></td><td>Virtual machine that executes bytecode</td></tr><tr><td><b>JRE</b></td><td>JVM + standard libraries (runtime only)</td></tr><tr><td><b>JDK</b></td><td>JRE + compiler and tools (javac, jar, jshell)</td></tr></table></div><pre><span class="pre-lang">java</span><code>public class Hello {
+    public static void main(String[] args) {
+        System.out.println(&quot;Hello, Java!&quot;);
+    }
+}
+// javac Hello.java  -&gt;  java Hello</code></pre></div><div class="section" id="s4-2"><h2><span class="sec-emoji">🔢</span> Data Types</h2><p>Two families: <b>primitives</b> (stored by value) and <b>reference types</b> (objects, stored as references).</p><div class="table-wrap"><table><tr><th>Type</th><th>Size</th><th>Example</th></tr><tr><td>byte / short / int / long</td><td>8 / 16 / 32 / 64 bit</td><td><code>int n = 42; long big = 1L;</code></td></tr><tr><td>float / double</td><td>32 / 64 bit</td><td><code>double p = 3.14;</code></td></tr><tr><td>char</td><td>16-bit Unicode</td><td><code>char c = 'A';</code></td></tr><tr><td>boolean</td><td>true / false</td><td><code>boolean ok = true;</code></td></tr><tr><td>Reference</td><td>String, arrays, classes, interfaces, enums, records</td><td><code>String s = "hi";</code></td></tr></table></div><div class="callout note"><div class="callout-icon">📝</div><div class="callout-body">Each primitive has a wrapper (<code>Integer</code>, <code>Double</code>…). <b>Autoboxing</b> converts automatically; compare wrappers with <code>equals</code>, not <code>==</code>.</div></div></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🧩</span> Control Flow, Arrays & Strings</h2><pre><span class="pre-lang">java</span><code>int[] scores = {80, 92, 67};
+int total = 0;
+for (int s : scores) total += s;
+String grade = switch (total / scores.length) {   // switch expression
+    case 90, 91, 92 -&gt; &quot;A&quot;;
+    default -&gt; total / scores.length &gt;= 70 ? &quot;B&quot; : &quot;C&quot;;
+};
+var text = &quot;Java&quot;;            // local type inference
+String t2 = text.toUpperCase();   // Strings are IMMUTABLE</code></pre><p><b>String pool:</b> literals are shared; <code>new String("a")</code> creates a separate object. Use <code>StringBuilder</code> for loops that concatenate.</p></div><div class="section" id="s4-4"><h2><span class="sec-emoji">🏗️</span> Object-Oriented Programming</h2><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft)">📦</div><div class="card-title">Encapsulation</div><div class="card-desc">Private fields, public methods.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft)">🧬</div><div class="card-title">Inheritance</div><div class="card-desc"><code>extends</code> reuses behaviour.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft)">🎭</div><div class="card-title">Polymorphism</div><div class="card-desc">Same call, different behaviour at runtime.</div></div><div class="card"><div class="card-icon" style="background:var(--pink-soft)">🧩</div><div class="card-title">Abstraction</div><div class="card-desc">Hide detail with interfaces / abstract classes.</div></div></div><pre><span class="pre-lang">java</span><code>sealed interface Shape permits Circle, Rect {}
+record Circle(double r) implements Shape {}
+record Rect(double w, double h) implements Shape {}
+
+static double area(Shape s) {
+    return switch (s) {                       // pattern matching
+        case Circle c -&gt; Math.PI * c.r() * c.r();
+        case Rect r   -&gt; r.w() * r.h();
+    };
+}</code></pre><ul><li><b>Interface</b> = contract (can have default methods); <b>abstract class</b> = partial implementation with state.</li><li>Override <code>equals</code> and <code>hashCode</code> together.</li><li>Prefer <b>composition over inheritance</b> and immutability (<code>record</code>, <code>final</code>).</li></ul></div><div class="section" id="s4-5"><h2><span class="sec-emoji">🚨</span> Exceptions</h2><p><b>Checked</b> exceptions (<code>IOException</code>) must be handled or declared. <b>Unchecked</b> (<code>RuntimeException</code>) signal bugs. <b>Error</b> (<code>OutOfMemoryError</code>) is not meant to be caught.</p><pre><span class="pre-lang">java</span><code>try (var in = Files.newBufferedReader(path)) {   // auto-closes
+    return in.readLine();
+} catch (IOException e) {
+    throw new UncheckedIOException(e);
+}</code></pre><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which statement about Java Strings is true?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> They are mutable</li><li class="mcq-opt"><span class="opt-letter">B</span> They are immutable</li><li class="mcq-opt"><span class="opt-letter">C</span> They are primitives</li><li class="mcq-opt"><span class="opt-letter">D</span> They cannot be compared</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — String objects never change after creation."></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> JDK vs JRE: which contains the javac compiler?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> JRE</li><li class="mcq-opt"><span class="opt-letter">B</span> JDK</li><li class="mcq-opt"><span class="opt-letter">C</span> Both</li><li class="mcq-opt"><span class="opt-letter">D</span> Neither</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — JDK = JRE + development tools."></div></div></div></section><section class="panel" id="t5" data-toc='[["s5-1", "Collections Framework"], ["s5-2", "Generics"], ["s5-3", "Lambdas, Streams & Optional"], ["s5-4", "Concurrency"]]'><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">→ Advanced</span></div><div class="panel-eyebrow">Module 05 · Language & Runtime</div><h1 class="panel-title">Collections, Generics, Streams & Concurrency</h1><p class="panel-subtitle">The standard library and modern Java features used daily in real projects.</p></div><div class="section" id="s5-1"><h2><span class="sec-emoji">📚</span> Collections Framework</h2><div class="table-wrap"><table><tr><th>Type</th><th>Implementations</th><th>Use when</th></tr><tr><td><b>List</b></td><td>ArrayList, LinkedList</td><td>Ordered, duplicates OK; ArrayList by default</td></tr><tr><td><b>Set</b></td><td>HashSet, LinkedHashSet, TreeSet</td><td>Uniqueness; Tree = sorted</td></tr><tr><td><b>Map</b></td><td>HashMap, LinkedHashMap, TreeMap, ConcurrentHashMap</td><td>Key → value lookup</td></tr><tr><td><b>Queue/Deque</b></td><td>ArrayDeque, PriorityQueue</td><td>FIFO / LIFO / priority</td></tr></table></div><pre><span class="pre-lang">java</span><code>List&lt;String&gt; names = List.of(&quot;Ana&quot;, &quot;Raj&quot;);       // immutable
+Map&lt;String,Integer&gt; m = new HashMap&lt;&gt;();
+m.merge(&quot;java&quot;, 1, Integer::sum);</code></pre><p><b>Expert:</b> HashMap buckets use <code>hashCode</code>; collisions become trees at 8+ entries. Keys must be effectively immutable. Plain collections are <b>not thread-safe</b>.</p></div><div class="section" id="s5-2"><h2><span class="sec-emoji">🧪</span> Generics</h2><p>Generics add compile-time type safety: <code>List&lt;String&gt;</code>. Types are <b>erased</b> at runtime. Wildcards: <code>? extends T</code> (read, producer) and <code>? super T</code> (write, consumer) — <b>PECS</b>.</p><pre><span class="pre-lang">java</span><code>static &lt;T extends Comparable&lt;T&gt;&gt; T max(List&lt;T&gt; xs) {
+    return Collections.max(xs);
+}</code></pre></div><div class="section" id="s5-3"><h2><span class="sec-emoji">⚡</span> Lambdas, Streams & Optional</h2><pre><span class="pre-lang">java</span><code>record Emp(String name, String dept, double pay) {}
+Map&lt;String, Double&gt; avg = emps.stream()
+    .filter(e -&gt; e.pay() &gt; 30_000)
+    .collect(Collectors.groupingBy(Emp::dept,
+             Collectors.averagingDouble(Emp::pay)));
+
+Optional&lt;Emp&gt; top = emps.stream()
+    .max(Comparator.comparingDouble(Emp::pay));
+String n = top.map(Emp::name).orElse(&quot;none&quot;);</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Streams are lazy: nothing runs until a terminal operation (<code>collect</code>, <code>forEach</code>). Avoid side effects; use <code>parallel()</code> only after measuring.</div></div></div><div class="section" id="s5-4"><h2><span class="sec-emoji">🧵</span> Concurrency</h2><p>A <b>thread</b> is a unit of execution. Share state safely or the program breaks (race conditions, deadlocks, visibility bugs).</p><div class="table-wrap"><table><tr><th>Tool</th><th>Purpose</th></tr><tr><td><code>synchronized</code>, <code>ReentrantLock</code></td><td>Mutual exclusion</td></tr><tr><td><code>volatile</code>, atomics</td><td>Visibility / lock-free counters</td></tr><tr><td><code>ExecutorService</code></td><td>Thread pools</td></tr><tr><td><code>CompletableFuture</code></td><td>Async pipelines</td></tr><tr><td><b>Virtual threads</b> (Java 21)</td><td>Millions of cheap threads for blocking I/O</td></tr></table></div><pre><span class="pre-lang">java</span><code>try (var ex = Executors.newVirtualThreadPerTaskExecutor()) {
+    var f = ex.submit(() -&gt; fetch(url));   // blocks cheaply
+    System.out.println(f.get());
+}</code></pre><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which collection gives sorted keys?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> HashMap</li><li class="mcq-opt"><span class="opt-letter">B</span> TreeMap</li><li class="mcq-opt"><span class="opt-letter">C</span> ArrayList</li><li class="mcq-opt"><span class="opt-letter">D</span> HashSet</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — TreeMap keeps keys ordered."></div></div><div class="mcq" data-answer="0"><div class="mcq-q"><span class="mcq-qnum">Q.</span> What does "type erasure" mean?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Generic types are removed at runtime</li><li class="mcq-opt"><span class="opt-letter">B</span> Types are deleted from source</li><li class="mcq-opt"><span class="opt-letter">C</span> Primitives are erased</li><li class="mcq-opt"><span class="opt-letter">D</span> Classes are unloaded</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — generic type arguments do not exist at runtime."></div></div></div></section><section class="panel" id="t6" data-toc='[["s6-1", "From Source to Execution"], ["s6-2", "Class Loading & Memory Areas"], ["s6-3", "Garbage Collection"], ["s6-4", "Tuning, Diagnostics & Versions"]]'><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 06 · Language & Runtime</div><h1 class="panel-title">The JVM & Runtime Internals</h1><p class="panel-subtitle">How Java code actually runs: class loading, memory, garbage collection, JIT and tuning.</p></div><div class="section" id="s6-1"><h2><span class="sec-emoji">🔄</span> From Source to Execution</h2><div class="diagram"><svg viewBox="0 0 720 120" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans"><defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><rect x="8" y="25" width="120" height="70" rx="12" fill="#14213D" stroke="#d3d3d0"/><text x="68" y="55" text-anchor="middle" fill="#fff" font-weight="700" font-size="12">Source</text><text x="68" y="75" text-anchor="middle" fill="#fff" font-size="10.5">.java</text><line x1="130" y1="60" x2="148" y2="60" stroke="#37352f" stroke-width="2" marker-end="url(#a1)"/><rect x="152" y="25" width="120" height="70" rx="12" fill="#eef1f7" stroke="#d3d3d0"/><text x="212" y="55" text-anchor="middle" fill="#14213D" font-weight="700" font-size="12">javac</text><text x="212" y="75" text-anchor="middle" fill="#14213D" font-size="10.5">compiler</text><line x1="274" y1="60" x2="292" y2="60" stroke="#37352f" stroke-width="2" marker-end="url(#a1)"/><rect x="296" y="25" width="120" height="70" rx="12" fill="#ddedea" stroke="#d3d3d0"/><text x="356" y="55" text-anchor="middle" fill="#0a5f0a" font-weight="700" font-size="12">Bytecode</text><text x="356" y="75" text-anchor="middle" fill="#0a5f0a" font-size="10.5">.class / JAR</text><line x1="418" y1="60" x2="436" y2="60" stroke="#37352f" stroke-width="2" marker-end="url(#a1)"/><rect x="440" y="25" width="120" height="70" rx="12" fill="#fadec9" stroke="#d3d3d0"/><text x="500" y="55" text-anchor="middle" fill="#a85a08" font-weight="700" font-size="12">Class Loader</text><text x="500" y="75" text-anchor="middle" fill="#a85a08" font-size="10.5">load, link</text><line x1="562" y1="60" x2="580" y2="60" stroke="#37352f" stroke-width="2" marker-end="url(#a1)"/><rect x="584" y="25" width="120" height="70" rx="12" fill="#14213D" stroke="#d3d3d0"/><text x="644" y="55" text-anchor="middle" fill="#fff" font-weight="700" font-size="12">Execution</text><text x="644" y="75" text-anchor="middle" fill="#fff" font-size="10.5">interpreter + JIT</text></svg><div class="diagram-caption">Java compile-and-run pipeline</div></div><p>The JVM first <b>interprets</b> bytecode, then the <b>JIT compiler</b> compiles hot methods to native code (C1 quick, C2 optimised — <i>tiered compilation</i>).</p></div><div class="section" id="s6-2"><h2><span class="sec-emoji">🧠</span> Class Loading & Memory Areas</h2><div class="table-wrap"><table><tr><th>Area</th><th>Holds</th><th>Shared?</th></tr><tr><td><b>Heap</b></td><td>Objects (Young: Eden + Survivors; Old)</td><td>All threads</td></tr><tr><td><b>Stack</b></td><td>Frames: locals, call chain</td><td>Per thread</td></tr><tr><td><b>Metaspace</b></td><td>Class metadata (native memory)</td><td>All threads</td></tr><tr><td><b>Code cache</b></td><td>JIT-compiled code</td><td>All threads</td></tr></table></div><p><b>Class loaders</b> (bootstrap → platform → application) use <i>parent delegation</i>. Loading → <b>linking</b> (verify, prepare, resolve) → <b>initialization</b> (static blocks).</p></div><div class="section" id="s6-3"><h2><span class="sec-emoji">♻️</span> Garbage Collection</h2><p>The GC reclaims objects that are no longer <b>reachable</b> from GC roots (stacks, statics). Most objects die young, so GCs are <b>generational</b>.</p><div class="table-wrap"><table><tr><th>Collector</th><th>Goal</th><th>Flag</th></tr><tr><td>Serial</td><td>Tiny apps, single core</td><td><code>-XX:+UseSerialGC</code></td></tr><tr><td>Parallel</td><td>Max throughput</td><td><code>-XX:+UseParallelGC</code></td></tr><tr><td><b>G1</b> (default)</td><td>Balanced, predictable pauses</td><td><code>-XX:+UseG1GC</code></td></tr><tr><td><b>ZGC</b></td><td>Sub-millisecond pauses, huge heaps</td><td><code>-XX:+UseZGC</code></td></tr><tr><td>Shenandoah</td><td>Low pause, concurrent compaction</td><td><code>-XX:+UseShenandoahGC</code></td></tr></table></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Memory leaks in Java = objects still <i>reachable</i> but no longer needed (static maps, unclosed listeners, ThreadLocals).</div></div></div><div class="section" id="s6-4"><h2><span class="sec-emoji">🛠️</span> Tuning, Diagnostics & Versions</h2><pre><span class="pre-lang">shell</span><code>java -Xms2g -Xmx2g -XX:+UseG1GC \
+     -XX:MaxGCPauseMillis=200 \
+     -Xlog:gc*:file=gc.log \
+     -XX:+HeapDumpOnOutOfMemoryError -jar app.jar</code></pre><div class="table-wrap"><table><tr><th>Tool</th><th>Use</th></tr><tr><td><code>jcmd</code> / <code>jps</code></td><td>List &amp; control JVMs</td></tr><tr><td><code>jstack</code></td><td>Thread dumps (deadlocks)</td></tr><tr><td><code>jmap</code> / MAT</td><td>Heap dumps, leak analysis</td></tr><tr><td><b>JFR</b> + JMC</td><td>Low-overhead profiling</td></tr></table></div><ul><li>Set <code>-Xms = -Xmx</code> on servers; measure before tuning; in containers the JVM respects cgroup limits.</li><li><b>LTS releases:</b> 8, 11, 17, 21, 25 — use an LTS in production.</li><li><b>JPMS</b> (Java 9+): <code>module-info.java</code> declares what a module <code>requires</code> and <code>exports</code>.</li></ul><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which area is private to each thread?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Heap</li><li class="mcq-opt"><span class="opt-letter">B</span> Stack</li><li class="mcq-opt"><span class="opt-letter">C</span> Metaspace</li><li class="mcq-opt"><span class="opt-letter">D</span> Code cache</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — every thread has its own stack."></div></div><div class="mcq" data-answer="2"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Best collector when very low pause times on a large heap matter most?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Serial</li><li class="mcq-opt"><span class="opt-letter">B</span> Parallel</li><li class="mcq-opt"><span class="opt-letter">C</span> ZGC</li><li class="mcq-opt"><span class="opt-letter">D</span> None</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — ZGC targets sub-millisecond pauses."></div></div></div></section><section class="panel" id="t7" data-toc='[["s7-1", "Scenario"], ["s7-2", "Task 1 \u00b7 Maven"], ["s7-3", "Task 2 \u00b7 Gradle"], ["s7-4", "Task 3 \u00b7 Language"], ["s7-5", "Task 4 \u00b7 Runtime"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 07 · Practice</div><h1 class="panel-title">Hands-on Practice</h1><p class="panel-subtitle">Apply what you learned across build tools and the language runtime.</p></div><div class="section" id="s7-1"><h2><span class="sec-emoji">🎬</span> Scenario</h2><p>Your team maintains a Java 21 order service. Builds are slow, a transitive library conflict appears, and production shows long GC pauses.</p></div><div class="section" id="s7-2"><h2><span class="sec-emoji">1️⃣</span> Task 1 · Maven</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Two libraries pull different versions of <code>jackson-databind</code>. How do you find and fix it?</div><textarea placeholder="Write your answer here…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Run <code>mvn dependency:tree -Dincludes=com.fasterxml.jackson.core</code>, then pin the version in <code>dependencyManagement</code> (or import the Jackson BOM), exclude the unwanted transitive, and add the enforcer <code>dependencyConvergence</code> rule.</div></div></div><div class="section" id="s7-3"><h2><span class="sec-emoji">2️⃣</span> Task 2 · Gradle</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Write the dependency lines: Guava used internally, JDBC driver at runtime only, JUnit for tests.</div><textarea placeholder="Write your answer here…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> <code>implementation("com.google.guava:guava:33.2.1-jre")</code>; <code>runtimeOnly("org.postgresql:postgresql:42.7.3")</code>; <code>testImplementation("org.junit.jupiter:junit-jupiter")</code>.</div></div></div><div class="section" id="s7-4"><h2><span class="sec-emoji">3️⃣</span> Task 3 · Language</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Using streams, return the names of employees earning over 50 000, sorted alphabetically.</div><textarea placeholder="Write your answer here…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> <code>emps.stream().filter(e -&gt; e.pay() &gt; 50_000).map(Emp::name).sorted().toList();</code></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Two Employee objects with equal data are not found in a HashSet. Likely cause?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> HashSet is broken</li><li class="mcq-opt"><span class="opt-letter">B</span> equals/hashCode not overridden together</li><li class="mcq-opt"><span class="opt-letter">C</span> Strings are immutable</li><li class="mcq-opt"><span class="opt-letter">D</span> Wrong JDK</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — both methods must be overridden consistently."></div></div></div><div class="section" id="s7-5"><h2><span class="sec-emoji">4️⃣</span> Task 4 · Runtime</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Production shows 3-second GC pauses on an 8 GB heap. List your investigation steps.</div><textarea placeholder="Write your answer here…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Enable GC logging (<code>-Xlog:gc*</code>), check pause cause and promotion rate, take a JFR recording and heap dump, look for leaks or large allocations, then consider G1 pause goals or ZGC, and re-measure after each change.</div></div></div></section><section class="panel" id="t8" data-toc='[["sA-1","Take the Assessment"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag expert">→ Expert</span></div><p class="panel-eyebrow">Module 08</p><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">Test yourself on Maven, Gradle, the Java language and the JVM runtime — from basic to expert.</p></div><div class="section" id="sA-1"><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div><div class="assess-intro-text">Full-screen, timed assessment with a question palette and review of every answer at the end.</div><ul class="assess-intro-list"><li><strong>50 questions</strong> per attempt, shuffled with randomized option order</li><li><strong>60-minute</strong> timer with warning state and automatic submission</li><li>Question palette, Previous/Next, Mark for Review</li><li>Full-screen and tab-switch monitoring — <strong>3 warnings</strong> auto-submit the assessment</li><li>Copy, cut, right-click and print/screenshot shortcuts are blocked during the attempt</li><li>Retry generates a new randomized attempt</li></ul><button class="assess-start-btn" id="assessStartBtn">▶ Start Assessment</button></div></div></section>
+</main></div>
+<script>
+
+/* Tabs, dynamic TOC, scroll-spy, progress pill */
+(function(){
+  const tabs=document.querySelectorAll('.tab'),panels=document.querySelectorAll('.panel'),tocEl=document.getElementById('toc'),total=tabs.length,pt=document.getElementById('progressText');
+  function buildToc(panel){const data=JSON.parse(panel.getAttribute('data-toc')||'[]');tocEl.innerHTML=data.map(([id,l])=>`<li><a href="#${id}" data-target="${id}">${l}</a></li>`).join('');const f=tocEl.querySelector('a');if(f)f.classList.add('active');}
+  function activate(i){tabs.forEach((t,k)=>{t.classList.toggle('active',k===i);t.setAttribute('aria-selected',k===i)});panels.forEach((p,k)=>p.classList.toggle('active',k===i));buildToc(panels[i]);pt.textContent=`Tab ${i+1} of ${total}`;window.scrollTo({top:0,behavior:'instant'});tabs[i].scrollIntoView({block:'nearest',inline:'nearest'});}
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{const a=e.target.closest('.toc-list a');if(!a)return;e.preventDefault();const el=document.getElementById(a.dataset.target);if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});});
+  let tk=false;function spy(){const ap=document.querySelector('.panel.active');if(!ap)return;let cur=null;ap.querySelectorAll('.section').forEach(s=>{if(s.getBoundingClientRect().top-180<0)cur=s.id});if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));tk=false;}
+  window.addEventListener('scroll',()=>{if(!tk){requestAnimationFrame(spy);tk=true}},{passive:true});
+  window.resetProgress=()=>activate(0);activate(0);
+})();
+/* Inline MCQs, per-panel score, model answers */
+(function(){
+  function update(panel){const bar=panel.querySelector('.quiz-progress');if(!bar||bar.id)return;const all=panel.querySelectorAll('.mcq').length,done=panel.querySelectorAll('.mcq.answered').length,okc=panel.querySelectorAll('.mcq.answered[data-correct="1"]').length;bar.querySelector('.quiz-score').textContent=`${okc} / ${all} correct`;bar.querySelector('.quiz-bar-fill').style.width=(all?done/all*100:0)+'%';}
+  document.querySelectorAll('.mcq').forEach(m=>{const ans=+m.dataset.answer,opts=m.querySelectorAll('.mcq-opt'),fb=m.querySelector('.mcq-feedback');
+    opts.forEach((o,i)=>{o.tabIndex=0;o.setAttribute('role','button');const go=()=>{if(m.classList.contains('answered'))return;m.classList.add('answered');const r=i===ans;m.dataset.correct=r?'1':'0';opts[ans].classList.add('correct');if(!r)o.classList.add('incorrect');fb.className='mcq-feedback '+(r?'ok':'bad');fb.textContent=r?fb.dataset.ok:fb.dataset.bad;update(m.closest('.panel'));};
+      o.addEventListener('click',go);o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});});});
+  document.querySelectorAll('.panel').forEach(p=>{update(p);const rb=p.querySelector('.quiz-reset-btn');if(rb)rb.addEventListener('click',()=>{p.querySelectorAll('.mcq').forEach(m=>{m.classList.remove('answered');delete m.dataset.correct;m.querySelectorAll('.mcq-opt').forEach(o=>o.classList.remove('correct','incorrect'));const fb=m.querySelector('.mcq-feedback');fb.className='mcq-feedback';fb.textContent='';});p.querySelectorAll('.saq textarea').forEach(t=>t.value='');p.querySelectorAll('.saq-model').forEach(x=>x.classList.remove('show'));p.querySelectorAll('.saq-toggle').forEach(b=>b.textContent='Show model answer');update(p);});});
+  document.querySelectorAll('.saq-toggle').forEach(b=>b.addEventListener('click',()=>{const s=b.nextElementSibling.classList.toggle('show');b.textContent=s?'Hide model answer':'Show model answer';}));
+})();
+/* Assessment — timed, full-screen, proctored (rules & security aligned with refer_assessment.html) */
+(function(){
+  const ROLE = "Java Developer";
+  const BANK = [{"q": "A build tool mainly…", "options": ["Replaces the JVM", "Automates compile, test, package and dependency handling", "Writes Java code", "Runs databases"], "answer": 1}, {"q": "Which tool uses a pom.xml?", "options": ["Gradle", "Maven", "Ant", "Bazel"], "answer": 1}, {"q": "The Maven phase that runs unit tests is…", "options": ["compile", "test", "install", "deploy"], "answer": 1}, {"q": "Maven scope for a JDBC driver needed only at runtime…", "options": ["compile", "runtime", "provided", "test"], "answer": 1}, {"q": "What does dependencyManagement do?", "options": ["Adds the dependency", "Centralises versions without adding the dependency", "Deletes dependencies", "Publishes artifacts"], "answer": 1}, {"q": "Gradle builds are modelled as…", "options": ["A fixed lifecycle", "A DAG of tasks", "A single script", "A shell pipeline"], "answer": 1}, {"q": "Gradle's Wrapper script is…", "options": ["gradle.exe", "./gradlew", "./mvnw", "gradle.properties"], "answer": 1}, {"q": "Which Gradle configuration is NOT exposed to consumers?", "options": ["api", "implementation", "both", "neither"], "answer": 1}, {"q": "Java bytecode is executed by…", "options": ["The OS directly", "The JVM", "The compiler", "A browser only"], "answer": 1}, {"q": "Which is NOT a primitive?", "options": ["int", "boolean", "String", "char"], "answer": 2}, {"q": "== on two String objects compares…", "options": ["Content", "References", "Length", "Hash"], "answer": 1}, {"q": "A checked exception must be…", "options": ["Ignored", "Handled or declared", "Logged only", "Never thrown"], "answer": 1}, {"q": "Streams are evaluated when…", "options": ["Created", "A terminal operation runs", "Imported", "Compiled"], "answer": 1}, {"q": "Objects live in which memory area?", "options": ["Stack", "Heap", "Code cache", "Registers"], "answer": 1}, {"q": "The default collector in modern JDKs is…", "options": ["Serial", "G1", "CMS", "Epsilon"], "answer": 1}, {"q": "Virtual threads (Java 21) are best for…", "options": ["CPU-heavy loops", "Many blocking I/O tasks", "GUI painting", "Bytecode verification"], "answer": 1}, {"q": "Which file describes a Maven project?", "options": ["pom.xml", "settings.xml only", "build.gradle", "package.json"], "answer": 0}, {"q": "Which Maven phase runs unit tests?", "options": ["compile", "install", "package", "test"], "answer": 3}, {"q": "Maven scope for an API supplied by the runtime container?", "options": ["compile", "runtime", "import", "provided"], "answer": 3}, {"q": "What does `mvn dependency:tree` show?", "options": ["Test results", "The resolved dependency graph", "JVM flags", "Plugin versions only"], "answer": 1}, {"q": "Purpose of `dependencyManagement`?", "options": ["Skip transitive deps", "Download sources", "Run tests", "Centralize versions without adding dependencies"], "answer": 3}, {"q": "`mvn install` copies the artifact to…", "options": ["The local repository (~/.m2)", "Maven Central", "Docker Hub", "The target folder only"], "answer": 0}, {"q": "Which plugin runs unit tests in Maven?", "options": ["Failsafe", "Compiler", "Surefire", "Shade"], "answer": 2}, {"q": "Failsafe plugin is meant for…", "options": ["Unit tests", "Integration tests", "Packaging", "Linting"], "answer": 1}, {"q": "A BOM is used to…", "options": ["Build Docker images", "Minify code", "Sign jars", "Align versions of related dependencies"], "answer": 3}, {"q": "Gradle build script file name?", "options": ["gradle.xml", "build.properties", "build.gradle or build.gradle.kts", "pom.xml"], "answer": 2}, {"q": "Gradle `implementation` vs `api`?", "options": ["api is test only", "implementation is runtime only", "They are identical", "implementation is not exposed to consumers' compile classpath"], "answer": 3}, {"q": "What is `gradlew`?", "options": ["A JVM flag", "A repository", "A plugin", "The Gradle wrapper script"], "answer": 3}, {"q": "Gradle models tasks as…", "options": ["Random order", "A linear list", "A tree of modules only", "A directed acyclic graph"], "answer": 3}, {"q": "Gradle skips a task as UP-TO-DATE when…", "options": ["It is slow", "Cache is disabled", "Tests fail", "Inputs and outputs are unchanged"], "answer": 3}, {"q": "Gradle `runtimeOnly` means the dependency is…", "options": ["Compile only", "On the runtime classpath only", "Ignored", "Test only"], "answer": 1}, {"q": "A Java `record` is…", "options": ["A thread type", "A mutable bean", "An immutable data carrier", "An interface"], "answer": 2}, {"q": "Why use `sealed` classes?", "options": ["Restrict which classes may extend them", "Make fields final", "Enable generics", "Speed up GC"], "answer": 0}, {"q": "Java 10 `var` does what?", "options": ["Infers a local variable's type", "Replaces generics", "Declares constants", "Makes variables dynamic"], "answer": 0}, {"q": "Switch expressions (arrow form) can…", "options": ["Yield a value", "Fall through always", "Not use enums", "Only run statements"], "answer": 0}, {"q": "Text blocks use which delimiter?", "options": ["Triple quotes", "Backticks", "Slashes", "Single quotes"], "answer": 0}, {"q": "Best use of `Optional`?", "options": ["Method parameters everywhere", "Return type for possibly absent values", "Entity fields", "Serialization"], "answer": 1}, {"q": "`equals`/`hashCode` contract says equal objects must…", "options": ["Be the same reference", "Be immutable", "Have equal hash codes", "Have different hashes"], "answer": 2}, {"q": "Why is `String` safe as a map key?", "options": ["It is a primitive", "It is mutable", "It is immutable", "It is thread-bound"], "answer": 2}, {"q": "Concatenating strings in a large loop is best done with…", "options": ["intern()", "String.valueOf", "String +=", "StringBuilder"], "answer": 3}, {"q": "`flatMap` in streams…", "options": ["Sorts elements", "Filters elements", "Flattens nested streams into one", "Counts elements"], "answer": 2}, {"q": "`Collectors.groupingBy` returns a…", "options": ["Optional", "Stream", "Set", "Map"], "answer": 3}, {"q": "`HashMap` vs `ConcurrentHashMap` null keys?", "options": ["Neither allows", "Both allow", "Only ConcurrentHashMap allows", "HashMap allows one null key; ConcurrentHashMap none"], "answer": 3}, {"q": "Random access is fastest in…", "options": ["ArrayList", "Both equally", "LinkedList", "Neither"], "answer": 0}, {"q": "Checked exceptions must be…", "options": ["Thrown as Error", "Ignored", "Only logged", "Declared or handled"], "answer": 3}, {"q": "try-with-resources requires the resource to implement…", "options": ["Comparable", "Runnable", "Serializable", "AutoCloseable"], "answer": 3}, {"q": "Where are objects allocated in the JVM?", "options": ["Heap", "Metaspace", "Code cache", "Stack only"], "answer": 0}, {"q": "Default garbage collector since Java 9?", "options": ["G1", "CMS", "Serial", "Epsilon"], "answer": 0}, {"q": "Metaspace stores…", "options": ["Class metadata", "Strings only", "Objects", "Thread stacks"], "answer": 0}, {"q": "The JIT compiler optimizes…", "options": ["Only main()", "Source code", "Hot code paths at runtime", "Class files on disk"], "answer": 2}];
+  const ATTEMPT_Q = Math.min(50, BANK.length);
+  const EXAM_SECONDS = Math.ceil(ATTEMPT_Q * 1.2) * 60;
+  const WARN_AT = Math.min(300, Math.floor(EXAM_SECONDS * 0.25));
+  const MAX_WARNS = 3;
+  const LS_KEY = 'javaDevAssessment:' + ROLE;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false, warns=0, proctorOn=false, lastWarn=0;
+  const esc = s => String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const fmt = t => {const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s};
+  const css = `
+  .cb-exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .cb-exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .cb-exam-top .et-title{font-size:16px;font-weight:800}.cb-exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .cb-exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .cb-exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:cbpulse 1s infinite}@keyframes cbpulse{50%{opacity:.5}}
+  .cb-exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .cb-exam-q-pane{padding:28px 36px;overflow:auto}
+  .cb-exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .cb-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .cb-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .cb-qtext code,.cb-opt code,.cb-rev code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em;background:#eef1f8;padding:1px 6px;border-radius:5px}
+  .cb-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .cb-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .cb-opt:hover{border-color:#14213D;background:#f9f9ff}.cb-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .cb-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .cb-opt.sel .k{background:#14213D;color:#fff}
+  .cb-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .cb-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .cb-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}.cb-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .cb-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}.cb-btn.mark.on{background:#FCA311;color:#14213D}
+  .cb-btn.submit{background:#FCA311;color:#14213D}.cb-btn.primary{background:#14213D;color:#fff}
+  .cb-count{font-size:14px;color:#475569}.cb-side-title{margin:0;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:#64748b}
+  .cb-palette{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+  .cb-pal{height:36px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;font-weight:700;font-size:13px;cursor:pointer;color:#14213D;font-family:inherit}
+  .cb-pal.answered{background:#14213D;border-color:#14213D;color:#fff}.cb-pal.marked{background:#FCA311;border-color:#FCA311;color:#14213D}.cb-pal.cur{outline:2px solid #FCA311;outline-offset:2px}
+  .cb-legend{display:flex;flex-direction:column;gap:5px;font-size:12px;color:#475569}.cb-legend i{display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid #cbd5e1;margin-right:7px;vertical-align:-2px;background:#fff}
+  .cb-splash{position:fixed;inset:0;z-index:99998;background:rgba(20,33,61,.55);display:flex;align-items:center;justify-content:center;padding:20px;font-family:'Noto Sans',system-ui,sans-serif}
+  .cb-splash .card{background:#fff;border-radius:16px;max-width:600px;width:100%;max-height:92vh;overflow:auto;padding:28px 30px;color:#161c27;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .cb-splash h2{margin:0 0 8px;font-size:22px}.cb-splash p{margin:8px 0;color:#475569;font-size:14.5px}.cb-splash ul{margin:6px 0 14px;padding-left:20px;color:#334155;font-size:14.5px;line-height:1.7}
+  .cb-cover{position:fixed;inset:0;z-index:100001;background:rgba(20,33,61,.96);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:30px;font-family:'Noto Sans',system-ui,sans-serif}
+  .cb-cover>div{font-size:26px;font-weight:800}.cb-cover small{font-size:14px;color:#cdd5e5;max-width:460px}
+  .cb-confirm{position:fixed;inset:0;z-index:100000;background:rgba(20,33,61,.55);display:flex;align-items:center;justify-content:center;padding:20px;font-family:'Noto Sans',system-ui,sans-serif}
+  .cb-confirm .box{background:#fff;border-radius:14px;padding:24px;max-width:420px;width:100%;color:#161c27}.cb-confirm h3{margin:0 0 8px}.cb-confirm p{margin:0 0 18px;color:#475569;font-size:14.5px}.cb-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .cb-result{max-width:820px;margin:0 auto}.cb-score{font-size:44px;font-weight:800;text-align:center;margin-top:10px}.cb-rmsg{text-align:center;color:#475569;margin-top:4px}
+  .cb-result .cb-btn.primary{display:block;margin:0 auto}
+  .cb-rev{margin-top:24px;display:flex;flex-direction:column;gap:12px}.cb-rev .r{background:#fff;border:1px solid #e2e8f0;border-left:5px solid #e53e3e;border-radius:10px;padding:14px 16px}.cb-rev .r.ok{border-left-color:#16a34a}
+  .cb-rev .rq{font-weight:700;margin-bottom:6px}.cb-rev .ra{font-size:14px}.cb-rev .ra.wrong{color:#b91c1c}.cb-rev .ra.cor{color:#166534}.cb-rev .rx{font-size:13px;color:#64748b;margin-top:6px}
+  @media(max-width:820px){.cb-exam-main{grid-template-columns:1fr}.cb-exam-side{border-left:none;border-top:1px solid #e2e8f0}.cb-exam-q-pane{padding:22px 18px}.cb-exam-top{padding:10px 14px}}
+  `;
+  function injectCss(){if(document.getElementById('cbExamCss'))return;const s=document.createElement('style');s.id='cbExamCss';s.textContent=css;document.head.appendChild(s)}
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function buildAttempt(){
+    let selected=[];
+    if(BANK.length>ATTEMPT_Q){
+      let recent=[];try{recent=JSON.parse(localStorage.getItem(LS_KEY+'_attempts')||'[]')}catch(e){}
+      let sig='';
+      for(let t=0;t<25;t++){selected=shuffle(BANK.map((q,i)=>i)).slice(0,ATTEMPT_Q);sig=selected.slice().sort((a,b)=>a-b).join('|');if(!recent.includes(sig))break}
+      recent.unshift(sig);try{localStorage.setItem(LS_KEY+'_attempts',JSON.stringify(recent.slice(0,20)))}catch(e){}
+    } else selected=shuffle(BANK.map((q,i)=>i));
+    return selected.map(n=>{const src=BANK[n];const pairs=src.options.map((o,i)=>({o,i}));shuffle(pairs);
+      return {id:'q'+n,q:src.q,options:pairs.map(p=>p.o),answer:pairs.findIndex(p=>p.i===src.answer),why:src.why||'',lvl:src.lvl||''}});
+  }
+  function confirmBox(title,msg,okLabel){return new Promise(resolve=>{injectCss();const d=document.createElement('div');d.className='cb-confirm';d.innerHTML=`<div class="box"><h3>${esc(title)}</h3><p>${esc(msg)}</p><div class="row"><button class="cb-btn nav" data-a="0">Cancel</button><button class="cb-btn primary" data-a="1">${esc(okLabel||'Confirm')}</button></div></div>`;document.body.appendChild(d);d.addEventListener('click',e=>{if(e.target===d){d.remove();resolve(false);return}const b=e.target.closest('[data-a]');if(!b)return;d.remove();resolve(b.dataset.a==='1')})})}
+  function requestFs(){const el=document.documentElement;try{if(el.requestFullscreen)el.requestFullscreen().catch(()=>{})}catch(e){}}
+  function showSplash(){injectCss();const sp=document.createElement('div');sp.className='cb-splash';sp.id='cbExamSplash';
+    sp.innerHTML=`<div class="card"><h2>🎯 ${esc(ROLE)} — Assessment</h2><p>A timed, full-screen assessment based on this course.</p><ul><li><b>${ATTEMPT_Q} questions</b> per attempt</li><li><b>${Math.round(EXAM_SECONDS/60)}-minute</b> timer — the assessment auto-submits when time is up</li><li>Navigate freely, answer questions, and <b>mark questions for review</b></li><li>Questions and answer options are shuffled on every attempt</li></ul><p style="font-weight:700;color:#14213D;margin-bottom:6px">Assessment rules</p><ul style="margin-top:0"><li>The assessment runs in <b>fullscreen</b>.</li><li>Do not switch tabs/windows or exit fullscreen.</li><li><b>${MAX_WARNS} warnings</b> for tab/window switching or leaving fullscreen will auto-submit the assessment.</li><li>Copy, cut, right-click and common screenshot/print shortcuts are blocked during the assessment.</li></ul><div style="display:flex;gap:10px"><button class="cb-btn nav" id="cbExamCancel">Cancel</button><button class="cb-btn primary" id="cbExamBegin" style="flex:1;padding:14px">Start Assessment →</button></div></div>`;
+    document.body.appendChild(sp);
+    document.getElementById('cbExamCancel').addEventListener('click',()=>sp.remove());
+    document.getElementById('cbExamBegin').addEventListener('click',()=>{requestFs();sp.remove();enterExam()})}
+  function enterExam(){injectCss();items=buildAttempt();answers={};marked={};cur=0;remaining=EXAM_SECONDS;examOn=true;document.body.style.overflow='hidden';
+    const ov=document.createElement('div');ov.className='cb-exam-overlay';ov.id='cbExamOverlay';
+    ov.innerHTML=`<div class="cb-exam-top"><div><div class="et-title">${esc(ROLE)} — Assessment</div><div class="et-sub">${items.length} questions · one attempt</div></div><div class="cb-exam-timer" id="cbExamTimer">${fmt(remaining)}</div></div><div class="cb-exam-main"><div class="cb-exam-q-pane" id="cbExamQ"></div><div class="cb-exam-side"><div class="cb-count">Answered <b id="cbExamAnsN">0</b> / ${items.length}</div><h4 class="cb-side-title">Question palette</h4><div class="cb-palette" id="cbExamPal"></div><div class="cb-legend"><span><i style="background:#14213D;border-color:#14213D"></i> Answered</span><span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span><span><i></i> Not answered</span></div><button class="cb-btn submit" id="cbExamSubmit" style="width:100%">Submit Assessment</button></div></div>`;
+    document.body.appendChild(ov);buildPalette();renderQ();timerId=setInterval(tick,1000);window.addEventListener('beforeunload',beforeUnload);startProctor();
+    document.getElementById('cbExamSubmit').addEventListener('click',()=>submitExam(false))}
+  function beforeUnload(e){if(examOn){e.preventDefault();e.returnValue=''}}
+  function tick(){remaining--;const el=document.getElementById('cbExamTimer');if(el){el.textContent=fmt(Math.max(remaining,0));if(remaining<=WARN_AT)el.classList.add('warn')}if(remaining<=0)submitExam(true)}
+  function buildPalette(){const pal=document.getElementById('cbExamPal');pal.innerHTML='';items.forEach((it,n)=>{const b=document.createElement('button');b.className='cb-pal';b.textContent=n+1;b.dataset.n=n;b.addEventListener('click',()=>{cur=n;renderQ()});pal.appendChild(b)});refreshPalette()}
+  function refreshPalette(){document.querySelectorAll('#cbExamPal .cb-pal').forEach(b=>{const n=+b.dataset.n,id=items[n].id;b.classList.toggle('answered',id in answers);b.classList.toggle('marked',!!marked[id]);b.classList.toggle('cur',n===cur)});const el=document.getElementById('cbExamAnsN');if(el)el.textContent=Object.keys(answers).length}
+  function renderQ(){const it=items[cur],id=it.id,pane=document.getElementById('cbExamQ');
+    pane.innerHTML=`<div class="cb-qnum">Question ${cur+1} of ${items.length}</div><div class="cb-qtext">${it.q}</div><div class="cb-opts">${it.options.map((o,i)=>`<div class="cb-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div><div class="cb-actions"><button class="cb-btn nav" id="cbPrev" ${cur===0?'disabled':''}>← Previous</button><button class="cb-btn mark${marked[id]?' on':''}" id="cbMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button><button class="cb-btn nav" id="cbNext" ${cur===items.length-1?'disabled':''}>Next →</button></div>`;
+    pane.querySelectorAll('.cb-opt').forEach(el=>el.addEventListener('click',()=>{answers[id]=+el.dataset.i;pane.querySelectorAll('.cb-opt').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');refreshPalette()}));
+    document.getElementById('cbPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ()}});
+    document.getElementById('cbNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ()}});
+    document.getElementById('cbMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ()});refreshPalette()}
+  async function submitExam(auto){if(!examOn)return;const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){const ok=await confirmBox('Submit assessment?',unanswered?`You have ${unanswered} unanswered question(s). Once submitted, you cannot change your answers.`:'Once submitted, you cannot change your answers.','Submit Assessment');if(!ok||!examOn)return}
+    examOn=false;clearInterval(timerId);window.removeEventListener('beforeunload',beforeUnload);stopProctor();
+    const score=items.reduce((n,it)=>n+(answers[it.id]===it.answer?1:0),0);saveScore(score,items.length);showResults(score)}
+  function saveScore(score,total){let a=[];try{a=JSON.parse(localStorage.getItem(LS_KEY)||'[]')}catch(e){}a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)))}catch(e){}}
+  function showResults(score){const total=items.length,pct=Math.round(score/total*100);let msg='Keep practising — review the questions you missed and try again.';
+    if(pct>=85)msg='Outstanding — strong command of this course.';else if(pct>=65)msg='Solid performance. Review the harder areas and try another attempt.';else if(pct>=50)msg='Borderline — revisit the modules and retake the assessment.';
+    const rev=items.map((it,n)=>{const you=answers[it.id],attempted=you!=null,ok=attempted&&you===it.answer;
+      const your=attempted?String.fromCharCode(65+you)+'. '+it.options[you]:'<i>Not answered</i>';const cor=String.fromCharCode(65+it.answer)+'. '+it.options[it.answer];
+      return `<div class="r ${ok?'ok':'no'}"><div class="rq">Q${n+1}. ${it.q}</div><div class="ra ${ok?'cor':'wrong'}">Your answer: ${your}</div>${ok?'':`<div class="ra cor">Correct: ${cor}</div>`}${it.why?`<div class="rx">${it.why}</div>`:''}</div>`}).join('');
+    const ov=document.getElementById('cbExamOverlay');
+    ov.innerHTML=`<div class="cb-exam-top"><div class="et-title">Result — ${esc(ROLE)} Assessment</div><button class="cb-btn" id="cbClose" style="background:rgba(255,255,255,.15);color:#fff">✕ Close</button></div><div class="cb-exam-q-pane" style="flex:1"><div class="cb-result"><div class="cb-score">${score} / ${total}</div><div class="cb-rmsg">${pct}% correct — ${msg}</div><div style="margin-top:16px"><button class="cb-btn primary" id="cbRetry">↻ Take another assessment</button></div><div class="cb-rev">${rev}</div></div></div>`;
+    document.getElementById('cbRetry').addEventListener('click',()=>{ov.remove();requestFs();enterExam()});
+    document.getElementById('cbClose').addEventListener('click',()=>closeExam())}
+  function closeExam(){stopProctor();const ov=document.getElementById('cbExamOverlay');if(ov)ov.remove();document.body.style.overflow='';if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}
+  /* ---- proctoring ---- */
+  function warning(title,msg){if(!proctorOn||!examOn)return;const now=Date.now();if(now-lastWarn<1200)return;lastWarn=now;warns++;
+    const cover=document.getElementById('cbExamCover')||document.createElement('div');cover.className='cb-cover';cover.id='cbExamCover';cover.style.display='flex';
+    cover.innerHTML=`<div>⚠️ ${esc(title)}</div><small>${esc(msg)}</small><small>Warning ${Math.min(warns,MAX_WARNS)} of ${MAX_WARNS}</small><button class="cb-btn primary" id="cbResume">Return to assessment</button>`;
+    document.body.appendChild(cover);
+    document.getElementById('cbResume').onclick=()=>{cover.style.display='none';requestFs();if(warns>=MAX_WARNS)submitExam(true)};
+    if(warns>=MAX_WARNS)setTimeout(()=>submitExam(true),500)}
+  function visHandler(){if(document.hidden)warning('Tab or window switch detected','Please stay on the assessment screen. Repeated violations will submit the assessment automatically.')}
+  function fsHandler(){if(examOn&&!document.fullscreenElement)warning('Fullscreen exited','The assessment must remain in fullscreen mode.')}
+  function blurHandler(){if(examOn)warning('Focus changed','Please keep the assessment window active.')}
+  function blockEvt(e){if(examOn){e.preventDefault();warning('Action blocked','Copy, cut and right-click are disabled during the assessment.')}}
+  function keyGuard(e){if(!examOn)return;const k=(e.key||'').toLowerCase();
+    if((e.ctrlKey||e.metaKey)&&['c','x','p','s','u'].includes(k)){e.preventDefault();warning('Shortcut blocked','This assessment disables copy, print, save and source shortcuts.')}
+    if(k==='f12'){e.preventDefault();warning('Developer tools shortcut blocked','This action is disabled during the assessment.')}}
+  function printGuard(e){if(examOn&&e.key==='PrintScreen'){e.preventDefault();warning('Screenshot action blocked','Screenshot capture is restricted during the assessment.')}}
+  function startProctor(){warns=0;lastWarn=0;proctorOn=true;document.addEventListener('visibilitychange',visHandler);document.addEventListener('fullscreenchange',fsHandler);window.addEventListener('blur',blurHandler);document.addEventListener('contextmenu',blockEvt,true);document.addEventListener('copy',blockEvt,true);document.addEventListener('cut',blockEvt,true);document.addEventListener('keydown',keyGuard,true);document.addEventListener('keyup',printGuard,true)}
+  function stopProctor(){proctorOn=false;document.removeEventListener('visibilitychange',visHandler);document.removeEventListener('fullscreenchange',fsHandler);window.removeEventListener('blur',blurHandler);document.removeEventListener('contextmenu',blockEvt,true);document.removeEventListener('copy',blockEvt,true);document.removeEventListener('cut',blockEvt,true);document.removeEventListener('keydown',keyGuard,true);document.removeEventListener('keyup',printGuard,true);const c=document.getElementById('cbExamCover');if(c)c.remove()}
+  document.addEventListener('click',function(e){const b=e.target.closest('#assessStartBtn');if(b){e.preventDefault();showSplash()}},true);
+  window.addEventListener('keydown',e=>{if(e.key==='Escape'&&examOn)e.preventDefault()});
+})();
+
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+<style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body>
+</html>

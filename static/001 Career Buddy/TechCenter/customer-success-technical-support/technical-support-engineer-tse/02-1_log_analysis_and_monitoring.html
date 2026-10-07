@@ -1,0 +1,2096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log Analysis & Monitoring — Technical Support Engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============= Notion-inspired theme ============= */
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#3a86ff 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans';font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'JetBrains Mono',monospace;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans';font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'JetBrains Mono',monospace;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'JetBrains Mono',monospace;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'JetBrains Mono',monospace;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'JetBrains Mono',monospace;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'JetBrains Mono',monospace;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+</style>
+<!-- ── Global theme overlay (DESIGN-CBuddy.md) ── -->
+<link rel="stylesheet" href="/theme-cbuddy.css">
+<style>
+/* CareerBuddy: sticky sidebar visible scrollbar */
+.toc,.sidebar,.sidenav{scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc::-webkit-scrollbar,.sidebar::-webkit-scrollbar,.sidenav::-webkit-scrollbar{width:9px;height:9px}
+.toc::-webkit-scrollbar-thumb,.sidebar::-webkit-scrollbar-thumb,.sidenav::-webkit-scrollbar-thumb{background:#cbd2e0;border-radius:8px}
+.toc::-webkit-scrollbar-thumb:hover,.sidebar::-webkit-scrollbar-thumb:hover,.sidenav::-webkit-scrollbar-thumb:hover{background:#9aa4b8}
+.toc::-webkit-scrollbar-track,.sidebar::-webkit-scrollbar-track,.sidenav::-webkit-scrollbar-track{background:transparent}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@100..900&display=swap">
+<style>
+/* -- Unify typography: Noto Sans everywhere (CareerBuddy) -- */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,dl,dt,dd,td,th,div,section,article,header,footer,nav,aside,main,label,button,input,select,textarea,blockquote,figcaption,small,strong,b,em,i{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif !important}
+.material-symbols-outlined,.material-icons{font-family:'Material Symbols Outlined','Material Icons' !important}
+code,pre,kbd,samp,tt,.mono,[class*="mono"],[class*="Mono"],[class*="code"],[class*="Code"],[class*="tok"],[class*="hljs"]{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+
+<style>
+/* Practice + quick-check additions (same visual language as the reference) */
+.practice-label{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:#0a5f0a;background:var(--green-soft);padding:3px 9px;border-radius:5px;margin-bottom:6px}
+.saq-scenario{font-size:14px;color:var(--ink-soft);margin:0 0 10px;line-height:1.55}
+.mcq-reset{margin-top:6px}
+.steps{counter-reset:st;list-style:none;padding-left:0 !important}
+.steps>li{counter-increment:st;position:relative;padding-left:40px;margin:12px 0 !important}
+.steps>li::before{content:counter(st);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;
+  background:#14213D;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}
+.script{background:var(--bg-soft);border-left:3px solid #14213D;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:14.5px}
+.script.bad{border-left-color:var(--red)}
+.script.good{border-left-color:var(--green)}
+.script b{display:block;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:2px}
+</style>
+
+<style>
+/* Visible, thin navbar scrollbar */
+.tabbar{overflow-x:auto !important;scrollbar-width:thin !important;scrollbar-color:#000000 #e2e8f0 !important;padding-bottom:4px}
+.tabbar::-webkit-scrollbar{display:block !important;height:8px}
+.tabbar::-webkit-scrollbar-track{background:#e2e8f0;border-radius:8px}
+.tabbar::-webkit-scrollbar-thumb{background:#000000;border-radius:8px}
+.tabbar::-webkit-scrollbar-thumb:hover{background:#333333}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<!-- ============= STICKY HEADER ============= -->
+<header class="header">
+  <div class="header-top">
+    <div class="brand">
+      <div class="brand-mark">LOG</div>
+      <span>Log Analysis &amp; Monitoring<span class="brand-sub"> · Technical Support Engineer</span></span>
+    </div>
+    <div class="header-actions">
+      <span class="progress-pill" id="progressPill">
+        <span class="progress-dot"></span>
+        <span id="progressText">Tab 1 of 10</span>
+      </span>
+      <button class="btn" onclick="resetProgress()" title="Reset to first tab">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9"/><path d="M2 4v3.5h3.5"/></svg>
+        Reset
+      </button>
+    </div>
+  </div>
+  <nav class="tabbar" role="tablist" id="tabbar">
+        <button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Logging Fundamentals</button>
+    <button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> Reading & Interpreting</button>
+    <button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> Search Techniques</button>
+    <button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> Datadog</button>
+    <button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> Splunk</button>
+    <button class="tab" data-tab="t6" role="tab"><span class="tab-num">06</span> Sumo Logic & CloudWatch</button>
+    <button class="tab" data-tab="t7" role="tab"><span class="tab-num">07</span> Monitoring & Alerts</button>
+    <button class="tab" data-tab="t8" role="tab"><span class="tab-num">08</span> Real-World Investigations</button>
+    <button class="tab" data-tab="t9" role="tab"><span class="tab-num">09</span> Interview Prep</button>
+    <button class="tab" data-tab="t10" role="tab"><span class="tab-num">10</span> Assessment</button>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="toc">
+    <div class="toc-title">On this page</div>
+    <ul class="toc-list" id="toc"></ul>
+  </aside>
+  <main class="main">
+
+    <section class="panel active" id="t1" data-toc='[["s1-1", "What Is a Log?"], ["s1-2", "Log Levels"], ["s1-3", "Structured vs Unstructured Logs"], ["s1-4", "Centralised Logging"], ["s1-5", "Logs, Metrics & Traces"], ["s1-6", "Common Mistakes"], ["s1-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Fresher</span></div>
+        <div class="panel-eyebrow">Module 01 · Foundations</div>
+        <h1 class="panel-title">What Logs Are and Why TSEs Depend on Them</h1>
+        <p class="panel-subtitle">Logs are the evidence trail of everything a system does. Learn what logs contain, log levels, structured vs unstructured logs, centralised logging, and where logs fit in observability.</p>
+      </div>
+<div class="section" id="s1-1">
+<h2><span class="sec-emoji">📜</span> What Is a Log?</h2>
+<p>A <strong>log</strong> is a timestamped record of an event that happened in a system: a request received, a payment processed, a job failed. Applications write logs continuously, producing millions of lines per day.</p><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d6bbf">🕓</div><div class="card-title">When</div><div class="card-desc">Timestamp of the event (ideally in UTC with milliseconds).</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🏷️</div><div class="card-title">Where</div><div class="card-desc">Service, host, environment (prod/staging), region.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#73508c">👤</div><div class="card-title">Who</div><div class="card-desc">Account ID, user ID, request ID.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">❗</div><div class="card-title">What</div><div class="card-desc">Event name, level, message, error details, status code.</div></div></div>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">For a Technical Support Engineer, logs answer the key question: <strong>"What actually happened?"</strong> They turn a customer's "it didn't work" into evidence.</div></div>
+
+</div>
+<div class="section" id="s1-2">
+<h2><span class="sec-emoji">🎚️</span> Log Levels</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Level</th><th>Meaning</th><th>Example</th><th>TSE focus</th></tr></thead><tbody><tr><td>TRACE / DEBUG</td><td>Very detailed developer info</td><td>"Parsed 12 fields from payload"</td><td>Rarely enabled in production</td></tr><tr><td>INFO</td><td>Normal operations</td><td>"Order 42 created"</td><td>Confirms something happened</td></tr><tr><td>WARN</td><td>Unexpected but handled</td><td>"Retrying webhook (attempt 2)"</td><td>Early signs of trouble</td></tr><tr><td>ERROR</td><td>An operation failed</td><td>"Webhook delivery failed: timeout"</td><td>Start here when investigating</td></tr><tr><td>FATAL / CRITICAL</td><td>Service can't continue</td><td>"DB connection pool exhausted"</td><td>Usually an incident</td></tr></tbody></table></div>
+<div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Start investigations by filtering <strong>ERROR and WARN</strong>, then widen to INFO around the same time to see what led up to the failure.</div></div>
+
+</div>
+<div class="section" id="s1-3">
+<h2><span class="sec-emoji">🧾</span> Structured vs Unstructured Logs</h2>
+<div class="compare"><div class="compare-col"><h4>📝 Unstructured (plain text)</h4><pre><span class="pre-lang">log</span><code>2026-10-05 09:41:17 ERROR webhooks Delivery to
+https://hooks.acme.com failed after 30001ms (attempt 3)</code></pre>
+<p style="font-size:13.5px;margin:0">Easy for humans; harder to filter. Needs parsing (regex) to extract fields.</p></div><div class="compare-col"><h4>🧩 Structured (JSON)</h4><pre><span class="pre-lang">json</span><code>{&quot;ts&quot;:&quot;2026-10-05T09:41:17Z&quot;,&quot;level&quot;:&quot;ERROR&quot;,
+ &quot;service&quot;:&quot;webhooks&quot;,&quot;account_id&quot;:&quot;acct_acme&quot;,
+ &quot;status_code&quot;:504,&quot;duration_ms&quot;:30001,&quot;attempt&quot;:3}</code></pre>
+<p style="font-size:13.5px;margin:0">Each value is a named field, so you can filter <code>status_code:504</code> or group by <code>account_id</code> instantly.</p></div></div>
+<div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Most modern platforms automatically parse JSON logs into fields (called <strong>attributes</strong> or <strong>facets</strong> in Datadog, <strong>fields</strong> in Splunk/Sumo/CloudWatch).</div></div>
+
+</div>
+<div class="section" id="s1-4">
+<h2><span class="sec-emoji">🏢</span> Centralised Logging</h2>
+<div class="diagram"><svg viewBox="0 0 720 210" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="la" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs>
+<g font-family="Noto Sans" font-size="11" text-anchor="middle">
+<rect x="10" y="20" width="120" height="34" rx="8" fill="#f1f1ef" stroke="#d3d3d0"/><text x="70" y="42" fill="#37352f">Web servers</text>
+<rect x="10" y="64" width="120" height="34" rx="8" fill="#f1f1ef" stroke="#d3d3d0"/><text x="70" y="86" fill="#37352f">API services</text>
+<rect x="10" y="108" width="120" height="34" rx="8" fill="#f1f1ef" stroke="#d3d3d0"/><text x="70" y="130" fill="#37352f">Databases</text>
+<rect x="10" y="152" width="120" height="34" rx="8" fill="#f1f1ef" stroke="#d3d3d0"/><text x="70" y="174" fill="#37352f">Background jobs</text>
+<line x1="132" y1="37" x2="200" y2="95" stroke="#37352f" marker-end="url(#la)"/><line x1="132" y1="81" x2="200" y2="100" stroke="#37352f" marker-end="url(#la)"/>
+<line x1="132" y1="125" x2="200" y2="108" stroke="#37352f" marker-end="url(#la)"/><line x1="132" y1="169" x2="200" y2="113" stroke="#37352f" marker-end="url(#la)"/>
+<rect x="205" y="70" width="130" height="70" rx="12" fill="#22345f"/><text x="270" y="98" fill="#fff" font-weight="700" font-size="12">Agents / shippers</text><text x="270" y="116" fill="#cdd5e5">collect &amp; forward</text>
+<line x1="337" y1="105" x2="373" y2="105" stroke="#37352f" stroke-width="2" marker-end="url(#la)"/>
+<rect x="375" y="60" width="160" height="90" rx="12" fill="#14213D"/><text x="455" y="88" fill="#fff" font-weight="700" font-size="12">Log platform</text><text x="455" y="106" fill="#cdd5e5">index · parse · store</text><text x="455" y="124" fill="#FCA311">Datadog · Splunk · Sumo · CloudWatch</text>
+<line x1="537" y1="105" x2="573" y2="105" stroke="#37352f" stroke-width="2" marker-end="url(#la)"/>
+<rect x="575" y="40" width="135" height="40" rx="10" fill="#ddedea" stroke="#bdd9d2"/><text x="642" y="65" fill="#0a5f0a" font-weight="700">🔎 Search (you)</text>
+<rect x="575" y="88" width="135" height="40" rx="10" fill="#eef1f7" stroke="#bcdcf5"/><text x="642" y="113" fill="#14213D" font-weight="700">📊 Dashboards</text>
+<rect x="575" y="136" width="135" height="40" rx="10" fill="#fadec9" stroke="#f5cc9c"/><text x="642" y="161" fill="#a85a08" font-weight="700">🔔 Alerts</text>
+<text x="360" y="204" fill="#787774" font-style="italic">Logs from many machines are centralised so one search covers the whole system.</text>
+</g></svg><div class="diagram-caption">Figure 1.1 · How logs reach a central platform</div></div>
+<ul><li>Applications run on many servers or containers; logging into each machine is impossible at scale.</li><li><strong>Agents/shippers</strong> (Datadog Agent, Splunk Universal Forwarder, Fluent Bit, CloudWatch agent) collect logs and send them to a central platform.</li><li>The platform <strong>indexes</strong> logs so you can search across everything in seconds.</li><li><strong>Retention</strong> is limited (e.g., 15–30 days hot, longer in archives), so old logs may not be searchable.</li></ul>
+<div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">If a customer reports something from 3 months ago, logs may be gone. Ask for recent examples, or check if archives can be rehydrated.</div></div>
+
+</div>
+<div class="section" id="s1-5">
+<h2><span class="sec-emoji">🔭</span> Logs, Metrics & Traces</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Signal</th><th>What it is</th><th>Answers</th><th>Example</th></tr></thead><tbody><tr><td><strong>Logs</strong></td><td>Individual event records</td><td>"What exactly happened in this request?"</td><td>ERROR line with stack trace</td></tr><tr><td><strong>Metrics</strong></td><td>Numbers over time</td><td>"Is the error rate rising?"</td><td>5xx errors per minute; p95 latency</td></tr><tr><td><strong>Traces</strong></td><td>One request's path across services</td><td>"Which service made it slow?"</td><td>API → auth → DB, 2.3 s in DB</td></tr></tbody></table></div>
+<div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Together these three are called <strong>observability</strong>. TSEs use metrics to spot a problem, logs to understand it, and traces to locate it.</div></div>
+
+</div>
+<div class="section" id="s1-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Searching only the word "error"</td><td>Misses failures logged as WARN or with status codes</td><td>Filter by level and status code fields</td></tr><tr><td>Ignoring timezones</td><td>Searching the wrong time window</td><td>Convert customer time to UTC first</td></tr><tr><td>Reading one line in isolation</td><td>The cause is often a few lines earlier</td><td>Read the lines before and after</td></tr><tr><td>Assuming no log = no event</td><td>Logs may be sampled, filtered or past retention</td><td>Check retention and logging coverage</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s1-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Identify the useful fields in this log line and explain what happened.</span></div><p class="saq-scenario"><code>{"ts":"2026-10-05T04:12:09Z","level":"WARN","service":"auth","user":"ravi@zen.io","event":"login_failed","reason":"sso_assertion_expired","skew_sec":420}</code></p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Time 04:12 UTC (09:42 IST); auth service; user ravi@zen.io; login failed because the SSO assertion was treated as expired; clock skew 420 s (7 min). The identity provider's server clock is likely out of sync, so the customer's IT team should sync it via NTP.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>A customer says something failed "3 months ago". Your platform keeps 30 days of searchable logs. What do you do?</span></div><p class="saq-scenario">Scenario: Billing dispute investigation.</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Explain that detailed logs may no longer be searchable; check if archived logs can be rehydrated (if your company supports it); look at other records (database, billing system, audit logs); ask for any recent occurrence to investigate with live logs.</div></div>
+<div class="mcq" data-answer="2"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Which log level indicates an operation failed?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> INFO</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> DEBUG</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> ERROR</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> TRACE</li></ul><div class="mcq-feedback" data-expl="ERROR marks failures."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>Structured logs are easier to search because…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> They are shorter</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Values are stored as named fields</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> They have no timestamps</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> They are encrypted</li></ul><div class="mcq-feedback" data-expl="Fields can be filtered and grouped."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>Logs, metrics and traces together are called…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Ticketing</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Observability</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Provisioning</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Monitoring only</li></ul><div class="mcq-feedback" data-expl="The three pillars of observability."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t2" data-toc='[["s2-1", "Anatomy of a Log Line"], ["s2-2", "Timestamps & Timezones"], ["s2-3", "Request IDs & Correlation"], ["s2-4", "Reading Stack Traces"], ["s2-5", "From Evidence to Conclusion"], ["s2-6", "Common Mistakes"], ["s2-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 02 · Interpretation</div>
+        <h1 class="panel-title">Reading and Interpreting Logs</h1>
+        <p class="panel-subtitle">How to read a log line, convert timezones, follow a request ID across services, read stack traces, and turn log evidence into a conclusion.</p>
+      </div>
+<div class="section" id="s2-1">
+<h2><span class="sec-emoji">🔍</span> Anatomy of a Log Line</h2>
+<pre><span class="pre-lang">log</span><code>2026-10-05T09:41:17.342Z ERROR [webhooks] req=req_7f2c91 acct=acct_acme
+  POST https://hooks.acme.com/orders -&gt; 504 in 30001ms (attempt 3/5)</code></pre>
+<div style="overflow-x:auto"><table><thead><tr><th>Part</th><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td>Timestamp</td><td>2026-10-05T09:41:17.342Z</td><td>09:41 UTC ("Z" = UTC) → 15:11 IST</td></tr><tr><td>Level</td><td>ERROR</td><td>The operation failed</td></tr><tr><td>Service</td><td>webhooks</td><td>Which component logged it</td></tr><tr><td>Request ID</td><td>req_7f2c91</td><td>Use to find every line for this request</td></tr><tr><td>Account</td><td>acct_acme</td><td>Which customer</td></tr><tr><td>Detail</td><td>504 in 30001ms, attempt 3/5</td><td>The customer's endpoint timed out after 30 s; we're retrying</td></tr></tbody></table></div>
+<div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Conclusion from one line: our system worked; the customer's endpoint is too slow. Advice: return 200 quickly and process asynchronously.</div></div>
+
+</div>
+<div class="section" id="s2-2">
+<h2><span class="sec-emoji">🌍</span> Timestamps & Timezones</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Format</th><th>Example</th><th>Notes</th></tr></thead><tbody><tr><td>ISO 8601 UTC</td><td>2026-10-05T09:41:17Z</td><td>"Z" means UTC</td></tr><tr><td>With offset</td><td>2026-10-05T15:11:17+05:30</td><td>Same moment, in IST</td></tr><tr><td>Epoch seconds</td><td>1791193277</td><td>Seconds since 1 Jan 1970 UTC; convert with a tool</td></tr><tr><td>Epoch milliseconds</td><td>1791193277342</td><td>13 digits = milliseconds</td></tr></tbody></table></div>
+<pre><span class="pre-lang">timezone conversion</span><code>Customer (IST, UTC+5:30): &quot;failed around 3:10 pm&quot;
+15:10 IST − 5:30 = 09:40 UTC
+Search window: 09:25–09:55 UTC  (±15 minutes)</code></pre>
+<div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Customers in the US, UK or Europe may be on <strong>daylight saving time</strong>, which shifts offsets by an hour part of the year. Confirm their timezone.</div></div>
+
+</div>
+<div class="section" id="s2-3">
+<h2><span class="sec-emoji">🔗</span> Request IDs & Correlation</h2>
+<p>In modern systems one customer action touches several services. A <strong>request ID</strong> (also called correlation ID or trace ID) is attached to every log line for that request, so you can follow its whole journey.</p><pre><span class="pre-lang">logs for req_7f2c91 (sorted by time)</span><code>09:41:16.901Z INFO  [api]      req=req_7f2c91 POST /v1/orders acct=acct_acme
+09:41:16.950Z INFO  [orders]   req=req_7f2c91 order=ord_5512 created
+09:41:16.988Z INFO  [webhooks] req=req_7f2c91 queued delivery to hooks.acme.com
+09:41:47.342Z ERROR [webhooks] req=req_7f2c91 -&gt; 504 in 30001ms (attempt 3/5)</code></pre>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Ask customers for the request ID from API response headers (e.g., <code>X-Request-Id</code>) or error pages. It's the fastest way into the logs.</div></div>
+
+</div>
+<div class="section" id="s2-4">
+<h2><span class="sec-emoji">🧵</span> Reading Stack Traces</h2>
+<p>A <strong>stack trace</strong> shows the chain of function calls when an error occurred. In Python, read from the <strong>bottom up</strong>: the last line is the error, the lines above show where it happened.</p><pre><span class="pre-lang">python traceback</span><code>Traceback (most recent call last):
+  File &quot;/app/api/orders.py&quot;, line 88, in create_order
+    total = calculate_total(items)
+  File &quot;/app/billing/totals.py&quot;, line 21, in calculate_total
+    return sum(i[&quot;price&quot;] * i[&quot;qty&quot;] for i in items)
+KeyError: &#x27;price&#x27;</code></pre>
+<div style="overflow-x:auto"><table><thead><tr><th>Read</th><th>What it tells you</th></tr></thead><tbody><tr><td>Last line</td><td><code>KeyError: 'price'</code>: an item had no price field</td></tr><tr><td>Frame just above</td><td>billing/totals.py line 21, inside calculate_total</td></tr><tr><td>Top frames</td><td>Called from the create_order API endpoint</td></tr></tbody></table></div>
+<div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">In Java the error is at the <strong>top</strong> ("Exception in thread…"), followed by "at …" lines and "Caused by:" sections; the deepest "Caused by" is often the root cause.</div></div>
+
+</div>
+<div class="section" id="s2-5">
+<h2><span class="sec-emoji">🧠</span> From Evidence to Conclusion</h2>
+<ol class="steps"><li>State what the logs <strong>prove</strong> (facts), separately from what they <strong>suggest</strong>.</li><li>Check scope: one request, one account, or many accounts?</li><li>Check timing: did it start with a release, config change or customer change?</li><li>Decide ownership: customer side, our side, or third party.</li><li>Document evidence in the ticket: time range, query, example log lines, request IDs.</li></ol>
+<div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">A good internal note reads like: "Between 09:30–10:10 UTC, 214 POSTs from acct_acme returned 401 (example req_8f3a). Started 2 min after the customer rotated API keys at 09:28. No other accounts affected."</div></div>
+
+</div>
+<div class="section" id="s2-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Reading top-down in a Python traceback</td><td>You focus on the wrong frame</td><td>Start from the last line</td></tr><tr><td>Using IST time to search UTC logs</td><td>Misses the event by 5.5 hours</td><td>Convert to UTC</td></tr><tr><td>Concluding from one line</td><td>Ignores scope and cause</td><td>Check before/after and how widespread</td></tr><tr><td>Sharing raw logs with customers</td><td>May expose internal or other data</td><td>Summarise in plain language</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s2-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Read this traceback and explain the error and where it happened.</span></div><p class="saq-scenario"><code>File "/app/reports/export.py", line 54, in to_csv → rows = data["rows"] → TypeError: 'NoneType' object is not subscriptable</code></p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">The code tried to read <code>data["rows"]</code> but <code>data</code> was <code>None</code>, i.e., no data came back (probably an empty or failed query). It happened in reports/export.py line 54, function to_csv. Worth checking why the data fetch returned nothing, e.g., the date range had no data or an upstream call failed.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>A US customer (UTC−4 in summer) says the error happened at 9:15 am their time. What UTC window do you search?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">09:15 + 4:00 = 13:15 UTC → search roughly 13:00–13:30 UTC.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>"2026-10-05T09:41:17Z": the Z means…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Zero errors</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> UTC</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Zone IST</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Zipped</li></ul><div class="mcq-feedback" data-expl="Z = Zulu/UTC."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>In a Python traceback, the actual error is on…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> The first line</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> The last line</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> The middle</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Not shown</li></ul><div class="mcq-feedback" data-expl="Read bottom-up."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>A request/correlation ID helps you…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Encrypt logs</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Follow one request across services</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Delete logs</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Change log level</li></ul><div class="mcq-feedback" data-expl="It links related lines."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t3" data-toc='[["s3-1", "The Search Funnel"], ["s3-2", "Filters, Booleans & Wildcards"], ["s3-3", "Grouping & Counting"], ["s3-4", "Parsing Text with Regex"], ["s3-5", "Same Query in Four Tools"], ["s3-6", "Common Mistakes"], ["s3-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 03 · Querying</div>
+        <h1 class="panel-title">Searching Logs Effectively</h1>
+        <p class="panel-subtitle">The universal search method that works in every tool: narrow the time, filter by identifiers and fields, use boolean logic and wildcards, then group and count to see the pattern.</p>
+      </div>
+<div class="section" id="s3-1">
+<h2><span class="sec-emoji">🔻</span> The Search Funnel</h2>
+<ol class="steps"><li><strong>Time range</strong>: the customer's time in UTC, ±15 minutes.</li><li><strong>Environment / service</strong>: production, the relevant service.</li><li><strong>Identifier</strong>: request ID, account ID, user email, order ID.</li><li><strong>Level / status</strong>: ERROR/WARN, status code 5xx/4xx.</li><li><strong>Group & count</strong>: how many, by what (status, account, host).</li><li><strong>Drill into examples</strong>: open a few matching lines and read context.</li></ol>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Narrowing the time window first is the single biggest speed-up: it shrinks millions of lines to thousands.</div></div>
+
+</div>
+<div class="section" id="s3-2">
+<h2><span class="sec-emoji">🧮</span> Filters, Booleans & Wildcards</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Technique</th><th>Concept</th><th>Typical syntax</th></tr></thead><tbody><tr><td>Field filter</td><td>Only lines where a field has a value</td><td><code>status:error</code>, <code>status_code=500</code></td></tr><tr><td>AND</td><td>Both conditions</td><td><code>service:api AND status:error</code> (often implied by a space)</td></tr><tr><td>OR</td><td>Either condition</td><td><code>status_code:500 OR status_code:503</code></td></tr><tr><td>NOT / exclusion</td><td>Remove noise</td><td><code>-status:info</code>, <code>NOT level=DEBUG</code></td></tr><tr><td>Wildcard</td><td>Partial match</td><td><code>host:web-*</code>, <code>*timeout*</code></td></tr><tr><td>Range</td><td>Numeric comparisons</td><td><code>@duration_ms:&gt;5000</code>, <code>status&gt;=500</code></td></tr><tr><td>Exact phrase</td><td>Words in order</td><td><code>"connection refused"</code></td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s3-3">
+<h2><span class="sec-emoji">📊</span> Grouping & Counting</h2>
+<p>Grouping answers <strong>"how widespread is it?"</strong>, the most important question in triage.</p><div style="overflow-x:auto"><table><thead><tr><th>Question</th><th>Group by</th></tr></thead><tbody><tr><td>Is it one customer or everyone?</td><td>account_id</td></tr><tr><td>Which error dominates?</td><td>status_code / error type</td></tr><tr><td>Is one server bad?</td><td>host</td></tr><tr><td>When did it start?</td><td>time buckets (e.g., per 5 minutes)</td></tr><tr><td>Which endpoint fails?</td><td>http.path / route</td></tr></tbody></table></div>
+<pre><span class="pre-lang">example result: errors by account (last 1 h)</span><code>account_id      count
+acct_acme       1,912
+acct_zenflow        4
+acct_kiranco        2
+→ Almost all errors are from one account → account-specific, not an outage</code></pre>
+
+</div>
+<div class="section" id="s3-4">
+<h2><span class="sec-emoji">🧩</span> Parsing Text with Regex</h2>
+<p>When logs are plain text, <strong>regular expressions</strong> extract values into fields.</p><div style="overflow-x:auto"><table><thead><tr><th>Pattern</th><th>Matches</th></tr></thead><tbody><tr><td><code>\d+</code></td><td>One or more digits</td></tr><tr><td><code>\w+</code></td><td>Word characters</td></tr><tr><td><code>.*</code></td><td>Anything</td></tr><tr><td><code>user=(?&lt;user&gt;\S+)</code></td><td>Captures the value after user= into a field named user</td></tr></tbody></table></div>
+<pre><span class="pre-lang">splunk example</span><code>index=prod &quot;payment failed&quot;
+| rex &quot;user=(?&lt;user&gt;\S+) amount=(?&lt;amount&gt;\d+)&quot;
+| stats count, sum(amount) by user</code></pre>
+<div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">You don't need to master regex. Learn digits, words, "anything" and named captures, and use an online regex tester to check patterns.</div></div>
+
+</div>
+<div class="section" id="s3-5">
+<h2><span class="sec-emoji">🔁</span> Same Query in Four Tools</h2>
+<p>Question: <em>"How many 5xx errors did account acct_acme get per status code in the last hour?"</em></p><pre><span class="pre-lang">Datadog (Log Explorer)</span><code>service:api @account_id:acct_acme @http.status_code:&gt;=500
+→ then &quot;Group into fields&quot; / Visualize as: count by @http.status_code</code></pre>
+<pre><span class="pre-lang">Splunk (SPL)</span><code>index=prod service=api account_id=acct_acme status&gt;=500 earliest=-1h
+| stats count by status</code></pre>
+<pre><span class="pre-lang">Sumo Logic</span><code>_sourceCategory=prod/api account_id=acct_acme
+| where status &gt;= 500
+| count by status</code></pre>
+<pre><span class="pre-lang">CloudWatch Logs Insights</span><code>fields @timestamp, status
+| filter account_id = &quot;acct_acme&quot; and status &gt;= 500
+| stats count(*) by status</code></pre>
+
+</div>
+<div class="section" id="s3-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Searching "all time"</td><td>Slow, noisy, may time out</td><td>Set a tight time range first</td></tr><tr><td>Free-text search only</td><td>Misses structured matches</td><td>Use field filters</td></tr><tr><td>Not grouping</td><td>Can't tell scope</td><td>Count by account/status/host</td></tr><tr><td>Forgetting exclusions</td><td>Health checks and bots flood results</td><td>Exclude noise (e.g., -path:/health)</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s3-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Write a tool-agnostic search plan for: "Customer acct_zen says exports failed this morning between 10 and 11 IST."</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Time: 04:30–05:30 UTC. Filters: env=prod, service=exports (or reports), account_id=acct_zen, level=ERROR or status&gt;=500. Group by error type/status and by time bucket. Then open example lines, follow request IDs, and compare with other accounts to check scope.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Results show 2,000 errors in the last hour: 1,950 from one account, 50 spread across 30 others. What does this suggest?</span></div><p class="saq-scenario">Scenario: Triage during a busy shift.</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">The problem is mainly account-specific (configuration, data, or their integration), while the 50 others may be normal background errors. Investigate the main account first; still check the 50 for a common pattern before ruling out a broader issue.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Which step usually speeds up a log search the most?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Adding more keywords</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Narrowing the time range</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Searching all time</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Exporting to Excel</li></ul><div class="mcq-feedback" data-expl="Time filtering shrinks data dramatically."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>Grouping errors by account_id answers…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Which server is down</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Whether it's one customer or many</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> What the log level is</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> The timezone</li></ul><div class="mcq-feedback" data-expl="Scope."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>Which is an exclusion filter example?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> status:error</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> -path:/health</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> host:web-*</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> "timeout"</li></ul><div class="mcq-feedback" data-expl="Minus excludes."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t4" data-toc='[["s4-1", "Datadog at a Glance"], ["s4-2", "Log Explorer & Query Syntax"], ["s4-3", "Facets, Attributes & Patterns"], ["s4-4", "Visualising & Saving Views"], ["s4-5", "Monitors & APM Links"], ["s4-6", "Common Mistakes"], ["s4-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 04 · Tool 1</div>
+        <h1 class="panel-title">Datadog Log Management</h1>
+        <p class="panel-subtitle">Datadog is a popular SaaS observability platform. Learn Log Explorer, its query syntax, facets, patterns, saved views, and how logs connect to metrics, APM traces and monitors.</p>
+      </div>
+<div class="section" id="s4-1">
+<h2><span class="sec-emoji">🐶</span> Datadog at a Glance</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Product area</th><th>Used for</th></tr></thead><tbody><tr><td>Log Management (Log Explorer)</td><td>Search, filter and analyse logs</td></tr><tr><td>Infrastructure</td><td>Host/container metrics (CPU, memory)</td></tr><tr><td>APM</td><td>Traces: request journeys across services</td></tr><tr><td>Dashboards</td><td>Charts of metrics and log counts</td></tr><tr><td>Monitors</td><td>Alerts when metrics/logs cross thresholds</td></tr><tr><td>RUM</td><td>Real User Monitoring: what users experience in the browser/app</td></tr></tbody></table></div>
+<div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Datadog uses <strong>unified tagging</strong>: <code>env</code>, <code>service</code> and <code>version</code> tags link logs, metrics and traces for the same service.</div></div>
+
+</div>
+<div class="section" id="s4-2">
+<h2><span class="sec-emoji">🔎</span> Log Explorer & Query Syntax</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Syntax</th><th>Meaning</th></tr></thead><tbody><tr><td><code>service:checkout</code></td><td>Reserved attribute / tag filter</td></tr><tr><td><code>status:error</code></td><td>Log status (error, warn, info…)</td></tr><tr><td><code>@http.status_code:500</code></td><td>Custom attribute (note the @)</td></tr><tr><td><code>@duration:&gt;2000000000</code></td><td>Numeric range (duration in nanoseconds)</td></tr><tr><td><code>-status:info</code></td><td>Exclude</td></tr><tr><td><code>host:web-*</code></td><td>Wildcard</td></tr><tr><td><code>"payment declined"</code></td><td>Exact phrase in the message</td></tr><tr><td><code>(@http.status_code:500 OR @http.status_code:503)</code></td><td>Boolean grouping</td></tr></tbody></table></div>
+<pre><span class="pre-lang">example query</span><code>env:prod service:webhooks status:error @account_id:acct_acme -@http.url:*health*</code></pre>
+
+</div>
+<div class="section" id="s4-3">
+<h2><span class="sec-emoji">🏷️</span> Facets, Attributes & Patterns</h2>
+<ul><li><strong>Attributes</strong> are fields parsed from logs (JSON keys or pipeline-extracted values).</li><li><strong>Facets</strong> are attributes made searchable in the left panel, showing top values and counts at a glance.</li><li><strong>Pipelines</strong> (set up by admins) parse plain-text logs into attributes with Grok parsers.</li><li><strong>Patterns</strong> view groups similar log lines together, revealing the most common messages fast.</li></ul>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Click a facet value (e.g., an account ID) to add it as a filter instantly; it's faster and avoids typos.</div></div>
+
+</div>
+<div class="section" id="s4-4">
+<h2><span class="sec-emoji">📈</span> Visualising & Saving Views</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Visualisation</th><th>Use</th></tr></thead><tbody><tr><td>List</td><td>Read individual log lines</td></tr><tr><td>Timeseries</td><td>Spot when errors started</td></tr><tr><td>Top list</td><td>Top accounts/endpoints by error count</td></tr><tr><td>Table</td><td>Grouped counts by several fields</td></tr></tbody></table></div>
+<ul><li><strong>Saved views</strong> store a query, columns and time range, e.g., "Webhook errors by account".</li><li><strong>Share links</strong> to an exact search when escalating, so engineers see the same results.</li><li><strong>Live Tail</strong> streams logs in real time while a customer reproduces the issue.</li></ul>
+
+</div>
+<div class="section" id="s4-5">
+<h2><span class="sec-emoji">🔔</span> Monitors & APM Links</h2>
+<pre><span class="pre-lang">example log monitor</span><code>Query:  env:prod service:webhooks status:error
+Alert:  count &gt; 500 in last 5 minutes
+Notify: @slack-support-alerts @oncall-integrations
+Message: Webhook errors spiking. Check top accounts and status codes.</code></pre>
+<div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">From a log line you can often jump to the related <strong>trace</strong> (if APM is enabled) to see which service or database call was slow.</div></div>
+
+</div>
+<div class="section" id="s4-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Forgetting @ for custom attributes</td><td>Filter matches nothing</td><td><code>@account_id:x</code></td></tr><tr><td>Searching the wrong env</td><td>Staging vs production confusion</td><td>Add <code>env:prod</code></td></tr><tr><td>Copying screenshots instead of links</td><td>Engineers can't explore</td><td>Share the Log Explorer link</td></tr><tr><td>Huge time ranges</td><td>Slow queries, noisy results</td><td>Narrow the window</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s4-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Write a Datadog query for production errors from the payments service for account acct_kiran with HTTP status 402 or 422, excluding health checks.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><code>env:prod service:payments status:error @account_id:acct_kiran (@http.status_code:402 OR @http.status_code:422) -@http.url:*health*</code></div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>How would you use Datadog to tell an engineer exactly when an error spike started and which accounts were affected?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Run the error query, switch to Timeseries to show the start time, then Top list grouped by @account_id; save it as a view or copy the link, and paste the link plus a short summary into the escalation.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>In Datadog, custom attributes are queried with…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> #</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> @</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> $</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> %</li></ul><div class="mcq-feedback" data-expl="@attribute:value."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="0"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>Datadog's feature that groups similar log lines is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Patterns</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Facets</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Monitors</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> RUM</li></ul><div class="mcq-feedback" data-expl="Patterns cluster similar messages."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="0"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>Unified tagging in Datadog uses…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> env, service, version</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> id, name, date</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> host only</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> tags are not used</li></ul><div class="mcq-feedback" data-expl="Links logs, metrics and traces."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t5" data-toc='[["s5-1", "Splunk at a Glance"], ["s5-2", "Basic Searches"], ["s5-3", "The SPL Pipeline"], ["s5-4", "Extracting Fields with rex"], ["s5-5", "Saved Searches, Dashboards & Alerts"], ["s5-6", "Common Mistakes"], ["s5-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 05 · Tool 2</div>
+        <h1 class="panel-title">Splunk & SPL</h1>
+        <p class="panel-subtitle">Splunk is a powerful enterprise log platform with its own Search Processing Language (SPL). Learn indexes, sourcetypes, search pipelines, stats, timecharts, field extraction and alerts.</p>
+      </div>
+<div class="section" id="s5-1">
+<h2><span class="sec-emoji">🟢</span> Splunk at a Glance</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Term</th><th>Meaning</th></tr></thead><tbody><tr><td>Index</td><td>Where data is stored (e.g., <code>index=prod</code>)</td></tr><tr><td>Sourcetype</td><td>Format/type of the data (e.g., <code>sourcetype=nginx:access</code>)</td></tr><tr><td>Source / host</td><td>File/path and machine the data came from</td></tr><tr><td>_raw</td><td>The original log line</td></tr><tr><td>_time</td><td>Event timestamp</td></tr><tr><td>Forwarder</td><td>Agent that sends logs to Splunk</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s5-2">
+<h2><span class="sec-emoji">🔎</span> Basic Searches</h2>
+<pre><span class="pre-lang">spl</span><code>index=prod sourcetype=app:json level=ERROR
+index=prod &quot;payment declined&quot; account_id=acct_acme
+index=prod status&gt;=500 earliest=-1h
+index=prod host=web-* NOT path=&quot;/health&quot;</code></pre>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Always start with <code>index=</code> and a time range (time picker or <code>earliest=-1h</code>). Searches without them are slow.</div></div>
+
+</div>
+<div class="section" id="s5-3">
+<h2><span class="sec-emoji">🔗</span> The SPL Pipeline</h2>
+<p>SPL works like a Bash pipe: each command after <code>|</code> transforms the results of the previous one.</p><div style="overflow-x:auto"><table><thead><tr><th>Command</th><th>Does</th><th>Example</th></tr></thead><tbody><tr><td>stats</td><td>Aggregate</td><td><code>| stats count by status</code></td></tr><tr><td>timechart</td><td>Counts over time</td><td><code>| timechart span=5m count by status</code></td></tr><tr><td>top / rare</td><td>Most / least common values</td><td><code>| top limit=10 account_id</code></td></tr><tr><td>table</td><td>Choose columns</td><td><code>| table _time, account_id, status, message</code></td></tr><tr><td>sort</td><td>Order results</td><td><code>| sort -count</code></td></tr><tr><td>where</td><td>Filter after calculations</td><td><code>| where count &gt; 100</code></td></tr><tr><td>dedup</td><td>Remove duplicates</td><td><code>| dedup request_id</code></td></tr></tbody></table></div>
+<pre><span class="pre-lang">spl</span><code>index=prod service=webhooks level=ERROR earliest=-24h
+| stats count by account_id, status_code
+| sort -count
+| head 10</code></pre>
+
+</div>
+<div class="section" id="s5-4">
+<h2><span class="sec-emoji">🧩</span> Extracting Fields with rex</h2>
+<pre><span class="pre-lang">spl</span><code>index=prod &quot;Delivery failed&quot;
+| rex &quot;to (?&lt;target_url&gt;\S+) after (?&lt;ms&gt;\d+)ms&quot;
+| stats count, avg(ms) as avg_ms by target_url
+| sort -count</code></pre>
+<div class="callout note"><div class="callout-icon">📌</div><div class="callout-body"><code>rex</code> uses regular expressions with named groups <code>(?&lt;name&gt;…)</code> to create fields on the fly.</div></div>
+
+</div>
+<div class="section" id="s5-5">
+<h2><span class="sec-emoji">📊</span> Saved Searches, Dashboards & Alerts</h2>
+<ul><li><strong>Saved search / report</strong>: reuse frequent queries ("Top webhook failures by account").</li><li><strong>Dashboards</strong>: panels built from searches, shared with the team.</li><li><strong>Alerts</strong>: scheduled or real-time searches that notify when a condition is met (e.g., count &gt; 500 in 5 min).</li><li>Share the search URL in escalations so engineers see the same results.</li></ul>
+
+</div>
+<div class="section" id="s5-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>No index or time range</td><td>Very slow, may time out</td><td><code>index=prod earliest=-1h</code></td></tr><tr><td>Using where before stats for simple filters</td><td>Slower</td><td>Filter in the base search when possible</td></tr><tr><td>Case-sensitive field values surprise</td><td>Values may not match</td><td>Check exact values with <code>| top field</code></td></tr><tr><td>Exporting huge raw results</td><td>Heavy and hard to read</td><td>Aggregate with stats first</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s5-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Write SPL that shows the 5 accounts with the most 500 errors in the last 4 hours in index prod.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><code>index=prod status=500 earliest=-4h | stats count by account_id | sort -count | head 5</code></div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Write SPL that charts errors per 10 minutes over the last day, split by service.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><code>index=prod level=ERROR earliest=-24h | timechart span=10m count by service</code></div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>In Splunk, data is stored in…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Buckets called views</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Indexes</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Facets</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Log groups</li></ul><div class="mcq-feedback" data-expl="Indexes."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>Which SPL command aggregates counts by a field?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> table</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> stats</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> rex</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> dedup</li></ul><div class="mcq-feedback" data-expl="stats count by field."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>rex is used to…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Delete events</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Extract fields with regex</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Send alerts</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Change time zones</li></ul><div class="mcq-feedback" data-expl="Regex field extraction."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t6" data-toc='[["s6-1", "Sumo Logic Basics"], ["s6-2", "Sumo Logic Queries"], ["s6-3", "CloudWatch Logs Basics"], ["s6-4", "CloudWatch Logs Insights"], ["s6-5", "Comparing the Four Tools"], ["s6-6", "Common Mistakes"], ["s6-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 06 · Tools 3 & 4</div>
+        <h1 class="panel-title">Sumo Logic & AWS CloudWatch</h1>
+        <p class="panel-subtitle">Two more platforms named in your role card. Learn Sumo Logic's source categories, parse and LogReduce, and CloudWatch log groups, Logs Insights queries, metric filters and alarms.</p>
+      </div>
+<div class="section" id="s6-1">
+<h2><span class="sec-emoji">🟦</span> Sumo Logic Basics</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Term</th><th>Meaning</th></tr></thead><tbody><tr><td>_sourceCategory</td><td>Label describing where logs come from (e.g., prod/api)</td></tr><tr><td>Collector / Source</td><td>Agent and configured input sending logs</td></tr><tr><td>Live Tail</td><td>Real-time log stream</td></tr><tr><td>LogReduce</td><td>Groups similar messages into patterns</td></tr><tr><td>Scheduled search</td><td>Saved search that runs and alerts</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s6-2">
+<h2><span class="sec-emoji">🔎</span> Sumo Logic Queries</h2>
+<pre><span class="pre-lang">sumo</span><code>_sourceCategory=prod/api error
+| parse &quot;account=*,&quot; as account
+| count by account
+| sort by _count desc
+| limit 10
+
+_sourceCategory=prod/webhooks &quot;Delivery failed&quot;
+| timeslice 5m
+| count by _timeslice
+
+_sourceCategory=prod/api
+| logreduce</code></pre>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><code>parse "start*end" as field</code> extracts the text between known anchors. It's simpler than regex for many cases.</div></div>
+
+</div>
+<div class="section" id="s6-3">
+<h2><span class="sec-emoji">☁️</span> CloudWatch Logs Basics</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Term</th><th>Meaning</th></tr></thead><tbody><tr><td>Log group</td><td>Collection of logs for an application/service (e.g., /aws/lambda/orders)</td></tr><tr><td>Log stream</td><td>Sequence of events from one source (instance, container, Lambda run)</td></tr><tr><td>Retention</td><td>Per log group, e.g., 30 days or never expire</td></tr><tr><td>Metric filter</td><td>Turns matching log lines into a CloudWatch metric</td></tr><tr><td>Alarm</td><td>Triggers notifications when a metric crosses a threshold</td></tr></tbody></table></div>
+<div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">AWS services like Lambda, ECS and API Gateway send logs to CloudWatch automatically, so it's common at AWS-based companies.</div></div>
+
+</div>
+<div class="section" id="s6-4">
+<h2><span class="sec-emoji">🔍</span> CloudWatch Logs Insights</h2>
+<pre><span class="pre-lang">logs insights</span><code>fields @timestamp, @message
+| filter @message like /ERROR/
+| sort @timestamp desc
+| limit 50
+
+fields @timestamp, status, account_id
+| filter status &gt;= 500
+| stats count(*) as errors by account_id
+| sort errors desc
+
+filter @message like /Delivery failed/
+| parse @message &quot;after *ms&quot; as ms
+| stats avg(ms), max(ms) by bin(5m)</code></pre>
+<div style="overflow-x:auto"><table><thead><tr><th>Command</th><th>Purpose</th></tr></thead><tbody><tr><td>fields</td><td>Choose columns</td></tr><tr><td>filter</td><td>Keep matching events</td></tr><tr><td>parse</td><td>Extract values from text</td></tr><tr><td>stats … by</td><td>Aggregate (with bin() for time buckets)</td></tr><tr><td>sort / limit</td><td>Order and cap results</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s6-5">
+<h2><span class="sec-emoji">⚖️</span> Comparing the Four Tools</h2>
+<div style="overflow-x:auto"><table><thead><tr><th></th><th>Datadog</th><th>Splunk</th><th>Sumo Logic</th><th>AWS CloudWatch</th></tr></thead><tbody><tr><td>Type</td><td>SaaS observability platform</td><td>Enterprise log analytics (cloud or on-prem)</td><td>Cloud-native log analytics</td><td>AWS built-in logs & metrics</td></tr><tr><td>Query language</td><td>Search syntax + facets</td><td>SPL</td><td>Sumo query language</td><td>Logs Insights query language</td></tr><tr><td>Grouping data</td><td>Log index / facets</td><td>index, sourcetype</td><td>_sourceCategory</td><td>Log groups / streams</td></tr><tr><td>Pattern finding</td><td>Patterns</td><td>cluster / patterns</td><td>LogReduce</td><td>Patterns (Logs Insights)</td></tr><tr><td>Strength</td><td>Logs + metrics + APM in one</td><td>Very powerful searches at scale</td><td>Easy cloud setup</td><td>Native for AWS services</td></tr></tbody></table></div>
+<div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">The concepts are identical: <strong>time range → filters → parse → group/count → drill down</strong>. Learn one deeply and you can switch tools within days.</div></div>
+
+</div>
+<div class="section" id="s6-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Searching the wrong CloudWatch log group</td><td>No results</td><td>Confirm the service's log group</td></tr><tr><td>Forgetting retention limits</td><td>Old data missing</td><td>Check retention settings</td></tr><tr><td>Querying huge time ranges in Logs Insights</td><td>Slow and billed per data scanned</td><td>Narrow time and log groups</td></tr><tr><td>Not using LogReduce/Patterns</td><td>Miss the dominant error</td><td>Cluster messages first</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s6-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Write a CloudWatch Logs Insights query that counts 5xx errors per account in a log group and shows the top 10.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><code>fields account_id, status | filter status &gt;= 500 | stats count(*) as errors by account_id | sort errors desc | limit 10</code></div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Write a Sumo Logic query that extracts the user from "user=ravi," style text in prod/auth logs and counts failures per user.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><code>_sourceCategory=prod/auth "login_failed" | parse "user=*," as user | count by user | sort by _count desc</code></div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>In CloudWatch, logs for a service are organised into…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Indexes</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Log groups and streams</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Facets</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Sourcetypes</li></ul><div class="mcq-feedback" data-expl="Groups contain streams."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="0"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>Sumo Logic's feature to group similar messages is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> LogReduce</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Patterns</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Timechart</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Facets</li></ul><div class="mcq-feedback" data-expl="LogReduce."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>A CloudWatch metric filter…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Deletes logs</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Turns matching log lines into a metric</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Changes retention</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Parses JSON only</li></ul><div class="mcq-feedback" data-expl="Metrics from logs, usable in alarms."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t7" data-toc='[["s7-1", "Monitoring vs Logging"], ["s7-2", "The Four Golden Signals"], ["s7-3", "Percentiles & Baselines"], ["s7-4", "Reading Dashboards"], ["s7-5", "Alert Design & Alert Fatigue"], ["s7-6", "Common Mistakes"], ["s7-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Advanced</span></div>
+        <div class="panel-eyebrow">Module 07 · Monitoring</div>
+        <h1 class="panel-title">Monitoring, Dashboards & Alerts</h1>
+        <p class="panel-subtitle">Monitoring spots problems before customers report them. Learn the golden signals, percentiles, how to read dashboards during an incident, and how good alerts are designed.</p>
+      </div>
+<div class="section" id="s7-1">
+<h2><span class="sec-emoji">📡</span> Monitoring vs Logging</h2>
+<div style="overflow-x:auto"><table><thead><tr><th></th><th>Logging</th><th>Monitoring</th></tr></thead><tbody><tr><td>Data</td><td>Detailed event records</td><td>Numeric metrics over time</td></tr><tr><td>Question</td><td>"What happened in this request?"</td><td>"Is the system healthy right now?"</td></tr><tr><td>Used for</td><td>Investigating specific issues</td><td>Detecting problems, trends, alerting</td></tr><tr><td>Example</td><td>ERROR webhook 504 for acct_acme</td><td>Webhook error rate 8% (normally 0.5%)</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s7-2">
+<h2><span class="sec-emoji">🚦</span> The Four Golden Signals</h2>
+<div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d6bbf">⏱️</div><div class="card-title">Latency</div><div class="card-desc">How long requests take (watch p95/p99).</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">📈</div><div class="card-title">Traffic</div><div class="card-desc">How much demand: requests per second, logins per minute.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#73508c">❌</div><div class="card-title">Errors</div><div class="card-desc">Rate of failed requests (5xx, exceptions).</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🔋</div><div class="card-title">Saturation</div><div class="card-desc">How full resources are: CPU, memory, DB connections, queue length.</div></div></div>
+<div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">The golden signals come from Google's Site Reliability Engineering practices and are a common interview topic.</div></div>
+
+</div>
+<div class="section" id="s7-3">
+<h2><span class="sec-emoji">📐</span> Percentiles & Baselines</h2>
+<pre><span class="pre-lang">latency example</span><code>100 requests sorted by duration:
+p50 (median) = 180 ms   → half are faster
+p95          = 900 ms   → 95% are faster, 5% slower
+p99          = 2.4 s    → the slowest 1% take 2.4 s or more
+average      = 260 ms   → hides the slow tail</code></pre>
+<ul><li>Customers complain about the <strong>slow tail</strong>, so p95/p99 matter more than the average.</li><li>Compare with a <strong>baseline</strong> (same time last week) to judge whether a number is abnormal.</li></ul>
+
+</div>
+<div class="section" id="s7-4">
+<h2><span class="sec-emoji">🖥️</span> Reading Dashboards</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Dashboard pattern</th><th>Likely meaning</th></tr></thead><tbody><tr><td>Errors spike at one moment across all services</td><td>Shared dependency (DB, auth) or deployment</td></tr><tr><td>Latency rises slowly over days</td><td>Growing data / resource saturation</td></tr><tr><td>Traffic drops to zero</td><td>Outage, DNS or load balancer problem</td></tr><tr><td>Errors spike right after a deploy marker</td><td>The release likely caused it</td></tr><tr><td>One host differs from others</td><td>Bad server/instance</td></tr></tbody></table></div>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">When tickets spike, open the service dashboard first. If it shows a clear incident, check the incident channel before investigating tickets one by one.</div></div>
+
+</div>
+<div class="section" id="s7-5">
+<h2><span class="sec-emoji">🔔</span> Alert Design & Alert Fatigue</h2>
+<ul><li>Alert on <strong>symptoms customers feel</strong> (error rate, latency), not every internal blip.</li><li>Use <strong>thresholds and durations</strong> (e.g., error rate &gt; 5% for 5 min) to avoid flapping.</li><li>Every alert should be <strong>actionable</strong> and link to a runbook.</li><li><strong>Alert fatigue</strong>: too many noisy alerts make people ignore real ones.</li></ul>
+
+</div>
+<div class="section" id="s7-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Trusting averages</td><td>Hides slow outliers</td><td>Watch p95/p99</td></tr><tr><td>No baseline comparison</td><td>Can't tell normal from abnormal</td><td>Compare with last week/day</td></tr><tr><td>Ignoring deploy markers</td><td>Miss the obvious cause</td><td>Check releases near the spike</td></tr><tr><td>Alerting on everything</td><td>Alert fatigue</td><td>Actionable, symptom-based alerts</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s7-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>A dashboard shows error rate jumping from 0.5% to 9% at 14:02, two minutes after a deploy marker. What do you do as a TSE?</span></div><p class="saq-scenario">Scenario: Tickets start arriving about failed checkouts.</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Alert the incident/engineering channel with the dashboard link, timing and deploy correlation; link incoming tickets to an incident/problem ticket; give customers a holding message; don't guess causes publicly; follow the incident process (engineering may roll back).</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Average latency is 200 ms but customers complain about slowness. What would you check?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">p95/p99 latency, latency by account or endpoint (large accounts or certain routes may be slow), traces for slow downstream calls, and saturation metrics (DB connections, CPU).</div></div>
+<div class="mcq" data-answer="3"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Which is NOT one of the four golden signals?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Latency</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Traffic</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Errors</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Revenue</li></ul><div class="mcq-feedback" data-expl="Latency, traffic, errors, saturation."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>p99 latency of 2 s means…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> All requests take 2 s</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> 99% are faster than 2 s</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Average is 2 s</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> 1% of requests fail</li></ul><div class="mcq-feedback" data-expl="Percentile."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>Alert fatigue is caused by…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Too few dashboards</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Too many noisy, non-actionable alerts</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Short retention</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Using JSON logs</li></ul><div class="mcq-feedback" data-expl="Noise hides real alerts."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t8" data-toc='[["s8-1", "The Investigation Workflow"], ["s8-2", "Case 1: Webhooks Not Arriving"], ["s8-3", "Case 2: API Returning 401"], ["s8-4", "Case 3: Slow Reports"], ["s8-5", "Case 4: Intermittent Login Failures"], ["s8-6", "Documenting Findings"], ["s8-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Advanced</span></div>
+        <div class="panel-eyebrow">Module 08 · Real-World Workflow</div>
+        <h1 class="panel-title">Real-World Log Investigations</h1>
+        <p class="panel-subtitle">The end-to-end workflow a TSE follows, from ticket to evidence to conclusion, plus four worked case studies you'll meet on the job.</p>
+      </div>
+<div class="section" id="s8-1">
+<h2><span class="sec-emoji">🔁</span> The Investigation Workflow</h2>
+<p><strong>Ticket → Define problem → Convert time to UTC → Find identifiers → Search &amp; filter → Group to check scope → Read context → Conclude → Document → Respond / escalate</strong></p><ol class="steps"><li>Clarify what failed, for whom, when (with timezone).</li><li>Collect identifiers: account ID, request ID, email, order ID.</li><li>Check dashboards/incidents for a wider problem.</li><li>Search logs with the funnel; group by status/account/time.</li><li>Read lines before/after; follow the request ID across services.</li><li>Decide owner: customer, us, or third party; write evidence and next steps.</li></ol>
+
+</div>
+<div class="section" id="s8-2">
+<h2><span class="sec-emoji">📭</span> Case 1: Webhooks Not Arriving</h2>
+<pre><span class="pre-lang">evidence</span><code>service:webhooks @account_id:acct_acme  (last 24 h)
+→ 1,240 deliveries, 1,238 with status 504, duration ≈ 30,000 ms
+→ started 05 Oct 09:12 UTC
+→ other accounts: normal</code></pre>
+<div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Conclusion: we send webhooks; the customer's endpoint times out after 30 s. Advise returning 200 immediately and processing asynchronously; share example timestamps and request IDs.</div></div>
+
+</div>
+<div class="section" id="s8-3">
+<h2><span class="sec-emoji">🔐</span> Case 2: API Returning 401</h2>
+<pre><span class="pre-lang">evidence</span><code>service:api @account_id:acct_zen @http.status_code:401
+→ 214 requests since 09:30 UTC, all with key prefix sk_live_…a9f2
+→ audit log: key ...a9f2 revoked by customer admin at 09:28 UTC</code></pre>
+<div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Conclusion: the integration still uses a revoked key. Customer must update the integration with the new key. No bug.</div></div>
+
+</div>
+<div class="section" id="s8-4">
+<h2><span class="sec-emoji">🐢</span> Case 3: Slow Reports</h2>
+<pre><span class="pre-lang">evidence</span><code>service:reports @account_id:acct_bigco  p95 duration = 48 s (others ≈ 3 s)
+→ trace: 45 s in DB query &quot;monthly_summary&quot; scanning 12M rows
+→ only for date ranges &gt; 6 months</code></pre>
+<div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Conclusion: performance issue for large accounts with long ranges. Workaround: shorter ranges / scheduled exports. Escalate to engineering with traces and query name.</div></div>
+
+</div>
+<div class="section" id="s8-5">
+<h2><span class="sec-emoji">🔀</span> Case 4: Intermittent Login Failures</h2>
+<pre><span class="pre-lang">evidence</span><code>service:auth event:login_failed (last 2 h), grouped by host
+host auth-3 → 412 failures   reason=token_signature_invalid
+host auth-1/2/4 → ~0</code></pre>
+<div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Conclusion: one server (auth-3) is misconfigured, so roughly 1 in 4 logins fail at random. Escalate urgently to engineering/on-call with host evidence.</div></div>
+
+</div>
+<div class="section" id="s8-6">
+<h2><span class="sec-emoji">📝</span> Documenting Findings</h2>
+<pre><span class="pre-lang">internal note template</span><code>Summary:   Webhooks failing for acct_acme since 05 Oct 09:12 UTC
+Scope:     1 account; other accounts normal
+Evidence:  Datadog view &lt;link&gt;; 1,238/1,240 deliveries returned 504 after 30s
+           Example req_7f2c91 at 09:41:17Z
+Cause:     Customer endpoint timing out (not our side)
+Next:      Advise customer to respond 200 within 5s and process async
+Customer told: Findings + recommendation sent 10:20 UTC</code></pre>
+<div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">When sharing with customers, summarise in plain language and never paste raw internal logs that may include other customers' data or internal details.</div></div>
+
+</div>
+<div class="section" id="s8-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>A customer says "some" users get "Something went wrong" when uploading. Plan your log investigation step by step.</span></div><p class="saq-scenario">Scenario: Ticket from a 200-user account.</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Get example users, times (convert to UTC) and file sizes. Search upload service errors for the account in that window; group by error type, user, host and file size; read a few failing request IDs end to end; compare with successful uploads. If errors cluster by file size, it's a limit; by host, a server issue; by user, permissions. Document evidence and escalate or advise accordingly.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Write a short customer-facing summary for Case 1 (webhooks timing out).</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">"We checked our delivery logs: since 5 Oct 09:12 UTC, our system has sent every webhook to your endpoint, but it hasn't responded within our 30-second limit, so the deliveries are marked as failed and retried. Could your team make the endpoint respond with a 200 status straight away and process the data in the background? Once that's in place, deliveries will succeed and we can resend recent events."</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Errors cluster on one host while others are normal. Most likely…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Customer error</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> A problem with that one server</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Global outage</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> DNS</li></ul><div class="mcq-feedback" data-expl="Host-specific cause."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>What should you share with a customer?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Raw internal logs</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> A plain-language summary with relevant times and IDs</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Other customers' errors</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Nothing</li></ul><div class="mcq-feedback" data-expl="Summarise safely."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>An API key revoked at 09:28 and 401s from 09:30 suggests…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> A server bug</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> The integration uses the revoked key</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> DNS failure</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Rate limit</li></ul><div class="mcq-feedback" data-expl="Timeline correlation."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t9" data-toc='[["s9-1", "Concept Questions"], ["s9-2", "Comparison Cheat Sheet"], ["s9-3", "Common Mistakes & Fixes"], ["s9-4", "Scenario Questions"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 09 · Interviews</div>
+        <h1 class="panel-title">Interview Preparation: Log Analysis & Monitoring</h1>
+        <p class="panel-subtitle">Interview questions about logs, log platforms and monitoring, with model answers, a comparison cheat sheet, common mistakes and scenarios.</p>
+      </div>
+<div class="section" id="s9-1">
+<h2><span class="sec-emoji">🎤</span> Concept Questions</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Question</th><th>Model answer</th></tr></thead><tbody><tr><td>Why are logs important for a TSE?</td><td>They show what actually happened, letting you find root causes, prove scope and give engineers evidence.</td></tr><tr><td>What are log levels?</td><td>DEBUG, INFO, WARN, ERROR, FATAL, indicating severity; start investigations with ERROR/WARN.</td></tr><tr><td>Structured vs unstructured logs?</td><td>JSON fields vs plain text; structured logs are easily filtered and grouped.</td></tr><tr><td>How do you search logs efficiently?</td><td>Narrow time (UTC), filter by service/environment and identifiers, filter level/status, group to check scope, drill into examples.</td></tr><tr><td>What is a correlation/request ID?</td><td>An ID attached to every log line of one request across services, used to follow its journey.</td></tr><tr><td>Logs vs metrics vs traces?</td><td>Events vs numbers over time vs a request's path across services.</td></tr><tr><td>What are the four golden signals?</td><td>Latency, traffic, errors, saturation.</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s9-2">
+<h2><span class="sec-emoji">📋</span> Comparison Cheat Sheet</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Pair</th><th>Key difference</th></tr></thead><tbody><tr><td>Datadog vs Splunk</td><td>SaaS logs+metrics+APM in one vs very powerful SPL searches, cloud or on-prem</td></tr><tr><td>Sumo Logic vs CloudWatch</td><td>Cloud-native log analytics vs AWS built-in logs/metrics</td></tr><tr><td>Index vs Log group vs _sourceCategory</td><td>Splunk vs CloudWatch vs Sumo Logic ways of organising logs</td></tr><tr><td>Logging vs Monitoring</td><td>Detailed events for investigation vs health metrics for detection</td></tr><tr><td>Average vs p95</td><td>Typical value that hides outliers vs the slow tail customers feel</td></tr><tr><td>WARN vs ERROR</td><td>Unexpected but handled vs operation failed</td></tr><tr><td>Structured vs Unstructured</td><td>JSON fields vs free text needing parsing</td></tr><tr><td>Patterns vs LogReduce</td><td>Datadog vs Sumo Logic message clustering</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s9-3">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes & Fixes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Searching in local time instead of UTC</td><td>Wrong window, missed events</td><td>Convert to UTC first</td></tr><tr><td>Searching without a time range</td><td>Slow, noisy results</td><td>Tight time window first</td></tr><tr><td>Concluding from one log line</td><td>Misses scope and cause</td><td>Group and read context</td></tr><tr><td>Pasting raw logs to customers</td><td>Leaks internal/other-customer data</td><td>Plain-language summary</td></tr><tr><td>Trusting averages</td><td>Hides slow outliers</td><td>Use percentiles</td></tr><tr><td>Not sharing query links in escalations</td><td>Engineers redo your work</td><td>Share the saved view/search link</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s9-4">
+<h2><span class="sec-emoji">🧩</span> Scenario Questions</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>"A customer says their API calls fail since this morning. How do you use logs?"</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Get account ID, example request IDs and time (convert to UTC); search API logs for the account and status codes; group by status/endpoint and time; read example requests; check whether other accounts are affected and whether anything changed (keys, deploys); conclude owner and document with links.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>"How would you explain p95 latency to a non-technical manager?"</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">"If we line up 100 requests from fastest to slowest, p95 is the 95th one: 95 were faster and 5 slower. It shows what our slowest customers experience, which the average hides."</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P3.</span><span>"Which log tool have you used and how?"</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Name one (e.g., Datadog): filtering by service/env/attributes, grouping by account, timeseries to spot starts, Live Tail during reproduction, saved views and sharing links in escalations.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Logs show "2026-10-05T04:30:00Z". In IST that is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> 04:30</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> 10:00</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> 23:00</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> 09:30</li></ul><div class="mcq-feedback" data-expl="+5:30."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>Splunk's query language is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> SQL</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> SPL</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> KQL</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Grok</li></ul><div class="mcq-feedback" data-expl="Search Processing Language."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t10" data-toc='[["s10-1","Take the Assessment"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">→ Intermediate</span></div>
+        <p class="panel-eyebrow">Module 10</p>
+        <h1 class="panel-title">Assessment</h1>
+        <p class="panel-subtitle">Test yourself on everything covered in this course — 50 scenario-based multiple-choice questions, all different (no repeats), shown in a random order each attempt.</p>
+      </div>
+      <div class="section" id="s10-1">
+        <div class="assess-start-card">
+          <div class="assess-intro-title">Test what you've learned</div>
+          <div class="assess-intro-text">A timed, exam-style mock test. Most questions describe a real support situation and ask what you would do, which tool or metric applies, or what went wrong.</div>
+          <ul class="assess-intro-list">
+            <li><strong>50 multiple-choice questions</strong> &mdash; all different, no repeats, in random order</li>
+            <li><strong>50-minute</strong> timer (1 minute per question), with mark-for-review and a question palette</li>
+            <li>Covers every module, from Logging Fundamentals through Interview Prep</li>
+            <li>Answers and explanations are shown after you submit</li>
+          </ul>
+          <button class="assess-start-btn" id="assessStartBtn">▶ Start Assessment</button>
+        </div>
+      </div>
+      <div class="assess-modal-overlay" id="assessModal">
+        <div class="assess-modal-box">
+          <div class="assess-sticky-header">
+            <div class="assess-modal-head">
+              <div class="assess-modal-title">Assessment</div>
+              <button class="assess-modal-close" id="assessModalClose">✕</button>
+            </div>
+            <div class="quiz-progress" id="assessProgressWrap" style="display:none">
+              <span class="quiz-score" id="assessProgressLabel">Question 1</span>
+              <div class="quiz-bar-track"><div class="quiz-bar-fill" id="assessProgressFill" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div id="assessStage"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+/* =========================================================
+   Tab switching, dynamic TOC, scroll-spy, progress pill
+   ========================================================= */
+(function(){
+  const tabs   = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel');
+  const tocEl  = document.getElementById('toc');
+  const total  = tabs.length;
+  const progressText = document.getElementById('progressText');
+
+  function buildToc(panel){
+    const data = JSON.parse(panel.getAttribute('data-toc') || '[]');
+    tocEl.innerHTML = data.map(([id,label]) =>
+      `<li><a href="#${id}" data-target="${id}">${label}</a></li>`
+    ).join('');
+    // first link active by default
+    const first = tocEl.querySelector('a');
+    if(first) first.classList.add('active');
+  }
+
+  function activate(idx){
+    tabs.forEach((t,i)=>t.classList.toggle('active', i===idx));
+    panels.forEach((p,i)=>p.classList.toggle('active', i===idx));
+    buildToc(panels[idx]);
+    progressText.textContent = `Tab ${idx+1} of ${total}`;
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+
+  tabs.forEach((t,i)=>{
+    t.addEventListener('click', ()=> activate(i));
+  });
+
+  // Smooth scroll inside the active tab
+  document.addEventListener('click', (e)=>{
+    const a = e.target.closest('.toc-list a');
+    if(!a) return;
+    e.preventDefault();
+    const id = a.getAttribute('data-target');
+    const el = document.getElementById(id);
+    if(el){
+      window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 130, behavior:'smooth'});
+    }
+  });
+
+  // Scroll spy — highlight the nearest visible section
+  let ticking = false;
+  function spy(){
+    const activePanel = document.querySelector('.panel.active');
+    if(!activePanel) return;
+    const sections = activePanel.querySelectorAll('.section');
+    const trigger  = 180; // px from top
+    let current = null;
+    sections.forEach(sec=>{
+      const rect = sec.getBoundingClientRect();
+      if(rect.top - trigger < 0) current = sec.id;
+    });
+    if(current){
+      tocEl.querySelectorAll('a').forEach(a=>{
+        a.classList.toggle('active', a.dataset.target === current);
+      });
+    }
+    ticking = false;
+  }
+  window.addEventListener('scroll', ()=>{
+    if(!ticking){ requestAnimationFrame(spy); ticking = true; }
+  }, {passive:true});
+
+  // Reset
+  window.resetProgress = function(){ activate(0); };
+
+  // Init
+  activate(0);
+})();
+
+/* =========================================================
+   Assessment modal — legacy modal (unused)
+   ========================================================= */
+(function(){
+  const assessItems = [];
+  const mcqTotal = assessItems.length;
+
+  let idx=0, score=0, answered=false;
+
+  function openAssess(){document.getElementById('assessModal').classList.add('open');showIntroStage()}
+  function closeAssess(){document.getElementById('assessModal').classList.remove('open')}
+
+  function showIntroStage(){
+    idx=0; score=0; answered=false;
+    renderItem();
+  }
+
+  function renderItem(){
+    answered=false;
+    const item=assessItems[idx];
+    const stage=document.getElementById('assessStage');
+    const pct=Math.round((idx/assessItems.length)*100);
+    document.getElementById('assessProgressWrap').style.display='flex';
+    document.getElementById('assessProgressLabel').textContent=`Question ${idx+1} / ${assessItems.length}`;
+    document.getElementById('assessProgressFill').style.width=pct+'%';
+    let inner=`
+      <div class="assess-q-wrap">
+        <div class="assess-q">${item.q}</div>
+        ${item.code?`<pre><code>${item.code}</code></pre>`:''}
+        <div id="assessBody"></div>
+        <div id="assessFeedback"></div>
+      </div>`;
+    stage.innerHTML=inner;
+    const body=document.getElementById('assessBody');
+    body.innerHTML=`<ul class="mcq-opts" id="assessOpts">${item.options.map((o,i)=>`<li class="mcq-opt" data-i="${i}"><span class="opt-letter">${String.fromCharCode(65+i)}</span> ${o}</li>`).join('')}</ul>`;
+    body.querySelectorAll('.mcq-opt').forEach(opt=>opt.addEventListener('click',()=>answerMCQ(opt,item)));
+  }
+
+  function showNextButton(){
+    const fb=document.getElementById('assessFeedback');
+    const btn=document.createElement('button');
+    btn.className='assess-next-btn';
+    btn.textContent = idx<assessItems.length-1 ? 'Next Question →' : 'See Results →';
+    btn.addEventListener('click',()=>{
+      if(idx<assessItems.length-1){idx++;renderItem()}else{showResults()}
+    });
+    fb.appendChild(btn);
+  }
+
+  function answerMCQ(optEl,item){
+    if(answered)return;
+    answered=true;
+    const chosen=parseInt(optEl.getAttribute('data-i'),10);
+    const correct=chosen===item.answer;
+    if(correct)score++;
+    document.querySelectorAll('#assessOpts .mcq-opt').forEach(opt=>{opt.style.pointerEvents='none'});
+    const fb=document.getElementById('assessFeedback');
+    if(correct){
+      optEl.classList.add('correct');
+      fb.innerHTML=`<div class="assess-fb-banner ok"><span>✅</span> Correct!</div>`;
+    }else{
+      optEl.classList.add('incorrect');
+      fb.innerHTML=`<div class="assess-fb-answer ok"><span>✅</span> ${item.options[item.answer]}</div>`;
+    }
+    showNextButton();
+  }
+
+  function showResults(){
+    const stage=document.getElementById('assessStage');
+    const pct=Math.round((score/mcqTotal)*100);
+    document.getElementById('assessProgressLabel').textContent='Completed';
+    document.getElementById('assessProgressFill').style.width='100%';
+    let msg='Keep practicing — revisit the tabs above and try again.';
+    if(pct>=85)msg='Outstanding! You have a strong command of this role.';
+    else if(pct>=65)msg="Great job! A little more practice with the harder questions and you'll be set.";
+    stage.innerHTML=`
+      <div class="assess-q-wrap">
+        <div class="assess-result-score">${score} / ${mcqTotal}</div>
+        <div class="assess-result-msg">${pct}% correct — ${msg}</div>
+        <button class="assess-retry-btn" id="assessRetryBtn">↻ Try Again</button>
+      </div>`;
+    document.getElementById('assessRetryBtn').addEventListener('click',showIntroStage);
+  }
+
+  document.getElementById('__disabledAssess')?.addEventListener('click',openAssess);
+  document.getElementById('assessModalClose').addEventListener('click',closeAssess);
+  document.getElementById('assessModal').addEventListener('click',e=>{if(e.target.id==='assessModal')closeAssess()});
+})();
+</script>
+
+<div id="scoreBoard" class="score-board" style="display:none;max-width:820px;margin:18px auto;padding:0 16px"></div>
+
+
+<script>
+/* Inline quick checks + practice model answers */
+document.addEventListener('click',function(e){
+  const opt=e.target.closest('.mcq .mcq-opt');
+  if(opt){
+    const box=opt.closest('.mcq'); if(box.classList.contains('answered'))return;
+    const ans=+box.dataset.answer, i=+opt.dataset.i;
+    box.classList.add('answered');
+    box.querySelectorAll('.mcq-opt').forEach(o=>{ if(+o.dataset.i===ans)o.classList.add('correct'); });
+    if(i!==ans)opt.classList.add('incorrect');
+    const fb=box.querySelector('.mcq-feedback');
+    fb.classList.add(i===ans?'ok':'bad');
+    fb.innerHTML=(i===ans?'✅ Correct. ':'❌ Not quite. ')+fb.dataset.expl;
+    return;
+  }
+  const rs=e.target.closest('.mcq-reset');
+  if(rs){
+    const box=rs.closest('.mcq'); box.classList.remove('answered');
+    box.querySelectorAll('.mcq-opt').forEach(o=>o.classList.remove('correct','incorrect'));
+    const fb=box.querySelector('.mcq-feedback'); fb.classList.remove('ok','bad'); fb.innerHTML='';
+    return;
+  }
+  const tg=e.target.closest('.saq-toggle');
+  if(tg){
+    const m=tg.closest('.saq').querySelector('.saq-model');
+    m.classList.toggle('show');
+    tg.textContent=m.classList.contains('show')?'Hide model answer':'Show model answer';
+  }
+});
+</script>
+<script>
+(function(){
+  /* =====================================================================
+     Log Analysis &amp; Monitoring -- full-screen, timed mock exam (MNC style).
+     All 50 questions of the bank, shuffled, none repeated.
+     Grading: all answers submitted at the end (server-side).
+     ===================================================================== */
+  const BANK=[{"id": "q1", "q": "A log is…", "options": ["A metric chart", "A timestamped record of an event", "A ticket", "A database table"], "answer": 1, "explanation": "Event records.", "difficulty": "Easy"}, {"id": "q2", "q": "Which level marks a failed operation?", "options": ["INFO", "DEBUG", "ERROR", "TRACE"], "answer": 2, "explanation": "ERROR.", "difficulty": "Easy"}, {"id": "q3", "q": "WARN usually means…", "options": ["Normal operation", "Unexpected but handled", "Service stopped", "Debug detail"], "answer": 1, "explanation": "Handled anomaly.", "difficulty": "Easy"}, {"id": "q4", "q": "Structured logs are easier to search because…", "options": ["Shorter", "Values are named fields", "No timestamps", "Encrypted"], "answer": 1, "explanation": "Field filtering.", "difficulty": "Easy"}, {"id": "q5", "q": "Agents like Fluent Bit or the Datadog Agent…", "options": ["Delete logs", "Collect and forward logs to a platform", "Write code", "Send emails"], "answer": 1, "explanation": "Shippers.", "difficulty": "Easy"}, {"id": "q6", "q": "Logs older than retention are…", "options": ["Always searchable", "Possibly unavailable unless archived", "Moved to tickets", "Converted to metrics"], "answer": 1, "explanation": "Retention limits.", "difficulty": "Medium"}, {"id": "q7", "q": "Logs, metrics and traces are the three pillars of…", "options": ["Ticketing", "Observability", "Billing", "Security"], "answer": 1, "explanation": "Observability.", "difficulty": "Easy"}, {"id": "q8", "q": "\"2026-10-05T09:41:17Z\": Z means…", "options": ["Zero", "UTC", "IST", "Zone unknown"], "answer": 1, "explanation": "UTC.", "difficulty": "Easy"}, {"id": "q9", "q": "Customer says 3:10 pm IST. Search around…", "options": ["15:10 UTC", "09:40 UTC", "20:40 UTC", "10:40 UTC"], "answer": 1, "explanation": "−5:30.", "difficulty": "Medium"}, {"id": "q10", "q": "A 13-digit epoch timestamp is in…", "options": ["Seconds", "Milliseconds", "Minutes", "Days"], "answer": 1, "explanation": "13 digits = ms.", "difficulty": "Medium"}, {"id": "q11", "q": "A correlation/request ID lets you…", "options": ["Encrypt logs", "Follow one request across services", "Delete logs", "Change level"], "answer": 1, "explanation": "Trace a request.", "difficulty": "Easy"}, {"id": "q12", "q": "In a Python traceback, the error is…", "options": ["First line", "Last line", "Middle", "Hidden"], "answer": 1, "explanation": "Read bottom-up.", "difficulty": "Easy"}, {"id": "q13", "q": "In Java stack traces, the deepest \"Caused by\" is often…", "options": ["Irrelevant", "The root cause", "A warning", "The timestamp"], "answer": 1, "explanation": "Root cause.", "difficulty": "Hard"}, {"id": "q14", "q": "Biggest speed-up when searching logs?", "options": ["More keywords", "Narrow time range", "All-time search", "Export"], "answer": 1, "explanation": "Time filter.", "difficulty": "Easy"}, {"id": "q15", "q": "Grouping by account_id answers…", "options": ["Which host failed", "One customer or many?", "Log level", "Timezone"], "answer": 1, "explanation": "Scope.", "difficulty": "Easy"}, {"id": "q16", "q": "-path:/health in a query…", "options": ["Includes health checks", "Excludes health checks", "Searches health", "Deletes lines"], "answer": 1, "explanation": "Exclusion.", "difficulty": "Easy"}, {"id": "q17", "q": "Regex \\d+ matches…", "options": ["Letters", "One or more digits", "Spaces", "Anything"], "answer": 1, "explanation": "Digits.", "difficulty": "Medium"}, {"id": "q18", "q": "In Datadog, custom attributes use…", "options": ["#", "@", "$", "!"], "answer": 1, "explanation": "@attr:value.", "difficulty": "Easy"}, {"id": "q19", "q": "Datadog feature clustering similar lines?", "options": ["Patterns", "Facets", "RUM", "Monitors"], "answer": 0, "explanation": "Patterns.", "difficulty": "Easy"}, {"id": "q20", "q": "Datadog unified tagging uses…", "options": ["env, service, version", "id, name", "host only", "none"], "answer": 0, "explanation": "Links signals.", "difficulty": "Medium"}, {"id": "q21", "q": "Live Tail is used to…", "options": ["Archive logs", "Watch logs in real time", "Delete logs", "Change retention"], "answer": 1, "explanation": "Streaming view.", "difficulty": "Easy"}, {"id": "q22", "q": "Best way to share a Datadog search with engineers?", "options": ["Screenshot", "The Log Explorer link / saved view", "Copy 1,000 lines", "Describe verbally"], "answer": 1, "explanation": "Explorable link.", "difficulty": "Easy"}, {"id": "q23", "q": "In Splunk, data lives in…", "options": ["Facets", "Indexes", "Log groups", "Categories"], "answer": 1, "explanation": "Indexes.", "difficulty": "Easy"}, {"id": "q24", "q": "SPL to count by status?", "options": ["| table status", "| stats count by status", "| rex status", "| dedup status"], "answer": 1, "explanation": "stats.", "difficulty": "Easy"}, {"id": "q25", "q": "SPL for counts over time?", "options": ["timechart", "table", "dedup", "rename"], "answer": 0, "explanation": "timechart.", "difficulty": "Easy"}, {"id": "q26", "q": "SPL rex is for…", "options": ["Alerts", "Regex field extraction", "Sorting", "Deleting"], "answer": 1, "explanation": "rex.", "difficulty": "Easy"}, {"id": "q27", "q": "Sumo Logic organises sources with…", "options": ["index", "_sourceCategory", "log group", "facet"], "answer": 1, "explanation": "_sourceCategory.", "difficulty": "Easy"}, {"id": "q28", "q": "Sumo Logic message clustering?", "options": ["LogReduce", "Patterns", "Timechart", "Pivot"], "answer": 0, "explanation": "LogReduce.", "difficulty": "Easy"}, {"id": "q29", "q": "CloudWatch organises logs in…", "options": ["Indexes", "Log groups and streams", "Sourcetypes", "Facets"], "answer": 1, "explanation": "Groups/streams.", "difficulty": "Easy"}, {"id": "q30", "q": "CloudWatch Logs Insights command to aggregate?", "options": ["stats", "rex", "timechart", "logreduce"], "answer": 0, "explanation": "stats … by.", "difficulty": "Easy"}, {"id": "q31", "q": "A CloudWatch metric filter…", "options": ["Deletes logs", "Creates a metric from matching logs", "Changes retention", "Parses XML"], "answer": 1, "explanation": "Metrics from logs.", "difficulty": "Medium"}, {"id": "q32", "q": "Which is AWS's native logging service?", "options": ["Splunk", "CloudWatch", "Sumo", "Datadog"], "answer": 1, "explanation": "CloudWatch.", "difficulty": "Easy"}, {"id": "q33", "q": "Logging vs monitoring:", "options": ["Same", "Events for investigation vs metrics for detecting health", "Monitoring stores raw text", "Logging alerts only"], "answer": 1, "explanation": "Different purposes.", "difficulty": "Easy"}, {"id": "q34", "q": "Which is a golden signal?", "options": ["Revenue", "Saturation", "Headcount", "CSAT"], "answer": 1, "explanation": "Latency, traffic, errors, saturation.", "difficulty": "Easy"}, {"id": "q35", "q": "p95 latency 900 ms means…", "options": ["All take 900 ms", "95% faster than 900 ms", "Average 900 ms", "5% fail"], "answer": 1, "explanation": "Percentile.", "difficulty": "Easy"}, {"id": "q36", "q": "Why prefer p95/p99 over averages?", "options": ["Bigger numbers", "Averages hide the slow tail", "Required", "Faster"], "answer": 1, "explanation": "Outliers matter.", "difficulty": "Medium"}, {"id": "q37", "q": "Error spike right after a deploy marker suggests…", "options": ["Customer error", "The release likely caused it", "DNS", "Billing"], "answer": 1, "explanation": "Correlation.", "difficulty": "Medium"}, {"id": "q38", "q": "Traffic dropping to zero suggests…", "options": ["Great performance", "Outage or routing/DNS problem", "More customers", "Logging off"], "answer": 1, "explanation": "No requests reaching us.", "difficulty": "Medium"}, {"id": "q39", "q": "Alert fatigue comes from…", "options": ["Few alerts", "Too many noisy alerts", "Long retention", "JSON logs"], "answer": 1, "explanation": "Noise.", "difficulty": "Easy"}, {"id": "q40", "q": "Webhook logs: 504 after 30,000 ms. Owner?", "options": ["Our DB", "Customer endpoint (timeout)", "DNS", "Billing"], "answer": 1, "explanation": "Their endpoint is slow.", "difficulty": "Hard"}, {"id": "q41", "q": "401s start 2 minutes after a key was revoked. Cause?", "options": ["Server bug", "Integration using revoked key", "Outage", "Rate limit"], "answer": 1, "explanation": "Timeline.", "difficulty": "Medium"}, {"id": "q42", "q": "Failures concentrated on one host suggest…", "options": ["User error", "Server-specific problem", "Global outage", "Network-wide DNS"], "answer": 1, "explanation": "Host issue.", "difficulty": "Medium"}, {"id": "q43", "q": "What should go to customers?", "options": ["Raw logs", "Plain-language summary", "Other accounts' data", "Internal stack traces"], "answer": 1, "explanation": "Safe summary.", "difficulty": "Easy"}, {"id": "q44", "q": "An escalation note should include…", "options": ["Opinions", "Scope, evidence/link, example IDs, cause, next steps", "Only \"see logs\"", "Emoji"], "answer": 1, "explanation": "Evidence-based.", "difficulty": "Easy"}, {"id": "q45", "q": "First step when tickets spike?", "options": ["Investigate each ticket separately", "Check dashboards/incident channel", "Close tickets", "Change priorities"], "answer": 1, "explanation": "Look for system issue.", "difficulty": "Easy"}, {"id": "q46", "q": "Search ±15 minutes around the reported time because…", "options": ["Customers report approximate times", "Logs are delayed by 15 min", "Required by law", "UTC rounding"], "answer": 0, "explanation": "Times are approximate.", "difficulty": "Medium"}, {"q": "Which HTTP status range in logs signals a server-side failure?", "options": ["2xx", "3xx", "4xx", "5xx"], "answer": 3, "explanation": "5xx = server errors.", "difficulty": "Easy", "id": "q47"}, {"q": "Why search logs in UTC?", "options": ["It is faster", "Platforms store UTC, so it avoids time-zone mismatches", "Law requires it", "It saves storage"], "answer": 1, "explanation": "Convert customer times to UTC first.", "difficulty": "Easy", "id": "q48"}, {"q": "A sudden jump in log volume right after a release most likely means…", "options": ["Logs were rotated", "New code is logging more or erroring repeatedly", "Disk upgrade", "Agent stopped"], "answer": 1, "explanation": "Correlate with the deploy marker.", "difficulty": "Easy", "id": "q49"}, {"q": "What should NOT be pasted into a ticket from logs?", "options": ["Request ID", "Timestamp", "Full API keys and tokens", "Status code"], "answer": 2, "explanation": "Secrets must be redacted.", "difficulty": "Easy", "id": "q50"}];
+  const EXAM_N=50;
+  function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  const EXAM_SECONDS=50*60; /* 1 minute per question */
+  const inIframe = window.self!==window.top;
+
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash h2{font-size:25px;font-weight:800;margin-bottom:8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin-bottom:12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:ecpop .18s ease}
+  @keyframes ecpop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+
+  .exam-fsprompt{position:fixed;inset:0;z-index:100003;background:rgba(11,21,38,.96);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fsprompt .box{background:#fff;color:#161c27;border-radius:16px;max-width:480px;width:100%;padding:30px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+  .exam-fsprompt h3{font-size:21px;font-weight:800;margin:0 0 10px;color:#c53030}
+  .exam-fsprompt p{font-size:14px;color:#4a5568;line-height:1.6;margin:0 0 20px}
+  .exam-warn{position:fixed;inset:0;z-index:100003;background:rgba(24,38,68,.94);display:flex;align-items:center;justify-content:center;padding:24px;color:#fff;text-align:center;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;animation:ewfade .15s ease}
+  @keyframes ewfade{from{opacity:0}to{opacity:1}}
+  .exam-warn .wbox{max-width:680px;width:100%}
+  .exam-warn h2{font-size:34px;font-weight:800;margin:0 0 24px;display:flex;align-items:center;justify-content:center;gap:12px;line-height:1.2}
+  .exam-warn h2 .wi{font-size:30px}
+  .exam-warn p{font-size:17px;line-height:1.5;margin:0 0 20px;color:#fff}
+  .exam-warn .wcount{font-size:17px;margin:0 0 22px;color:#fff}
+  .exam-warn .wbtn{background:#0f1a30;color:#fff;border:none;border-radius:10px;padding:16px 25px;font-weight:700;font-size:17px;cursor:pointer;font-family:inherit}
+  .exam-warn .wbtn:hover{background:#0a1224}
+  @media(max-width:520px){.exam-warn h2{font-size:26px}.exam-warn p,.exam-warn .wcount,.exam-warn .wbtn{font-size:15px}}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+
+  function examConfirm(title,msg,okLabel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">
+        <button class="exam-btn nav" data-a="0">Cancel</button>
+        <button class="exam-btn primary" data-a="1">${okLabel||'Submit'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  /* ---- score history (localStorage, shared across the exam tab + guide) ---- */
+  const LS_KEY='logScores';
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores();
+    a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: exactly 3 violation warnings (tab switch, fullscreen exit, screenshot attempt); 3 strikes -> auto-submit ---- */
+  let warns=0, lastWarn=0, lastType='', proctorOn=false;
+  const MAX_WARN=3;
+  const VIOL={
+    tab:{title:'Tab switch detected',msg:'You left the assessment window. Please stay on this page until you submit.'},
+    fs:{title:'Fullscreen exited',msg:'The assessment must remain in fullscreen mode.'},
+    shot:{title:'Screenshot attempt detected',msg:'Screenshots are not permitted during the assessment.'}
+  };
+  function examWarn(title,msg,count){
+    injectCss();
+    const old=document.getElementById('examWarnBox'); if(old)old.remove();
+    const d=document.createElement('div'); d.className='exam-warn'; d.id='examWarnBox';
+    d.innerHTML='<div class="wbox"><h2><span class="wi">&#9888;&#65039;</span><span>'+title+'</span></h2><p>'+msg+'</p>'+(count?'<div class="wcount">Warning '+count+' of '+MAX_WARN+'</div>':'')+'<button class="wbtn" data-a="1">OK</button></div>';
+    document.body.appendChild(d);
+    d.addEventListener('click',e=>{ if(e.target.closest('[data-a]'))d.remove(); });
+  }
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function removeFsPrompt(){ const p=document.getElementById('examFsPrompt'); if(p)p.remove(); }
+  function removeViolPop(){ const p=document.getElementById('examViolPop'); if(p)p.remove(); }
+  function goFullscreen(){
+    try{ const re=document.documentElement.requestFullscreen?document.documentElement.requestFullscreen():Promise.resolve(); return Promise.resolve(re).catch(()=>{}); }
+    catch(_){ return Promise.resolve(); }
+  }
+  /* One popup at a time. kind = tab | fs | shot. n = strike number (null = no strike, e.g. entering fullscreen at start). */
+  function showViolation(kind,n){
+    if(!examOn)return;
+    injectCss(); hideCover(); removeViolPop(); removeFsPrompt();
+    const v=VIOL[kind]; const needFs=!document.fullscreenElement;
+    const d=document.createElement('div'); d.className='exam-warn'; d.id=(kind==='fs'||needFs)?'examFsPrompt':'examViolPop';
+    d.innerHTML='<div class="wbox"><h2><span class="wi">&#9888;&#65039;</span><span>'+v.title+'</span></h2><p>'+v.msg+'</p>'+(n?'<div class="wcount">Warning '+n+' of '+MAX_WARN+'</div>':'')+'<button class="wbtn" id="examContinue">Return to assessment</button></div>';
+    document.body.appendChild(d);
+    document.getElementById('examContinue').addEventListener('click',()=>{
+      const go=document.fullscreenElement?Promise.resolve():goFullscreen();
+      go.then(()=>{ d.remove(); hideCover(); renderQ(); });
+    });
+  }
+  function violation(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now();
+    /* same incident (e.g. tab switch firing blur + visibilitychange together) counts once */
+    const fresh = now-lastWarn >= (kind===lastType?1500:800);
+    if(!fresh){ if(!document.fullscreenElement && !document.getElementById('examFsPrompt')) showViolation(kind,Math.min(warns,MAX_WARN)); return; }
+    lastWarn=now; lastType=kind; warns++;
+    if(warns>=MAX_WARN){
+      removeFsPrompt(); removeViolPop(); hideCover();
+      examWarn('Assessment submitted','Warning limit reached ('+VIOL[kind].title.toLowerCase()+'). The assessment has been auto-submitted.',MAX_WARN);
+      submitExam(true); return;
+    }
+    showViolation(kind,warns);
+  }
+  function fsHandler(){ if(examOn && !document.fullscreenElement){ violation('fs'); } }
+  function visHandler(){ if(document.hidden){ showCover(); violation('tab'); } else { hideCover(); } }
+  function blurHandler(){ if(!examOn)return; showCover(); violation('tab'); }
+  function focusHandler(){ hideCover(); }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function shotWarn(){ try{navigator.clipboard.writeText('');}catch(_){} violation('shot'); }
+  function keyGuard(e){
+    const k=(e.key||'').toLowerCase(), c=e.code||'';
+    if(k==='printscreen'||(e.metaKey&&e.shiftKey&&k==='s')||(e.metaKey&&e.shiftKey&&['Digit3','Digit4','Digit5'].includes(c))){ e.preventDefault(); shotWarn(); return false; }
+    if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; }
+  }
+  function printGuard(e){ if((e.key||'')==='PrintScreen'){ shotWarn(); } }
+  function startProctor(){
+    warns=0; lastWarn=0; lastType=''; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    window.addEventListener('blur',blurHandler);
+    window.addEventListener('focus',focusHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('cut',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keyup',printGuard,true);
+    /* if fullscreen could not be entered at start, ask for it (no strike) */
+    setTimeout(()=>{ if(examOn && proctorOn && !document.fullscreenElement) showViolation('fs',null); },700);
+  }
+  function stopProctor(){
+    proctorOn=false;
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    window.removeEventListener('blur',blurHandler);
+    window.removeEventListener('focus',focusHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('cut',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keyup',printGuard,true);
+    hideCover(); removeViolPop();
+  }
+
+  function startEntry(){
+    if(inIframe){ window.open(location.pathname+'?mode=exam','_blank'); return; }
+    showSplash();
+  }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; Log Analysis &amp; Monitoring &mdash; Mock Test</h2>
+      <p>A timed, exam-style assessment modelled on real technical screening tests.</p>
+      <ul>
+        <li><b>50 questions</b> to attempt</li>
+        <li><b>50-minute</b> timer (1 min per question) &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Results and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> &mdash; stay in fullscreen the whole time</li>
+        <li>Exactly <b>3 things trigger a warning</b>: (1) <b>switching tab / window</b>, (2) <b>exiting fullscreen (Esc)</b>, (3) <b>attempting a screenshot</b> (PrintScreen / Win+Shift+S / Cmd+Shift+3-5)</li>
+        <li>Each warning shows a popup with a <b>Return to assessment</b> button that resumes where you left off &mdash; the timer keeps running</li>
+        <li><b>3 warnings in total</b> &rarr; the assessment <b>auto-submits</b>. Copy and right-click are also disabled</li>
+      </ul>
+      <button class="exam-btn primary" id="examBegin" style="width:100%;padding:14px">Start Test &rarr;</button>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      if(document.documentElement.requestFullscreen){document.documentElement.requestFullscreen().catch(()=>{});}
+      sp.remove(); enterExam();
+    });
+  }
+
+  async function enterExam(){
+    injectCss();
+    let ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Loading your test&hellip;</div>';
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    items=shuffle(BANK).slice(0,EXAM_N).map(b=>({id:b.id,q:b.q,code:b.code,options:b.options,difficulty:b.difficulty}));
+    if(!items.length){ ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center">Could not load the test. Close and try again.</div>'; return; }
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">Log Analysis &amp; Monitoring &mdash; Mock Test</div><div class="et-sub">50 questions &middot; one attempt &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}${it.difficulty?`<span class="diff">${it.difficulty}</span>`:''}</div>
+      ${it.code?`<pre><code>${it.code}</code></pre>`:''}
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>el.addEventListener('click',()=>{
+      answers[id]=+el.dataset.i;
+      pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel'));
+      el.classList.add('sel'); refreshPalette();
+    }));
+    const prev=document.getElementById('examPrev'), next=document.getElementById('examNext');
+    if(prev)prev.addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    if(next)next.addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();refreshPalette();});
+    refreshPalette();
+  }
+
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examConfirm('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test');
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId); removeFsPrompt();
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    const payload={answers:{}};
+    items.forEach(it=>{ payload.answers[it.id] = (it.id in answers)?answers[it.id]:-1; });
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Grading your test&hellip;</div>';
+    const byId={}; BANK.forEach(b=>byId[b.id]=b);
+    let sc=0; const results={};
+    items.forEach(it=>{ const b=byId[it.id], you=payload.answers[it.id];
+      const ok=(you===b.answer); if(ok)sc++;
+      results[it.id]={correct:ok,answer:b.answer,explanation:b.explanation}; });
+    showResults({score:sc,results:results});
+  }
+
+  function showResults(data){
+    const results=data.results||{}, total=items.length, score=data.score||0;
+    saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below and try again.';
+    if(pct>=85)msg='Outstanding &mdash; strong command of log analysis, log platforms and monitoring.';
+    else if(pct>=65)msg='Solid pass. A little more practice on the tricky ones and you are set.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the topics you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const r=results[it.id]||{}; const you=answers[it.id];
+      const attempted=(you!=null);
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      if(!attempted){
+        // Not attempted: reveal nothing (answer stays protected)
+        inner+='<div class="ra">Your answer: <i>Not answered</i></div>';
+        return '<div class="r no">'+inner+'</div>';
+      }
+      const youTxt=String.fromCharCode(65+you)+'. '+it.options[you];
+      const cor=(r.answer!=null&&r.answer>=0)?(String.fromCharCode(65+r.answer)+'. '+it.options[r.answer]):'';
+      inner+='<div class="ra '+(r.correct?'cor':'wrong')+'">Your answer: '+youTxt+'</div>'
+        +(r.correct?'':'<div class="ra cor">Correct: '+cor+'</div>')
+        +(r.explanation?'<div class="rx">'+r.explanation+'</div>':'');
+      return '<div class="r '+(r.correct?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; Log Analysis &amp; Monitoring Mock Test</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another test</button></div>
+          <div class="exam-rmsg" id="examRedirect" style="margin-top:8px;color:#94a3b8"></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    let left=30;
+    const rd=document.getElementById('examRedirect');
+    const setTxt=()=>{ if(rd)rd.textContent='Returning to the assessment page in '+left+'s…'; };
+    setTxt();
+    const rt=setInterval(()=>{ left--; setTxt(); if(left<=0){ clearInterval(rt); goBack(); } },1000);
+    function goBack(){
+      if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); }
+      if(window.opener){ try{ window.close(); }catch(_){} }
+      location.href=location.pathname;   // fallback: reload guide (assessment) page
+    }
+    document.getElementById('examRetry').addEventListener('click',()=>{ clearInterval(rt); document.getElementById('examOverlay').remove(); enterExam(); });
+    document.getElementById('examClose').addEventListener('click',()=>{ clearInterval(rt); goBack(); });
+  }
+
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',startEntry);
+  window.__mockExamStart=startEntry;
+  renderScoreboard();
+  window.addEventListener('storage',e=>{ if(e.key===LS_KEY)renderScoreboard(); });
+  if(new URLSearchParams(location.search).get('mode')==='exam'){ showSplash(); }
+})();
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+<style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body>
+</html>

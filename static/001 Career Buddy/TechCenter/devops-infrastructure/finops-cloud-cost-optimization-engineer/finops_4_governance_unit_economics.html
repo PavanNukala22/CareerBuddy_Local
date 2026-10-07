@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>FinOps: Governance & Unit Economics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============= Notion-inspired theme ============= */
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#3776ab 0%,#ffd43b 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans';font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'JetBrains Mono',monospace;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans';font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'JetBrains Mono',monospace;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'JetBrains Mono',monospace;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'JetBrains Mono',monospace;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'JetBrains Mono',monospace;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'JetBrains Mono',monospace;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+</style>
+<!-- ── Global theme overlay (DESIGN-CBuddy.md) ── -->
+<style>
+/* CareerBuddy: sticky sidebar visible scrollbar */
+.toc,.sidebar,.sidenav{scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc::-webkit-scrollbar,.sidebar::-webkit-scrollbar,.sidenav::-webkit-scrollbar{width:9px;height:9px}
+.toc::-webkit-scrollbar-thumb,.sidebar::-webkit-scrollbar-thumb,.sidenav::-webkit-scrollbar-thumb{background:#cbd2e0;border-radius:8px}
+.toc::-webkit-scrollbar-thumb:hover,.sidebar::-webkit-scrollbar-thumb:hover,.sidenav::-webkit-scrollbar-thumb:hover{background:#9aa4b8}
+.toc::-webkit-scrollbar-track,.sidebar::-webkit-scrollbar-track,.sidenav::-webkit-scrollbar-track{background:transparent}
+</style>
+<style>
+/* -- Unify typography: Noto Sans everywhere (CareerBuddy) -- */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,dl,dt,dd,td,th,div,section,article,header,footer,nav,aside,main,label,button,input,select,textarea,blockquote,figcaption,small,strong,b,em,i{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif !important}
+.material-symbols-outlined,.material-icons{font-family:'Material Symbols Outlined','Material Icons' !important}
+code,pre,kbd,samp,tt,.mono,[class*="mono"],[class*="Mono"],[class*="code"],[class*="Code"],[class*="tok"],[class*="hljs"]{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+
+<style>
+.brand-mark{background:linear-gradient(135deg,#14213D 0%,#fca311 100%)}
+body,h1,h2,h3,h4,p,li,td,th,div,span,button,textarea,a{font-family:'Noto Sans',system-ui,sans-serif !important}
+code,pre{font-family:'JetBrains Mono',ui-monospace,monospace !important}
+.ex{background:#f7f9fc;border-left:4px solid #14213D;border-radius:8px;padding:12px 16px;margin:14px 0;font-size:14.5px}
+.ex b.t{display:block;margin-bottom:4px;color:#14213D}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head><body>
+<header class="header"><div class="header-top"><div class="brand"><div class="brand-mark">$</div><span>FinOps: Governance & Unit Economics<span class="brand-sub"> · FinOps / Cloud Cost Optimization Engineer</span></span></div>
+<div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 4</span></span><button class="btn" onclick="resetProgress()">↺ Reset</button></div></div>
+<nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Cost Allocation & Tagging</button><button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> Showback & Chargeback</button><button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> Unit Economics & KPIs</button><button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> Assessment</button></nav></header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside><main class="main">
+<section class="panel active" id="t1" data-toc='[["s1-1", "What is cost allocation?"], ["s1-2", "Designing a tagging strategy"], ["s1-3", "Expert: shared & untagged cost"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag fresher">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 01 · Governance</div><h1 class="panel-title">Cost Allocation & Tagging Strategies</h1><p class="panel-subtitle">You cannot optimize, charge back or compute unit costs for spend you cannot attribute. Learn how to label cloud cost to the right owner — with tags, account structure and shared-cost rules.</p></div><div class="section" id="s1-1"><h2><span class="sec-emoji">🏷️</span> What is cost allocation?</h2><p><strong>Cost allocation</strong> is the practice of assigning every dollar of cloud spend to a <em>team, product, environment or customer</em>. It is the foundation of accountability: no owner, no action.</p><div class="cards"><div class="card"><div class="card-icon" style="background:var(--blue-soft);color:#1d6bbf">🏷️</div><div class="card-title">Tags / Labels</div><div class="card-desc">Key-value metadata on resources: <code>team=payments</code>. (AWS &amp; Azure: tags; GCP: labels.)</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🏢</div><div class="card-title">Account structure</div><div class="card-desc">Separate AWS accounts / Azure subscriptions / GCP projects per team or env.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🔀</div><div class="card-title">Shared cost rules</div><div class="card-desc">Rules to split networking, support, platform clusters across consumers.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#73508c">📦</div><div class="card-title">Allocation tools</div><div class="card-desc">Cost Categories, Cost Allocation Tags, Cost Management scopes, BigQuery billing export.</div></div></div><h3><span class="badge green">BASIC</span> Types of allocation</h3><table><tr><th>Type</th><th>How it works</th><th>Pros</th><th>Cons</th></tr><tr><td>Tag-based</td><td>Costs follow resource tags</td><td>Granular, flexible</td><td>Needs discipline; some resources untaggable</td></tr><tr><td>Account / project-based</td><td>Each team has its own account/project</td><td>Clean, no tags needed</td><td>Many accounts to manage</td></tr><tr><td>Rule-based (categories)</td><td>Rules map accounts/tags/services to groups</td><td>Re-map without touching resources</td><td>Rules must be maintained</td></tr><tr><td>Proportional (shared costs)</td><td>Split shared spend by usage ratio</td><td>Fair, incentivizes efficiency</td><td>Needs usage data</td></tr></table></div><div class="section" id="s1-2"><h2><span class="sec-emoji">📋</span> Designing a tagging strategy</h2><h3><span class="badge green">BASIC</span> Core mandatory tags</h3><table><tr><th>Tag key</th><th>Purpose</th><th>Example</th></tr><tr><td><code>owner</code></td><td>Who to contact</td><td><code>team-payments@corp.com</code></td></tr><tr><td><code>cost-center</code></td><td>Finance mapping</td><td><code>CC-4021</code></td></tr><tr><td><code>environment</code></td><td>Prod vs non-prod</td><td><code>prod / stage / dev</code></td></tr><tr><td><code>application</code></td><td>Product or service</td><td><code>checkout-api</code></td></tr><tr><td><code>project</code> / <code>business-unit</code></td><td>Initiative / org unit</td><td><code>bu-retail</code></td></tr></table><h3><span class="badge blue">INTERMEDIATE</span> Rules that make tags work</h3><ul><li>Fixed <strong>naming standard</strong> (lower-case, hyphens, one spelling: <code>cost-center</code>, not <code>CostCentre</code>).</li><li><strong>Activate</strong> user-defined tags for billing (AWS Cost Allocation Tags) — tags only appear in cost data after activation and are not retroactive.</li><li><strong>Enforce at creation:</strong> AWS tag policies/SCPs, Azure Policy (<em>require tag / inherit tag</em>), GCP org policy + labels in IaC.</li><li><strong>Tag in IaC</strong> (Terraform default tags) so tags can’t be forgotten.</li><li>Report <strong>tag compliance %</strong> weekly; auto-ticket violators.</li></ul><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Never put secrets or personal data in tags; tags are visible in billing and APIs.</div></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">🧠</span> Expert: shared & untagged cost</h2><h3><span class="badge purple">EXPERT</span> Allocating shared costs</h3><p>Three accepted methods:</p><ul><li><strong>Fixed:</strong> pre-agreed percentages (simple, predictable).</li><li><strong>Even split:</strong> equal share per consumer (rarely fair).</li><li><strong>Proportional:</strong> split by a usage driver — requests, vCPU-hours, data processed (fairest).</li></ul><div class="ex"><b class="t">🧮 Example — shared Kubernetes cluster</b><p>Cluster cost <code>$30,000</code>. Namespace CPU requests: Search 50%, Payments 30%, Reco 20%. Allocation → Search $15,000; Payments $9,000; Reco $6,000. Add idle capacity as a separate line (e.g. 15% idle = $4,500 shown to the platform team, not hidden in tenants).</p></div><h3><span class="badge purple">EXPERT</span> Handling untagged spend</h3><p>Create an <strong>“Unallocated”</strong> bucket and shrink it with targets (e.g. &lt;10% → &lt;5%). Backfill using account mapping, resource-name patterns, or <em>tag inheritance</em> from parent (resource group/stack) before leaving costs to central IT.</p><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><strong>KPI:</strong> allocation coverage = allocated spend ÷ total spend. Mature FinOps teams target 90–95%+ allocated.</div></div></div></section>
+<section class="panel" id="t2" data-toc='[["s2-1", "What are showback and chargeback?"], ["s2-2", "Chargeback models (types)"], ["s2-3", "Expert: operating the program"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag fresher">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 02 · Governance</div><h1 class="panel-title">Showback & Chargeback Models</h1><p class="panel-subtitle">Once cost is attributed, you must communicate it. Showback informs; chargeback bills. Pick the right model, define how discounts and shared cost flow, and mature step by step.</p></div><div class="section" id="s2-1"><h2><span class="sec-emoji">📣</span> What are showback and chargeback?</h2><div class="compare"><div class="compare-col"><h4>👁️ Showback</h4><p>Teams <strong>see</strong> their cloud cost, but are not billed internally. Drives awareness and accountability with low friction.</p></div><div class="compare-col"><h4>💸 Chargeback</h4><p>Cost is <strong>transferred</strong> to the team’s budget / P&amp;L through internal billing. Drives ownership of real money.</p></div></div><table><tr><th>Aspect</th><th>Showback</th><th>Chargeback</th></tr><tr><td>Money moves?</td><td>No</td><td>Yes (journal entries)</td></tr><tr><td>Effort</td><td>Low</td><td>High (finance process, disputes)</td></tr><tr><td>Behavior change</td><td>Moderate</td><td>Strong</td></tr><tr><td>Accuracy needed</td><td>Good</td><td>Audit-level</td></tr><tr><td>Best when</td><td>Starting FinOps, tagging immature</td><td>Allocation ≥ 90%, finance buy-in</td></tr></table><div class="callout note"><div class="callout-icon">📝</div><div class="callout-body">They are stages, not rivals: most organizations run <strong>Crawl: showback → Walk: partial chargeback → Run: full chargeback</strong>.</div></div></div><div class="section" id="s2-2"><h2><span class="sec-emoji">🧮</span> Chargeback models (types)</h2><table><tr><th>Model</th><th>Formula</th><th>Use when</th></tr><tr><td>Direct / actual</td><td>Team pays exactly its tagged cost</td><td>Dedicated accounts, good tagging</td></tr><tr><td>Proportional</td><td>Share of a pool × usage driver %</td><td>Shared platforms, Kubernetes, data lakes</td></tr><tr><td>Fixed / flat</td><td>Pre-agreed monthly fee</td><td>Predictable internal services</td></tr><tr><td>Tiered / rate card</td><td>Price per unit (e.g. $/vCPU-hr) set by platform team</td><td>Internal cloud “as a product”</td></tr><tr><td>Blended rate</td><td>Average discounted rate for all teams</td><td>Simplicity, avoid RI “lottery”</td></tr></table><div class="ex"><b class="t">🧮 Example — proportional chargeback</b><p>Monthly invoice: Team A direct $40,000; Team B direct $25,000. Shared network/support pool $15,000, split by direct-spend ratio (A 61.5%, B 38.5%).<br>A pays $40,000 + $9,231 = <strong>$49,231</strong>; B pays $25,000 + $5,769 = <strong>$30,769</strong>.</p></div><h3><span class="badge blue">INTERMEDIATE</span> The commitment-discount question</h3><p>Who gets the benefit of a Savings Plan/RI? Options: (1) <strong>buyer-keeps</strong> (unfair), (2) <strong>actual benefit</strong> to the consuming team, (3) <strong>blended/amortized rate</strong> for everyone — the most common and fair for shared pools.</p></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🚀</span> Expert: operating the program</h2><ul><li><strong>Use amortized &amp; blended cost</strong> for allocation, not raw invoice cash, so upfront fees do not distort a single month.</li><li><strong>Unit price transparency:</strong> publish an internal rate card (price per vCPU-hr, GB-month) so teams can forecast.</li><li><strong>Budgets &amp; alerts</strong> per team at 50/80/100% of forecast; escalate to finance on breach.</li><li><strong>Dispute workflow:</strong> a 5-day window to challenge allocations before month-end close.</li><li><strong>Incentive design:</strong> reward teams for reducing <em>unit cost</em>, not just total cost — growth should not be punished.</li><li><strong>Pitfalls:</strong> charging for untagged costs without grace, hiding idle capacity, changing rules mid-quarter.</li></ul><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Start chargeback with a pilot business unit, publish methodology, and freeze rules for at least a quarter to build trust.</div></div></div></section>
+<section class="panel" id="t3" data-toc='[["s3-1", "What is unit economics?"], ["s3-2", "Core FinOps KPIs"], ["s3-3", "Expert: marginal cost, margin and pitfalls"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag fresher">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 03 · Business value</div><h1 class="panel-title">Unit Economics & KPIs</h1><p class="panel-subtitle">Total cloud spend rising is not bad if revenue and usage grow faster. Unit economics ties cost to business output — cost per transaction, customer or feature — so you can judge efficiency, not just size.</p></div><div class="section" id="s3-1"><h2><span class="sec-emoji">🎯</span> What is unit economics?</h2><p><strong>Unit cost = allocated cloud cost ÷ business metric</strong> (the <em>driver</em>). It answers: “What does it cost us to serve one more order / user / API call?”</p><div class="cards"><div class="card"><div class="card-icon" style="background:var(--blue-soft);color:#1d6bbf">🧾</div><div class="card-title">Cost per transaction</div><div class="card-desc">Cloud cost ÷ orders, payments or API calls.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">👤</div><div class="card-title">Cost per customer / tenant</div><div class="card-desc">Cloud cost ÷ active customers (SaaS).</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🎬</div><div class="card-title">Cost per feature / stream</div><div class="card-desc">Cost of one product capability, minute streamed, GB processed.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#73508c">📉</div><div class="card-title">Cloud cost % of revenue</div><div class="card-desc">Cloud cost ÷ revenue; ties to gross margin.</div></div></div><div class="ex"><b class="t">🧮 Example — cost per transaction</b><p>Checkout service cost last month = <code>$42,000</code>, transactions = <code>12,000,000</code>.<br>Unit cost = 42,000 ÷ 12,000,000 = <strong>$0.0035 per transaction</strong> (= $3.50 per 1,000).</p></div><div class="callout success"><div class="callout-icon">✅</div><div class="callout-body"><strong>Why it matters:</strong> if spend rises 20% but transactions rise 40%, unit cost <em>falls ~14%</em> — healthy growth, not a problem.</div></div></div><div class="section" id="s3-2"><h2><span class="sec-emoji">📊</span> Core FinOps KPIs</h2><table><tr><th>KPI</th><th>Formula</th><th>Typical goal</th></tr><tr><td>Cost per unit (CPU)</td><td>Allocated cost ÷ driver</td><td>Flat or declining</td></tr><tr><td>Cloud % of revenue</td><td>Cloud cost ÷ revenue</td><td>Within target by business model</td></tr><tr><td>Allocation coverage</td><td>Allocated ÷ total cost</td><td>≥ 90–95%</td></tr><tr><td>Tag compliance</td><td>Compliant resources ÷ taggable resources</td><td>≥ 95%</td></tr><tr><td>Forecast accuracy</td><td>1 − |actual − forecast| ÷ actual</td><td>± 5–10%</td></tr><tr><td>Commitment utilization / coverage</td><td>See Pricing Models</td><td>Util ≥ 95%</td></tr><tr><td>Waste %</td><td>Idle/underused spend ÷ total</td><td>Down quarter over quarter</td></tr><tr><td>Cost of idle</td><td>Reserved but unused capacity cost</td><td>Trend to minimum</td></tr></table><h3><span class="badge green">BASIC</span> How to build a unit metric (step by step)</h3><ol><li>Pick a meaningful <strong>business driver</strong> (not CPU hours).</li><li>Allocate cost to that product/service (tags, accounts, shared-cost rules).</li><li>Join cost and driver data by time (daily/weekly).</li><li>Divide, chart the trend, set a target, review monthly with product owners.</li></ol></div><div class="section" id="s3-3"><h2><span class="sec-emoji">🔬</span> Expert: marginal cost, margin and pitfalls</h2><h3><span class="badge purple">EXPERT</span> Average vs marginal cost</h3><p>Average unit cost includes fixed cost (databases, baseline clusters). <strong>Marginal cost</strong> is the cost of the <em>next</em> unit — usually lower at scale.</p><div class="ex"><b class="t">🧮 Example — fixed vs variable</b><p>Fixed platform = $20,000/mo; variable = $0.001 per transaction. At 10M tx: (20,000 + 10,000) ÷ 10M = <strong>$0.0030</strong>. At 20M tx: (20,000 + 20,000) ÷ 20M = <strong>$0.0020</strong>. The marginal cost stays $0.001 — scale improves unit cost.</p></div><h3><span class="badge purple">EXPERT</span> Unit margin per tenant</h3><p>Tenant revenue $5,000/mo, allocated cloud cost $1,200 → cloud margin 76%. Identify tenants with &lt;50% margin for repricing or optimization.</p><ul><li><strong>Targets:</strong> set a “unit cost budget” per release; use anomaly detection on unit cost, not just total cost.</li><li><strong>Include all costs:</strong> amortized commitments, data transfer, shared platform, support.</li><li><strong>Avoid vanity drivers</strong> that don’t correlate with cost (e.g. page views for a batch workload).</li><li><strong>Normalize</strong> for price changes (rate vs usage variance) when explaining movement.</li></ul><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Unit economics depends on trustworthy allocation. If 30% of cost is unallocated, your unit costs are understated.</div></div></div></section>
+<section class="panel" id="t4" data-toc='[["s4-1","Take the Assessment"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag fresher">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 04</p><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">15 multiple-choice questions on tagging, allocation, showback/chargeback and unit KPIs — basic definitions through expert unit-cost calculations.</p></div>
+<div class="section" id="s4-1"><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div><div class="assess-intro-text">A timed, proctored, exam-style assessment on tagging, allocation, showback/chargeback and unit economics. Questions <strong>and answer options are shuffled on every attempt</strong>.</div><ul class="assess-intro-list"><li><strong>15 multiple-choice questions</strong>: concept checks, scenario and query-reading questions</li><li>Difficulty ranges from <strong>Basic</strong> to <strong>Expert</strong></li><li><strong>20-minute</strong> timer, question palette, mark-for-review</li><li>Runs <strong>fullscreen</strong>; tab switching and leaving the window are tracked (3 warnings = auto-submit)</li><li>Answers and explanations are shown <strong>only after you submit</strong>; attempts and top score are saved in this browser</li></ul><button class="assess-start-btn" id="assessStartBtn" type="button">&#9654; Start Assessment</button></div><div id="scoreBoard" style="display:none"></div></div></section></main></div>
+<script>
+/* =========================================================
+   Tab switching, dynamic TOC, scroll-spy, progress pill
+   ========================================================= */
+(function(){
+  const tabs   = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel');
+  const tocEl  = document.getElementById('toc');
+  const total  = tabs.length;
+  const progressText = document.getElementById('progressText');
+
+  function buildToc(panel){
+    const data = JSON.parse(panel.getAttribute('data-toc') || '[]');
+    tocEl.innerHTML = data.map(([id,label]) =>
+      `<li><a href="#${id}" data-target="${id}">${label}</a></li>`
+    ).join('');
+    // first link active by default
+    const first = tocEl.querySelector('a');
+    if(first) first.classList.add('active');
+  }
+
+  let manual=null;
+  function activate(idx){
+    tabs.forEach((t,i)=>t.classList.toggle('active', i===idx));
+    panels.forEach((p,i)=>p.classList.toggle('active', i===idx));
+    manual=null;
+    buildToc(panels[idx]);
+    progressText.textContent = `Tab ${idx+1} of ${total}`;
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+
+  tabs.forEach((t,i)=>{
+    t.addEventListener('click', ()=> activate(i));
+  });
+
+  // Smooth scroll inside the active tab
+  document.addEventListener('click', (e)=>{
+    const a = e.target.closest('.toc-list a');
+    if(!a) return;
+    e.preventDefault();
+    const id = a.getAttribute('data-target');
+    const el = document.getElementById(id);
+    manual = id; tocEl.querySelectorAll('a').forEach(x=>x.classList.toggle('active', x===a));
+    if(el){
+      window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 130, behavior:'smooth'});
+    }
+  });
+
+  // Scroll spy — highlight the nearest visible section
+  let ticking = false;
+  function spy(){
+    if(manual){ ticking = false; return; }
+    const activePanel = document.querySelector('.panel.active');
+    if(!activePanel){ ticking = false; return; }
+    const sections = activePanel.querySelectorAll('.section');
+    const trigger  = 180; // px from top
+    let current = null;
+    sections.forEach(sec=>{
+      const rect = sec.getBoundingClientRect();
+      if(rect.top - trigger < 0) current = sec.id;
+    });
+    if(sections.length && window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) current = sections[sections.length-1].id;
+    if(current){
+      tocEl.querySelectorAll('a').forEach(a=>{
+        a.classList.toggle('active', a.dataset.target === current);
+      });
+    }
+    ticking = false;
+  }
+  window.addEventListener('scroll', ()=>{
+    if(!ticking){ requestAnimationFrame(spy); ticking = true; }
+  }, {passive:true});
+  ['wheel','touchstart','keydown','pointerdown'].forEach(ev=>window.addEventListener(ev,e=>{if(e.target&&e.target.closest&&e.target.closest('.toc-list a'))return;manual=null},{passive:true}));
+
+  // Reset
+  window.resetProgress = function(){ activate(0); };
+
+  // Init
+  activate(0);
+})();
+
+</script>
+
+<style>
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash .card:hover{transform:none}
+  .exam-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9;padding:0}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-fswarn{position:fixed;inset:0;z-index:100003;background:rgba(15,23,42,.92);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#fff;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fswarn .fw-box{max-width:520px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .exam-fswarn h3{font-size:30px;font-weight:800;margin:0;display:flex;align-items:center;gap:12px;color:#fff}
+  .exam-fswarn p{margin:0;font-size:16px;color:#e2e8f0;line-height:1.5}
+  .exam-fswarn .fw-count{font-size:16px;font-weight:600;color:#fff}
+  .exam-fswarn .fw-btn{margin-top:6px;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:15px 26px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+  .exam-fswarn .fw-btn:hover{background:#000}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}.exam-q-pane{padding:20px}}
+  
+.assess-start-card{border:1px solid #e9e9e7;border-radius:14px;padding:26px;background:#f7f6f3;max-width:760px}
+.assess-intro-title{font-size:20px;font-weight:700;margin-bottom:10px}.assess-intro-text{font-size:14.5px;color:#787774;margin-bottom:12px}
+.assess-intro-list{font-size:14px;color:#787774;line-height:1.9;margin:0 0 20px 18px;padding:0}
+.assess-start-btn{background:#14213D;color:#fff;border:0;border-radius:9px;padding:13px 26px;font:700 15px 'Noto Sans',sans-serif;cursor:pointer}.assess-start-btn:hover{opacity:.9}
+.exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none}
+@media print{.exam-overlay,.exam-splash{display:none!important}}
+</style><script>
+(function(){
+  const RAW=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob('W3siZCI6ICJCYXNpYyIsICJxIjogIldoYXQgaXMgdGhlIHByaW1hcnkgcHVycG9zZSBvZiBjb3N0IGFsbG9jYXRpb24gaW4gRmluT3BzPyIsICJvIjogWyJSZWR1Y2luZyBkaXNjb3VudCByYXRlcyIsICJDaG9vc2luZyBpbnN0YW5jZSB0eXBlcyIsICJSZXBsYWNpbmcgYnVkZ2V0cyIsICJBdHRyaWJ1dGluZyBldmVyeSBkb2xsYXIgb2YgY2xvdWQgc3BlbmQgdG8gYW4gb3duZXIiXSwgImEiOiAzLCAiZSI6ICJBbGxvY2F0aW9uIGNyZWF0ZXMgYWNjb3VudGFiaWxpdHkgYnkgbWFwcGluZyBzcGVuZCB0byB0ZWFtcywgcHJvZHVjdHMsIGVudmlyb25tZW50cyBvciBjdXN0b21lcnMuIn0sIHsiZCI6ICJCYXNpYyIsICJxIjogIldoaWNoIHRhZyBzZXQgaXMgdGhlIGJlc3QgbWluaW1hbCBiYXNlbGluZSBmb3IgY29zdCBhbGxvY2F0aW9uPyIsICJvIjogWyJjb2xvciwgc2l6ZSwgc2hhcGUiLCAicGFzc3dvcmQsIHVzZXIsIGlwIiwgIm93bmVyLCBjb3N0LWNlbnRlciwgZW52aXJvbm1lbnQsIGFwcGxpY2F0aW9uIiwgInJlZ2lvbiwgYXosIHZwYyJdLCAiYSI6IDIsICJlIjogIk93bmVyLCBjb3N0LWNlbnRlciwgZW52aXJvbm1lbnQgYW5kIGFwcGxpY2F0aW9uIGNvdmVyIGFjY291bnRhYmlsaXR5LCBmaW5hbmNlIG1hcHBpbmcgYW5kIGNvbnRleHQuIn0sIHsiZCI6ICJCYXNpYyIsICJxIjogIk9uIEFXUywgdXNlci1kZWZpbmVkIHRhZ3MgYXBwZWFyIGluIGNvc3QgcmVwb3J0cyBvbmx5IGFmdGVyIHlvdToiLCAibyI6IFsiUmVuYW1lIHRoZSBhY2NvdW50IiwgIkJ1eSBhIFNhdmluZ3MgUGxhbiIsICJEZWxldGUgdW50YWdnZWQgcmVzb3VyY2VzIiwgIkFjdGl2YXRlIHRoZW0gYXMgY29zdCBhbGxvY2F0aW9uIHRhZ3MiXSwgImEiOiAzLCAiZSI6ICJUYWdzIG11c3QgYmUgYWN0aXZhdGVkIGZvciBiaWxsaW5nIGFuZCBhcmUgbm90IGFwcGxpZWQgcmV0cm9hY3RpdmVseS4ifSwgeyJkIjogIkJhc2ljIiwgInEiOiAiV2hpY2ggbWV0aG9kIHByZXZlbnRzIHVudGFnZ2VkIHJlc291cmNlcyBhdCBjcmVhdGlvbiB0aW1lPyIsICJvIjogWyJNb250aGx5IGVtYWlscyIsICJNYW51YWwgc3ByZWFkc2hlZXRzIiwgIkhpZ2hlciBidWRnZXRzIiwgIlBvbGljeSBlbmZvcmNlbWVudCAodGFnIHBvbGljaWVzLCBBenVyZSBQb2xpY3ksIG9yZyBwb2xpY3kpIGFuZCBJYUMgZGVmYXVsdHMiXSwgImEiOiAzLCAiZSI6ICJQcmV2ZW50aXZlIGNvbnRyb2xzIGJlYXQgYWZ0ZXItdGhlLWZhY3QgY2xlYW51cC4ifSwgeyJkIjogIkJhc2ljIiwgInEiOiAiQSBzaGFyZWQgY2x1c3RlciBjb3N0cyAkMzAsMDAwLiBOYW1lc3BhY2UgQSB1c2VzIDUwJSBvZiBDUFUgcmVxdWVzdHMuIEEncyBwcm9wb3J0aW9uYWwgc2hhcmUgaXM6IiwgIm8iOiBbIiQ1LDAwMCIsICIkMzAsMDAwIiwgIiQxNSwwMDAiLCAiJDEwLDAwMCJdLCAiYSI6IDIsICJlIjogIjUwJSDDlyAkMzAsMDAwID0gJDE1LDAwMC4ifSwgeyJkIjogIkludGVybWVkaWF0ZSIsICJxIjogIldoYXQgaXMgdGhlIGtleSBkaWZmZXJlbmNlIGJldHdlZW4gc2hvd2JhY2sgYW5kIGNoYXJnZWJhY2s/IiwgIm8iOiBbIlRoZXkgYXJlIGlkZW50aWNhbCIsICJTaG93YmFjayBuZWVkcyBubyBkYXRhIiwgIlNob3diYWNrIGJpbGxzIHRlYW1zOyBjaGFyZ2ViYWNrIGRvZXMgbm90IiwgIkNoYXJnZWJhY2sgbW92ZXMgbW9uZXkgdG8gdGhlIHRlYW0ncyBidWRnZXQ7IHNob3diYWNrIG9ubHkgcmVwb3J0cyJdLCAiYSI6IDMsICJlIjogIlNob3diYWNrIGluZm9ybXM7IGNoYXJnZWJhY2sgdHJhbnNmZXJzIGFjdHVhbCBjb3N0LiJ9LCB7ImQiOiAiSW50ZXJtZWRpYXRlIiwgInEiOiAiV2hpY2ggaXMgYSBjb21tb24gbWF0dXJpdHkgcGF0aD8iLCAibyI6IFsiVGFnZ2luZyBhZnRlciBjaGFyZ2ViYWNrIiwgIlNob3diYWNrIChhd2FyZW5lc3MpIOKGkiBwYXJ0aWFsIGNoYXJnZWJhY2sg4oaSIGZ1bGwgY2hhcmdlYmFjayIsICJDaGFyZ2ViYWNrIOKGkiBzaG93YmFjayDihpIgbm90aGluZyIsICJGdWxsIGNoYXJnZWJhY2sgaW1tZWRpYXRlbHkiXSwgImEiOiAxLCAiZSI6ICJTdGFydCB3aXRoIHNob3diYWNrIHdoaWxlIHRhZ2dpbmcgbWF0dXJlcywgdGhlbiBpbnRyb2R1Y2UgY2hhcmdlYmFjay4ifSwgeyJkIjogIkludGVybWVkaWF0ZSIsICJxIjogIkRpcmVjdCBzcGVuZDogQSAkNDAsMDAwLCBCICQyNSwwMDA7IHNoYXJlZCBwb29sICQxNSwwMDAgc3BsaXQgYnkgZGlyZWN0LXNwZW5kIHJhdGlvLiBXaGF0IGRvZXMgQSBwYXkgaW4gdG90YWwgKG5lYXJlc3QgZG9sbGFyKT8iLCAibyI6IFsiJDU1LDAwMCIsICIkNDUsMDAwIiwgIiQ0MCwwMDAiLCAiJDQ5LDIzMSJdLCAiYSI6IDMsICJlIjogIkEncyByYXRpbyA9IDQwLzY1ID0gNjEuNTQlIOKGkiAkOSwyMzEgc2hhcmVkICsgJDQwLDAwMCA9ICQ0OSwyMzEuIn0sIHsiZCI6ICJJbnRlcm1lZGlhdGUiLCAicSI6ICJXaGljaCBjb21taXRtZW50LWRpc2NvdW50IGFsbG9jYXRpb24gaXMgdHlwaWNhbGx5IGZhaXJlc3QgZm9yIHNoYXJlZCBwb29scz8iLCAibyI6IFsiQmxlbmRlZC9hbW9ydGl6ZWQgcmF0ZSBhY3Jvc3MgY29uc3VtZXJzIiwgIk9ubHkgdGhlIGxhcmdlc3QgdGVhbSBiZW5lZml0cyIsICJCdXllciBrZWVwcyBhbGwgYmVuZWZpdCIsICJJZ25vcmUgdGhlIGRpc2NvdW50cyJdLCAiYSI6IDAsICJlIjogIkJsZW5kZWQgb3IgYW1vcnRpemVkIHJhdGVzIGF2b2lkIGEgJ2xvdHRlcnknIG9uIHdobyBoYXBwZW5zIHRvIHJ1biBjb3ZlcmVkIHJlc291cmNlcy4ifSwgeyJkIjogIkludGVybWVkaWF0ZSIsICJxIjogIlVuaXQgY29zdCBpcyBjYWxjdWxhdGVkIGFzOiIsICJvIjogWyJUb3RhbCBjbG91ZCBzcGVuZCDDtyBudW1iZXIgb2YgZW5naW5lZXJzIiwgIlJldmVudWUgw7cgY2xvdWQgc3BlbmQiLCAiQWxsb2NhdGVkIGNsb3VkIGNvc3Qgw7cgYSBidXNpbmVzcyBkcml2ZXIiLCAiQnVkZ2V0IMO3IGZvcmVjYXN0Il0sICJhIjogMiwgImUiOiAiQSB1bml0IG1ldHJpYyBkaXZpZGVzIGFsbG9jYXRlZCBjb3N0IGJ5IGEgYnVzaW5lc3Mgb3V0cHV0IHN1Y2ggYXMgdHJhbnNhY3Rpb25zLiJ9LCB7ImQiOiAiRXhwZXJ0IiwgInEiOiAiQ2xvdWQgY29zdCAkNDIsMDAwIGZvciAxMiwwMDAsMDAwIHRyYW5zYWN0aW9ucy4gQ29zdCBwZXIgMSwwMDAgdHJhbnNhY3Rpb25zPyIsICJvIjogWyIkMzUiLCAiJDAuMDAzNSIsICIkMC4zNSIsICIkMy41MCJdLCAiYSI6IDMsICJlIjogIjQyLDAwMCDDtyAxMiwwMDAsMDAwID0gJDAuMDAzNSBwZXIgdHJhbnNhY3Rpb24gPSAkMy41MCBwZXIgMSwwMDAuIn0sIHsiZCI6ICJFeHBlcnQiLCAicSI6ICJTcGVuZCByaXNlcyAyMCUgd2hpbGUgdHJhbnNhY3Rpb25zIHJpc2UgNDAlLiBXaGF0IGhhcHBlbnMgdG8gdW5pdCBjb3N0PyIsICJvIjogWyJSaXNlcyAyMCUiLCAiRG91YmxlcyIsICJGYWxscyBhYm91dCAxNCUiLCAiVW5jaGFuZ2VkIl0sICJhIjogMiwgImUiOiAiMS4yMCDDtyAxLjQwIOKJiCAwLjg1Nywgc28gdW5pdCBjb3N0IGRyb3BzIOKJiCAxNCUuIn0sIHsiZCI6ICJFeHBlcnQiLCAicSI6ICJXaXRoICQyMGsgZml4ZWQgKyAkMC4wMDEgcGVyIHRyYW5zYWN0aW9uLCB3aGF0IGlzIHRoZSBhdmVyYWdlIHVuaXQgY29zdCBhdCAyME0gdHJhbnNhY3Rpb25zPyIsICJvIjogWyIkMC4wMDEwIiwgIiQwLjAwMzAiLCAiJDAuMDA0MCIsICIkMC4wMDIwIl0sICJhIjogMywgImUiOiAiKDIwLDAwMCArIDIwLDAwMCkgw7cgMjAsMDAwLDAwMCA9ICQwLjAwMjA7IG1hcmdpbmFsIGNvc3QgcmVtYWlucyAkMC4wMDEuIn0sIHsiZCI6ICJFeHBlcnQiLCAicSI6ICJXaHkgY2FuIHVuYWxsb2NhdGVkIHNwZW5kIGJlIGRhbmdlcm91cyBmb3IgdW5pdCBlY29ub21pY3M/IiwgIm8iOiBbIkl0IGluY3JlYXNlcyB0YWdzIiwgIkl0IHVuZGVyc3RhdGVzIHVuaXQgY29zdCBiZWNhdXNlIHBhcnQgb2YgdGhlIHNwZW5kIGlzIG1pc3NpbmciLCAiSXQgbG93ZXJzIGludm9pY2VzIiwgIkl0IGltcHJvdmVzIGZvcmVjYXN0IGFjY3VyYWN5Il0sICJhIjogMSwgImUiOiAiTWlzc2luZyBhbGxvY2F0aW9uIG1lYW5zIG51bWVyYXRvciBpcyB0b28gc21hbGwg4oCUIHVuaXQgY29zdHMgbG9vayBiZXR0ZXIgdGhhbiByZWFsaXR5LiJ9LCB7ImQiOiAiRXhwZXJ0IiwgInEiOiAiV2hpY2ggaXMgYSBzb3VuZCB3YXkgdG8gaW5jZW50aXZpemUgZW5naW5lZXJpbmcgdGVhbXM/IiwgIm8iOiBbIlB1bmlzaCBhbGwgZ3Jvd3RoIiwgIkhpZGUgdGhlIGRhdGEiLCAiUmV3YXJkIGltcHJvdmluZyB1bml0IGNvc3Qgd2hpbGUgdGhlIGJ1c2luZXNzIGdyb3dzIiwgIlJld2FyZCBvbmx5IHRvdGFsIHNwZW5kIHJlZHVjdGlvbiJdLCAiYSI6IDIsICJlIjogIlVuaXQgY29zdCBzZXBhcmF0ZXMgaGVhbHRoeSBncm93dGggZnJvbSBpbmVmZmljaWVuY3kuIn1d'),c=>c.charCodeAt(0))));
+  const TITLE="Governance & Unit Economics", LS_KEY='obs_scores_fin4', EXAM_SECONDS=20*60;
+  let items=[],answers={},marked={},cur=0,remaining=EXAM_SECONDS,timerId=null,examOn=false;
+  const fmt=t=>{const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s};
+  function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function build(){ // shuffle questions AND options, remap the answer
+    return shuffle(RAW.map((x,i)=>{const idx=shuffle(x.o.map((_,k)=>k));return {id:'q'+i,d:x.d,q:x.q,options:idx.map(k=>x.o[k]),answer:idx.indexOf(x.a),exp:x.e}}))}
+  function dlg(title,msg,ok,cancel){return new Promise(res=>{const d=document.createElement('div');d.className='exam-confirm';
+    d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">${cancel?'<button class="exam-btn nav" data-a="0">Cancel</button>':''}<button class="exam-btn primary" data-a="1">${ok||'OK'}</button></div></div>`;
+    document.body.appendChild(d);d.addEventListener('click',e=>{if(e.target===d&&cancel){d.remove();res(false);return}const b=e.target.closest('[data-a]');if(!b)return;d.remove();res(b.dataset.a==='1')})})}
+  const load=()=>{try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]')}catch(e){return[]}};
+  function save(score,total){const a=load();a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)))}catch(e){}board()}
+  function board(){const el=document.getElementById('scoreBoard');if(!el)return;const a=load();if(!a.length){el.style.display='none';return}
+    el.style.display='block';const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]),l5=a.slice(0,5);
+    const f=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})};
+    el.innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:18px;max-width:760px"><div style="min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center"><div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div><div style="font-size:34px;font-weight:800">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div><div style="font-size:12px;color:#cdd5e5">${best.pct}%</div></div>
+    <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px"><div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${l5.length} attempt${l5.length>1?'s':''}</div>${l5.map(x=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px"><span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b">&middot; ${x.pct}%</span></span><span style="color:#94a3b8">${f(x.ts)}</span></div>`).join('')}</div></div>`}
+  /* proctoring: tab switch / blur / fullscreen exit = warning, 3 strikes = auto-submit; copy, cut, print, save, view-source, right-click, drag disabled */
+  let warns=0,lastWarn=0,proctor=false,fsWanted=false;
+  function cover(on){let c=document.getElementById('examCover');if(on){if(!examOn)return;if(!c){c=document.createElement('div');c.id='examCover';c.className='exam-cover';c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';document.body.appendChild(c)}c.style.display='flex'}else if(c)c.style.display='none'}
+  function hideFsWarn(){const w=document.getElementById('examFsWarn');if(w)w.remove()}
+  function showFsWarn(n){hideFsWarn();const w=document.createElement('div');w.className='exam-fswarn';w.id='examFsWarn';
+    w.innerHTML='<div class="fw-box"><h3><span>&#9888;&#65039;</span> Fullscreen exited</h3><p>The assessment must remain in fullscreen mode.</p><div class="fw-count">Warning '+n+' of 3</div><button class="fw-btn" id="examFsReturn">Return to assessment</button></div>';
+    document.body.appendChild(w);const b=document.getElementById('examFsReturn');
+    b.addEventListener('click',()=>{const el=document.documentElement;const done=()=>{fsWanted=true;hideFsWarn();cover(false)};
+      if(el.requestFullscreen){el.requestFullscreen().then(done).catch(()=>{})}else done()});
+    try{b.focus()}catch(e){}}
+  function warn(kind){if(!proctor||!examOn)return;const n=Date.now();if(n-lastWarn<1500)return;lastWarn=n;warns++;
+    if(warns>=3){hideFsWarn();dlg('Test submitted','You left the test 3 times. It has been auto-submitted.');submit(true)}
+    else if(kind==='fs')showFsWarn(warns);
+    else dlg('Warning '+warns+' of 3','Switching tabs or leaving the window is not allowed. After 3 warnings the test is auto-submitted.')}
+  const onFs=()=>{if(!examOn)return;if(document.fullscreenElement){hideFsWarn();cover(false);return}if(fsWanted)warn('fs')};
+  const onVis=()=>{if(document.hidden){cover(true);warn()}else cover(false)};
+  const onBlur=()=>{if(examOn&&document.hasFocus&&!document.hasFocus()&&!document.hidden){cover(true);warn()}};
+  const onFocus=()=>cover(false);
+  const stop=e=>{e.preventDefault();return false};
+  const keyg=e=>{const k=(e.key||'').toLowerCase();if(((e.ctrlKey||e.metaKey)&&['c','x','s','p','u','a'].includes(k))||k==='f12'||((e.ctrlKey||e.metaKey)&&e.shiftKey&&['i','j','c'].includes(k))){e.preventDefault();return false}};
+  const EV=[['visibilitychange',onVis,document],['fullscreenchange',onFs,document],['blur',onBlur,window],['focus',onFocus,window],['contextmenu',stop,document],['copy',stop,document],['cut',stop,document],['dragstart',stop,document],['keydown',keyg,document]];
+  function pOn(){warns=0;lastWarn=0;proctor=true;EV.forEach(([n,f,t])=>t.addEventListener(n,f,true))}
+  function pOff(){proctor=false;hideFsWarn();EV.forEach(([n,f,t])=>t.removeEventListener(n,f,true));cover(false)}
+  function splash(){const sp=document.createElement('div');sp.className='exam-splash';sp.id='examSplash';
+    sp.innerHTML=`<div class="card"><h2>&#127919; ${TITLE} &mdash; Final Assessment</h2><p>A timed, exam-style assessment modelled on real hiring screens for Observability / SRE roles.</p>
+    <ul><li><b>${RAW.length} questions</b>, questions and options shuffled every attempt</li><li><b>20-minute</b> timer; the test auto-submits when time is up</li><li>Navigate freely, <b>mark questions for review</b>, then submit</li><li>Correct answers and explanations are shown only after you submit</li></ul>
+    <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p><ul style="margin-top:0"><li>The test runs in <b>fullscreen</b> where your browser allows it</li><li><b>No tab / window switching</b> and <b>no exiting fullscreen (Esc)</b>: 3 warnings and the test <b>auto-submits</b></li><li>Copy, print, save, right-click and developer shortcuts are disabled during the test</li></ul>
+    <div style="display:flex;gap:10px"><button class="exam-btn nav" id="exC" style="flex:0 0 auto">Cancel</button><button class="exam-btn primary" id="exB" style="flex:1;padding:14px">Start Test &rarr;</button></div></div>`;
+    document.body.appendChild(sp);document.getElementById('exC').onclick=()=>sp.remove();
+    document.getElementById('exB').onclick=()=>{fsWanted=false;if(document.documentElement.requestFullscreen){document.documentElement.requestFullscreen().then(()=>{fsWanted=true}).catch(()=>{})}sp.remove();enter()}}
+  function enter(){items=build();answers={};marked={};cur=0;remaining=EXAM_SECONDS;examOn=true;
+    const ov=document.createElement('div');ov.className='exam-overlay';ov.id='examOverlay';
+    ov.innerHTML=`<div class="exam-top"><div><div class="et-title">${TITLE} &mdash; Final Assessment</div><div class="et-sub">${items.length} questions &middot; one attempt &middot; good luck</div></div><div class="exam-timer" id="examTimer">${fmt(remaining)}</div></div>
+    <div class="exam-main"><div class="exam-q-pane" id="examQ"></div><div class="exam-side"><div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div><h4>Question palette</h4><div class="exam-palette" id="examPal"></div>
+    <div class="exam-legend"><span><i style="background:#14213D;border-color:#14213D"></i> Answered</span><span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span><span><i></i> Not answered</span></div>
+    <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button></div></div>`;
+    document.body.appendChild(ov);document.body.style.overflow='hidden';
+    document.getElementById('examSubmit').onclick=()=>submit(false);pal();show();timerId=setInterval(tick,1000);addEventListener('beforeunload',bu);pOn()}
+  const bu=e=>{if(examOn){e.preventDefault();e.returnValue=''}};
+  function tick(){remaining--;const el=document.getElementById('examTimer');if(el){el.textContent=fmt(Math.max(remaining,0));if(remaining<=300)el.classList.add('warn')}if(remaining<=0)submit(true)}
+  function pal(){const p=document.getElementById('examPal');p.innerHTML='';items.forEach((it,n)=>{const b=document.createElement('button');b.className='pal';b.textContent=n+1;b.dataset.n=n;b.onclick=()=>{cur=n;show()};p.appendChild(b)});refresh()}
+  function refresh(){document.querySelectorAll('#examPal .pal').forEach(b=>{const n=+b.dataset.n,id=items[n].id;b.classList.toggle('answered',id in answers);b.classList.toggle('marked',!!marked[id]);b.classList.toggle('cur',n===cur)});const e=document.getElementById('examAnsN');if(e)e.textContent=Object.keys(answers).length}
+  function show(){const it=items[cur],id=it.id,pane=document.getElementById('examQ');
+    pane.innerHTML=`<div class="exam-qnum">Question ${cur+1} of ${items.length} &middot; ${it.d}</div><div class="exam-qtext">${it.q}</div>
+    <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}" tabindex="0"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+    <div class="exam-actions"><button class="exam-btn nav" id="exP" ${cur===0?'disabled':''}>&larr; Previous</button><button class="exam-btn mark${marked[id]?' on':''}" id="exM">${marked[id]?'&#9733; Marked':'&#9734; Mark for review'}</button><button class="exam-btn nav" id="exN" ${cur===items.length-1?'disabled':''}>Next &rarr;</button></div>`;
+    pane.querySelectorAll('.exam-opt').forEach(el=>{const pick=()=>{answers[id]=+el.dataset.i;pane.querySelectorAll('.exam-opt').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');refresh()};el.onclick=pick;el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick()}}});
+    document.getElementById('exP').onclick=()=>{if(cur>0){cur--;show()}};document.getElementById('exN').onclick=()=>{if(cur<items.length-1){cur++;show()}};document.getElementById('exM').onclick=()=>{marked[id]=!marked[id];show()};refresh();pane.scrollTop=0}
+  async function submit(auto){if(!examOn)return;const un=items.length-Object.keys(answers).length;
+    if(!auto){const ok=await dlg('Submit test?',(un>0?'You have '+un+' unanswered question(s). ':'')+'Once submitted, you can\'t change your answers.','Submit test',true);if(!ok)return}
+    examOn=false;clearInterval(timerId);removeEventListener('beforeunload',bu);pOff();let s=0;items.forEach(it=>{if(answers[it.id]===it.answer)s++});results(s)}
+  function results(score){const total=items.length;save(score,total);const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below, revisit the modules and try again.';
+    if(pct>=85)msg='Outstanding &mdash; you are operating at an expert level for this role.';else if(pct>=65)msg='Solid pass. Review the questions you missed and you are interview-ready.';else if(pct>=50)msg='Borderline &mdash; revisit the modules you missed and retake.';
+    const rev=items.map((it,n)=>{const you=answers[it.id],att=you!=null,ok=att&&you===it.answer;let h='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      h+=att?'<div class="ra '+(ok?'cor':'wrong')+'">Your answer: '+String.fromCharCode(65+you)+'. '+it.options[you]+'</div>':'<div class="ra wrong">Your answer: <i>Not answered</i></div>';
+      if(!ok)h+='<div class="ra cor">Correct: '+String.fromCharCode(65+it.answer)+'. '+it.options[it.answer]+'</div>';if(it.exp)h+='<div class="rx">'+it.exp+'</div>';return '<div class="r '+(ok?'ok':'no')+'">'+h+'</div>'}).join('');
+    document.getElementById('examOverlay').innerHTML=`<div class="exam-top"><div class="et-title">Result &mdash; ${TITLE}</div><button class="exam-btn" id="exX" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+    <div class="exam-q-pane" style="grid-column:1/-1"><div class="exam-result"><div class="exam-score">${score} / ${total}</div><div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div><div style="margin-top:16px"><button class="exam-btn primary" id="exR">&#8635; Take another attempt</button></div><div class="exam-rev">${rev}</div></div></div>`;
+    document.getElementById('exR').onclick=()=>{close();splash()};document.getElementById('exX').onclick=close}
+  function close(){pOff();const o=document.getElementById('examOverlay');if(o)o.remove();document.body.style.overflow='';if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}
+  const sb=document.getElementById('assessStartBtn');if(sb)sb.addEventListener('click',splash);board();
+})();
+</script><script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+<style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body></html>

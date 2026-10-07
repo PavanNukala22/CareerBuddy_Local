@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scripting &amp; Automation — Customer Success Engineer (CSE)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============= Notion-inspired theme ============= */
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#ad1a72 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans';font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'JetBrains Mono',monospace;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans';font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'JetBrains Mono',monospace;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'JetBrains Mono',monospace;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'JetBrains Mono',monospace;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'JetBrains Mono',monospace;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'JetBrains Mono',monospace;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+</style>
+<!-- ── Global theme overlay (DESIGN-CBuddy.md) ── -->
+<link rel="stylesheet" href="/theme-cbuddy.css">
+<style>
+/* CareerBuddy: sticky sidebar visible scrollbar */
+.toc,.sidebar,.sidenav{scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc::-webkit-scrollbar,.sidebar::-webkit-scrollbar,.sidenav::-webkit-scrollbar{width:9px;height:9px}
+.toc::-webkit-scrollbar-thumb,.sidebar::-webkit-scrollbar-thumb,.sidenav::-webkit-scrollbar-thumb{background:#cbd2e0;border-radius:8px}
+.toc::-webkit-scrollbar-thumb:hover,.sidebar::-webkit-scrollbar-thumb:hover,.sidenav::-webkit-scrollbar-thumb:hover{background:#9aa4b8}
+.toc::-webkit-scrollbar-track,.sidebar::-webkit-scrollbar-track,.sidenav::-webkit-scrollbar-track{background:transparent}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@100..900&display=swap">
+<style>
+/* -- Unify typography: Noto Sans everywhere (CareerBuddy) -- */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,dl,dt,dd,td,th,div,section,article,header,footer,nav,aside,main,label,button,input,select,textarea,blockquote,figcaption,small,strong,b,em,i{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif !important}
+.material-symbols-outlined,.material-icons{font-family:'Material Symbols Outlined','Material Icons' !important}
+code,pre,kbd,samp,tt,.mono,[class*="mono"],[class*="Mono"],[class*="code"],[class*="Code"],[class*="tok"],[class*="hljs"]{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+
+<style>
+/* Practice + quick-check additions (same visual language as the reference) */
+.practice-label{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:#0a5f0a;background:var(--green-soft);padding:3px 9px;border-radius:5px;margin-bottom:6px}
+.saq-scenario{font-size:14px;color:var(--ink-soft);margin:0 0 10px;line-height:1.55}
+.mcq-reset{margin-top:6px}
+.steps{counter-reset:st;list-style:none;padding-left:0 !important}
+.steps>li{counter-increment:st;position:relative;padding-left:40px;margin:12px 0 !important}
+.steps>li::before{content:counter(st);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;
+  background:#14213D;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}
+.script{background:var(--bg-soft);border-left:3px solid #14213D;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:14.5px}
+.script.bad{border-left-color:var(--red)}
+.script.good{border-left-color:var(--green)}
+.script b{display:block;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:2px}
+</style>
+
+<style>
+/* Visible, thin navbar scrollbar */
+.tabbar{overflow-x:auto !important;scrollbar-width:thin !important;scrollbar-color:#000000 #e2e8f0 !important;padding-bottom:4px}
+.tabbar::-webkit-scrollbar{display:block !important;height:8px}
+.tabbar::-webkit-scrollbar-track{background:#e2e8f0;border-radius:8px}
+.tabbar::-webkit-scrollbar-thumb{background:#000000;border-radius:8px}
+.tabbar::-webkit-scrollbar-thumb:hover{background:#333333}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<!-- ============= STICKY HEADER ============= -->
+<header class="header"><div class="header-top"><div class="brand"><div class="brand-mark">SC</div><span>Scripting &amp; Automation<span class="brand-sub"> · Customer Success Engineer (CSE)</span></span></div><div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 12</span></span><button class="btn" onclick="resetProgress()">↻ Reset</button></div></div><nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Fundamentals</button><button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> Bash Essentials</button><button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> Python Scripting</button><button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> Node.js Scripting</button><button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> Calling APIs from Scripts</button><button class="tab" data-tab="t6" role="tab"><span class="tab-num">06</span> Data Processing</button><button class="tab" data-tab="t7" role="tab"><span class="tab-num">07</span> Scheduling & Orchestration</button><button class="tab" data-tab="t8" role="tab"><span class="tab-num">08</span> Testing & Safety</button><button class="tab" data-tab="t9" role="tab"><span class="tab-num">09</span> Logging, Secrets & Packaging</button><button class="tab" data-tab="t10" role="tab"><span class="tab-num">10</span> Real-World Scenarios</button><button class="tab" data-tab="t11" role="tab"><span class="tab-num">11</span> Interview Prep</button><button class="tab" data-tab="t12" role="tab"><span class="tab-num">12</span> Assessment</button></nav></header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside><main class="main">
+<section class="panel active" id="t1" data-toc="[[&quot;s1-1&quot;, &quot;Scripts Bridge Product Gaps&quot;], [&quot;s1-2&quot;, &quot;Choosing the Language&quot;], [&quot;s1-3&quot;, &quot;When Not to Script&quot;], [&quot;s1-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Basic</span><span class="level-tag inter">Intermediate</span></div><div class="panel-eyebrow">Module 01 · Foundations</div><h1 class="panel-title">Scripting & Automation for CSEs</h1><p class="panel-subtitle">Why a Customer Success Engineer writes scripts, how to choose the language, and when NOT to script.</p></div>
+<div class="section" id="s1-1"><h2><span class="sec-emoji">🔌</span> Scripts Bridge Product Gaps</h2><p>No product covers every customer workflow. A <strong>script</strong> is a small, purpose-built program that fills the gap: importing 5,000 users from a spreadsheet, producing a weekly usage report, cleaning stale records, or moving data between your product and the client's tools. <strong>Automation</strong> means the script runs reliably without a person pressing the buttons.</p><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> an adapter plug when you travel. The socket (the client's system) and the plug (your product) do not match, so you carry a small adapter instead of rebuilding the wall.</div></div><div style="overflow-x:auto"><table><thead><tr><th>Typical gap</th><th>Script solution</th><th>Time saved</th></tr></thead><tbody><tr><td>Bulk create 5,000 users</td><td>Python reads CSV, calls the users API</td><td>Days to minutes</td></tr><tr><td>Weekly executive report</td><td>Node script queries API, posts to Slack</td><td>1 hour per week</td></tr><tr><td>Find accounts with failing webhooks</td><td>Bash + curl + jq over the API</td><td>Instant daily check</td></tr><tr><td>Clean old test data</td><td>Python with dry-run and confirmation</td><td>Safe bulk cleanup</td></tr></tbody></table></div></div>
+<div class="section" id="s1-2"><h2><span class="sec-emoji">🧰</span> Choosing the Language</h2><div style="overflow-x:auto"><table><thead><tr><th>Language</th><th>Strengths</th><th>Choose it when</th></tr></thead><tbody><tr><td>Bash</td><td>Glue for command-line tools, files, cron</td><td>Short tasks chaining curl, jq, grep, scp</td></tr><tr><td>Python</td><td>Readable, rich libraries (requests, csv, pandas)</td><td>Data handling, APIs, anything with logic</td></tr><tr><td>JavaScript / Node.js</td><td>Async I/O, same language as many SDKs and webhooks</td><td>Webhook receivers, SDK-based tools, client already uses JS</td></tr></tbody></table></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Use the language the <b>client's team can maintain</b>. A perfect script nobody can read becomes your support burden forever.</div></div></div>
+<div class="section" id="s1-3"><h2><span class="sec-emoji">🛑</span> When Not to Script</h2><ol class="steps"><li>The product already has the feature (check docs and roadmap first).</li><li>The job is one-off and tiny: do it manually and carefully.</li><li>The script would run unsupervised against production data with no safety net.</li><li>It needs a permanent custom service: that is an engineering project, not a quick script.</li><li>Security or compliance rules forbid extracting the data.</li></ol><p>Good CSEs ask: <em>should this be a script, a configuration, a product request, or a proper integration?</em> A script is the right answer when it is small, repeatable and safe.</p></div>
+<div class="section" id="s1-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>A client wants a nightly sync of 2 million records with complex rules and 99.99% uptime. Why is a quick script the wrong tool?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">It is a permanent, high-volume, high-availability workload: needs proper architecture, monitoring, scaling and ownership, i.e. an integration project, not an ad-hoc script.</div></div><div class="mcq" data-answer="0"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>The best language for a client-maintained script is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> The one the client's team can read and maintain</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Always Bash</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Always Python</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> The newest language</li></ul><div class="mcq-feedback" data-expl="Maintainability beats personal preference."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t2" data-toc="[[&quot;s2-1&quot;, &quot;Core Building Blocks&quot;], [&quot;s2-2&quot;, &quot;A Safe Script Template&quot;], [&quot;s2-3&quot;, &quot;Text Pipelines with grep, awk and jq&quot;], [&quot;s2-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Basic</span><span class="level-tag inter">Intermediate</span></div><div class="panel-eyebrow">Module 02 · Bash</div><h1 class="panel-title">Bash: Command-Line Glue</h1><p class="panel-subtitle">The shell is the fastest way to combine existing tools. Learn the safe patterns that stop small scripts from causing big accidents.</p></div>
+<div class="section" id="s2-1"><h2><span class="sec-emoji">🧱</span> Core Building Blocks</h2><div style="overflow-x:auto"><table><thead><tr><th>Concept</th><th>Example</th><th>Meaning</th></tr></thead><tbody><tr><td>Pipe</td><td><code>cat log | grep ERROR</code></td><td>Output of one command feeds the next</td></tr><tr><td>Redirect</td><td><code>cmd &gt; out.txt 2&gt;&amp;1</code></td><td>Send stdout and stderr to a file</td></tr><tr><td>Variable</td><td><code>NAME="acme"; echo "$NAME"</code></td><td>Always quote variables</td></tr><tr><td>Exit code</td><td><code>cmd; echo $?</code></td><td>0 = success, non-zero = failure</td></tr><tr><td>Loop</td><td><code>for f in *.csv; do ...; done</code></td><td>Repeat for each file</td></tr><tr><td>Command substitution</td><td><code>TODAY=$(date -u +%F)</code></td><td>Capture command output</td></tr></tbody></table></div></div>
+<div class="section" id="s2-2"><h2><span class="sec-emoji">🛡️</span> A Safe Script Template</h2><pre><span class="pre-lang">bash</span><code>#!/usr/bin/env bash
+set -euo pipefail                 # stop on error, undefined variable, or failed pipe stage
+IFS=$&#x27;\n\t&#x27;                       # safer word splitting
+trap &#x27;echo &quot;FAILED at line $LINENO&quot; &gt;&amp;2&#x27; ERR
+
+: &quot;${API_TOKEN:?API_TOKEN is required}&quot;     # fail early if a secret is missing
+: &quot;${API_BASE:=https://api.example.com}&quot;    # default value
+
+echo &quot;[$(date -u +%FT%TZ)] starting export&quot; &gt;&amp;2
+curl -fsS -H &quot;Authorization: Bearer $API_TOKEN&quot; &quot;$API_BASE/v2/orders?limit=100&quot; -o orders.json
+echo &quot;done: $(jq &#x27;.items | length&#x27; orders.json) orders&quot; &gt;&amp;2</code></pre><p>Line by line: <code>-e</code> exits on the first failing command, <code>-u</code> treats unset variables as errors (catching typos), <code>-o pipefail</code> makes a pipeline fail if <em>any</em> stage fails. <code>trap ... ERR</code> reports where it died. <code>curl -f</code> turns HTTP 4xx/5xx into a failure and <code>-sS</code> hides the progress bar but still shows errors. Messages go to <code>stderr</code> (<code>&gt;&amp;2</code>) so they do not pollute data output.</p><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Quote every variable (<code>"$FILE"</code>). An unquoted <code>rm -rf $DIR/*</code> with an empty <code>$DIR</code> becomes <code>rm -rf /*</code>.</div></div></div>
+<div class="section" id="s2-3"><h2><span class="sec-emoji">🔍</span> Text Pipelines with grep, awk and jq</h2><pre><span class="pre-lang">bash</span><code># Count errors per endpoint from an access log
+grep &#x27; 500 &#x27; access.log | awk &#x27;{print $7}&#x27; | sort | uniq -c | sort -nr | head
+
+# List open tickets as CSV from a JSON API response
+curl -fsS -H &quot;Authorization: Bearer $API_TOKEN&quot; &quot;$API_BASE/tickets&quot; \
+  | jq -r &#x27;.items[] | select(.status==&quot;open&quot;) | [.id, .priority, .title] | @csv&#x27;</code></pre><p>The first pipeline filters lines, extracts the 7th column (the URL), counts duplicates and ranks them. The second uses <code>jq</code>, a JSON query tool: <code>select</code> filters items, the array picks fields, and <code>@csv</code> formats them. Reading pipelines <strong>left to right</strong> as a series of small transformations is the key skill.</p></div>
+<div class="section" id="s2-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>What do the three flags in <code>set -euo pipefail</code> do?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">-e exits when a command fails, -u errors on unset variables, -o pipefail makes a pipeline fail if any command in it fails, so errors are not hidden.</div></div><div class="mcq" data-answer="0"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>In Bash, a command that succeeds returns exit code…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> 0</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> 1</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> -1</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> 255</li></ul><div class="mcq-feedback" data-expl="Zero means success; anything else is a failure."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t3" data-toc="[[&quot;s3-1&quot;, &quot;The Toolbox&quot;], [&quot;s3-2&quot;, &quot;Example: Export Open Tickets to CSV&quot;], [&quot;s3-3&quot;, &quot;Project Hygiene&quot;], [&quot;s3-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 03 · Python</div><h1 class="panel-title">Python for Automation</h1><p class="panel-subtitle">The workhorse language of CSE scripting: readable, batteries included, and full of libraries for APIs and data.</p></div>
+<div class="section" id="s3-1"><h2><span class="sec-emoji">🧰</span> The Toolbox</h2><div style="overflow-x:auto"><table><thead><tr><th>Task</th><th>Library</th><th>Example</th></tr></thead><tbody><tr><td>HTTP calls</td><td><code>requests</code></td><td><code>requests.get(url, timeout=10)</code></td></tr><tr><td>Command-line options</td><td><code>argparse</code></td><td><code>--since 2026-10-01 --dry-run</code></td></tr><tr><td>CSV files</td><td><code>csv</code></td><td><code>csv.DictReader(f)</code></td></tr><tr><td>JSON</td><td><code>json</code></td><td><code>json.load(f)</code></td></tr><tr><td>Files and paths</td><td><code>pathlib</code></td><td><code>Path('out')/'report.csv'</code></td></tr><tr><td>Logging</td><td><code>logging</code></td><td><code>logging.info(...)</code></td></tr><tr><td>Dates</td><td><code>datetime</code></td><td><code>datetime.now(timezone.utc)</code></td></tr></tbody></table></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Always pass <code>timeout=</code> to <code>requests</code>. Without it, a stuck server can hang your script forever.</div></div></div>
+<div class="section" id="s3-2"><h2><span class="sec-emoji">📄</span> Example: Export Open Tickets to CSV</h2><pre><span class="pre-lang">python</span><code>import argparse, csv, logging, os, sys
+import requests
+
+BASE = os.environ.get(&quot;API_BASE&quot;, &quot;https://api.example.com&quot;)
+TOKEN = os.environ[&quot;API_TOKEN&quot;]                       # fail fast if missing
+log = logging.getLogger(&quot;export&quot;)
+
+def fetch_all(path, params=None):
+    params = dict(params or {}, limit=100)
+    while True:
+        r = requests.get(f&quot;{BASE}{path}&quot;, params=params, timeout=15,
+                         headers={&quot;Authorization&quot;: f&quot;Bearer {TOKEN}&quot;})
+        r.raise_for_status()                          # raise on 4xx/5xx
+        body = r.json()
+        yield from body[&quot;items&quot;]
+        if not body.get(&quot;next_cursor&quot;):
+            return
+        params[&quot;cursor&quot;] = body[&quot;next_cursor&quot;]
+
+def main():
+    ap = argparse.ArgumentParser(description=&quot;Export open tickets&quot;)
+    ap.add_argument(&quot;--out&quot;, default=&quot;tickets.csv&quot;)
+    args = ap.parse_args()
+    logging.basicConfig(level=logging.INFO, format=&quot;%(asctime)s %(levelname)s %(message)s&quot;)
+    n = 0
+    with open(args.out, &quot;w&quot;, newline=&quot;&quot;, encoding=&quot;utf-8&quot;) as f:
+        w = csv.DictWriter(f, fieldnames=[&quot;id&quot;, &quot;priority&quot;, &quot;title&quot;])
+        w.writeheader()
+        for t in fetch_all(&quot;/tickets&quot;, {&quot;status&quot;: &quot;open&quot;}):
+            w.writerow({k: t.get(k, &quot;&quot;) for k in (&quot;id&quot;, &quot;priority&quot;, &quot;title&quot;)}); n += 1
+    log.info(&quot;wrote %d tickets to %s&quot;, n, args.out)
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre><p>Notice the patterns: configuration comes from environment variables, a <strong>generator</strong> (<code>yield from</code>) hides pagination from the caller, <code>raise_for_status()</code> turns HTTP errors into exceptions, <code>newline=""</code> and <code>encoding="utf-8"</code> avoid blank rows and garbled characters in CSV, and <code>if __name__ == "__main__"</code> lets the file be both a script and importable code.</p></div>
+<div class="section" id="s3-3"><h2><span class="sec-emoji">📦</span> Project Hygiene</h2><pre><span class="pre-lang">bash</span><code>python -m venv .venv &amp;&amp; source .venv/bin/activate     # isolated environment
+pip install requests python-dotenv
+pip freeze &gt; requirements.txt                          # pin exact versions
+python export.py --out tickets.csv</code></pre><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> a labelled toolbox per job. A virtual environment keeps one project's library versions from breaking another's.</div></div></div>
+<div class="section" id="s3-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Why is a generator (<code>yield from</code>) a good fit for paginated API results?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">It fetches pages lazily, keeps memory low for large datasets, and hides pagination: the caller just loops over items.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Which argument prevents <code>requests</code> from hanging forever?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> verify=True</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> timeout=15</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> stream=True</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> json=data</li></ul><div class="mcq-feedback" data-expl="Always set a timeout on network calls."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t4" data-toc="[[&quot;s4-1&quot;, &quot;Async/Await Basics&quot;], [&quot;s4-2&quot;, &quot;Controlling Concurrency&quot;], [&quot;s4-3&quot;, &quot;Python or Node?&quot;], [&quot;s4-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 04 · Node.js</div><h1 class="panel-title">JavaScript / Node.js for Automation</h1><p class="panel-subtitle">Async by nature and the language of most SDKs and webhook handlers. Know the patterns and the pitfalls.</p></div>
+<div class="section" id="s4-1"><h2><span class="sec-emoji">⚡</span> Async/Await Basics</h2><pre><span class="pre-lang">javascript</span><code>require(&#x27;dotenv&#x27;).config();                       // load .env into process.env
+const BASE = process.env.API_BASE;
+const TOKEN = process.env.API_TOKEN;
+
+async function getJson(path) {
+  const res = await fetch(`${BASE}${path}`, { headers: { Authorization: `Bearer ${TOKEN}` } });
+  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+  return res.json();
+}
+
+(async () =&gt; {
+  try {
+    const user = await getJson(&#x27;/v2/users/42&#x27;);       // wait for the result
+    console.log(user.email);
+  } catch (err) {
+    console.error(&#x27;failed:&#x27;, err.message);
+    process.exit(1);                                  // non-zero exit so schedulers notice
+  }
+})();</code></pre><p><code>fetch</code> returns a Promise; <code>await</code> pauses until it resolves. <strong>Forgetting <code>await</code></strong> gives you a pending Promise instead of data. <code>fetch</code> does not throw on HTTP errors, so you must check <code>res.ok</code> yourself.</p><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> ordering at a counter and waiting for your number to be called. A Promise is the ticket; await is standing there until it is your turn.</div></div></div>
+<div class="section" id="s4-2"><h2><span class="sec-emoji">🚦</span> Controlling Concurrency</h2><pre><span class="pre-lang">javascript</span><code>const pLimit = require(&#x27;p-limit&#x27;);
+const limit = pLimit(5);                              // at most 5 requests at once
+
+const ids = [101, 102, 103 /* ... thousands ... */];
+const results = await Promise.allSettled(
+  ids.map(id =&gt; limit(() =&gt; updateUser(id)))
+);
+const failed = results.filter(r =&gt; r.status === &#x27;rejected&#x27;);
+console.log(`ok=${results.length - failed.length} failed=${failed.length}`);</code></pre><p><code>Promise.all</code> on thousands of calls fires them all at once and triggers rate limits (HTTP 429). A limiter caps parallelism. <code>Promise.allSettled</code> waits for everything and reports each outcome, so one failure does not hide the other 999 results.</p></div>
+<div class="section" id="s4-3"><h2><span class="sec-emoji">⚖️</span> Python or Node?</h2><div style="overflow-x:auto"><table><thead><tr><th></th><th>Python</th><th>Node.js</th></tr></thead><tbody><tr><td>Data and CSV work</td><td>Excellent</td><td>Good</td></tr><tr><td>Async APIs and webhooks</td><td>Good (asyncio)</td><td>Excellent, native</td></tr><tr><td>Official SDK available?</td><td>Check the product's SDK list</td><td>Check the product's SDK list</td></tr><tr><td>Install on clients' machines</td><td>Often preinstalled on Linux/macOS</td><td>Needs Node runtime</td></tr></tbody></table></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Pick based on the <b>vendor SDK</b> and the client's skills, not language preference.</div></div></div>
+<div class="section" id="s4-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>A Node script fires 5,000 <code>fetch</code> calls with <code>Promise.all</code> and gets many 429 errors. What is the fix?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Limit concurrency (for example p-limit set to 5), respect Retry-After, add retries with backoff, and use Promise.allSettled so failures are reported without hiding successes.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Which JavaScript mistake returns a pending Promise instead of data?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Using const</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Forgetting await</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Using JSON</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Using fetch</li></ul><div class="mcq-feedback" data-expl="The call returns before the data is ready."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t5" data-toc="[[&quot;s5-1&quot;, &quot;Auth and Headers&quot;], [&quot;s5-2&quot;, &quot;Pagination, Limits and Status Codes&quot;], [&quot;s5-3&quot;, &quot;Retry Wrapper&quot;], [&quot;s5-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 05 · APIs</div><h1 class="panel-title">Robust API Calls: Auth, Pagination and Limits</h1><p class="panel-subtitle">Almost every automation is an API client. Make it polite, resilient and correct.</p></div>
+<div class="section" id="s5-1"><h2><span class="sec-emoji">🔑</span> Auth and Headers</h2><pre><span class="pre-lang">bash</span><code>curl -fsS -X POST &quot;$API_BASE/v2/users&quot; \
+  -H &quot;Authorization: Bearer $API_TOKEN&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -H &quot;Idempotency-Key: import-row-1042&quot; \
+  -d &#x27;{&quot;email&quot;:&quot;asha@example.com&quot;,&quot;role&quot;:&quot;viewer&quot;}&#x27;</code></pre><p>Three headers do most of the work: <code>Authorization</code> proves who you are, <code>Content-Type</code> tells the server how to parse the body, and <code>Idempotency-Key</code> lets you safely retry a create without producing a duplicate.</p></div>
+<div class="section" id="s5-2"><h2><span class="sec-emoji">📑</span> Pagination, Limits and Status Codes</h2><div style="overflow-x:auto"><table><thead><tr><th>Situation</th><th>What the API says</th><th>What your script does</th></tr></thead><tbody><tr><td>More data than one page</td><td><code>next_cursor</code> or <code>Link</code> header</td><td>Loop until there is no next page</td></tr><tr><td>Too many requests</td><td>429 + <code>Retry-After</code></td><td>Wait that long, then retry</td></tr><tr><td>Server hiccup</td><td>500, 502, 503, 504</td><td>Retry with exponential backoff and jitter</td></tr><tr><td>Bad input</td><td>400, 422</td><td>Do not retry; log the row and continue</td></tr><tr><td>Expired or wrong token</td><td>401</td><td>Refresh token once, else stop</td></tr><tr><td>No permission</td><td>403</td><td>Stop and report scopes needed</td></tr><tr><td>Not found</td><td>404</td><td>Skip or report depending on the task</td></tr></tbody></table></div><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> a queue at a busy counter. If the clerk says 'come back in two minutes' (Retry-After), you do exactly that rather than shouting louder.</div></div></div>
+<div class="section" id="s5-3"><h2><span class="sec-emoji">🧪</span> Retry Wrapper</h2><pre><span class="pre-lang">python</span><code>import random, time, requests
+RETRY = {429, 500, 502, 503, 504}
+
+def request_with_retry(method, url, attempts=5, **kw):
+    for i in range(attempts):
+        try:
+            r = requests.request(method, url, timeout=15, **kw)
+        except (requests.ConnectionError, requests.Timeout):
+            r = None                                   # network trouble: treat as retryable
+        if r is not None and r.status_code not in RETRY:
+            return r
+        delay = min(60, 2 ** i) + random.random()
+        if r is not None and &quot;Retry-After&quot; in r.headers:
+            delay = float(r.headers[&quot;Retry-After&quot;])
+        time.sleep(delay)
+    raise RuntimeError(f&quot;giving up on {url}&quot;)</code></pre><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Only retry <b>safe</b> operations: GETs, or POSTs protected by an idempotency key. Blindly retrying a non-idempotent POST can create duplicates.</div></div></div>
+<div class="section" id="s5-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Your script receives HTTP 422 for 3 of 1,000 rows. What should it do?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Do not retry (the data is invalid). Log the failing row and error message, write it to a rejects file, continue with the remaining rows, and report the count at the end.</div></div><div class="mcq" data-answer="2"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Which status code means 'slow down, retry after a delay'?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> 200</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> 404</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> 429</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> 201</li></ul><div class="mcq-feedback" data-expl="429 Too Many Requests, with Retry-After."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t6" data-toc="[[&quot;s6-1&quot;, &quot;Common Data Problems&quot;], [&quot;s6-2&quot;, &quot;Validate, Transform, Reject&quot;], [&quot;s6-3&quot;, &quot;Quick Data Wrangling with jq and pandas&quot;], [&quot;s6-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 06 · Data</div><h1 class="panel-title">Transforming and Validating Data</h1><p class="panel-subtitle">Real data is messy. Scripts earn their value by cleaning it and by refusing to push bad data into a customer's system.</p></div>
+<div class="section" id="s6-1"><h2><span class="sec-emoji">🧹</span> Common Data Problems</h2><div style="overflow-x:auto"><table><thead><tr><th>Problem</th><th>Example</th><th>Handling</th></tr></thead><tbody><tr><td>Encoding</td><td>'José' appears as 'JosÃ©'</td><td>Read and write UTF-8 explicitly; handle BOM with utf-8-sig</td></tr><tr><td>Whitespace and case</td><td>' Asha@Example.COM '</td><td>strip() and lower() before matching</td></tr><tr><td>Dates and time zones</td><td>'03/04/2026' (March or April?)</td><td>Agree a format; store UTC ISO 8601</td></tr><tr><td>Duplicates</td><td>Same email twice</td><td>Dedupe on a normalised key</td></tr><tr><td>Missing values</td><td>Empty phone</td><td>Define required vs optional</td></tr><tr><td>Number formats</td><td>'1.234,50' vs '1,234.50'</td><td>Parse with locale rules</td></tr></tbody></table></div></div>
+<div class="section" id="s6-2"><h2><span class="sec-emoji">✅</span> Validate, Transform, Reject</h2><pre><span class="pre-lang">python</span><code>import csv, re
+EMAIL = re.compile(r&quot;^[^@\s]+@[^@\s]+\.[^@\s]+$&quot;)
+
+good, rejects, seen = [], [], set()
+with open(&quot;users.csv&quot;, newline=&quot;&quot;, encoding=&quot;utf-8-sig&quot;) as f:
+    for line_no, row in enumerate(csv.DictReader(f), start=2):      # row 1 is the header
+        email = row[&quot;email&quot;].strip().lower()
+        if not EMAIL.match(email):
+            rejects.append({**row, &quot;error&quot;: &quot;invalid email&quot;, &quot;line&quot;: line_no}); continue
+        if email in seen:
+            rejects.append({**row, &quot;error&quot;: &quot;duplicate&quot;, &quot;line&quot;: line_no}); continue
+        seen.add(email)
+        good.append({&quot;email&quot;: email, &quot;name&quot;: row[&quot;name&quot;].strip().title()})
+
+print(f&quot;valid={len(good)} rejected={len(rejects)}&quot;)   # always show counts</code></pre><p>The pattern is <strong>validate, transform, reject with a reason</strong>. Rejected rows are saved with a line number and error, so the client can fix the spreadsheet instead of asking 'why did some users not import?'. <code>utf-8-sig</code> strips the invisible BOM Excel adds to CSV files.</p><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> a quality check on a factory line. Good items continue, defective ones go into a labelled bin with the reason written on them.</div></div></div>
+<div class="section" id="s6-3"><h2><span class="sec-emoji">🔎</span> Quick Data Wrangling with jq and pandas</h2><pre><span class="pre-lang">bash</span><code># jq: count webhook deliveries by status
+jq -r &#x27;.deliveries[].status&#x27; deliveries.json | sort | uniq -c
+
+# pandas: accounts with more than 5% failed calls
+python - &lt;&lt;&#x27;PY&#x27;
+import pandas as pd
+df = pd.read_csv(&quot;calls.csv&quot;)
+rate = df.groupby(&quot;account&quot;)[&quot;failed&quot;].mean()
+print(rate[rate &gt; 0.05].sort_values(ascending=False))
+PY</code></pre></div>
+<div class="section" id="s6-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Why write rejected rows to a separate file with the reason?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">The client can correct and resubmit exactly the failing rows, you can prove what was skipped and why, and good rows are not blocked by bad ones.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Which setting reads a CSV exported from Excel that starts with a hidden BOM?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> encoding='ascii'</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> encoding='utf-8-sig'</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> newline='x'</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> mode='rb'</li></ul><div class="mcq-feedback" data-expl="utf-8-sig strips the BOM."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t7" data-toc="[[&quot;s7-1&quot;, &quot;Cron Basics&quot;], [&quot;s7-2&quot;, &quot;Avoid Overlaps and Silent Failures&quot;], [&quot;s7-3&quot;, &quot;Other Ways to Schedule&quot;], [&quot;s7-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 07 · Scheduling</div><h1 class="panel-title">Running Scripts Automatically</h1><p class="panel-subtitle">A script only becomes automation when it runs on its own, never twice at once, and tells someone when it fails.</p></div>
+<div class="section" id="s7-1"><h2><span class="sec-emoji">⏰</span> Cron Basics</h2><p><strong>cron</strong> is the classic Unix scheduler. Each line has five time fields followed by the command.</p><pre><span class="pre-lang">cron</span><code># ┌ minute (0-59)
+# │ ┌ hour (0-23)
+# │ │ ┌ day of month (1-31)
+# │ │ │ ┌ month (1-12)
+# │ │ │ │ ┌ day of week (0-6, Sun=0)
+  */15 * * * *   /opt/sync/run.sh          # every 15 minutes
+  0 2 * * 1-5    /opt/sync/nightly.sh      # 02:00 on weekdays
+  30 6 1 * *     /opt/sync/monthly.sh      # 06:30 on the 1st of each month</code></pre><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> an alarm clock with a repeat pattern. You describe when it rings; it does not care how long the task takes.</div></div></div>
+<div class="section" id="s7-2"><h2><span class="sec-emoji">🔒</span> Avoid Overlaps and Silent Failures</h2><pre><span class="pre-lang">cron</span><code># flock -n skips the run if the previous one still holds the lock
+*/5 * * * * flock -n /tmp/sync.lock /opt/sync/run.sh &gt;&gt; /var/log/sync.log 2&gt;&amp;1 || /opt/sync/alert.sh</code></pre><ol class="steps"><li>Prevent <b>overlap</b> with a lock (flock) so two runs never process the same data.</li><li>Use <b>UTC</b> on servers to avoid daylight-saving surprises, or document the zone clearly.</li><li>Send output to a log file and make failures <b>alert</b> someone (non-zero exit, message to chat or email).</li><li>Add a <b>heartbeat</b> check (a monitoring service expects a ping every run); no ping means an alert.</li><li>Make runs <b>idempotent</b> so a retry or double run is harmless.</li></ol></div>
+<div class="section" id="s7-3"><h2><span class="sec-emoji">☁️</span> Other Ways to Schedule</h2><div style="overflow-x:auto"><table><thead><tr><th>Option</th><th>Best for</th><th>Notes</th></tr></thead><tbody><tr><td>cron / systemd timers</td><td>Single server tasks</td><td>Simple; you maintain the host</td></tr><tr><td>GitHub Actions <code>schedule</code></td><td>Scripts stored in Git, light jobs</td><td>Cron syntax in UTC; limited runtime</td></tr><tr><td>AWS Lambda + EventBridge / Cloud Functions</td><td>Serverless, event-driven jobs</td><td>No server; watch time and memory limits</td></tr><tr><td>Airflow / Prefect</td><td>Multi-step pipelines with dependencies</td><td>More setup, strong monitoring</td></tr><tr><td>Kubernetes CronJob</td><td>Teams already on Kubernetes</td><td>Set <code>concurrencyPolicy: Forbid</code></td></tr></tbody></table></div></div>
+<div class="section" id="s7-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>A cron job runs every 5 minutes but sometimes takes 8 minutes. What problem arises and how do you prevent it?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Runs overlap and may process the same data twice or fight over resources. Use a lock (flock or a distributed lock), make the job idempotent, and consider a longer interval or a queue.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>The cron expression <code>0 2 * * 1-5</code> runs…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Every 2 minutes</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> At 02:00 Monday to Friday</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> At 02:00 every day</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> On the 2nd of the month</li></ul><div class="mcq-feedback" data-expl="Minute 0, hour 2, weekdays 1 to 5."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t8" data-toc="[[&quot;s8-1&quot;, &quot;Dry-Run First&quot;], [&quot;s8-2&quot;, &quot;Safety Checklist&quot;], [&quot;s8-3&quot;, &quot;Testing with Mocks&quot;], [&quot;s8-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 08 · Safety</div><h1 class="panel-title">Writing Scripts That Cannot Do Much Damage</h1><p class="panel-subtitle">Scripts act on real customer data at machine speed. Build in brakes before you press run.</p></div>
+<div class="section" id="s8-1"><h2><span class="sec-emoji">🧯</span> Dry-Run First</h2><pre><span class="pre-lang">python</span><code>ap.add_argument(&quot;--apply&quot;, action=&quot;store_true&quot;, help=&quot;actually make changes (default: dry-run)&quot;)
+...
+for acct in stale_accounts:
+    if args.apply:
+        client.delete_account(acct[&quot;id&quot;])
+        log.info(&quot;DELETED %s&quot;, acct[&quot;id&quot;])
+    else:
+        log.info(&quot;[dry-run] would delete %s (last login %s)&quot;, acct[&quot;id&quot;], acct[&quot;last_login&quot;])</code></pre><p>Make the <strong>safe mode the default</strong>: the script only prints what it <em>would</em> do unless you pass <code>--apply</code>. Review the list with the client, then run for real.</p><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> a pilot's pre-flight checklist. You verify everything on the ground before taking off, not in the air.</div></div></div>
+<div class="section" id="s8-2"><h2><span class="sec-emoji">🛡️</span> Safety Checklist</h2><ol class="steps"><li><b>Backup or export</b> the affected data before changing it.</li><li><b>Canary:</b> run on 5 records first, inspect the result, then widen.</li><li><b>Confirm</b> the target environment (print the host, tenant and count; require typed confirmation for destructive actions).</li><li><b>Idempotent:</b> running twice must not break anything.</li><li><b>Limit blast radius:</b> use a least-privilege token; add <code>--limit N</code> and <code>--tenant</code> options.</li><li><b>Log every change</b> (id, old value, new value) so you can undo.</li></ol><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">A classic disaster: a script run against production instead of sandbox because the environment variable was left set. Always echo the target and ask for confirmation before writes.</div></div></div>
+<div class="section" id="s8-3"><h2><span class="sec-emoji">🧪</span> Testing with Mocks</h2><pre><span class="pre-lang">python</span><code># test_export.py (pytest)
+from unittest.mock import patch, Mock
+import export
+
+def test_fetch_all_follows_cursor():
+    page1 = Mock(status_code=200, json=lambda: {&quot;items&quot;: [{&quot;id&quot;: 1}], &quot;next_cursor&quot;: &quot;abc&quot;})
+    page2 = Mock(status_code=200, json=lambda: {&quot;items&quot;: [{&quot;id&quot;: 2}], &quot;next_cursor&quot;: None})
+    with patch(&quot;export.requests.get&quot;, side_effect=[page1, page2]):
+        assert [t[&quot;id&quot;] for t in export.fetch_all(&quot;/tickets&quot;)] == [1, 2]</code></pre><p>A mock replaces the real network call, so the test is fast and safe: it proves the pagination logic works without touching the customer's system. Use the vendor's <strong>sandbox</strong> for end-to-end tests.</p></div>
+<div class="section" id="s8-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Why should a destructive script default to dry-run?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">A mistake then only prints a list instead of deleting data. It lets you and the client review exactly what will change before using the explicit flag to apply it.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>The best first step before a bulk update in production is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Run it on all records</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Back up the data and try a small canary batch</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Delete logs</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Disable alerts</li></ul><div class="mcq-feedback" data-expl="Limit the blast radius and keep a way back."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t9" data-toc="[[&quot;s9-1&quot;, &quot;Useful Logging&quot;], [&quot;s9-2&quot;, &quot;Secrets and Config&quot;], [&quot;s9-3&quot;, &quot;Packaging for Handover&quot;], [&quot;s9-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 09 · Operations</div><h1 class="panel-title">Logging, Secrets and Packaging</h1><p class="panel-subtitle">What separates a throwaway script from something a client can trust and run without you.</p></div>
+<div class="section" id="s9-1"><h2><span class="sec-emoji">📝</span> Useful Logging</h2><pre><span class="pre-lang">python</span><code>import logging, json
+logging.basicConfig(level=logging.INFO, format=&quot;%(asctime)s %(levelname)s %(message)s&quot;)
+log = logging.getLogger(&quot;sync&quot;)
+
+log.info(&quot;start run_id=%s since=%s&quot;, run_id, since)
+log.warning(&quot;rate limited, waiting %ss (attempt %d)&quot;, delay, attempt)
+log.error(&quot;failed id=%s status=%s body=%s&quot;, rec_id, r.status_code, r.text[:200])
+log.info(&quot;summary created=%d updated=%d skipped=%d failed=%d&quot;, c, u, s, f)</code></pre><p>Log <strong>what happened, to which record, and the final summary</strong>. Never log secrets or full personal data (truncate bodies). A summary line with counts is the first thing you read when a client says 'the sync looks wrong'.</p></div>
+<div class="section" id="s9-2"><h2><span class="sec-emoji">🔐</span> Secrets and Config</h2><div style="overflow-x:auto"><table><thead><tr><th>Do</th><th>Do not</th></tr></thead><tbody><tr><td>Read secrets from environment variables or a vault</td><td>Hard-code tokens in the script</td></tr><tr><td>Keep <code>.env</code> in <code>.gitignore</code>; commit <code>.env.example</code></td><td>Commit real credentials to Git</td></tr><tr><td>Use scoped, short-lived tokens</td><td>Use an admin key for everything</td></tr><tr><td>Rotate keys and support two active keys</td><td>Share one key by email</td></tr></tbody></table></div><pre><span class="pre-lang">bash</span><code># .env.example (committed)         # .env (never committed)
+API_BASE=https://api.example.com    API_TOKEN=sk_live_xxxxxxxxx
+API_TOKEN=changeme</code></pre></div>
+<div class="section" id="s9-3"><h2><span class="sec-emoji">📦</span> Packaging for Handover</h2><pre><span class="pre-lang">dockerfile</span><code>FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+CMD [&quot;python&quot;, &quot;sync.py&quot;]</code></pre><p>A <strong>Dockerfile</strong> bundles the script and its exact dependencies so it runs the same everywhere. Handover contents: source in Git, README (purpose, setup, config keys, how to run, how to read logs), pinned dependencies, a runbook and an owner on the client's side.</p><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">A good README answers four questions in under a minute: <b>what it does, how to run it, what it needs, how to know it worked</b>.</div></div></div>
+<div class="section" id="s9-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>What should the final log line of a sync script contain, and why?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">A summary with counts (created, updated, skipped, failed) and run time. It gives instant evidence of success or partial failure and helps reconcile with the client's numbers.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Where should API tokens live?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Inside the script</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> In environment variables or a secrets vault</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> In the ticket</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> In the README</li></ul><div class="mcq-feedback" data-expl="Keep secrets out of code, tickets and Git."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t10" data-toc="[[&quot;s10-1&quot;, &quot;Scenario: Bulk user import from a spreadsheet&quot;], [&quot;s10-2&quot;, &quot;Scenario: Weekly usage report to Slack&quot;], [&quot;s10-3&quot;, &quot;Scenario: Cleaning stale sandbox data&quot;], [&quot;s10-4&quot;, &quot;Scenario: Daily webhook health check&quot;], [&quot;s10-5&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 10 · Scenarios</div><h1 class="panel-title">Scripting Scenarios from Real Engagements</h1><p class="panel-subtitle">Four realistic tasks, showing the thinking behind safe and useful automation.</p></div>
+<div class="section" id="s10-1"><h2><span class="sec-emoji">👥</span> Scenario: Bulk user import from a spreadsheet</h2><ul><li><b>Ask:</b> create 5,000 users from an HR export.</li><li><b>Script:</b> Python reads CSV (utf-8-sig), validates and de-duplicates emails, upserts with an idempotency key per row, limits concurrency, writes <code>rejects.csv</code>.</li><li><b>Safety:</b> dry-run first, canary of 20 users, summary counts reconciled with the HR total.</li><li><b>Handover:</b> README and a one-command re-run for the next batch.</li></ul></div>
+<div class="section" id="s10-2"><h2><span class="sec-emoji">📊</span> Scenario: Weekly usage report to Slack</h2><ul><li>Node script queries the usage API for the last 7 days (UTC), computes top 10 accounts and week-on-week change, posts a formatted message through a chat webhook.</li><li>Scheduled by GitHub Actions every Monday 06:00 UTC; failures alert the CSE channel.</li><li>Lesson: handle empty weeks and API pagination, otherwise the report silently lies.</li></ul></div>
+<div class="section" id="s10-3"><h2><span class="sec-emoji">🧹</span> Scenario: Cleaning stale sandbox data</h2><ul><li>Delete test accounts untouched for 180 days.</li><li>Dry-run lists 412 accounts; the client removes 12 they still use; script exports them as a backup then deletes with <code>--apply --limit 100</code> per run.</li><li>Every deletion is logged with id and last login so it can be restored if needed.</li></ul></div>
+<div class="section" id="s10-4"><h2><span class="sec-emoji">🚨</span> Scenario: Daily webhook health check</h2><ul><li>Bash + curl + jq fetches delivery stats per account every morning.</li><li>Accounts with more than 5% failures or 20+ consecutive failures are written to a report and posted to the team channel.</li><li>This becomes the seed of technical health monitoring: proactive outreach before the customer notices.</li></ul></div>
+<div class="section" id="s10-5"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>A teammate's script deleted records in production by mistake. List three controls that would have prevented it.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Dry-run by default with explicit --apply, confirmation showing the target environment and record count, a canary or --limit batch, a backup/export before deletion, and a least-privilege token that cannot delete.</div></div><div class="mcq" data-answer="0"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>The value of a daily health-check script is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Finding problems before customers report them</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Replacing monitoring tools</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Hiding errors</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Increasing ticket volume</li></ul><div class="mcq-feedback" data-expl="Proactive detection."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t11" data-toc="[[&quot;s11-1&quot;, &quot;Concept Questions&quot;], [&quot;s11-2&quot;, &quot;Whiteboard Task Pattern&quot;], [&quot;s11-3&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span></div><div class="panel-eyebrow">Module 11 · Interviews</div><h1 class="panel-title">Interview Prep: Scripting & Automation</h1><p class="panel-subtitle">Questions you are likely to meet, with model answers.</p></div>
+<div class="section" id="s11-1"><h2><span class="sec-emoji">🎤</span> Concept Questions</h2><div style="overflow-x:auto"><table><thead><tr><th>Question</th><th>Model answer</th></tr></thead><tbody><tr><td>How do you make a script safe for production?</td><td>Dry-run default, canary batch, backup, idempotency, least-privilege token, confirmation of target, logging of every change.</td></tr><tr><td>How do you handle API rate limits?</td><td>Honour 429 and Retry-After, exponential backoff with jitter, cap concurrency, batch where supported.</td></tr><tr><td>Python or Bash?</td><td>Bash for short command glue; Python once there is logic, data handling or error handling worth testing.</td></tr><tr><td>How do you stop two runs overlapping?</td><td>Lock (flock or distributed lock), idempotent processing, appropriate schedule interval.</td></tr><tr><td>How do you manage secrets?</td><td>Environment variables or a vault, never in code or tickets, scoped tokens, rotation.</td></tr><tr><td>A script that worked for months suddenly fails. First steps?</td><td>Check logs and exit code, API changes or expired credentials, rate limits, data shape changes, recent deployments, reproduce with the failing input.</td></tr></tbody></table></div></div>
+<div class="section" id="s11-2"><h2><span class="sec-emoji">🧠</span> Whiteboard Task Pattern</h2><ol class="steps"><li>Clarify input, output, volume and failure behaviour.</li><li>Describe the flow: read, validate, transform, call API, handle errors, report.</li><li>Mention pagination, rate limits, idempotency and logging.</li><li>State how you would test and roll it out safely.</li><li>Explain handover: README, runbook, owner.</li></ol></div>
+<div class="section" id="s11-3"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Describe how you would build a script that deactivates 3,000 accounts listed in a CSV.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Validate the CSV, check each account exists, run in dry-run to show the list, back up current status, canary a few, then apply with concurrency limit and retries using idempotent calls, log each result, write rejects, and print a summary reconciled with 3,000.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Which opening shows the best engineering judgement for a scripting task?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Start typing code</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Clarify inputs, volume and safety requirements first</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Pick a library</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Ask for a deadline extension</li></ul><div class="mcq-feedback" data-expl="Understand the problem and risks before coding."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t12" data-toc='[["s12-1","Take the Assessment"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">→ Intermediate</span></div>
+        <p class="panel-eyebrow">Module 12</p>
+        <h1 class="panel-title">Assessment</h1>
+        <p class="panel-subtitle">Test yourself on everything covered in this course — 50 multiple-choice questions drawn at random from a bank of 50, so every attempt is a little different.</p>
+      </div>
+      <div class="section" id="s12-1">
+        <div class="assess-start-card">
+          <div class="assess-intro-title">Test what you've learned</div>
+          <div class="assess-intro-text">A timed, exam-style mock test. Questions are scenario-based: what you would do, which tool applies, or what went wrong.</div>
+          <ul class="assess-intro-list">
+            <li><strong>50 multiple-choice questions</strong> picked at random from 50</li>
+            <li><strong>50-minute</strong> timer (1 minute per question), with mark-for-review and a question palette</li>
+            <li>Covers every module in this course</li>
+            <li>Answers and explanations are shown after you submit</li>
+          </ul>
+          <button class="assess-start-btn" id="assessStartBtn">▶ Start Assessment</button>
+        </div>
+      </div>
+      <div class="assess-modal-overlay" id="assessModal">
+        <div class="assess-modal-box">
+          <div class="assess-sticky-header">
+            <div class="assess-modal-head">
+              <div class="assess-modal-title">Assessment</div>
+              <button class="assess-modal-close" id="assessModalClose">✕</button>
+            </div>
+            <div class="quiz-progress" id="assessProgressWrap" style="display:none">
+              <span class="quiz-score" id="assessProgressLabel">Question 1</span>
+              <div class="quiz-bar-track"><div class="quiz-bar-fill" id="assessProgressFill" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div id="assessStage"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+/* =========================================================
+   Tab switching, dynamic TOC, scroll-spy, progress pill
+   ========================================================= */
+(function(){
+  const tabs   = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel');
+  const tocEl  = document.getElementById('toc');
+  const total  = tabs.length;
+  const progressText = document.getElementById('progressText');
+
+  function buildToc(panel){
+    const data = JSON.parse(panel.getAttribute('data-toc') || '[]');
+    tocEl.innerHTML = data.map(([id,label]) =>
+      `<li><a href="#${id}" data-target="${id}">${label}</a></li>`
+    ).join('');
+    // first link active by default
+    const first = tocEl.querySelector('a');
+    if(first) first.classList.add('active');
+  }
+
+  function activate(idx){
+    tabs.forEach((t,i)=>t.classList.toggle('active', i===idx));
+    panels.forEach((p,i)=>p.classList.toggle('active', i===idx));
+    buildToc(panels[idx]);
+    progressText.textContent = `Tab ${idx+1} of ${total}`;
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+
+  tabs.forEach((t,i)=>{
+    t.addEventListener('click', ()=> activate(i));
+  });
+
+  // Smooth scroll inside the active tab
+  document.addEventListener('click', (e)=>{
+    const a = e.target.closest('.toc-list a');
+    if(!a) return;
+    e.preventDefault();
+    const id = a.getAttribute('data-target');
+    const el = document.getElementById(id);
+    if(el){
+      window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 130, behavior:'smooth'});
+    }
+  });
+
+  // Scroll spy — highlight the nearest visible section
+  let ticking = false;
+  function spy(){
+    const activePanel = document.querySelector('.panel.active');
+    if(!activePanel) return;
+    const sections = activePanel.querySelectorAll('.section');
+    const trigger  = 180; // px from top
+    let current = null;
+    sections.forEach(sec=>{
+      const rect = sec.getBoundingClientRect();
+      if(rect.top - trigger < 0) current = sec.id;
+    });
+    if(current){
+      tocEl.querySelectorAll('a').forEach(a=>{
+        a.classList.toggle('active', a.dataset.target === current);
+      });
+    }
+    ticking = false;
+  }
+  window.addEventListener('scroll', ()=>{
+    if(!ticking){ requestAnimationFrame(spy); ticking = true; }
+  }, {passive:true});
+
+  // Reset
+  window.resetProgress = function(){ activate(0); };
+
+  // Init
+  activate(0);
+})();
+
+/* =========================================================
+   Assessment modal — legacy modal (unused)
+   ========================================================= */
+(function(){
+  const assessItems = [];
+  const mcqTotal = assessItems.length;
+
+  let idx=0, score=0, answered=false;
+
+  function openAssess(){document.getElementById('assessModal').classList.add('open');showIntroStage()}
+  function closeAssess(){document.getElementById('assessModal').classList.remove('open')}
+
+  function showIntroStage(){
+    idx=0; score=0; answered=false;
+    renderItem();
+  }
+
+  function renderItem(){
+    answered=false;
+    const item=assessItems[idx];
+    const stage=document.getElementById('assessStage');
+    const pct=Math.round((idx/assessItems.length)*100);
+    document.getElementById('assessProgressWrap').style.display='flex';
+    document.getElementById('assessProgressLabel').textContent=`Question ${idx+1} / ${assessItems.length}`;
+    document.getElementById('assessProgressFill').style.width=pct+'%';
+    let inner=`
+      <div class="assess-q-wrap">
+        <div class="assess-q">${item.q}</div>
+        ${item.code?`<pre><code>${item.code}</code></pre>`:''}
+        <div id="assessBody"></div>
+        <div id="assessFeedback"></div>
+      </div>`;
+    stage.innerHTML=inner;
+    const body=document.getElementById('assessBody');
+    body.innerHTML=`<ul class="mcq-opts" id="assessOpts">${item.options.map((o,i)=>`<li class="mcq-opt" data-i="${i}"><span class="opt-letter">${String.fromCharCode(65+i)}</span> ${o}</li>`).join('')}</ul>`;
+    body.querySelectorAll('.mcq-opt').forEach(opt=>opt.addEventListener('click',()=>answerMCQ(opt,item)));
+  }
+
+  function showNextButton(){
+    const fb=document.getElementById('assessFeedback');
+    const btn=document.createElement('button');
+    btn.className='assess-next-btn';
+    btn.textContent = idx<assessItems.length-1 ? 'Next Question →' : 'See Results →';
+    btn.addEventListener('click',()=>{
+      if(idx<assessItems.length-1){idx++;renderItem()}else{showResults()}
+    });
+    fb.appendChild(btn);
+  }
+
+  function answerMCQ(optEl,item){
+    if(answered)return;
+    answered=true;
+    const chosen=parseInt(optEl.getAttribute('data-i'),10);
+    const correct=chosen===item.answer;
+    if(correct)score++;
+    document.querySelectorAll('#assessOpts .mcq-opt').forEach(opt=>{opt.style.pointerEvents='none'});
+    const fb=document.getElementById('assessFeedback');
+    if(correct){
+      optEl.classList.add('correct');
+      fb.innerHTML=`<div class="assess-fb-banner ok"><span>✅</span> Correct!</div>`;
+    }else{
+      optEl.classList.add('incorrect');
+      fb.innerHTML=`<div class="assess-fb-answer ok"><span>✅</span> ${item.options[item.answer]}</div>`;
+    }
+    showNextButton();
+  }
+
+  function showResults(){
+    const stage=document.getElementById('assessStage');
+    const pct=Math.round((score/mcqTotal)*100);
+    document.getElementById('assessProgressLabel').textContent='Completed';
+    document.getElementById('assessProgressFill').style.width='100%';
+    let msg='Keep practicing — revisit the tabs above and try again.';
+    if(pct>=85)msg='Outstanding! You have a strong command of this role.';
+    else if(pct>=65)msg="Great job! A little more practice with the harder questions and you'll be set.";
+    stage.innerHTML=`
+      <div class="assess-q-wrap">
+        <div class="assess-result-score">${score} / ${mcqTotal}</div>
+        <div class="assess-result-msg">${pct}% correct — ${msg}</div>
+        <button class="assess-retry-btn" id="assessRetryBtn">↻ Try Again</button>
+      </div>`;
+    document.getElementById('assessRetryBtn').addEventListener('click',showIntroStage);
+  }
+
+  document.getElementById('__disabledAssess')?.addEventListener('click',openAssess);
+  document.getElementById('assessModalClose').addEventListener('click',closeAssess);
+  document.getElementById('assessModal').addEventListener('click',e=>{if(e.target.id==='assessModal')closeAssess()});
+})();
+</script>
+
+<div id="scoreBoard" class="score-board" style="display:none;max-width:820px;margin:18px auto;padding:0 16px"></div>
+
+
+<script>
+/* Inline quick checks + practice model answers */
+document.addEventListener('click',function(e){
+  const opt=e.target.closest('.mcq .mcq-opt');
+  if(opt){
+    const box=opt.closest('.mcq'); if(box.classList.contains('answered'))return;
+    const ans=+box.dataset.answer, i=+opt.dataset.i;
+    box.classList.add('answered');
+    box.querySelectorAll('.mcq-opt').forEach(o=>{ if(+o.dataset.i===ans)o.classList.add('correct'); });
+    if(i!==ans)opt.classList.add('incorrect');
+    const fb=box.querySelector('.mcq-feedback');
+    fb.classList.add(i===ans?'ok':'bad');
+    fb.innerHTML=(i===ans?'✅ Correct. ':'❌ Not quite. ')+fb.dataset.expl;
+    return;
+  }
+  const rs=e.target.closest('.mcq-reset');
+  if(rs){
+    const box=rs.closest('.mcq'); box.classList.remove('answered');
+    box.querySelectorAll('.mcq-opt').forEach(o=>o.classList.remove('correct','incorrect'));
+    const fb=box.querySelector('.mcq-feedback'); fb.classList.remove('ok','bad'); fb.innerHTML='';
+    return;
+  }
+  const tg=e.target.closest('.saq-toggle');
+  if(tg){
+    const m=tg.closest('.saq').querySelector('.saq-model');
+    m.classList.toggle('show');
+    tg.textContent=m.classList.contains('show')?'Hide model answer':'Show model answer';
+  }
+});
+</script>
+<script>
+(function(){
+  /* =====================================================================
+     Scripting &amp; Automation -- full-screen, timed mock exam (MNC style).
+     All 50 questions of the bank, shuffled, none repeated.
+     Grading: all answers submitted at the end (server-side).
+     ===================================================================== */
+  const BANK=[{"id": "q1", "q": "What is a script in the CSE context?", "options": ["A contract", "A marketing plan", "A database", "A small program that fills a gap in a workflow"], "answer": 3, "explanation": "Purpose-built automation.", "difficulty": "Medium"}, {"id": "q2", "q": "Which language is best chosen for a script the client will maintain?", "options": ["Whatever is shortest", "Always assembly", "The one their team knows", "Always the newest"], "answer": 2, "explanation": "Maintainability matters.", "difficulty": "Medium"}, {"id": "q3", "q": "Bash is best for…", "options": ["Heavy data science", "Drawing UI", "Building mobile apps", "Chaining command-line tools"], "answer": 3, "explanation": "Glue code.", "difficulty": "Medium"}, {"id": "q4", "q": "In Bash, 'set -e' makes the script…", "options": ["Print every line", "Run faster", "Exit when a command fails", "Ignore errors"], "answer": 2, "explanation": "Stop on the first error.", "difficulty": "Medium"}, {"id": "q5", "q": "In Bash, 'set -u' causes an error when…", "options": ["A file is empty", "A loop ends", "A pipe is used", "An undefined variable is used"], "answer": 3, "explanation": "Catches typos.", "difficulty": "Medium"}, {"id": "q6", "q": "'set -o pipefail' ensures…", "options": ["Pipes are faster", "Variables are quoted", "Output is hidden", "A pipeline fails if any stage fails"], "answer": 3, "explanation": "Errors in the middle are not masked.", "difficulty": "Medium"}, {"id": "q7", "q": "Why quote variables in Bash?", "options": ["To speed up scripts", "To make them uppercase", "To prevent word splitting and dangerous expansion", "It is optional style"], "answer": 2, "explanation": "Unquoted empty variables can be catastrophic.", "difficulty": "Medium"}, {"id": "q8", "q": "Exit code 0 means…", "options": ["Failure", "Syntax error", "Success", "Timeout"], "answer": 2, "explanation": "Zero is success.", "difficulty": "Medium"}, {"id": "q9", "q": "jq is used to…", "options": ["Query and transform JSON", "Edit images", "Compile C", "Send email"], "answer": 0, "explanation": "Command-line JSON processor.", "difficulty": "Medium"}, {"id": "q10", "q": "curl -f makes curl…", "options": ["Run faster", "Hide output", "Fail on HTTP 4xx/5xx responses", "Follow redirects only"], "answer": 2, "explanation": "Non-zero exit on HTTP errors.", "difficulty": "Medium"}, {"id": "q11", "q": "Python library used for HTTP calls:", "options": ["csv", "pathlib", "heapq", "requests"], "answer": 3, "explanation": "The standard choice.", "difficulty": "Medium"}, {"id": "q12", "q": "Always add a timeout to requests because…", "options": ["It encrypts data", "It is required by Python", "It makes data larger", "A stuck server could hang the script forever"], "answer": 3, "explanation": "Prevent infinite waits.", "difficulty": "Medium"}, {"id": "q13", "q": "argparse is used for…", "options": ["Compression", "Plotting", "Command-line options", "Encryption"], "answer": 2, "explanation": "--flag style arguments.", "difficulty": "Medium"}, {"id": "q14", "q": "A Python generator with yield is useful for…", "options": ["Defining classes only", "Sorting", "Encrypting files", "Lazily streaming paginated data"], "answer": 3, "explanation": "Low memory, simple callers.", "difficulty": "Medium"}, {"id": "q15", "q": "csv files from Excel may start with a BOM; use…", "options": ["utf-8-sig", "ascii", "binary", "latin-2 only"], "answer": 0, "explanation": "Strips the BOM.", "difficulty": "Medium"}, {"id": "q16", "q": "A virtual environment isolates…", "options": ["The clock", "Project dependencies", "The network", "The CPU"], "answer": 1, "explanation": "Prevents version conflicts.", "difficulty": "Medium"}, {"id": "q17", "q": "pip freeze > requirements.txt is used to…", "options": ["Delete packages", "Format code", "Start Python", "Pin exact dependency versions"], "answer": 3, "explanation": "Reproducible installs.", "difficulty": "Medium"}, {"id": "q18", "q": "In Node.js, fetch does NOT throw on…", "options": ["Network failure", "Timeouts only", "HTTP error status codes like 404/500", "Invalid URL"], "answer": 2, "explanation": "Check res.ok.", "difficulty": "Medium"}, {"id": "q19", "q": "Forgetting await on an async call gives…", "options": ["A faster script", "A syntax error", "The value", "A pending Promise"], "answer": 3, "explanation": "Not the actual data.", "difficulty": "Medium"}, {"id": "q20", "q": "Promise.allSettled is helpful because…", "options": ["It reports each outcome without failing fast", "It runs one at a time", "It retries automatically", "It hides errors"], "answer": 0, "explanation": "You see successes and failures.", "difficulty": "Medium"}, {"id": "q21", "q": "Why limit concurrency when calling an API?", "options": ["To avoid rate limits (429)", "To skip auth", "To slow tests", "To use more memory"], "answer": 0, "explanation": "Be polite to the API.", "difficulty": "Medium"}, {"id": "q22", "q": "HTTP 429 means…", "options": ["Too many requests", "OK", "Unauthorized", "Not found"], "answer": 0, "explanation": "Back off and honour Retry-After.", "difficulty": "Medium"}, {"id": "q23", "q": "Which errors should generally NOT be retried?", "options": ["503", "Network timeout", "429", "400/422 invalid input"], "answer": 3, "explanation": "The same input will keep failing.", "difficulty": "Medium"}, {"id": "q24", "q": "An idempotency key allows…", "options": ["Encryption", "Pagination", "Safe retries without duplicates", "Faster responses"], "answer": 2, "explanation": "Same key, same effect.", "difficulty": "Medium"}, {"id": "q25", "q": "Cursor pagination means…", "options": ["Sorting alphabetically", "Using a token to fetch the next page", "Fetching all at once", "Caching"], "answer": 1, "explanation": "Loop until no next cursor.", "difficulty": "Medium"}, {"id": "q26", "q": "Good practice for validating imported rows:", "options": ["Stop everything at the first bad row silently", "Modify data randomly", "Reject bad rows with a reason and continue", "Ignore invalid rows silently"], "answer": 2, "explanation": "Provide a rejects file.", "difficulty": "Medium"}, {"id": "q27", "q": "Storing dates in scripts is best done in…", "options": ["Excel serial only", "Free text", "Local ambiguous format", "UTC ISO 8601"], "answer": 3, "explanation": "Unambiguous and sortable.", "difficulty": "Medium"}, {"id": "q28", "q": "The cron expression '*/15 * * * *' runs…", "options": ["Once at 15:00", "Every 15 days", "Every 15 minutes", "Every 15 hours"], "answer": 2, "explanation": "Step of 15 in the minute field.", "difficulty": "Medium"}, {"id": "q29", "q": "flock -n in a cron line is used to…", "options": ["Rotate keys", "Speed up jobs", "Prevent overlapping runs", "Encrypt logs"], "answer": 2, "explanation": "Skip if still locked.", "difficulty": "Medium"}, {"id": "q30", "q": "Servers running scheduled jobs commonly use…", "options": ["UTC", "A random time zone", "Local DST time silently", "No time zone"], "answer": 0, "explanation": "Avoids DST surprises.", "difficulty": "Medium"}, {"id": "q31", "q": "A heartbeat check in monitoring means…", "options": ["A user login", "An alert if the expected ping is missing", "A DNS record", "A server temperature"], "answer": 1, "explanation": "Detects jobs that never ran.", "difficulty": "Medium"}, {"id": "q32", "q": "A destructive script should default to…", "options": ["Dry-run mode", "Silent mode", "Delete everything", "Apply mode"], "answer": 0, "explanation": "Safe by default.", "difficulty": "Medium"}, {"id": "q33", "q": "A canary run means…", "options": ["Trying a small batch first", "Running at night", "Running twice", "Skipping logs"], "answer": 0, "explanation": "Check results before scaling.", "difficulty": "Medium"}, {"id": "q34", "q": "Before bulk-changing data you should…", "options": ["Disable logging", "Use admin tokens", "Back it up or export it", "Remove limits"], "answer": 2, "explanation": "Keep a way to undo.", "difficulty": "Medium"}, {"id": "q35", "q": "A mock in a unit test replaces…", "options": ["The test runner", "The CPU", "The real network call", "The OS"], "answer": 2, "explanation": "Tests stay fast and safe.", "difficulty": "Medium"}, {"id": "q36", "q": "The final log line of a sync should include…", "options": ["Passwords", "Only 'done'", "A joke", "Summary counts"], "answer": 3, "explanation": "Created, updated, skipped, failed.", "difficulty": "Medium"}, {"id": "q37", "q": "Never log…", "options": ["Run IDs", "Secrets and full personal data", "Counts", "Timestamps"], "answer": 1, "explanation": "Protect sensitive data.", "difficulty": "Medium"}, {"id": "q38", "q": "Where should secrets be kept?", "options": ["Environment variables or a vault", "In the README", "Hard-coded in the script", "In chat"], "answer": 0, "explanation": "Out of code and tickets.", "difficulty": "Medium"}, {"id": "q39", "q": "A .env.example file is…", "options": ["The real secrets file", "Committed with placeholder values", "Encrypted", "Deleted"], "answer": 1, "explanation": "Documents required config.", "difficulty": "Medium"}, {"id": "q40", "q": "A Dockerfile helps by…", "options": ["Encrypting disks", "Writing tests", "Creating tokens", "Packaging the script with exact dependencies"], "answer": 3, "explanation": "Runs the same everywhere.", "difficulty": "Medium"}, {"id": "q41", "q": "A README should answer…", "options": ["Nothing", "Only the author's name", "What it does, how to run it, what it needs, how to know it worked", "The company history"], "answer": 2, "explanation": "Fast onboarding.", "difficulty": "Medium"}, {"id": "q42", "q": "When NOT to write a script:", "options": ["The data is small", "The task is repeatable", "The product already has the feature", "A report is needed"], "answer": 2, "explanation": "Check the product first.", "difficulty": "Medium"}, {"id": "q43", "q": "A script that is idempotent can be…", "options": ["Never retried", "Run only once", "Run only manually", "Run twice without harm"], "answer": 3, "explanation": "Safe to repeat.", "difficulty": "Medium"}, {"id": "q44", "q": "Why print the target environment before destructive actions?", "options": ["To hide errors", "To avoid running against the wrong environment", "To speed up", "To decorate output"], "answer": 1, "explanation": "Prevents production mistakes.", "difficulty": "Medium"}, {"id": "q45", "q": "Non-zero exit codes in scheduled scripts matter because…", "options": ["They are optional decoration", "Schedulers and monitors use them to detect failure", "They encrypt output", "They speed up jobs"], "answer": 1, "explanation": "Failures must be visible.", "difficulty": "Medium"}, {"q": "Why add logging to an automation script?", "options": ["To trace what it did and debug failures", "To slow it down", "To avoid errors", "To skip tests"], "answer": 0, "explanation": "Observability.", "difficulty": "Easy", "id": "qx46"}, {"q": "A dry-run mode in a script…", "options": ["Deletes data faster", "Shows what would change without changing it", "Skips validation", "Hides output"], "answer": 1, "explanation": "Safe preview.", "difficulty": "Easy", "id": "qx47"}, {"q": "Why avoid hard-coding credentials in scripts?", "options": ["It is faster", "It is required", "They can leak and are hard to rotate", "It improves logging"], "answer": 2, "explanation": "Use env vars or a secret store.", "difficulty": "Easy", "id": "qx48"}, {"q": "Which makes a script safe to re-run?", "options": ["Random IDs", "No logging", "Manual steps", "Idempotent design"], "answer": 3, "explanation": "Same result each run.", "difficulty": "Easy", "id": "qx49"}, {"q": "Retry with backoff in a script helps handle…", "options": ["Temporary failures like rate limits", "Syntax errors", "Typos", "Missing files forever"], "answer": 0, "explanation": "Transient errors.", "difficulty": "Easy", "id": "qx50"}];
+  const EXAM_N=50;
+  function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  const EXAM_SECONDS=50*60; /* 1 minute per question */
+  const inIframe = window.self!==window.top;
+
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash h2{font-size:25px;font-weight:800;margin-bottom:8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin-bottom:12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:ecpop .18s ease}
+  @keyframes ecpop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+
+  .exam-fsprompt{position:fixed;inset:0;z-index:100003;background:rgba(20,33,61,.93);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fsprompt .box{background:transparent;color:#fff;max-width:640px;width:100%;padding:0;text-align:center;box-shadow:none}
+  .exam-fsprompt h3{font-size:34px;font-weight:700;margin:0 0 22px;color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;line-height:1.2}
+  .exam-fsprompt h3 .wi{font-size:32px;line-height:1}
+  .exam-fsprompt p{font-size:17px;color:#fff;line-height:1.6;margin:0 0 16px}
+  .exam-fsprompt .wcount{font-size:17px;color:#fff;margin:0 0 18px}
+  .exam-fsprompt .rbtn{background:#0f1a2e;color:#fff;border:none;border-radius:12px;padding:15px 26px;font-weight:700;font-size:17px;font-family:inherit;cursor:pointer;transition:.12s}
+  .exam-fsprompt .rbtn:hover{background:#0a1220}
+  .exam-fsprompt .rbtn:focus-visible{outline:2px solid #FCA311;outline-offset:2px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+
+  function examConfirm(title,msg,okLabel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">
+        <button class="exam-btn nav" data-a="0">Cancel</button>
+        <button class="exam-btn primary" data-a="1">${okLabel||'Submit'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  /* ---- score history (localStorage, shared across the exam tab + guide) ---- */
+  const LS_KEY='SCScores';
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores();
+    a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: exactly 3 violation warnings (tab switch, fullscreen exit, screenshot attempt); 3 strikes -> auto-submit ---- */
+  let warns=0, lastWarn=0, lastType='', proctorOn=false;
+  const MAX_WARN=3;
+  const VIOL={
+    tab:{icon:'&#9888;&#65039;',title:'Tab switch detected',msg:'The assessment must stay in this tab and window.'},
+    fs:{icon:'&#9888;&#65039;',title:'Fullscreen exited',msg:'The assessment must remain in fullscreen mode.'},
+    shot:{icon:'&#9888;&#65039;',title:'Screenshot attempt detected',msg:'Screenshots and screen recordings are not permitted during the assessment.'}
+  };
+  function examWarn(title,msg){
+    injectCss();
+    const d=document.createElement('div'); d.className='exam-confirm';
+    d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row"><button class="exam-btn primary" data-a="1">OK</button></div></div>`;
+    document.body.appendChild(d);
+    d.addEventListener('click',e=>{ if(e.target.closest('[data-a]'))d.remove(); });
+  }
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function removeFsPrompt(){ const p=document.getElementById('examFsPrompt'); if(p)p.remove(); }
+  function removeViolPop(){ const p=document.getElementById('examViolPop'); if(p)p.remove(); }
+  function goFullscreen(){
+    try{ const re=document.documentElement.requestFullscreen?document.documentElement.requestFullscreen():Promise.resolve(); return Promise.resolve(re).catch(()=>{}); }
+    catch(_){ return Promise.resolve(); }
+  }
+  /* One popup at a time. kind = tab | fs | shot. n = strike number (null = no strike, e.g. entering fullscreen at start). */
+  function showViolation(kind,n){
+    if(!examOn)return;
+    injectCss(); hideCover(); removeViolPop(); removeFsPrompt();
+    const v=VIOL[kind]; const needFs=!document.fullscreenElement;
+    const title=(!n&&kind==='fs')?'Fullscreen required':v.title;
+    const wline=n?'<div class="wcount">Warning '+n+' of '+MAX_WARN+'</div>':'';
+    const d=document.createElement('div'); d.className='exam-fsprompt'; d.id=(kind==='fs'||needFs)?'examFsPrompt':'examViolPop';
+    d.setAttribute('role','alertdialog'); d.setAttribute('aria-modal','true');
+    d.innerHTML='<div class="box"><h3><span class="wi">'+v.icon+'</span><span>'+title+'</span></h3><p>'+v.msg+'</p>'+wline+'<button class="rbtn" id="examContinue">Return to assessment</button></div>';
+    document.body.appendChild(d);
+    const cb=document.getElementById('examContinue'); try{cb.focus();}catch(_){}
+    cb.addEventListener('click',()=>{
+      const go=document.fullscreenElement?Promise.resolve():goFullscreen();
+      go.then(()=>{ d.remove(); hideCover(); renderQ(); });
+    });
+  }
+  function violation(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now();
+    /* same incident (e.g. tab switch firing blur + visibilitychange together) counts once */
+    const fresh = now-lastWarn >= (kind===lastType?1500:800);
+    if(!fresh){ if(!document.fullscreenElement && !document.getElementById('examFsPrompt')) showViolation(kind,Math.min(warns,MAX_WARN)); return; }
+    lastWarn=now; lastType=kind; warns++;
+    if(warns>=MAX_WARN){
+      removeFsPrompt(); removeViolPop(); hideCover();
+      examWarn('Test submitted','You reached '+MAX_WARN+' warnings ('+VIOL[kind].title.toLowerCase()+'). The test has been auto-submitted.');
+      submitExam(true); return;
+    }
+    showViolation(kind,warns);
+  }
+  function fsHandler(){ if(examOn && !document.fullscreenElement){ violation('fs'); } }
+  function visHandler(){ if(document.hidden){ showCover(); violation('tab'); } else { hideCover(); } }
+  function blurHandler(){ if(!examOn)return; showCover(); violation('tab'); }
+  function focusHandler(){ hideCover(); }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function shotWarn(){ try{navigator.clipboard.writeText('');}catch(_){} violation('shot'); }
+  function keyGuard(e){
+    const k=(e.key||'').toLowerCase(), c=e.code||'';
+    if(k==='printscreen'||(e.metaKey&&e.shiftKey&&k==='s')||(e.metaKey&&e.shiftKey&&['Digit3','Digit4','Digit5'].includes(c))){ e.preventDefault(); shotWarn(); return false; }
+    if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; }
+  }
+  function printGuard(e){ if((e.key||'')==='PrintScreen'){ shotWarn(); } }
+  function startProctor(){
+    warns=0; lastWarn=0; lastType=''; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    window.addEventListener('blur',blurHandler);
+    window.addEventListener('focus',focusHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('cut',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keyup',printGuard,true);
+    /* if fullscreen could not be entered at start, ask for it (no strike) */
+    setTimeout(()=>{ if(examOn && proctorOn && !document.fullscreenElement) showViolation('fs',null); },700);
+  }
+  function stopProctor(){
+    proctorOn=false;
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    window.removeEventListener('blur',blurHandler);
+    window.removeEventListener('focus',focusHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('cut',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keyup',printGuard,true);
+    hideCover(); removeViolPop();
+  }
+
+  function startEntry(){
+    if(inIframe){ window.open(location.pathname+'?mode=exam','_blank'); return; }
+    showSplash();
+  }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; Scripting &amp; Automation &mdash; Mock Test</h2>
+      <p>A timed, exam-style assessment modelled on real technical screening tests.</p>
+      <ul>
+        <li><b>50 questions</b> to attempt</li>
+        <li><b>50-minute</b> timer (1 min per question) &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Results and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> &mdash; stay in fullscreen the whole time</li>
+        <li>Exactly <b>3 things trigger a warning</b>: (1) <b>switching tab / window</b>, (2) <b>exiting fullscreen</b>, (3) <b>attempting a screenshot</b> (PrintScreen / Win+Shift+S / Cmd+Shift+3-5)</li>
+        <li>Each warning shows a popup with a <b>Continue Test</b> button that resumes where you left off &mdash; the timer keeps running</li>
+        <li><b>3 warnings in total</b> &rarr; the test <b>auto-submits</b>. Copy and right-click are also disabled</li>
+      </ul>
+      <button class="exam-btn primary" id="examBegin" style="width:100%;padding:14px">Start Test &rarr;</button>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      if(document.documentElement.requestFullscreen){document.documentElement.requestFullscreen().catch(()=>{});}
+      sp.remove(); enterExam();
+    });
+  }
+
+  async function enterExam(){
+    injectCss();
+    let ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Loading your test&hellip;</div>';
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    items=shuffle(BANK).slice(0,EXAM_N).map(b=>({id:b.id,q:b.q,code:b.code,options:b.options,difficulty:b.difficulty}));
+    if(!items.length){ ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center">Could not load the test. Close and try again.</div>'; return; }
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">Scripting &amp; Automation &mdash; Mock Test</div><div class="et-sub">50 questions &middot; one attempt &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}${it.difficulty?`<span class="diff">${it.difficulty}</span>`:''}</div>
+      ${it.code?`<pre><code>${it.code}</code></pre>`:''}
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>el.addEventListener('click',()=>{
+      answers[id]=+el.dataset.i;
+      pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel'));
+      el.classList.add('sel'); refreshPalette();
+    }));
+    const prev=document.getElementById('examPrev'), next=document.getElementById('examNext');
+    if(prev)prev.addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    if(next)next.addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();refreshPalette();});
+    refreshPalette();
+  }
+
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examConfirm('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test');
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId); removeFsPrompt();
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    const payload={answers:{}};
+    items.forEach(it=>{ payload.answers[it.id] = (it.id in answers)?answers[it.id]:-1; });
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Grading your test&hellip;</div>';
+    const byId={}; BANK.forEach(b=>byId[b.id]=b);
+    let sc=0; const results={};
+    items.forEach(it=>{ const b=byId[it.id], you=payload.answers[it.id];
+      const ok=(you===b.answer); if(ok)sc++;
+      results[it.id]={correct:ok,answer:b.answer,explanation:b.explanation}; });
+    showResults({score:sc,results:results});
+  }
+
+  function showResults(data){
+    const results=data.results||{}, total=items.length, score=data.score||0;
+    saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below and try again.';
+    if(pct>=85)msg='Outstanding &mdash; strong command of this module.';
+    else if(pct>=65)msg='Solid pass. A little more practice on the tricky ones and you are set.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the topics you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const r=results[it.id]||{}; const you=answers[it.id];
+      const attempted=(you!=null);
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      if(!attempted){
+        // Not attempted: reveal nothing (answer stays protected)
+        inner+='<div class="ra">Your answer: <i>Not answered</i></div>';
+        return '<div class="r no">'+inner+'</div>';
+      }
+      const youTxt=String.fromCharCode(65+you)+'. '+it.options[you];
+      const cor=(r.answer!=null&&r.answer>=0)?(String.fromCharCode(65+r.answer)+'. '+it.options[r.answer]):'';
+      inner+='<div class="ra '+(r.correct?'cor':'wrong')+'">Your answer: '+youTxt+'</div>'
+        +(r.correct?'':'<div class="ra cor">Correct: '+cor+'</div>')
+        +(r.explanation?'<div class="rx">'+r.explanation+'</div>':'');
+      return '<div class="r '+(r.correct?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; Scripting &amp; Automation Mock Test</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another test</button></div>
+          <div class="exam-rmsg" id="examRedirect" style="margin-top:8px;color:#94a3b8"></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    let left=30;
+    const rd=document.getElementById('examRedirect');
+    const setTxt=()=>{ if(rd)rd.textContent='Returning to the assessment page in '+left+'s…'; };
+    setTxt();
+    const rt=setInterval(()=>{ left--; setTxt(); if(left<=0){ clearInterval(rt); goBack(); } },1000);
+    function goBack(){
+      if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); }
+      if(window.opener){ try{ window.close(); }catch(_){} }
+      location.href=location.pathname;   // fallback: reload guide (assessment) page
+    }
+    document.getElementById('examRetry').addEventListener('click',()=>{ clearInterval(rt); document.getElementById('examOverlay').remove(); enterExam(); });
+    document.getElementById('examClose').addEventListener('click',()=>{ clearInterval(rt); goBack(); });
+  }
+
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',startEntry);
+  window.__mockExamStart=startEntry;
+  renderScoreboard();
+  window.addEventListener('storage',e=>{ if(e.key===LS_KEY)renderScoreboard(); });
+  if(new URLSearchParams(location.search).get('mode')==='exam'){ showSplash(); }
+})();
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+<style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body>
+</html>

@@ -1,0 +1,2013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relationship & Account Management — Customer Success Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============= Notion-inspired theme ============= */
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#0f7b0f 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans';font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'JetBrains Mono',monospace;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans';font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'JetBrains Mono',monospace;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'JetBrains Mono',monospace;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'JetBrains Mono',monospace;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'JetBrains Mono',monospace;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'JetBrains Mono',monospace;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+</style>
+<!-- ── Global theme overlay (DESIGN-CBuddy.md) ── -->
+<link rel="stylesheet" href="/theme-cbuddy.css">
+<style>
+/* CareerBuddy: sticky sidebar visible scrollbar */
+.toc,.sidebar,.sidenav{scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc::-webkit-scrollbar,.sidebar::-webkit-scrollbar,.sidenav::-webkit-scrollbar{width:9px;height:9px}
+.toc::-webkit-scrollbar-thumb,.sidebar::-webkit-scrollbar-thumb,.sidenav::-webkit-scrollbar-thumb{background:#cbd2e0;border-radius:8px}
+.toc::-webkit-scrollbar-thumb:hover,.sidebar::-webkit-scrollbar-thumb:hover,.sidenav::-webkit-scrollbar-thumb:hover{background:#9aa4b8}
+.toc::-webkit-scrollbar-track,.sidebar::-webkit-scrollbar-track,.sidenav::-webkit-scrollbar-track{background:transparent}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@100..900&display=swap">
+<style>
+/* -- Unify typography: Noto Sans everywhere (CareerBuddy) -- */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,dl,dt,dd,td,th,div,section,article,header,footer,nav,aside,main,label,button,input,select,textarea,blockquote,figcaption,small,strong,b,em,i{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif !important}
+.material-symbols-outlined,.material-icons{font-family:'Material Symbols Outlined','Material Icons' !important}
+code,pre,kbd,samp,tt,.mono,[class*="mono"],[class*="Mono"],[class*="code"],[class*="Code"],[class*="tok"],[class*="hljs"]{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+
+<style>
+/* Practice + quick-check additions (same visual language as the reference) */
+.practice-label{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:#0a5f0a;background:var(--green-soft);padding:3px 9px;border-radius:5px;margin-bottom:6px}
+.saq-scenario{font-size:14px;color:var(--ink-soft);margin:0 0 10px;line-height:1.55}
+.mcq-reset{margin-top:6px}
+.steps{counter-reset:st;list-style:none;padding-left:0 !important}
+.steps>li{counter-increment:st;position:relative;padding-left:40px;margin:12px 0 !important}
+.steps>li::before{content:counter(st);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;
+  background:#14213D;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}
+.script{background:var(--bg-soft);border-left:3px solid #14213D;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:14.5px}
+.script.bad{border-left-color:var(--red)}
+.script.good{border-left-color:var(--green)}
+.script b{display:block;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:2px}
+</style>
+
+<style>
+/* Visible, thin navbar scrollbar */
+.tabbar{overflow-x:auto !important;scrollbar-width:thin !important;scrollbar-color:#000000 #e2e8f0 !important;padding-bottom:4px}
+.tabbar::-webkit-scrollbar{display:block !important;height:8px}
+.tabbar::-webkit-scrollbar-track{background:#e2e8f0;border-radius:8px}
+.tabbar::-webkit-scrollbar-thumb{background:#000000;border-radius:8px}
+.tabbar::-webkit-scrollbar-thumb:hover{background:#333333}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<!-- ============= STICKY HEADER ============= -->
+<header class="header">
+  <div class="header-top">
+    <div class="brand">
+      <div class="brand-mark">RAM</div>
+      <span>Relationship &amp; Account Management<span class="brand-sub"> · Customer Success Manager</span></span>
+    </div>
+    <div class="header-actions">
+      <span class="progress-pill" id="progressPill">
+        <span class="progress-dot"></span>
+        <span id="progressText">Tab 1 of 10</span>
+      </span>
+      <button class="btn" onclick="resetProgress()" title="Reset to first tab">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9"/><path d="M2 4v3.5h3.5"/></svg>
+        Reset
+      </button>
+    </div>
+  </div>
+  <nav class="tabbar" role="tablist" id="tabbar">
+        <button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Customer Success Basics</button>
+    <button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> Building Relationships</button>
+    <button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> Executive Presence</button>
+    <button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> QBR Fundamentals</button>
+    <button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> Preparing & Running QBRs</button>
+    <button class="tab" data-tab="t6" role="tab"><span class="tab-num">06</span> Executive Check-ins</button>
+    <button class="tab" data-tab="t7" role="tab"><span class="tab-num">07</span> Account Planning</button>
+    <button class="tab" data-tab="t8" role="tab"><span class="tab-num">08</span> Real-World Scenarios</button>
+    <button class="tab" data-tab="t9" role="tab"><span class="tab-num">09</span> Interview Prep</button>
+    <button class="tab" data-tab="t10" role="tab"><span class="tab-num">10</span> Assessment</button>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="toc">
+    <div class="toc-title">On this page</div>
+    <ul class="toc-list" id="toc"></ul>
+  </aside>
+  <main class="main">
+
+    <section class="panel active" id="t1" data-toc='[["s1-1", "What Is Customer Success?"], ["s1-2", "What Does a CSM Do?"], ["s1-3", "CSM vs Support vs Account Manager"], ["s1-4", "Types of Engagement Models"], ["s1-5", "The Customer Lifecycle"], ["s1-6", "Common Mistakes"], ["s1-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Basic</span></div>
+        <div class="panel-eyebrow">Module 01 · What Is What</div>
+        <h1 class="panel-title">Customer Success & the CSM Role</h1>
+        <p class="panel-subtitle">Start from the beginning: what Customer Success is, what a Customer Success Manager does, how it differs from Support, Sales and Account Management, and the types of CS engagement models.</p>
+      </div>
+<div class="section" id="s1-1">
+<h2><span class="sec-emoji">🌱</span> What Is Customer Success?</h2>
+<p><strong>Customer Success (CS)</strong> is the practice of making sure customers achieve the outcomes they bought a product for. In subscription (SaaS) businesses, customers can leave at every renewal, so the company only grows if customers keep getting value.</p><div class="compare"><div class="compare-col"><h4>🛠️ Customer Support</h4><p style="font-size:13.5px;margin:0"><strong>Reactive</strong>: helps when the customer reports a problem. Measured by response time and resolution.</p></div><div class="compare-col"><h4>🌱 Customer Success</h4><p style="font-size:13.5px;margin:0"><strong>Proactive</strong>: reaches out to drive adoption and outcomes before problems happen. Measured by retention, expansion and health.</p></div></div>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">A simple definition for interviews: <strong>"Customer Success makes sure customers get the value they paid for, so they renew and grow."</strong></div></div>
+
+</div>
+<div class="section" id="s1-2">
+<h2><span class="sec-emoji">👤</span> What Does a CSM Do?</h2>
+<div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d6bbf">🤝</div><div class="card-title">Relationships</div><div class="card-desc">Builds trust with users, champions and executives.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🎯</div><div class="card-title">Outcomes</div><div class="card-desc">Turns business goals into an adoption plan.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#73508c">📈</div><div class="card-title">Adoption</div><div class="card-desc">Drives usage of the right features by the right people.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">❤️</div><div class="card-title">Health</div><div class="card-desc">Monitors health scores and spots risk early.</div></div><div class="card"><div class="card-icon" style="background:var(--yellow-soft);color:#8a6a00">🔁</div><div class="card-title">Renewals</div><div class="card-desc">Leads or supports contract renewals.</div></div><div class="card"><div class="card-icon" style="background:var(--pink-soft);color:#8c1a63">🚀</div><div class="card-title">Expansion</div><div class="card-desc">Finds upsell/cross-sell opportunities with Sales.</div></div></div>
+<div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">The set of accounts a CSM manages is called their <strong>book of business</strong>, often measured in number of accounts and total ARR (annual recurring revenue).</div></div>
+
+</div>
+<div class="section" id="s1-3">
+<h2><span class="sec-emoji">⚖️</span> CSM vs Support vs Account Manager</h2>
+<div style="overflow-x:auto"><table><thead><tr><th></th><th>Support Rep / TSE</th><th>Customer Success Manager</th><th>Account Manager / Account Executive</th></tr></thead><tbody><tr><td>Main goal</td><td>Fix issues</td><td>Drive outcomes, adoption, retention</td><td>Sell: new deals, upsells, renewals (commercial)</td></tr><tr><td>Approach</td><td>Reactive</td><td>Proactive</td><td>Commercial</td></tr><tr><td>Talks to</td><td>Users reporting issues</td><td>Users, champions, executives</td><td>Buyers, procurement, executives</td></tr><tr><td>Measured by</td><td>FRT, CSAT, resolution</td><td>Health, GRR/NRR, adoption</td><td>Quota, bookings</td></tr><tr><td>Typical meetings</td><td>Troubleshooting calls</td><td>Onboarding, check-ins, QBRs</td><td>Negotiations, pricing</td></tr></tbody></table></div>
+<div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">In some companies CSMs own renewals and expansion ("commercial CSM"); in others, Account Managers own the money and CSMs own value and adoption. Always ask which model a company uses.</div></div>
+
+</div>
+<div class="section" id="s1-4">
+<h2><span class="sec-emoji">🧭</span> Types of Engagement Models</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Model</th><th>Accounts per CSM</th><th>How engagement happens</th><th>Typical customers</th></tr></thead><tbody><tr><td>High-touch</td><td>5–20</td><td>Dedicated CSM, regular meetings, onsite, QBRs</td><td>Enterprise, high ARR</td></tr><tr><td>Mid-touch</td><td>30–100</td><td>Mix of meetings and automated programmes</td><td>Mid-market</td></tr><tr><td>Low / tech-touch</td><td>Hundreds–thousands (pooled)</td><td>Automated emails, in-app guides, webinars, community</td><td>SMB, self-serve</td></tr><tr><td>Digital / scaled CS</td><td>Pooled team</td><td>Data-driven journeys; humans on risk triggers</td><td>Large long-tail bases</td></tr></tbody></table></div>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Segmentation is usually by <strong>ARR</strong>, potential, complexity and strategic value. The higher the value, the more human time each account gets.</div></div>
+
+</div>
+<div class="section" id="s1-5">
+<h2><span class="sec-emoji">🔄</span> The Customer Lifecycle</h2>
+<div class="diagram"><svg viewBox="0 0 740 190" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ra2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs>
+<g font-family="Noto Sans" font-size="11" text-anchor="middle">
+<rect x="5" y="55" width="95" height="56" rx="10" fill="#f1f1ef" stroke="#d3d3d0"/><text x="52" y="79" font-weight="700" fill="#37352f">Sales</text><text x="52" y="95" fill="#787774">deal signed</text>
+<rect x="115" y="55" width="95" height="56" rx="10" fill="#eef1f7" stroke="#bcdcf5"/><text x="162" y="79" font-weight="700" fill="#14213D">Onboarding</text><text x="162" y="95" fill="#14213D">kickoff, setup</text>
+<rect x="225" y="55" width="95" height="56" rx="10" fill="#14213D"/><text x="272" y="79" font-weight="700" fill="#fff">Adoption</text><text x="272" y="95" fill="#cdd5e5">usage grows</text>
+<rect x="335" y="55" width="95" height="56" rx="10" fill="#22345f"/><text x="382" y="79" font-weight="700" fill="#fff">Value</text><text x="382" y="95" fill="#cdd5e5">goals achieved</text>
+<rect x="445" y="55" width="95" height="56" rx="10" fill="#fdecc8" stroke="#f0d889"/><text x="492" y="79" font-weight="700" fill="#8a6a00">Renewal</text><text x="492" y="95" fill="#8a6a00">contract renewed</text>
+<rect x="555" y="55" width="95" height="56" rx="10" fill="#ddedea" stroke="#bdd9d2"/><text x="602" y="79" font-weight="700" fill="#0a5f0a">Expansion</text><text x="602" y="95" fill="#0a5f0a">more users/products</text>
+<rect x="665" y="55" width="70" height="56" rx="10" fill="#0f7b0f"/><text x="700" y="79" font-weight="700" fill="#fff">Advocacy</text><text x="700" y="95" fill="#fff">referrals</text>
+<line x1="100" y1="83" x2="114" y2="83" stroke="#37352f" marker-end="url(#ra2)"/><line x1="210" y1="83" x2="224" y2="83" stroke="#37352f" marker-end="url(#ra2)"/>
+<line x1="320" y1="83" x2="334" y2="83" stroke="#37352f" marker-end="url(#ra2)"/><line x1="430" y1="83" x2="444" y2="83" stroke="#37352f" marker-end="url(#ra2)"/>
+<line x1="540" y1="83" x2="554" y2="83" stroke="#37352f" marker-end="url(#ra2)"/><line x1="650" y1="83" x2="664" y2="83" stroke="#37352f" marker-end="url(#ra2)"/>
+<text x="380" y="35" fill="#787774" font-style="italic">The CSM owns the relationship from onboarding through renewal and expansion.</text>
+<text x="380" y="150" fill="#a85a08">Relationship strength at every stage decides whether customers renew.</text>
+</g></svg><div class="diagram-caption">Figure 1.1 · The customer lifecycle a CSM manages</div></div>
+
+</div>
+<div class="section" id="s1-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Acting like a support desk</td><td>Becomes reactive; no strategic value</td><td>Lead with outcomes and plans</td></tr><tr><td>Only talking to one user</td><td>Single point of failure</td><td>Build multi-threaded relationships</td></tr><tr><td>Selling too early</td><td>Erodes trust</td><td>Earn the right through value first</td></tr><tr><td>Same treatment for every account</td><td>Wastes time or under-serves key accounts</td><td>Match engagement to segment</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s1-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Explain the difference between Customer Support and Customer Success to a new joiner, with one example each.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Support is reactive: a user can't log in, so support resets access. Success is proactive: the CSM sees that only 20% of licences are used, meets the customer, and runs a training plan so the team adopts the product before renewal.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>You manage 12 enterprise accounts worth ₹40 crore ARR. Which engagement model is this, and what activities would you run?</span></div><p class="saq-scenario">Scenario: New CSM joining an enterprise team.</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">High-touch. Activities: kickoff and success plans, regular check-ins (weekly/fortnightly with champions), QBRs with executives, stakeholder mapping, health monitoring, renewal planning 6+ months ahead, onsite visits where valuable.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Customer Success is mainly…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Reactive</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Proactive</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Only sales</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Only billing</li></ul><div class="mcq-feedback" data-expl="Proactive outcomes."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>The accounts a CSM manages are called their…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Pipeline</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Book of business</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Backlog</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Queue</li></ul><div class="mcq-feedback" data-expl="Book of business."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>Tech-touch CS relies mostly on…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Onsite visits</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Automated, scaled programmes</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Monthly QBRs for each account</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Sales calls</li></ul><div class="mcq-feedback" data-expl="Scaled engagement."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t2" data-toc='[["s2-1", "What Is a Strong Relationship?"], ["s2-2", "Types of Customer Meetings"], ["s2-3", "Communication Cadence"], ["s2-4", "Multi-threading"], ["s2-5", "Trust When Things Go Wrong"], ["s2-6", "Common Mistakes"], ["s2-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Basic</span><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 02 · Relationships</div>
+        <h1 class="panel-title">Building Strong Customer Relationships</h1>
+        <p class="panel-subtitle">Trust is the foundation of retention. Learn what makes a strong relationship, types of customer meetings, communication cadence, multi-threading, and how to stay credible when things go wrong.</p>
+      </div>
+<div class="section" id="s2-1">
+<h2><span class="sec-emoji">🤝</span> What Is a Strong Relationship?</h2>
+<p>A strong customer relationship means the customer sees you as a <strong>trusted advisor</strong>: someone who understands their business, tells the truth, and helps them succeed, not just a vendor contact.</p><div style="overflow-x:auto"><table><thead><tr><th>Level</th><th>How the customer sees you</th><th>Example</th></tr></thead><tbody><tr><td>1. Vendor contact</td><td>"The person from the software company"</td><td>Only contacted for invoices</td></tr><tr><td>2. Helpful resource</td><td>"Good at answering questions"</td><td>Solves how-to issues</td></tr><tr><td>3. Partner</td><td>"Understands our goals"</td><td>Joins planning; brings best practices</td></tr><tr><td>4. Trusted advisor</td><td>"Part of our team; we ask their opinion"</td><td>Consulted on strategy beyond the product</td></tr></tbody></table></div>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Trust formula often used: <strong>Trust = (Credibility + Reliability + Intimacy) ÷ Self-orientation</strong>. Be knowledgeable, keep promises, understand them personally, and focus on their success, not your quota.</div></div>
+
+</div>
+<div class="section" id="s2-2">
+<h2><span class="sec-emoji">📅</span> Types of Customer Meetings</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Meeting</th><th>Purpose</th><th>Who</th><th>When</th></tr></thead><tbody><tr><td>Kickoff</td><td>Align on goals, success criteria, plan</td><td>Champion, project team, sponsor</td><td>Start of onboarding</td></tr><tr><td>Check-in / sync</td><td>Progress, blockers, adoption</td><td>Champion, admins</td><td>Weekly → monthly</td></tr><tr><td>Training / enablement</td><td>Teach features and best practices</td><td>End users, admins</td><td>As needed</td></tr><tr><td>QBR / EBR</td><td>Strategic review of value and next goals</td><td>Executives + champion</td><td>Quarterly / twice a year</td></tr><tr><td>Executive check-in</td><td>Relationship at leadership level</td><td>Exec sponsor ↔ customer exec</td><td>Quarterly or at key moments</td></tr><tr><td>Renewal discussion</td><td>Commercial terms, future plans</td><td>Decision-makers, procurement</td><td>90–120 days before renewal</td></tr><tr><td>Escalation / recovery</td><td>Fix serious problems; rebuild trust</td><td>Execs on both sides</td><td>When issues arise</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s2-3">
+<h2><span class="sec-emoji">⏰</span> Communication Cadence</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Segment / stage</th><th>Cadence example</th></tr></thead><tbody><tr><td>Onboarding (any segment)</td><td>Weekly calls until go-live</td></tr><tr><td>High-touch steady state</td><td>Fortnightly or monthly check-ins + quarterly QBR</td></tr><tr><td>Mid-touch</td><td>Monthly email/call + twice-yearly review</td></tr><tr><td>Tech-touch</td><td>Automated monthly newsletter, in-app tips, webinars</td></tr><tr><td>At-risk account</td><td>Weekly, with an agreed recovery plan</td></tr></tbody></table></div>
+<ul><li>Send a <strong>recap email</strong> after every meeting: decisions, owners, dates.</li><li>Prefer value-adding touches ("here's a benchmark for your team") over "just checking in".</li><li>Log every interaction in the CS platform/CRM so anyone can see the history.</li></ul>
+
+</div>
+<div class="section" id="s2-4">
+<h2><span class="sec-emoji">🕸️</span> Multi-threading</h2>
+<p><strong>Multi-threading</strong> means building relationships with several people at the customer, across levels and departments, so the account doesn't depend on one person.</p><div class="compare"><div class="compare-col"><h4>🧵 Single-threaded</h4><p style="font-size:13.5px;margin:0">Only one champion. If they leave or change role, the CSM loses visibility and the renewal is at risk.</p></div><div class="compare-col"><h4>🕸️ Multi-threaded</h4><p style="font-size:13.5px;margin:0">Champion + admin + end-user leads + department head + executive sponsor. Losing one contact doesn't break the account.</p></div></div>
+<div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><strong>Champion departure</strong> is one of the top churn risk signals. Multi-thread before it happens.</div></div>
+
+</div>
+<div class="section" id="s2-5">
+<h2><span class="sec-emoji">🛡️</span> Trust When Things Go Wrong</h2>
+<ol class="steps"><li>Acknowledge the problem quickly and honestly; don't hide or minimise it.</li><li>Own the follow-up even if another team must fix it.</li><li>Share a clear plan with owners and dates.</li><li>Over-communicate progress until resolved.</li><li>Afterwards, review what happened and what changes prevent repeats.</li></ol>
+<div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Customers often trust a CSM <em>more</em> after a well-handled problem than if nothing had gone wrong.</div></div>
+
+</div>
+<div class="section" id="s2-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>"Just checking in" emails</td><td>No value; get ignored</td><td>Bring an insight, tip or benchmark</td></tr><tr><td>No meeting recaps</td><td>Decisions forgotten</td><td>Recap with owners and dates</td></tr><tr><td>Single-threaded accounts</td><td>Champion leaves → risk</td><td>Map and engage multiple stakeholders</td></tr><tr><td>Overpromising</td><td>Broken trust</td><td>Commit only to what you control</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s2-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Write a meeting recap email after a monthly check-in where the customer agreed to train 3 new teams by month-end.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">"Hi Kavya, thanks for today. Summary: (1) Adoption is up to 64% of licences (from 51%). (2) Agreed: train Finance, Ops and HR teams by 31 Oct. Owner: you to share attendee lists by Friday; me to run three 45-minute sessions. (3) Open item: SSO setup, with your IT team, target 15 Oct. Next check-in: 4 Nov. Let me know if I missed anything."</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Your only contact at a key account just announced she is leaving. What do you do this week?</span></div><p class="saq-scenario">Scenario: Champion departure.</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Thank her and ask for introductions to her successor and other key people; get a handover meeting; review the stakeholder map and contact other users/admins/managers; schedule an intro with the new owner to restate goals and value; flag the account as at-risk in the CS platform and inform your manager/AM.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Multi-threading means…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Using many tools</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Building relationships with several stakeholders</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Sending many emails</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Multiple CSMs per account</li></ul><div class="mcq-feedback" data-expl="Avoid single points of failure."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>Which is the best follow-up after a meeting?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Nothing</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Recap with decisions, owners and dates</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> A sales pitch</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> A survey only</li></ul><div class="mcq-feedback" data-expl="Clear recap."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="3"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>In the trust formula, which REDUCES trust?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Credibility</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Reliability</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Intimacy</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Self-orientation</li></ul><div class="mcq-feedback" data-expl="Focus on yourself lowers trust."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t3" data-toc='[["s3-1", "What Is Executive Presence?"], ["s3-2", "Speaking the Executive Language"], ["s3-3", "Preparing for Executive Meetings"], ["s3-4", "Communication Techniques"], ["s3-5", "Handling Tough Questions"], ["s3-6", "Common Mistakes"], ["s3-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 03 · Executive Presence</div>
+        <h1 class="panel-title">Executive Presence for CSMs</h1>
+        <p class="panel-subtitle">Executive presence is how credibly you show up with senior leaders. Learn its components, how to speak in business outcomes, prepare for executive conversations, and handle tough questions with composure.</p>
+      </div>
+<div class="section" id="s3-1">
+<h2><span class="sec-emoji">👔</span> What Is Executive Presence?</h2>
+<p><strong>Executive presence</strong> is the ability to communicate with senior leaders in a way that is confident, concise, credible and focused on what matters to them.</p><div style="overflow-x:auto"><table><thead><tr><th>Component</th><th>What it looks like</th></tr></thead><tbody><tr><td>Gravitas</td><td>Calm confidence; you know the account and the business</td></tr><tr><td>Communication</td><td>Short, structured, outcome-focused; no rambling</td></tr><tr><td>Credibility</td><td>Facts and data; honest about problems</td></tr><tr><td>Composure</td><td>Steady under pressure or criticism</td></tr><tr><td>Business acumen</td><td>Understands their industry, goals, metrics</td></tr><tr><td>Appearance &amp; punctuality</td><td>Professional, prepared, on time, tech checked</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s3-2">
+<h2><span class="sec-emoji">💼</span> Speaking the Executive Language</h2>
+<p>Executives care about <strong>outcomes</strong> (revenue, cost, risk, speed, customer experience), not features.</p><div style="overflow-x:auto"><table><thead><tr><th>Feature language (avoid)</th><th>Executive language (use)</th></tr></thead><tbody><tr><td>"We launched a new dashboard filter."</td><td>"Your managers now find late shipments 40% faster, reducing penalty costs."</td></tr><tr><td>"Adoption is 72% DAU/MAU."</td><td>"Seven in ten of your team use the platform daily, so the process change is sticking."</td></tr><tr><td>"Ticket volume went down."</td><td>"Support costs per order dropped 18% this quarter."</td></tr><tr><td>"We need you to use feature X."</td><td>"Teams that automate approvals cut cycle time by a third; here's a plan for yours."</td></tr></tbody></table></div>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Use the <strong>"So what?"</strong> test: after every statement, ask "so what does this mean for their business?" and say that instead.</div></div>
+
+</div>
+<div class="section" id="s3-3">
+<h2><span class="sec-emoji">📋</span> Preparing for Executive Meetings</h2>
+<ol class="steps"><li>Know the executive: role, priorities, recent company news, LinkedIn background.</li><li>Know the account: goals, health, usage, value delivered, open issues, renewal date.</li><li>Define your <strong>one objective</strong> for the meeting (e.g., agree on next-year goals).</li><li>Prepare a 1-page summary or 3–5 slides maximum.</li><li>Align internally: your exec sponsor, AM, support on open issues.</li><li>Anticipate tough questions and prepare honest answers.</li></ol>
+
+</div>
+<div class="section" id="s3-4">
+<h2><span class="sec-emoji">🗣️</span> Communication Techniques</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Technique</th><th>How</th></tr></thead><tbody><tr><td>BLUF (Bottom Line Up Front)</td><td>Start with the conclusion, then details if asked</td></tr><tr><td>Rule of three</td><td>Group points into three (wins, risks, asks)</td></tr><tr><td>Pyramid principle</td><td>Main message → supporting points → data</td></tr><tr><td>Data + story</td><td>One metric plus one real example from their team</td></tr><tr><td>Clear ask</td><td>End with a specific decision or support you need</td></tr><tr><td>Listen more</td><td>Ask about their priorities; let them talk</td></tr></tbody></table></div>
+<div class="script good"><b>BLUF opening</b>In short: you're on track to hit the 30% faster-onboarding goal by December. Two things would get you there sooner: SSO rollout and training the Pune team. I'd like your help unblocking IT for SSO.</div>
+
+</div>
+<div class="section" id="s3-5">
+<h2><span class="sec-emoji">🔥</span> Handling Tough Questions</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Question</th><th>Strong response approach</th></tr></thead><tbody><tr><td>"Why should we renew when usage is low?"</td><td>Acknowledge; show where value exists; present a concrete adoption plan with dates</td></tr><tr><td>"Your product had two outages this quarter."</td><td>Own it; share root cause summary, fixes and SLA commitments</td></tr><tr><td>"A competitor is cheaper."</td><td>Focus on outcomes delivered, switching cost, roadmap fit; involve AM for commercial terms</td></tr><tr><td>Question you can't answer</td><td>"I don't want to guess. I'll confirm by Thursday."</td></tr></tbody></table></div>
+<div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Never bluff with executives. One wrong answer damages credibility more than "I'll find out".</div></div>
+
+</div>
+<div class="section" id="s3-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Feature tours for executives</td><td>Wastes their time</td><td>Talk outcomes and decisions</td></tr><tr><td>30-slide decks</td><td>Lose attention</td><td>3–5 slides, BLUF</td></tr><tr><td>Hiding bad news</td><td>Destroys trust when discovered</td><td>Share proactively with a plan</td></tr><tr><td>No clear ask</td><td>Meeting ends with no progress</td><td>End with a specific request</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s3-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Rewrite this for a CFO: "We released bulk invoice upload and your team uploaded 3,000 invoices."</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">"Your finance team processed 3,000 invoices in bulk this quarter instead of one by one, saving roughly 120 hours of manual work, about ₹4.8 lakh in staff time, and month-end closing finished two days earlier."</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>A VP asks in a QBR: "Why are we paying for 500 seats when only 210 are active?" How do you respond?</span></div><p class="saq-scenario">Scenario: Executive challenge on value.</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Acknowledge directly ("That's a fair question"). Show where the 210 active users get value (results/metrics). Explain why the rest aren't active (teams not onboarded, SSO pending). Present a dated plan to activate key teams with owners. Offer to revisit seat count at renewal if adoption doesn't improve, which builds trust. Bring the AM in for commercial discussion.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>BLUF means…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Begin with long updates first</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Bottom Line Up Front</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Build Long Usage Forecasts</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Business Level Usage File</li></ul><div class="mcq-feedback" data-expl="Conclusion first."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>Executives care most about…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Feature names</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Business outcomes (revenue, cost, risk)</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> UI colours</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Ticket IDs</li></ul><div class="mcq-feedback" data-expl="Outcomes."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>If you don't know an answer in an executive meeting…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Guess confidently</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Say you'll confirm by a specific date</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Change the topic</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Blame engineering</li></ul><div class="mcq-feedback" data-expl="Credibility."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t4" data-toc='[["s4-1", "What Is a QBR?"], ["s4-2", "Types of Business Reviews"], ["s4-3", "Why QBRs Matter"], ["s4-4", "Who Attends"], ["s4-5", "The Standard QBR Structure"], ["s4-6", "Common Mistakes"], ["s4-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Basic</span><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 04 · QBRs</div>
+        <h1 class="panel-title">Quarterly Business Reviews: The Basics</h1>
+        <p class="panel-subtitle">What a QBR is, why it matters, its types (QBR, EBR, MBR), who should attend, and the standard agenda structure.</p>
+      </div>
+<div class="section" id="s4-1">
+<h2><span class="sec-emoji">📊</span> What Is a QBR?</h2>
+<p>A <strong>Quarterly Business Review (QBR)</strong> is a strategic meeting, usually every three months, where the CSM and the customer review the value delivered, progress against goals, and agree on priorities for the next period.</p><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">A QBR is <strong>not</strong> a product demo or a support review. It's a business conversation about outcomes.</div></div>
+
+</div>
+<div class="section" id="s4-2">
+<h2><span class="sec-emoji">🗂️</span> Types of Business Reviews</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Type</th><th>Frequency</th><th>Audience</th><th>Focus</th></tr></thead><tbody><tr><td>MBR (Monthly)</td><td>Monthly</td><td>Champion, project team</td><td>Operational progress, adoption</td></tr><tr><td>QBR (Quarterly)</td><td>Quarterly</td><td>Champion + leadership</td><td>Value, goals, roadmap fit</td></tr><tr><td>EBR (Executive)</td><td>Twice a year / yearly</td><td>Executives on both sides</td><td>Strategy, partnership, renewal direction</td></tr><tr><td>Success plan review</td><td>Milestone-based</td><td>Project owners</td><td>Specific goal milestones</td></tr></tbody></table></div>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Many companies now call quarterly reviews <strong>EBRs</strong> to emphasise executive and business focus. The name matters less than the content.</div></div>
+
+</div>
+<div class="section" id="s4-3">
+<h2><span class="sec-emoji">🎯</span> Why QBRs Matter</h2>
+<div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d6bbf">💰</div><div class="card-title">Prove value</div><div class="card-desc">Show ROI before renewal conversations.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🧭</div><div class="card-title">Align goals</div><div class="card-desc">Make sure you're working on what matters to them now.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#73508c">👔</div><div class="card-title">Executive access</div><div class="card-desc">Build relationships beyond the champion.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">⚠️</div><div class="card-title">Surface risk</div><div class="card-desc">Hear concerns early.</div></div><div class="card"><div class="card-icon" style="background:var(--yellow-soft);color:#8a6a00">🚀</div><div class="card-title">Find growth</div><div class="card-desc">Identify new teams or use cases.</div></div></div>
+
+</div>
+<div class="section" id="s4-4">
+<h2><span class="sec-emoji">👥</span> Who Attends</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Customer side</th><th>Your side</th></tr></thead><tbody><tr><td>Executive sponsor / decision-maker</td><td>CSM (owner of the meeting)</td></tr><tr><td>Champion / project owner</td><td>Account Manager (if commercial topics)</td></tr><tr><td>Key department leads</td><td>Exec sponsor (for strategic accounts)</td></tr><tr><td>Admin (sometimes)</td><td>Solutions engineer / product expert (if needed)</td></tr></tbody></table></div>
+<div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">If the decision-maker never attends your QBRs, you don't really have executive alignment, a risk at renewal time.</div></div>
+
+</div>
+<div class="section" id="s4-5">
+<h2><span class="sec-emoji">🧱</span> The Standard QBR Structure</h2>
+<div class="diagram"><svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg">
+<g font-family="Noto Sans" font-size="11" text-anchor="middle">
+<rect x="20" y="30" width="155" height="120" rx="12" fill="#eef1f7" stroke="#bcdcf5"/><text x="97" y="58" font-weight="700" fill="#14213D" font-size="13">1. Look back</text><text x="97" y="82" fill="#14213D">goals vs results</text><text x="97" y="100" fill="#14213D">usage &amp; ROI</text><text x="97" y="118" fill="#14213D">wins &amp; issues</text>
+<rect x="195" y="30" width="155" height="120" rx="12" fill="#14213D"/><text x="272" y="58" font-weight="700" fill="#fff" font-size="13">2. Insights</text><text x="272" y="82" fill="#cdd5e5">benchmarks</text><text x="272" y="100" fill="#cdd5e5">what drove value</text><text x="272" y="118" fill="#cdd5e5">gaps &amp; risks</text>
+<rect x="370" y="30" width="155" height="120" rx="12" fill="#22345f"/><text x="447" y="58" font-weight="700" fill="#fff" font-size="13">3. Look ahead</text><text x="447" y="82" fill="#cdd5e5">next-quarter goals</text><text x="447" y="100" fill="#cdd5e5">roadmap fit</text><text x="447" y="118" fill="#cdd5e5">recommendations</text>
+<rect x="545" y="30" width="155" height="120" rx="12" fill="#ddedea" stroke="#bdd9d2"/><text x="622" y="58" font-weight="700" fill="#0a5f0a" font-size="13">4. Agree</text><text x="622" y="82" fill="#0a5f0a">success plan</text><text x="622" y="100" fill="#0a5f0a">owners &amp; dates</text><text x="622" y="118" fill="#0a5f0a">next meeting</text>
+<text x="360" y="185" fill="#787774" font-style="italic">A QBR tells a story: where we were, what we achieved, where we go next, and who does what.</text>
+</g></svg><div class="diagram-caption">Figure 4.1 · Look back → Insights → Look ahead → Agree</div></div>
+<div style="overflow-x:auto"><table><thead><tr><th>Agenda item</th><th>Time (60 min)</th></tr></thead><tbody><tr><td>Objectives &amp; agenda</td><td>3 min</td></tr><tr><td>Goals recap &amp; results vs goals</td><td>12 min</td></tr><tr><td>Value/ROI story + adoption insights</td><td>12 min</td></tr><tr><td>Customer priorities for next quarter (they speak!)</td><td>12 min</td></tr><tr><td>Recommendations &amp; roadmap fit</td><td>10 min</td></tr><tr><td>Agreed success plan, owners, next steps</td><td>8 min</td></tr><tr><td>Feedback</td><td>3 min</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s4-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Presenting usage stats only</td><td>No business meaning</td><td>Tie metrics to their goals</td></tr><tr><td>CSM talks 90% of the time</td><td>Miss customer priorities</td><td>Leave at least a third for their input</td></tr><tr><td>Same deck for every customer</td><td>Feels generic</td><td>Customise to their goals and data</td></tr><tr><td>No next steps</td><td>No progress</td><td>End with owners and dates</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s4-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Draft a 60-minute QBR agenda for a logistics customer whose goal is to reduce late deliveries by 20%.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Objectives (3); recap goal and results: late deliveries down 12% so far (12); value story: alerts helped dispatchers act 30 min earlier, plus a customer quote (12); their priorities next quarter, e.g., expanding to two new hubs (12); recommendations: route-optimisation feature and training for night shift (10); success plan with owners/dates to reach 20% by Q4 (8); feedback (3).</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Your champion attends QBRs but the VP never does. Why is this a problem and what will you do?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Without the VP, value isn't visible to the decision-maker and renewal/expansion depend on one champion. Ask the champion what the VP cares about, create a short executive summary, propose a 20-minute EBR with your exec sponsor, and send a one-page value summary to the VP.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>A QBR is mainly…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> A product demo</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> A strategic review of value and goals</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> A support ticket review</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> A sales pitch</li></ul><div class="mcq-feedback" data-expl="Strategic review."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>EBR stands for…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Engineering Bug Review</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Executive Business Review</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Early Billing Report</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Escalation Backlog Review</li></ul><div class="mcq-feedback" data-expl="Executive Business Review."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>Who should talk a significant part of a QBR?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Only the CSM</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> The customer, about their priorities</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Only engineers</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Nobody</li></ul><div class="mcq-feedback" data-expl="Two-way conversation."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t5" data-toc='[["s5-1", "Data to Gather"], ["s5-2", "Building the Value Story"], ["s5-3", "Designing the Deck"], ["s5-4", "Running the Meeting"], ["s5-5", "Follow-up"], ["s5-6", "Common Mistakes"], ["s5-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div>
+        <div class="panel-eyebrow">Module 05 · QBRs in Practice</div>
+        <h1 class="panel-title">Preparing, Running & Following Up on QBRs</h1>
+        <p class="panel-subtitle">How expert CSMs build a QBR: gathering data, crafting the value story, designing a deck, running the meeting, and turning it into an agreed success plan.</p>
+      </div>
+<div class="section" id="s5-1">
+<h2><span class="sec-emoji">📥</span> Data to Gather</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Source</th><th>Data</th></tr></thead><tbody><tr><td>Product analytics</td><td>Active users, feature adoption, trends, licence utilisation</td></tr><tr><td>CS platform (Gainsight/ChurnZero…)</td><td>Health score history, success plan progress, risks</td></tr><tr><td>Support</td><td>Ticket volume, top issues, CSAT, open escalations</td></tr><tr><td>Customer</td><td>Their KPIs before/after (time saved, revenue, error rates), quotes</td></tr><tr><td>Commercial</td><td>Contract, renewal date, seats, products owned</td></tr><tr><td>Benchmarks</td><td>How similar customers perform</td></tr></tbody></table></div>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Send a short pre-QBR survey or call to the champion: "What should we focus on? What changed in your business?" It makes the meeting about them.</div></div>
+
+</div>
+<div class="section" id="s5-2">
+<h2><span class="sec-emoji">📖</span> Building the Value Story</h2>
+<p>Structure the story as <strong>Goal → Action → Result → Next</strong>:</p><pre><span class="pre-lang">value story example</span><code>Goal:    Reduce invoice processing time by 30% (set at kickoff, Jan)
+Action:  Automated approval workflows rolled out to 4 regional teams
+Result:  Processing time 6.2 → 3.9 days (−37%); 1,100 hours saved per quarter
+         &quot;Month-end close is no longer a weekend job.&quot; – Finance Lead, Pune
+Next:    Extend to vendor onboarding; target −25% onboarding time by Q2</code></pre>
+<div style="overflow-x:auto"><table><thead><tr><th>ROI type</th><th>Example</th></tr></thead><tbody><tr><td>Time saved</td><td>Hours × hourly cost</td></tr><tr><td>Revenue gained</td><td>Faster sales cycle, higher conversion</td></tr><tr><td>Cost avoided</td><td>Fewer errors, penalties, tools replaced</td></tr><tr><td>Risk reduced</td><td>Compliance, security, audit readiness</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s5-3">
+<h2><span class="sec-emoji">🖼️</span> Designing the Deck</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Slide</th><th>Content</th></tr></thead><tbody><tr><td>1. Title &amp; agenda</td><td>Meeting objective in one line</td></tr><tr><td>2. Executive summary</td><td>3 wins, 1–2 risks, 1 ask (BLUF)</td></tr><tr><td>3. Goals vs results</td><td>Table of goals, targets, actuals, status</td></tr><tr><td>4. Value &amp; ROI</td><td>The value story with one chart</td></tr><tr><td>5. Adoption insights</td><td>Who uses what; gaps; benchmarks</td></tr><tr><td>6. Their priorities (discussion)</td><td>Questions, not answers</td></tr><tr><td>7. Recommendations &amp; roadmap</td><td>What to do next; relevant upcoming features</td></tr><tr><td>8. Success plan &amp; next steps</td><td>Owners, dates, next review</td></tr></tbody></table></div>
+<div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Keep it to 8–10 slides and put detailed data in an appendix.</div></div>
+
+</div>
+<div class="section" id="s5-4">
+<h2><span class="sec-emoji">🎤</span> Running the Meeting</h2>
+<ol class="steps"><li>Start on time; state the objective and confirm agenda.</li><li>Give the executive summary in 2 minutes.</li><li>Ask open questions: "What are your top priorities next quarter?" "What would make this a great year?"</li><li>Listen and take notes; adapt the agenda if a bigger topic appears.</li><li>Handle concerns honestly; take detailed issues offline.</li><li>Close by reading back agreed actions, owners and dates.</li></ol>
+
+</div>
+<div class="section" id="s5-5">
+<h2><span class="sec-emoji">📮</span> Follow-up</h2>
+<ul><li>Recap email within 24 hours with the deck, decisions and action items.</li><li>Update the success plan and CRM/CS platform.</li><li>Create tasks for every action; share internally (AM, support, product feedback).</li><li>Send feature requests to product with the customer's business context.</li><li>Book the next review.</li></ul>
+
+</div>
+<div class="section" id="s5-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Building the deck the night before</td><td>Weak data, no customer input</td><td>Start 2 weeks ahead</td></tr><tr><td>Vanity metrics (logins)</td><td>No business value shown</td><td>Outcome metrics tied to goals</td></tr><tr><td>No customer quotes</td><td>Story feels abstract</td><td>Include their words</td></tr><tr><td>No follow-up</td><td>Agreements forgotten</td><td>Recap within 24 h</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s5-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Write a value story (Goal → Action → Result → Next) for an HR platform customer whose goal was to reduce time-to-hire.</span></div><p class="saq-scenario">Facts: time-to-hire 42 → 31 days; interview scheduling automated for 3 teams; 600 recruiter hours saved; next: campus hiring season.</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Goal: reduce time-to-hire by 20%. Action: automated interview scheduling for Engineering, Sales and Support hiring teams. Result: time-to-hire fell from 42 to 31 days (−26%) and saved ~600 recruiter hours this quarter. Next: apply the same workflow to campus hiring, targeting 30% faster offers by March.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>List 6 data points you would collect two weeks before a QBR.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Licence utilisation and active-user trend; adoption of key features tied to goals; health score history; support tickets and CSAT; progress on success-plan milestones; customer KPIs/ROI and quotes; renewal date and commercial context.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>The best QBR value metric is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Number of logins</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> A business outcome tied to their goal</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Number of features released</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Slide count</li></ul><div class="mcq-feedback" data-expl="Outcome-based."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>QBR recap should be sent…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Never</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Within 24 hours</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Next quarter</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Only if asked</li></ul><div class="mcq-feedback" data-expl="Quick follow-up."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>A good QBR deck length is roughly…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> 30–40 slides</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> 8–10 slides with appendix</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> 1 slide</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> No slides ever</li></ul><div class="mcq-feedback" data-expl="Concise."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t6" data-toc='[["s6-1", "What Is an Executive Check-in?"], ["s6-2", "Executive Sponsor Programmes"], ["s6-3", "Running a 20-Minute Check-in"], ["s6-4", "Executives in Escalations"], ["s6-5", "Briefing Your Own Executive"], ["s6-6", "Common Mistakes"], ["s6-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div>
+        <div class="panel-eyebrow">Module 06 · Executive Relationships</div>
+        <h1 class="panel-title">Executive Check-ins & Executive Sponsorship</h1>
+        <p class="panel-subtitle">Executive check-ins keep leadership on both sides aligned between QBRs. Learn executive sponsor programmes, how to run a 20-minute check-in, and how to involve executives in escalations.</p>
+      </div>
+<div class="section" id="s6-1">
+<h2><span class="sec-emoji">👔</span> What Is an Executive Check-in?</h2>
+<p>An <strong>executive check-in</strong> is a short, focused conversation with a customer executive (VP, Director, CXO) to confirm priorities, share progress and keep the relationship strong. It's lighter than a QBR and often happens between them.</p><div style="overflow-x:auto"><table><thead><tr><th></th><th>Executive check-in</th><th>QBR / EBR</th></tr></thead><tbody><tr><td>Length</td><td>15–30 minutes</td><td>45–90 minutes</td></tr><tr><td>Prep</td><td>1-page brief</td><td>Full deck and data</td></tr><tr><td>Focus</td><td>Priorities, relationship, one ask</td><td>Full review and planning</td></tr><tr><td>Frequency</td><td>Quarterly or at key moments</td><td>Quarterly / twice a year</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s6-2">
+<h2><span class="sec-emoji">🤝</span> Executive Sponsor Programmes</h2>
+<p>Many companies pair each strategic customer with an <strong>executive sponsor</strong> from their own leadership team (e.g., a VP of Engineering or CRO).</p><ul><li>Peer-to-peer relationship: their exec talks to our exec.</li><li>Helps with escalations, roadmap influence and renewal confidence.</li><li>The CSM orchestrates: briefs both sides, sets agendas, follows up.</li></ul>
+
+</div>
+<div class="section" id="s6-3">
+<h2><span class="sec-emoji">⏱️</span> Running a 20-Minute Check-in</h2>
+<pre><span class="pre-lang">20-minute check-in</span><code>0–3   Thank them; purpose of the call
+3–8   &quot;What are your top priorities this quarter? What has changed?&quot;
+8–13  One-slide progress: 2 wins, 1 risk, plan
+13–17 Their feedback: &quot;How are we doing as a partner?&quot;
+17–20 Agree one action / ask; confirm next touchpoint</code></pre>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">The most valuable output is often what you <em>learn</em>: new initiatives, budget changes, reorganisations, competitor evaluations.</div></div>
+
+</div>
+<div class="section" id="s6-4">
+<h2><span class="sec-emoji">🚨</span> Executives in Escalations</h2>
+<ol class="steps"><li>Escalate when: serious outage, repeated failures, renewal at risk, unresolved critical issue.</li><li>Brief your executive: facts, timeline, impact, what's been done, what the customer wants.</li><li>Hold an executive call: acknowledge, apologise for impact, present the recovery plan.</li><li>Agree an update cadence (e.g., daily until resolved).</li><li>Close with a review of fixes and prevention steps.</li></ol>
+<div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Don't pull in executives for every small issue; you'll lose their attention for the big ones.</div></div>
+
+</div>
+<div class="section" id="s6-5">
+<h2><span class="sec-emoji">📄</span> Briefing Your Own Executive</h2>
+<pre><span class="pre-lang">1-page executive brief</span><code>Account: Acme Logistics · ARR ₹1.2 Cr · Renewal 31 Mar · Health: Yellow
+Their exec: Rohit Mehta, VP Operations (decision-maker)
+Goals: −20% late deliveries (now −12%)
+Wins: 2 hubs live; alerts adopted by 85% of dispatchers
+Risks: Route module adoption low; competitor demo last month
+Ask for this call: Commit to 2 new hubs in Q1; agree joint success plan
+Avoid: Pricing (AM will handle)</code></pre>
+
+</div>
+<div class="section" id="s6-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Unprepared executive sponsor</td><td>Embarrassing; loses credibility</td><td>1-page brief 24 h before</td></tr><tr><td>Check-ins only when renewal is near</td><td>Feels transactional</td><td>Regular, value-led touchpoints</td></tr><tr><td>Executive escalations for minor issues</td><td>Diminishing attention</td><td>Escalate by clear criteria</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s6-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Write three open questions to ask a customer VP in a 20-minute check-in.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">"What are your top three priorities for the next quarter?" "What would success with our platform look like for you by year-end?" "Is there anything about how we work together you'd like us to change?"</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>After two major outages, a customer CTO emails your CEO. Outline your escalation steps.</span></div><p class="saq-scenario">Scenario: Strategic account at risk.</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Acknowledge to the CTO within hours; brief your exec (facts, impact, actions); get the RCA and fix timeline from engineering; hold an exec-to-exec call with apology and recovery plan (and service credits if contract allows); set daily/regular updates; follow up with a written summary; monitor health and schedule an EBR after stability returns.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>A typical executive check-in lasts…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> 5 hours</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> 15–30 minutes</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> A full day</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> 2 minutes</li></ul><div class="mcq-feedback" data-expl="Short and focused."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>An executive sponsor programme pairs…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Two CSMs</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> A customer exec with an exec from your company</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Support and sales</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Users and admins</li></ul><div class="mcq-feedback" data-expl="Peer relationship."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>Before an executive call you should prepare…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Nothing</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> A 1-page brief for your executive</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> A 40-slide deck</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> A pricing sheet only</li></ul><div class="mcq-feedback" data-expl="Brief."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t7" data-toc='[["s7-1", "Success Plan vs Account Plan"], ["s7-2", "Building a Success Plan"], ["s7-3", "Account Plans & Whitespace"], ["s7-4", "Risk Register"], ["s7-5", "Prioritising Your Book of Business"], ["s7-6", "Common Mistakes"], ["s7-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag adv">Expert</span></div>
+        <div class="panel-eyebrow">Module 07 · Strategy</div>
+        <h1 class="panel-title">Account Planning & Success Plans</h1>
+        <p class="panel-subtitle">Expert CSMs manage accounts strategically with written plans. Learn success plans, account plans, whitespace analysis and risk registers.</p>
+      </div>
+<div class="section" id="s7-1">
+<h2><span class="sec-emoji">🗺️</span> Success Plan vs Account Plan</h2>
+<div style="overflow-x:auto"><table><thead><tr><th></th><th>Success plan</th><th>Account plan</th></tr></thead><tbody><tr><td>Shared with customer?</td><td>Yes, jointly owned</td><td>Usually internal</td></tr><tr><td>Focus</td><td>Customer goals, milestones, owners</td><td>Relationship, risks, growth, strategy</td></tr><tr><td>Contents</td><td>Objectives, KPIs, actions, dates</td><td>Stakeholders, health, renewal plan, whitespace</td></tr><tr><td>Updated</td><td>Each review/QBR</td><td>Monthly/quarterly</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s7-2">
+<h2><span class="sec-emoji">🎯</span> Building a Success Plan</h2>
+<pre><span class="pre-lang">success plan (example)</span><code>Objective 1: Reduce late deliveries by 20% by 31 Dec
+  KPI: late deliveries % (baseline 14%)
+  Milestones:
+    - Alerts live in all 4 hubs        Owner: Acme Ops   Due: 31 Oct   ✅
+    - Night-shift training             Owner: CSM        Due: 15 Nov   ⏳
+    - Route optimisation pilot (Pune)  Owner: Acme IT    Due: 30 Nov   ⏳
+Objective 2: Expand to 2 new hubs in Q1
+  KPI: hubs live
+  Milestones: business case (Acme VP, 15 Dec) …</code></pre>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Use <strong>SMART</strong> goals: Specific, Measurable, Achievable, Relevant, Time-bound.</div></div>
+
+</div>
+<div class="section" id="s7-3">
+<h2><span class="sec-emoji">🧩</span> Account Plans & Whitespace</h2>
+<ul><li><strong>Account overview</strong>: ARR, products, contract dates, segment.</li><li><strong>Stakeholder map</strong>: champions, decision-makers, detractors (see Stakeholder Mapping course).</li><li><strong>Health &amp; risks</strong> with mitigation actions.</li><li><strong>Whitespace analysis</strong>: products/teams/regions not yet using you, i.e., expansion opportunities.</li><li><strong>Renewal strategy</strong>: timeline, decision process, likely objections.</li></ul>
+<div style="overflow-x:auto"><table><thead><tr><th>Whitespace grid</th><th>Product A</th><th>Product B</th><th>Product C</th></tr></thead><tbody><tr><td>Sales team</td><td>✅</td><td>✅</td><td>—</td></tr><tr><td>Support team</td><td>✅</td><td>—</td><td>—</td></tr><tr><td>Finance</td><td>—</td><td>—</td><td>—</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s7-4">
+<h2><span class="sec-emoji">⚠️</span> Risk Register</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th><th>Owner</th></tr></thead><tbody><tr><td>Champion leaving in Dec</td><td>High</td><td>High</td><td>Multi-thread to new ops manager; exec intro</td><td>CSM</td></tr><tr><td>Low adoption of module B</td><td>Medium</td><td>Medium</td><td>Training plan + in-app guides</td><td>CSM</td></tr><tr><td>Budget cuts announced</td><td>Medium</td><td>High</td><td>Quantify ROI for CFO; flexible options via AM</td><td>CSM + AM</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s7-5">
+<h2><span class="sec-emoji">📋</span> Prioritising Your Book of Business</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Priority</th><th>Accounts</th><th>Your time</th></tr></thead><tbody><tr><td>1</td><td>At-risk and high ARR / renewal within 6 months</td><td>Most attention, weekly actions</td></tr><tr><td>2</td><td>Expansion-ready, healthy, strategic</td><td>Growth plays, exec engagement</td></tr><tr><td>3</td><td>Healthy, stable</td><td>Scheduled cadence, scaled programmes</td></tr><tr><td>4</td><td>Small, low potential</td><td>Tech-touch / pooled</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s7-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Success plans written but never reviewed</td><td>Become shelfware</td><td>Review at every check-in/QBR</td></tr><tr><td>Vague goals ("improve efficiency")</td><td>Can't prove value</td><td>SMART goals with baselines</td></tr><tr><td>Spending time evenly on all accounts</td><td>Key risks missed</td><td>Prioritise by risk, ARR, renewal date</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s7-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Turn "We want to improve customer support" into a SMART objective with one KPI and two milestones.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Objective: reduce first-response time on email tickets from 10 hours to 4 hours by 31 March. KPI: median FRT. Milestones: configure SLA policies and routing by 15 Jan (customer admin + CSM); train 25 agents on macros and views by 31 Jan (CSM).</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>You have 40 accounts. Which 5 do you focus on this month and why?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Those with the highest combination of risk and value: low/declining health with large ARR, renewals in the next 3–6 months, recent champion changes or escalations, plus 1–2 strong expansion opportunities.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>A success plan is usually…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Internal only</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Jointly owned with the customer</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> A pricing document</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> A support ticket</li></ul><div class="mcq-feedback" data-expl="Shared plan."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>Whitespace analysis identifies…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Blank slides</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Teams/products not yet using you (expansion)</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Bugs</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Holidays</li></ul><div class="mcq-feedback" data-expl="Expansion areas."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>SMART stands for…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Simple, Modern, Accurate, Real, Timely</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Specific, Measurable, Achievable, Relevant, Time-bound</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Strategic, Managed, Approved, Reviewed, Tracked</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> None</li></ul><div class="mcq-feedback" data-expl="SMART goals."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t8" data-toc='[["s8-1", "End-to-End Workflow"], ["s8-2", "Scenario: New Account Handoff"], ["s8-3", "Scenario: Silent Customer"], ["s8-4", "Scenario: New Executive Arrives"], ["s8-5", "Scenario: Value Not Visible"], ["s8-6", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div>
+        <div class="panel-eyebrow">Module 08 · Real-World Workflow</div>
+        <h1 class="panel-title">Real-World Account Management Scenarios</h1>
+        <p class="panel-subtitle">Worked examples of situations CSMs face, plus the end-to-end account management workflow from handoff to renewal.</p>
+      </div>
+<div class="section" id="s8-1">
+<h2><span class="sec-emoji">🔁</span> End-to-End Workflow</h2>
+<p><strong>Sales handoff → Kickoff &amp; success plan → Onboarding → Regular check-ins → QBR/EBR → Executive check-ins → Health monitoring → Renewal → Expansion</strong></p><div style="overflow-x:auto"><table><thead><tr><th>Stage</th><th>CSM key output</th></tr></thead><tbody><tr><td>Handoff</td><td>Notes on goals, stakeholders, promises made in sales</td></tr><tr><td>Kickoff</td><td>Agreed success plan</td></tr><tr><td>Onboarding</td><td>Go-live and first value</td></tr><tr><td>Steady state</td><td>Recaps, adoption progress, risks logged</td></tr><tr><td>QBR</td><td>Value story, updated plan</td></tr><tr><td>Renewal</td><td>Renewal plan 120+ days ahead</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s8-2">
+<h2><span class="sec-emoji">🤝</span> Scenario: New Account Handoff</h2>
+<ul><li>Read the sales notes; meet the AE: why did they buy? what was promised? who signed?</li><li>Introduce yourself to champion and sponsor within 48 hours.</li><li>Kickoff: confirm goals in their words; agree success metrics and timeline.</li><li>Flag any unrealistic promises early, and agree a plan with the AE.</li></ul>
+
+</div>
+<div class="section" id="s8-3">
+<h2><span class="sec-emoji">🔇</span> Scenario: Silent Customer</h2>
+<ul><li>No reply to 3 emails, usage dropping → treat as risk.</li><li>Try other channels and contacts (multi-threading), and ask your AE/exec for introductions.</li><li>Offer something valuable: benchmark report, quick win, training.</li><li>Log the risk and set a recovery plan.</li></ul>
+
+</div>
+<div class="section" id="s8-4">
+<h2><span class="sec-emoji">👋</span> Scenario: New Executive Arrives</h2>
+<ul><li>New execs often review all vendors in their first 90 days, a risk and an opportunity.</li><li>Request an intro meeting quickly; prepare a value summary in their language.</li><li>Ask about their priorities; re-align the success plan to them.</li><li>Bring your exec sponsor for strategic accounts.</li></ul>
+
+</div>
+<div class="section" id="s8-5">
+<h2><span class="sec-emoji">🔍</span> Scenario: Value Not Visible</h2>
+<ul><li>Users like the product, but leadership "doesn't see the ROI".</li><li>Agree measurable KPIs and baselines with the champion.</li><li>Build an ROI summary and share it with leadership (one-pager or EBR).</li><li>Create regular value reports so value is visible all year, not just at renewal.</li></ul>
+
+</div>
+<div class="section" id="s8-6">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>A new CFO joins your largest customer and announces a vendor review. Write your 2-week action plan.</span></div><p class="saq-scenario">Scenario: Executive change at a strategic account.</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Day 1–2: align internally (AM, exec sponsor), gather value data and ROI. Day 3–5: ask the champion for an intro; send a short congratulatory note offering a briefing. Week 2: 30-minute meeting with the CFO focused on outcomes and cost/ROI, ask about priorities; follow up with a one-page value summary and updated success plan; flag risk in the CS platform and schedule regular exec check-ins.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Sales promised a feature that doesn't exist. You discover it at kickoff. What do you do?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Don't hide it. Align with the AE and product first; then tell the customer honestly what exists today, any roadmap timing (only if confirmed), and a workaround; adjust the success plan accordingly; document it and inform leadership if it risks the relationship.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>First step after a new account handoff?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Pitch upsells</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Review sales notes and meet the AE</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Wait for the customer</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Send a survey</li></ul><div class="mcq-feedback" data-expl="Understand context first."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>A customer stops replying and usage drops. This is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Normal, ignore</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> A churn-risk signal to act on</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> A support issue only</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Good news</li></ul><div class="mcq-feedback" data-expl="Risk signal."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t9" data-toc='[["s9-1", "Concept Questions"], ["s9-2", "Comparison Cheat Sheet"], ["s9-3", "Common Mistakes & Fixes"], ["s9-4", "Scenario Questions"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 09 · Interviews</div>
+        <h1 class="panel-title">Interview Preparation: Relationship & Account Management</h1>
+        <p class="panel-subtitle">CSM interview questions on relationships, executive presence, QBRs and account management, with model answers, comparisons, common mistakes and scenarios.</p>
+      </div>
+<div class="section" id="s9-1">
+<h2><span class="sec-emoji">🎤</span> Concept Questions</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Question</th><th>Model answer</th></tr></thead><tbody><tr><td>What does a CSM do?</td><td>Drives customer outcomes and adoption, builds relationships, monitors health, and secures renewals and expansion.</td></tr><tr><td>How do you build trust with a new customer?</td><td>Understand their goals, deliver early wins, keep promises, communicate proactively, and be honest about problems.</td></tr><tr><td>What is a QBR and how do you run one?</td><td>A strategic review of value and goals: look back at results, share insights, agree next goals and a success plan with owners.</td></tr><tr><td>What is executive presence?</td><td>Confident, concise, credible communication focused on business outcomes, with composure under pressure.</td></tr><tr><td>How do you prove value?</td><td>Agree measurable goals and baselines early, track outcomes, tell a Goal→Action→Result→Next story with ROI.</td></tr><tr><td>What is multi-threading and why does it matter?</td><td>Relationships with several stakeholders, so the account survives champion changes.</td></tr><tr><td>How do you prioritise many accounts?</td><td>By risk, ARR, renewal date, strategic and expansion potential.</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s9-2">
+<h2><span class="sec-emoji">📋</span> Comparison Cheat Sheet</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Pair</th><th>Key difference</th></tr></thead><tbody><tr><td>Customer Success vs Support</td><td>Proactive outcomes vs reactive issue resolution</td></tr><tr><td>CSM vs Account Manager</td><td>Value/adoption owner vs commercial owner (varies by company)</td></tr><tr><td>QBR vs EBR vs MBR</td><td>Quarterly review vs executive strategic review vs monthly operational review</td></tr><tr><td>Success plan vs Account plan</td><td>Shared customer goals plan vs internal account strategy</td></tr><tr><td>High-touch vs Tech-touch</td><td>Dedicated CSM vs scaled automated engagement</td></tr><tr><td>Executive check-in vs QBR</td><td>Short relationship touchpoint vs full review</td></tr><tr><td>Champion vs Executive sponsor</td><td>Day-to-day advocate vs senior decision-level supporter</td></tr><tr><td>Vanity vs Outcome metrics</td><td>Logins/clicks vs business results</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s9-3">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes & Fixes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Feature demos in QBRs</td><td>No business value</td><td>Outcome story and decisions</td></tr><tr><td>Single-threaded accounts</td><td>Risk if contact leaves</td><td>Multi-thread</td></tr><tr><td>No meeting recaps</td><td>Decisions lost</td><td>Recap with owners/dates</td></tr><tr><td>Overpromising</td><td>Broken trust</td><td>Commit to what you control</td></tr><tr><td>Engaging executives only at renewal</td><td>Transactional feel</td><td>Regular exec touchpoints</td></tr><tr><td>Vague goals</td><td>Can't prove value</td><td>SMART goals with baselines</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s9-4">
+<h2><span class="sec-emoji">🧩</span> Scenario Questions</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>"Tell me about a time you turned around an unhappy customer." (STAR)</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">S: A key account had two outages and low adoption before renewal. T: Rebuild trust and secure renewal. A: Exec call with apology and recovery plan, weekly updates, training for two teams, value report showing 25% time savings. R: Health moved red→green, renewal signed with 50 extra seats.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>"How would you structure your first 90 days with a new book of business?"</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">30 days: review every account (health, renewal dates, goals), meet top accounts and AEs, identify risks. 60 days: build success/account plans for priority accounts, fix urgent risks, run QBRs. 90 days: regular cadences in place, renewal plans for next two quarters, expansion opportunities identified.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P3.</span><span>"A customer executive says your product isn't worth the cost. Respond."</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Acknowledge, ask what outcomes they expected, show measured value and gaps honestly, propose a dated plan to close gaps, offer an executive review, and involve the AM on commercial flexibility if appropriate.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>The main difference between Support and Customer Success is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Support is proactive</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> CS is proactive and outcome-focused</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> They are identical</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> CS only sells</li></ul><div class="mcq-feedback" data-expl="Proactive."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="0"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>BLUF in executive communication means…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Bottom Line Up Front</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Build Long Updates First</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Basic Level User Feedback</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> None</li></ul><div class="mcq-feedback" data-expl="Conclusion first."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t10" data-toc='[["s10-1","Take the Assessment"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">→ Intermediate</span></div>
+        <p class="panel-eyebrow">Module 10</p>
+        <h1 class="panel-title">Assessment</h1>
+        <p class="panel-subtitle">Test yourself on everything covered in this course — 50 scenario-based multiple-choice questions drawn at random from a bank of 50, so every attempt is a little different.</p>
+      </div>
+      <div class="section" id="s10-1">
+        <div class="assess-start-card">
+          <div class="assess-intro-title">Test what you've learned</div>
+          <div class="assess-intro-text">A timed, exam-style mock test. Most questions describe a real support situation and ask what you would do, which tool or metric applies, or what went wrong.</div>
+          <ul class="assess-intro-list">
+            <li><strong>50 multiple-choice questions</strong> picked at random from 50</li>
+            <li><strong>50-minute</strong> timer (1 minute per question), with mark-for-review and a question palette</li>
+            <li>Covers every module, from Customer Success Basics through Interview Prep</li>
+            <li>Answers and explanations are shown after you submit</li>
+          </ul>
+          <button class="assess-start-btn" id="assessStartBtn">▶ Start Assessment</button>
+        </div>
+      </div>
+      <div class="assess-modal-overlay" id="assessModal">
+        <div class="assess-modal-box">
+          <div class="assess-sticky-header">
+            <div class="assess-modal-head">
+              <div class="assess-modal-title">Assessment</div>
+              <button class="assess-modal-close" id="assessModalClose">✕</button>
+            </div>
+            <div class="quiz-progress" id="assessProgressWrap" style="display:none">
+              <span class="quiz-score" id="assessProgressLabel">Question 1</span>
+              <div class="quiz-bar-track"><div class="quiz-bar-fill" id="assessProgressFill" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div id="assessStage"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+/* =========================================================
+   Tab switching, dynamic TOC, scroll-spy, progress pill
+   ========================================================= */
+(function(){
+  const tabs   = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel');
+  const tocEl  = document.getElementById('toc');
+  const total  = tabs.length;
+  const progressText = document.getElementById('progressText');
+
+  function buildToc(panel){
+    const data = JSON.parse(panel.getAttribute('data-toc') || '[]');
+    tocEl.innerHTML = data.map(([id,label]) =>
+      `<li><a href="#${id}" data-target="${id}">${label}</a></li>`
+    ).join('');
+    // first link active by default
+    const first = tocEl.querySelector('a');
+    if(first) first.classList.add('active');
+  }
+
+  function activate(idx){
+    tabs.forEach((t,i)=>t.classList.toggle('active', i===idx));
+    panels.forEach((p,i)=>p.classList.toggle('active', i===idx));
+    buildToc(panels[idx]);
+    progressText.textContent = `Tab ${idx+1} of ${total}`;
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+
+  tabs.forEach((t,i)=>{
+    t.addEventListener('click', ()=> activate(i));
+  });
+
+  // Smooth scroll inside the active tab
+  document.addEventListener('click', (e)=>{
+    const a = e.target.closest('.toc-list a');
+    if(!a) return;
+    e.preventDefault();
+    const id = a.getAttribute('data-target');
+    const el = document.getElementById(id);
+    if(el){
+      window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 130, behavior:'smooth'});
+    }
+  });
+
+  // Scroll spy — highlight the nearest visible section
+  let ticking = false;
+  function spy(){
+    const activePanel = document.querySelector('.panel.active');
+    if(!activePanel) return;
+    const sections = activePanel.querySelectorAll('.section');
+    const trigger  = 180; // px from top
+    let current = null;
+    sections.forEach(sec=>{
+      const rect = sec.getBoundingClientRect();
+      if(rect.top - trigger < 0) current = sec.id;
+    });
+    if(current){
+      tocEl.querySelectorAll('a').forEach(a=>{
+        a.classList.toggle('active', a.dataset.target === current);
+      });
+    }
+    ticking = false;
+  }
+  window.addEventListener('scroll', ()=>{
+    if(!ticking){ requestAnimationFrame(spy); ticking = true; }
+  }, {passive:true});
+
+  // Reset
+  window.resetProgress = function(){ activate(0); };
+
+  // Init
+  activate(0);
+})();
+
+/* =========================================================
+   Assessment modal — legacy modal (unused)
+   ========================================================= */
+(function(){
+  const assessItems = [];
+  const mcqTotal = assessItems.length;
+
+  let idx=0, score=0, answered=false;
+
+  function openAssess(){document.getElementById('assessModal').classList.add('open');showIntroStage()}
+  function closeAssess(){document.getElementById('assessModal').classList.remove('open')}
+
+  function showIntroStage(){
+    idx=0; score=0; answered=false;
+    renderItem();
+  }
+
+  function renderItem(){
+    answered=false;
+    const item=assessItems[idx];
+    const stage=document.getElementById('assessStage');
+    const pct=Math.round((idx/assessItems.length)*100);
+    document.getElementById('assessProgressWrap').style.display='flex';
+    document.getElementById('assessProgressLabel').textContent=`Question ${idx+1} / ${assessItems.length}`;
+    document.getElementById('assessProgressFill').style.width=pct+'%';
+    let inner=`
+      <div class="assess-q-wrap">
+        <div class="assess-q">${item.q}</div>
+        ${item.code?`<pre><code>${item.code}</code></pre>`:''}
+        <div id="assessBody"></div>
+        <div id="assessFeedback"></div>
+      </div>`;
+    stage.innerHTML=inner;
+    const body=document.getElementById('assessBody');
+    body.innerHTML=`<ul class="mcq-opts" id="assessOpts">${item.options.map((o,i)=>`<li class="mcq-opt" data-i="${i}"><span class="opt-letter">${String.fromCharCode(65+i)}</span> ${o}</li>`).join('')}</ul>`;
+    body.querySelectorAll('.mcq-opt').forEach(opt=>opt.addEventListener('click',()=>answerMCQ(opt,item)));
+  }
+
+  function showNextButton(){
+    const fb=document.getElementById('assessFeedback');
+    const btn=document.createElement('button');
+    btn.className='assess-next-btn';
+    btn.textContent = idx<assessItems.length-1 ? 'Next Question →' : 'See Results →';
+    btn.addEventListener('click',()=>{
+      if(idx<assessItems.length-1){idx++;renderItem()}else{showResults()}
+    });
+    fb.appendChild(btn);
+  }
+
+  function answerMCQ(optEl,item){
+    if(answered)return;
+    answered=true;
+    const chosen=parseInt(optEl.getAttribute('data-i'),10);
+    const correct=chosen===item.answer;
+    if(correct)score++;
+    document.querySelectorAll('#assessOpts .mcq-opt').forEach(opt=>{opt.style.pointerEvents='none'});
+    const fb=document.getElementById('assessFeedback');
+    if(correct){
+      optEl.classList.add('correct');
+      fb.innerHTML=`<div class="assess-fb-banner ok"><span>✅</span> Correct!</div>`;
+    }else{
+      optEl.classList.add('incorrect');
+      fb.innerHTML=`<div class="assess-fb-answer ok"><span>✅</span> ${item.options[item.answer]}</div>`;
+    }
+    showNextButton();
+  }
+
+  function showResults(){
+    const stage=document.getElementById('assessStage');
+    const pct=Math.round((score/mcqTotal)*100);
+    document.getElementById('assessProgressLabel').textContent='Completed';
+    document.getElementById('assessProgressFill').style.width='100%';
+    let msg='Keep practicing — revisit the tabs above and try again.';
+    if(pct>=85)msg='Outstanding! You have a strong command of this role.';
+    else if(pct>=65)msg="Great job! A little more practice with the harder questions and you'll be set.";
+    stage.innerHTML=`
+      <div class="assess-q-wrap">
+        <div class="assess-result-score">${score} / ${mcqTotal}</div>
+        <div class="assess-result-msg">${pct}% correct — ${msg}</div>
+        <button class="assess-retry-btn" id="assessRetryBtn">↻ Try Again</button>
+      </div>`;
+    document.getElementById('assessRetryBtn').addEventListener('click',showIntroStage);
+  }
+
+  document.getElementById('__disabledAssess')?.addEventListener('click',openAssess);
+  document.getElementById('assessModalClose').addEventListener('click',closeAssess);
+  document.getElementById('assessModal').addEventListener('click',e=>{if(e.target.id==='assessModal')closeAssess()});
+})();
+</script>
+
+<div id="scoreBoard" class="score-board" style="display:none;max-width:820px;margin:18px auto;padding:0 16px"></div>
+
+
+<script>
+/* Inline quick checks + practice model answers */
+document.addEventListener('click',function(e){
+  const opt=e.target.closest('.mcq .mcq-opt');
+  if(opt){
+    const box=opt.closest('.mcq'); if(box.classList.contains('answered'))return;
+    const ans=+box.dataset.answer, i=+opt.dataset.i;
+    box.classList.add('answered');
+    box.querySelectorAll('.mcq-opt').forEach(o=>{ if(+o.dataset.i===ans)o.classList.add('correct'); });
+    if(i!==ans)opt.classList.add('incorrect');
+    const fb=box.querySelector('.mcq-feedback');
+    fb.classList.add(i===ans?'ok':'bad');
+    fb.innerHTML=(i===ans?'✅ Correct. ':'❌ Not quite. ')+fb.dataset.expl;
+    return;
+  }
+  const rs=e.target.closest('.mcq-reset');
+  if(rs){
+    const box=rs.closest('.mcq'); box.classList.remove('answered');
+    box.querySelectorAll('.mcq-opt').forEach(o=>o.classList.remove('correct','incorrect'));
+    const fb=box.querySelector('.mcq-feedback'); fb.classList.remove('ok','bad'); fb.innerHTML='';
+    return;
+  }
+  const tg=e.target.closest('.saq-toggle');
+  if(tg){
+    const m=tg.closest('.saq').querySelector('.saq-model');
+    m.classList.toggle('show');
+    tg.textContent=m.classList.contains('show')?'Hide model answer':'Show model answer';
+  }
+});
+</script>
+<script>
+(function(){
+  /* =====================================================================
+     Relationship &amp; Account Management -- full-screen, timed mock exam (MNC style).
+     All 50 questions of the bank, shuffled, none repeated.
+     Grading: all answers submitted at the end (server-side).
+     ===================================================================== */
+  const BANK=[{"id": "q1", "q": "Customer Success is mainly…", "options": ["Reactive", "Proactive and outcome-focused", "Billing", "Marketing"], "answer": 1, "explanation": "Proactive.", "difficulty": "Easy"}, {"id": "q2", "q": "The accounts a CSM manages are their…", "options": ["Pipeline", "Book of business", "Backlog", "Queue"], "answer": 1, "explanation": "Book of business.", "difficulty": "Easy"}, {"id": "q3", "q": "ARR stands for…", "options": ["Annual Recurring Revenue", "Average Response Rate", "Account Renewal Ratio", "Annual Retention Report"], "answer": 0, "explanation": "Revenue measure.", "difficulty": "Easy"}, {"id": "q4", "q": "High-touch CS typically means…", "options": ["Hundreds of accounts per CSM", "Few strategic accounts with dedicated CSM", "Only emails", "No meetings"], "answer": 1, "explanation": "Dedicated.", "difficulty": "Easy"}, {"id": "q5", "q": "Tech-touch CS relies on…", "options": ["Onsite visits", "Automated scaled programmes", "Executive dinners", "Quarterly QBRs for all"], "answer": 1, "explanation": "Scaled.", "difficulty": "Easy"}, {"id": "q6", "q": "CSM vs Account Manager (common model):", "options": ["Same", "CSM drives value/adoption; AM owns commercial deals", "AM fixes tickets", "CSM sets prices"], "answer": 1, "explanation": "Varies, but often this.", "difficulty": "Medium"}, {"id": "q7", "q": "Which stage comes right after the sales handoff?", "options": ["Renewal", "Onboarding / kickoff", "Advocacy", "Expansion"], "answer": 1, "explanation": "Lifecycle.", "difficulty": "Easy"}, {"id": "q8", "q": "A \"trusted advisor\" is seen as…", "options": ["A vendor contact", "Part of their team, consulted on strategy", "A support agent", "A salesperson"], "answer": 1, "explanation": "Highest level.", "difficulty": "Easy"}, {"id": "q9", "q": "In the trust formula, what lowers trust?", "options": ["Credibility", "Reliability", "Intimacy", "Self-orientation"], "answer": 3, "explanation": "Self-focus.", "difficulty": "Medium"}, {"id": "q10", "q": "After every customer meeting send…", "options": ["Nothing", "A recap with decisions, owners, dates", "A price list", "A survey only"], "answer": 1, "explanation": "Recap.", "difficulty": "Easy"}, {"id": "q11", "q": "Multi-threading means…", "options": ["Many tools", "Relationships with multiple stakeholders", "Many CSMs", "Many emails"], "answer": 1, "explanation": "Avoid single point of failure.", "difficulty": "Easy"}, {"id": "q12", "q": "Top churn risk signal related to relationships:", "options": ["New feature release", "Champion leaving", "Holiday season", "Office move"], "answer": 1, "explanation": "Champion departure.", "difficulty": "Medium"}, {"id": "q13", "q": "\"Just checking in\" emails are weak because…", "options": ["Too short", "They add no value", "Too formal", "Illegal"], "answer": 1, "explanation": "Bring value.", "difficulty": "Easy"}, {"id": "q14", "q": "Executive presence includes…", "options": ["Long feature tours", "Concise, credible, composed communication", "Avoiding data", "Talking only"], "answer": 1, "explanation": "Components.", "difficulty": "Easy"}, {"id": "q15", "q": "Executives care most about…", "options": ["Feature names", "Business outcomes", "UI colours", "Ticket IDs"], "answer": 1, "explanation": "Outcomes.", "difficulty": "Easy"}, {"id": "q16", "q": "BLUF means…", "options": ["Bottom Line Up Front", "Big List Usage Facts", "Business Long Update", "None"], "answer": 0, "explanation": "Conclusion first.", "difficulty": "Easy"}, {"id": "q17", "q": "The \"So what?\" test helps you…", "options": ["Shorten slides", "Translate features into business impact", "Find bugs", "Price deals"], "answer": 1, "explanation": "Impact.", "difficulty": "Medium"}, {"id": "q18", "q": "If you don't know an answer in an exec meeting…", "options": ["Guess", "Commit to confirm by a date", "Change topic", "Blame others"], "answer": 1, "explanation": "Credibility.", "difficulty": "Easy"}, {"id": "q19", "q": "A QBR is…", "options": ["A demo", "A strategic review of value and goals", "A support review", "A pricing call"], "answer": 1, "explanation": "Strategic.", "difficulty": "Easy"}, {"id": "q20", "q": "EBR stands for…", "options": ["Executive Business Review", "Engineering Bug Report", "Early Billing Run", "Escalation Board Review"], "answer": 0, "explanation": "Executive.", "difficulty": "Easy"}, {"id": "q21", "q": "MBR is usually…", "options": ["Yearly", "Monthly operational review", "Executive only", "A ticket"], "answer": 1, "explanation": "Monthly.", "difficulty": "Medium"}, {"id": "q22", "q": "A good QBR structure is…", "options": ["Features → pricing", "Look back → insights → look ahead → agree plan", "Only Q&A", "Only metrics"], "answer": 1, "explanation": "Story.", "difficulty": "Easy"}, {"id": "q23", "q": "Who should speak a significant part of a QBR?", "options": ["Only CSM", "Customer about priorities", "Only engineers", "Nobody"], "answer": 1, "explanation": "Two-way.", "difficulty": "Easy"}, {"id": "q24", "q": "If the decision-maker never attends QBRs…", "options": ["Fine", "Executive alignment risk", "Better", "Irrelevant"], "answer": 1, "explanation": "Renewal risk.", "difficulty": "Medium"}, {"id": "q25", "q": "Best QBR value metric:", "options": ["Logins", "Outcome tied to their goal", "Slides", "Release count"], "answer": 1, "explanation": "Outcome.", "difficulty": "Easy"}, {"id": "q26", "q": "Value story format:", "options": ["Goal → Action → Result → Next", "Feature → Price → Discount", "Problem → Blame", "Intro → Outro"], "answer": 0, "explanation": "Story.", "difficulty": "Easy"}, {"id": "q27", "q": "Time-saved ROI is calculated as…", "options": ["Hours saved × hourly cost", "Logins × price", "Tickets × 2", "Seats only"], "answer": 0, "explanation": "ROI.", "difficulty": "Medium"}, {"id": "q28", "q": "QBR deck length:", "options": ["40 slides", "8–10 slides + appendix", "1 slide", "No deck"], "answer": 1, "explanation": "Concise.", "difficulty": "Easy"}, {"id": "q29", "q": "QBR recap timing:", "options": ["Never", "Within 24 h", "Next quarter", "After renewal"], "answer": 1, "explanation": "Quick.", "difficulty": "Easy"}, {"id": "q30", "q": "Pre-QBR survey/call with the champion helps…", "options": ["Delay", "Focus the meeting on their priorities", "Skip prep", "Upsell only"], "answer": 1, "explanation": "Customer-centred.", "difficulty": "Easy"}, {"id": "q31", "q": "Executive check-in length:", "options": ["15–30 min", "4 hours", "1 day", "2 min"], "answer": 0, "explanation": "Short.", "difficulty": "Easy"}, {"id": "q32", "q": "Executive sponsor programme pairs…", "options": ["Two CSMs", "Customer exec with your exec", "Users with admins", "Sales with support"], "answer": 1, "explanation": "Peers.", "difficulty": "Easy"}, {"id": "q33", "q": "Before an exec call, prepare…", "options": ["Nothing", "A 1-page brief", "40 slides", "Contract only"], "answer": 1, "explanation": "Brief.", "difficulty": "Easy"}, {"id": "q34", "q": "Pull executives into escalations when…", "options": ["Every ticket", "Serious risk: outages, renewal at risk", "Never", "Random"], "answer": 1, "explanation": "Criteria.", "difficulty": "Medium"}, {"id": "q35", "q": "A success plan is…", "options": ["Internal only", "Jointly owned with the customer", "A price list", "A ticket"], "answer": 1, "explanation": "Shared.", "difficulty": "Easy"}, {"id": "q36", "q": "An account plan is usually…", "options": ["Shared with customer always", "Internal strategy document", "A contract", "A survey"], "answer": 1, "explanation": "Internal.", "difficulty": "Medium"}, {"id": "q37", "q": "Whitespace analysis finds…", "options": ["Bugs", "Unused teams/products (expansion)", "Holidays", "Blank pages"], "answer": 1, "explanation": "Expansion.", "difficulty": "Easy"}, {"id": "q38", "q": "SMART goals are…", "options": ["Simple, Modern…", "Specific, Measurable, Achievable, Relevant, Time-bound", "Strategic, Managed…", "None"], "answer": 1, "explanation": "SMART.", "difficulty": "Easy"}, {"id": "q39", "q": "A risk register lists…", "options": ["Contacts", "Risks, likelihood, impact, mitigation, owner", "Invoices", "Features"], "answer": 1, "explanation": "Risk management.", "difficulty": "Easy"}, {"id": "q40", "q": "Prioritise your book by…", "options": ["Alphabet", "Risk, ARR, renewal date, potential", "Random", "Newest first"], "answer": 1, "explanation": "Value + risk.", "difficulty": "Easy"}, {"id": "q41", "q": "First step after a new account handoff:", "options": ["Upsell", "Review sales notes and meet AE", "Wait", "Survey"], "answer": 1, "explanation": "Context.", "difficulty": "Easy"}, {"id": "q42", "q": "Silent customer with dropping usage is…", "options": ["Fine", "A churn-risk signal", "Support issue only", "Good"], "answer": 1, "explanation": "Act.", "difficulty": "Easy"}, {"id": "q43", "q": "New customer executive in first 90 days often…", "options": ["Ignores vendors", "Reviews vendors (risk/opportunity)", "Signs instantly", "Leaves"], "answer": 1, "explanation": "Vendor review.", "difficulty": "Medium"}, {"id": "q44", "q": "Sales promised a missing feature. You should…", "options": ["Hide it", "Align with AE/product and be honest with the customer", "Promise it anyway", "Blame sales publicly"], "answer": 1, "explanation": "Honesty.", "difficulty": "Medium"}, {"id": "q45", "q": "Users like the product but leadership sees no ROI. Fix by…", "options": ["Ignoring", "Agreeing KPIs/baselines and sharing ROI reports", "Discounting", "More demos"], "answer": 1, "explanation": "Make value visible.", "difficulty": "Medium"}, {"id": "q46", "q": "Vanity metric example:", "options": ["Hours saved", "Number of logins", "Revenue gained", "Cost avoided"], "answer": 1, "explanation": "Not outcome.", "difficulty": "Easy"}, {"q": "A CSM's main goal with a new customer is…", "options": ["Closing the next deal", "Helping them achieve their desired outcomes", "Fixing tickets", "Collecting invoices"], "answer": 1, "explanation": "CS is outcome-focused.", "difficulty": "Easy", "id": "q47"}, {"q": "A good executive summary email after a meeting includes…", "options": ["Only a thank-you", "Decisions, owners and next steps", "Meeting gossip", "Pricing details only"], "answer": 1, "explanation": "Recap decisions and actions.", "difficulty": "Easy", "id": "q48"}, {"q": "Which action best builds trust with a customer?", "options": ["Overpromising", "Doing what you said you would, on time", "Avoiding bad news", "Sending only templates"], "answer": 1, "explanation": "Reliability builds trust.", "difficulty": "Easy", "id": "q49"}, {"q": "Why is a single point of contact risky in an account?", "options": ["It is cheaper", "If that person leaves, the relationship is lost", "It speeds up QBRs", "It improves NPS"], "answer": 1, "explanation": "Multi-thread the account.", "difficulty": "Easy", "id": "q50"}];
+  const EXAM_N=50;
+  function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  const EXAM_SECONDS=50*60; /* 1 minute per question */
+  const inIframe = window.self!==window.top;
+
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash h2{font-size:25px;font-weight:800;margin-bottom:8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin-bottom:12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:ecpop .18s ease}
+  @keyframes ecpop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+
+  .exam-fsprompt{position:fixed;inset:0;z-index:100003;background:rgba(20,33,61,.93);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fsprompt .box{background:transparent;color:#fff;max-width:640px;width:100%;padding:0;text-align:center;box-shadow:none}
+  .exam-fsprompt h3{font-size:34px;font-weight:700;margin:0 0 22px;color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;line-height:1.2}
+  .exam-fsprompt h3 .wi{font-size:32px;line-height:1}
+  .exam-fsprompt p{font-size:17px;color:#fff;line-height:1.6;margin:0 0 16px}
+  .exam-fsprompt .wcount{font-size:17px;color:#fff;margin:0 0 18px}
+  .exam-fsprompt .rbtn{background:#0f1a2e;color:#fff;border:none;border-radius:12px;padding:15px 26px;font-weight:700;font-size:17px;font-family:inherit;cursor:pointer;transition:.12s}
+  .exam-fsprompt .rbtn:hover{background:#0a1220}
+  .exam-fsprompt .rbtn:focus-visible{outline:2px solid #FCA311;outline-offset:2px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+
+  function examConfirm(title,msg,okLabel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">
+        <button class="exam-btn nav" data-a="0">Cancel</button>
+        <button class="exam-btn primary" data-a="1">${okLabel||'Submit'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  /* ---- score history (localStorage, shared across the exam tab + guide) ---- */
+  const LS_KEY='ramScores';
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores();
+    a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: exactly 3 violation warnings (tab switch, fullscreen exit, screenshot attempt); 3 strikes -> auto-submit ---- */
+  let warns=0, lastWarn=0, lastType='', proctorOn=false;
+  const MAX_WARN=3;
+  const VIOL={
+    tab:{icon:'&#9888;&#65039;',title:'Tab switch detected',msg:'The assessment must stay in this tab and window.'},
+    fs:{icon:'&#9888;&#65039;',title:'Fullscreen exited',msg:'The assessment must remain in fullscreen mode.'},
+    shot:{icon:'&#9888;&#65039;',title:'Screenshot attempt detected',msg:'Screenshots and screen recordings are not permitted during the assessment.'}
+  };
+  function examWarn(title,msg){
+    injectCss();
+    const d=document.createElement('div'); d.className='exam-confirm';
+    d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row"><button class="exam-btn primary" data-a="1">OK</button></div></div>`;
+    document.body.appendChild(d);
+    d.addEventListener('click',e=>{ if(e.target.closest('[data-a]'))d.remove(); });
+  }
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function removeFsPrompt(){ const p=document.getElementById('examFsPrompt'); if(p)p.remove(); }
+  function removeViolPop(){ const p=document.getElementById('examViolPop'); if(p)p.remove(); }
+  function goFullscreen(){
+    try{ const re=document.documentElement.requestFullscreen?document.documentElement.requestFullscreen():Promise.resolve(); return Promise.resolve(re).catch(()=>{}); }
+    catch(_){ return Promise.resolve(); }
+  }
+  /* One popup at a time. kind = tab | fs | shot. n = strike number (null = no strike, e.g. entering fullscreen at start). */
+  function showViolation(kind,n){
+    if(!examOn)return;
+    injectCss(); hideCover(); removeViolPop(); removeFsPrompt();
+    const v=VIOL[kind]; const needFs=!document.fullscreenElement;
+    const title=(!n&&kind==='fs')?'Fullscreen required':v.title;
+    const wline=n?'<div class="wcount">Warning '+n+' of '+MAX_WARN+'</div>':'';
+    const d=document.createElement('div'); d.className='exam-fsprompt'; d.id=(kind==='fs'||needFs)?'examFsPrompt':'examViolPop';
+    d.setAttribute('role','alertdialog'); d.setAttribute('aria-modal','true');
+    d.innerHTML='<div class="box"><h3><span class="wi">'+v.icon+'</span><span>'+title+'</span></h3><p>'+v.msg+'</p>'+wline+'<button class="rbtn" id="examContinue">Return to assessment</button></div>';
+    document.body.appendChild(d);
+    const cb=document.getElementById('examContinue'); try{cb.focus();}catch(_){}
+    cb.addEventListener('click',()=>{
+      const go=document.fullscreenElement?Promise.resolve():goFullscreen();
+      go.then(()=>{ d.remove(); hideCover(); renderQ(); });
+    });
+  }
+  function violation(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now();
+    /* same incident (e.g. tab switch firing blur + visibilitychange together) counts once */
+    const fresh = now-lastWarn >= (kind===lastType?1500:800);
+    if(!fresh){ if(!document.fullscreenElement && !document.getElementById('examFsPrompt')) showViolation(kind,Math.min(warns,MAX_WARN)); return; }
+    lastWarn=now; lastType=kind; warns++;
+    if(warns>=MAX_WARN){
+      removeFsPrompt(); removeViolPop(); hideCover();
+      examWarn('Test submitted','You reached '+MAX_WARN+' warnings ('+VIOL[kind].title.toLowerCase()+'). The test has been auto-submitted.');
+      submitExam(true); return;
+    }
+    showViolation(kind,warns);
+  }
+  function fsHandler(){ if(examOn && !document.fullscreenElement){ violation('fs'); } }
+  function visHandler(){ if(document.hidden){ showCover(); violation('tab'); } else { hideCover(); } }
+  function blurHandler(){ if(!examOn)return; showCover(); violation('tab'); }
+  function focusHandler(){ hideCover(); }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function shotWarn(){ try{navigator.clipboard.writeText('');}catch(_){} violation('shot'); }
+  function keyGuard(e){
+    const k=(e.key||'').toLowerCase(), c=e.code||'';
+    if(k==='printscreen'||(e.metaKey&&e.shiftKey&&k==='s')||(e.metaKey&&e.shiftKey&&['Digit3','Digit4','Digit5'].includes(c))){ e.preventDefault(); shotWarn(); return false; }
+    if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; }
+  }
+  function printGuard(e){ if((e.key||'')==='PrintScreen'){ shotWarn(); } }
+  function startProctor(){
+    warns=0; lastWarn=0; lastType=''; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    window.addEventListener('blur',blurHandler);
+    window.addEventListener('focus',focusHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('cut',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keyup',printGuard,true);
+    /* if fullscreen could not be entered at start, ask for it (no strike) */
+    setTimeout(()=>{ if(examOn && proctorOn && !document.fullscreenElement) showViolation('fs',null); },700);
+  }
+  function stopProctor(){
+    proctorOn=false;
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    window.removeEventListener('blur',blurHandler);
+    window.removeEventListener('focus',focusHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('cut',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keyup',printGuard,true);
+    hideCover(); removeViolPop();
+  }
+
+  function startEntry(){
+    if(inIframe){ window.open(location.pathname+'?mode=exam','_blank'); return; }
+    showSplash();
+  }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; Relationship &amp; Account Management &mdash; Mock Test</h2>
+      <p>A timed, exam-style assessment modelled on real technical screening tests.</p>
+      <ul>
+        <li><b>50 questions</b> to attempt</li>
+        <li><b>50-minute</b> timer (1 min per question) &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Results and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> &mdash; stay in fullscreen the whole time</li>
+        <li>Exactly <b>3 things trigger a warning</b>: (1) <b>switching tab / window</b>, (2) <b>exiting fullscreen</b>, (3) <b>attempting a screenshot</b> (PrintScreen / Win+Shift+S / Cmd+Shift+3-5)</li>
+        <li>Each warning shows a popup with a <b>Continue Test</b> button that resumes where you left off &mdash; the timer keeps running</li>
+        <li><b>3 warnings in total</b> &rarr; the test <b>auto-submits</b>. Copy and right-click are also disabled</li>
+      </ul>
+      <button class="exam-btn primary" id="examBegin" style="width:100%;padding:14px">Start Test &rarr;</button>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      if(document.documentElement.requestFullscreen){document.documentElement.requestFullscreen().catch(()=>{});}
+      sp.remove(); enterExam();
+    });
+  }
+
+  async function enterExam(){
+    injectCss();
+    let ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Loading your test&hellip;</div>';
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    items=shuffle(BANK).slice(0,EXAM_N).map(b=>({id:b.id,q:b.q,code:b.code,options:b.options,difficulty:b.difficulty}));
+    if(!items.length){ ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center">Could not load the test. Close and try again.</div>'; return; }
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">Relationship &amp; Account Management &mdash; Mock Test</div><div class="et-sub">50 questions &middot; one attempt &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}${it.difficulty?`<span class="diff">${it.difficulty}</span>`:''}</div>
+      ${it.code?`<pre><code>${it.code}</code></pre>`:''}
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>el.addEventListener('click',()=>{
+      answers[id]=+el.dataset.i;
+      pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel'));
+      el.classList.add('sel'); refreshPalette();
+    }));
+    const prev=document.getElementById('examPrev'), next=document.getElementById('examNext');
+    if(prev)prev.addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    if(next)next.addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();refreshPalette();});
+    refreshPalette();
+  }
+
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examConfirm('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test');
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId); removeFsPrompt();
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    const payload={answers:{}};
+    items.forEach(it=>{ payload.answers[it.id] = (it.id in answers)?answers[it.id]:-1; });
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Grading your test&hellip;</div>';
+    const byId={}; BANK.forEach(b=>byId[b.id]=b);
+    let sc=0; const results={};
+    items.forEach(it=>{ const b=byId[it.id], you=payload.answers[it.id];
+      const ok=(you===b.answer); if(ok)sc++;
+      results[it.id]={correct:ok,answer:b.answer,explanation:b.explanation}; });
+    showResults({score:sc,results:results});
+  }
+
+  function showResults(data){
+    const results=data.results||{}, total=items.length, score=data.score||0;
+    saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below and try again.';
+    if(pct>=85)msg='Outstanding &mdash; strong command of executive presence, QBRs and account management.';
+    else if(pct>=65)msg='Solid pass. A little more practice on the tricky ones and you are set.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the topics you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const r=results[it.id]||{}; const you=answers[it.id];
+      const attempted=(you!=null);
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      if(!attempted){
+        // Not attempted: reveal nothing (answer stays protected)
+        inner+='<div class="ra">Your answer: <i>Not answered</i></div>';
+        return '<div class="r no">'+inner+'</div>';
+      }
+      const youTxt=String.fromCharCode(65+you)+'. '+it.options[you];
+      const cor=(r.answer!=null&&r.answer>=0)?(String.fromCharCode(65+r.answer)+'. '+it.options[r.answer]):'';
+      inner+='<div class="ra '+(r.correct?'cor':'wrong')+'">Your answer: '+youTxt+'</div>'
+        +(r.correct?'':'<div class="ra cor">Correct: '+cor+'</div>')
+        +(r.explanation?'<div class="rx">'+r.explanation+'</div>':'');
+      return '<div class="r '+(r.correct?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; Relationship &amp; Account Management Mock Test</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another test</button></div>
+          <div class="exam-rmsg" id="examRedirect" style="margin-top:8px;color:#94a3b8"></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    let left=30;
+    const rd=document.getElementById('examRedirect');
+    const setTxt=()=>{ if(rd)rd.textContent='Returning to the assessment page in '+left+'s…'; };
+    setTxt();
+    const rt=setInterval(()=>{ left--; setTxt(); if(left<=0){ clearInterval(rt); goBack(); } },1000);
+    function goBack(){
+      if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); }
+      if(window.opener){ try{ window.close(); }catch(_){} }
+      location.href=location.pathname;   // fallback: reload guide (assessment) page
+    }
+    document.getElementById('examRetry').addEventListener('click',()=>{ clearInterval(rt); document.getElementById('examOverlay').remove(); enterExam(); });
+    document.getElementById('examClose').addEventListener('click',()=>{ clearInterval(rt); goBack(); });
+  }
+
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',startEntry);
+  window.__mockExamStart=startEntry;
+  renderScoreboard();
+  window.addEventListener('storage',e=>{ if(e.key===LS_KEY)renderScoreboard(); });
+  if(new URLSearchParams(location.search).get('mode')==='exam'){ showSplash(); }
+})();
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+<style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body>
+</html>

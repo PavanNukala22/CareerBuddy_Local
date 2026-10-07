@@ -1,0 +1,1276 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Module 5: Tooling — Enterprise Analyst</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet"><style>
+/* ============= Notion-inspired theme ============= */
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#3776ab 0%,#ffd43b 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'Noto Sans Mono',monospace;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans';font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'Noto Sans Mono',monospace;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'Noto Sans Mono',monospace;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'Noto Sans Mono',monospace;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans';font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'Noto Sans Mono',monospace;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'Noto Sans Mono',monospace;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'Noto Sans Mono',monospace;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'Noto Sans Mono',monospace;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'Noto Sans Mono',monospace;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'Noto Sans Mono',monospace;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'Noto Sans Mono',monospace;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'Noto Sans Mono',monospace;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+.pt td{vertical-align:top;line-height:1.6}.pt td:first-child{width:150px;font-weight:700;color:var(--ink);white-space:nowrap}.pt tr:nth-child(even) td{background:var(--bg-soft)}@media(max-width:700px){.pt td:first-child{width:100px;white-space:normal}}
+.tabbar{display:flex;gap:8px;padding:12px 24px 10px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:#b4bccf #eef0f5;border-top:1px solid var(--line);scroll-behavior:smooth}
+.tabbar::-webkit-scrollbar{height:12px;display:block}.tabbar::-webkit-scrollbar-track{background:#eef0f5;border-radius:8px}.tabbar::-webkit-scrollbar-thumb{background:#b4bccf;border-radius:8px;border:2px solid #eef0f5}.tabbar::-webkit-scrollbar-thumb:hover{background:#8f9ab5}
+.tab{flex:0 0 auto;padding:11px 20px;background:transparent;border:none;border-radius:10px;font-family:'Noto Sans',sans-serif;font-size:15px;font-weight:500;color:#3d4660;cursor:pointer;white-space:nowrap;transition:background .25s ease,color .25s ease,box-shadow .25s ease,transform .15s ease}
+.tab .tab-num{display:none}.tab:hover{background:#eef1f7;color:#14213D}
+.tab.active{background:#14213D;color:#fff;font-weight:700;box-shadow:0 4px 12px rgba(20,33,61,.28)}.tab:active{transform:scale(.97)}
+.toc{top:132px!important;height:calc(100vh - 144px)!important}
+.sec-block{margin:0}.qa{border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:10px 0;background:var(--bg-soft)}.qa b{color:var(--accent)}
+.tabbar{margin:10px 24px 12px!important;padding:8px 8px 12px!important;background:#fff;border:1px solid var(--line)!important;border-radius:14px;box-shadow:0 1px 3px rgba(20,33,61,.08);scrollbar-color:#14213D #e8ebf2!important}
+.tabbar::-webkit-scrollbar-track{background:#e8ebf2!important}.tabbar::-webkit-scrollbar-thumb{background:#14213D!important;border:2px solid #e8ebf2!important}
+.tabbar::after{content:'';flex:0 0 8px}.main{padding-bottom:140px!important}
+</style><style>
+body,body *{font-family:'Noto Sans',sans-serif !important}
+code,pre,pre *,.pill,.tab-num,.badge,.quiz-score{font-family:'Noto Sans Mono',monospace !important}
+.panel-title,.section h2{font-weight:700}
+</style><style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head><body>
+<header class="header"><div class="header-top"><div class="brand"><div class="brand-mark" style="background:linear-gradient(135deg,#14213D,#fca311)">EA</div><span>Module 5: Tooling<span class="brand-sub"> · Enterprise Analyst</span></span></div><div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText"></span></span><button class="btn" onclick="resetProgress()">Reset</button></div></div><nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1" role="tab">Course Overview</button><button class="tab" data-tab="t2" role="tab">Fundamentals &amp; Core Concepts</button><button class="tab" data-tab="t3" role="tab">Tooling Landscape for the Enterprise Analyst</button><button class="tab" data-tab="t4" role="tab">Microsoft Excel for Financial Modeling — Foundations</button><button class="tab" data-tab="t5" role="tab">Excel Advanced Modeling: Scenarios, Optimization &amp; Simulation</button><button class="tab" data-tab="t6" role="tab">Gartner &amp; Forrester Research Frameworks</button><button class="tab" data-tab="t7" role="tab">Jira Portfolio (Advanced Roadmaps / Plans)</button><button class="tab" data-tab="t8" role="tab">Planview and Enterprise Portfolio Management</button><button class="tab" data-tab="t9" role="tab">Intermediate &amp; Advanced</button><button class="tab" data-tab="t10" role="tab">Practice &amp; Projects</button><button class="tab" data-tab="t11" role="tab">Tools, Quality &amp; Best Practices</button><button class="tab" data-tab="t12" role="tab">Troubleshooting &amp; Interview Prep</button><button class="tab" data-tab="t13" role="tab" data-assess>Assessment</button></nav></header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside><main class="main"><section class="panel active" id="t1" data-toc='[["s1-1", "📘 Course Overview"], ["s1-2", "🎯 Learning Objectives"], ["s1-3", "🧾 Prerequisites"], ["s1-4", "🗺️ Course map"]]'><div class="panel-header"><div class="panel-eyebrow">Module 5 · Part 1 of 13</div><h1 class="panel-title">Course Overview</h1><p class="panel-subtitle">Scope, objectives, prerequisites and the route through this module.</p></div><div class="section" id="s1-1"><h2><span class="sec-emoji">📘</span> Course Overview</h2><p>This module teaches <strong>Tooling</strong> for the Enterprise Analyst, from fundamentals to expert practice, with examples, exercises, a project and a mock test.</p></div><div class="section" id="s1-2"><h2><span class="sec-emoji">🎯</span> Learning Objectives</h2><ul><li>Choose the right enterprise analysis tool</li><li>Build and stress-test financial models in Excel</li><li>Use Gartner and Forrester frameworks critically</li><li>Plan roadmaps in Jira Portfolio and Planview</li></ul></div><div class="section" id="s1-3"><h2><span class="sec-emoji">🧾</span> Prerequisites</h2><ul><li>Basic Excel</li><li>Portfolio and roadmap concepts</li><li>Familiarity with research reports</li></ul></div><div class="section" id="s1-4"><h2><span class="sec-emoji">🗺️</span> Course map</h2><table><tr><th>Tab</th><th>What you learn</th></tr><tr><td>Tooling Landscape for the Enterprise Analyst</td><td>What each tool category does, how tools fit together across the strategy-to-delivery chain, and how to choose without becoming tool-dependent.</td></tr><tr><td>Microsoft Excel for Financial Modeling — Foundations</td><td>Model architecture, essential functions, formatting standards and error-proofing — from first formulas to a clean, auditable model.</td></tr><tr><td>Excel Advanced Modeling: Scenarios, Optimization & Simulation</td><td>Scenario switches, data tables, Goal Seek, Solver, Monte Carlo, dashboards and Power Query — for expert-level portfolio and investment analysis.</td></tr><tr><td>Gartner & Forrester Research Frameworks</td><td>How to read and use analyst research: Magic Quadrant, Hype Cycle, Wave, Total Economic Impact and application-rationalization models — and their limits.</td></tr><tr><td>Jira Portfolio (Advanced Roadmaps / Plans)</td><td>Planning work across teams in Jira: hierarchy, plans, capacity, dependencies, scenarios and reporting — and how it connects to portfolio governance.</td></tr><tr><td>Planview and Enterprise Portfolio Management</td><td>Strategic portfolio management platforms: investment planning, resource and capacity management, financials, benefits and integration with delivery tools.</td></tr></table></div></section><section class="panel" id="t2" data-toc='[["s2-1", "🧱 Fundamentals"], ["s2-2", "🧠 Core Concepts"], ["s2-3", "🗂️ Topics &amp; Subtopics"]]'><div class="panel-header"><div class="panel-eyebrow">Module 5 · Part 2 of 13</div><h1 class="panel-title">Fundamentals &amp; Core Concepts</h1><p class="panel-subtitle">The vocabulary, key rules and topic map for this module.</p></div><div class="section" id="s2-1"><h2><span class="sec-emoji">🧱</span> Fundamentals</h2><p>Tools do not create insight; they <strong>carry</strong> analysis. An Enterprise Analyst typically works across four tool families, each answering a different question.</p><ul><li>Tooling Landscape for the Enterprise Analyst: What each tool category does, how tools fit together across the strategy-to-delivery chain, and how to choose without becoming tool-dependent.</li><li>Microsoft Excel for Financial Modeling — Foundations: Model architecture, essential functions, formatting standards and error-proofing — from first formulas to a clean, auditable model.</li><li>Excel Advanced Modeling: Scenarios, Optimization & Simulation: Scenario switches, data tables, Goal Seek, Solver, Monte Carlo, dashboards and Power Query — for expert-level portfolio and investment analysis.</li><li>Gartner & Forrester Research Frameworks: How to read and use analyst research: Magic Quadrant, Hype Cycle, Wave, Total Economic Impact and application-rationalization models — and their limits.</li><li>Jira Portfolio (Advanced Roadmaps / Plans): Planning work across teams in Jira: hierarchy, plans, capacity, dependencies, scenarios and reporting — and how it connects to portfolio governance.</li><li>Planview and Enterprise Portfolio Management: Strategic portfolio management platforms: investment planning, resource and capacity management, financials, benefits and integration with delivery tools.</li></ul></div><div class="section" id="s2-2"><h2><span class="sec-emoji">🧠</span> Core Concepts</h2><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Rule of thumb: <strong>Excel</strong> for analysis, <strong>research firms</strong> for evidence, <strong>PPM</strong> for decisions across projects, <strong>Jira</strong> for team-level delivery.</div></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Pitfall: buying a PPM platform before agreeing on <em>criteria, taxonomy and decision rights</em>. Tools automate a process; they cannot fix a missing one.</div></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Industry standards such as <strong>FAST</strong> promote flat, consistent, transparent layouts. Fewer clever formulas, more readable ones.</div></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><code>NPV()</code> treats the first value as occurring at the <em>end</em> of period 1. Add the time-zero investment outside the function.</div></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Reviewer test: could a colleague understand and rerun the model in 30 minutes <em>without you</em>?</div></div></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🗂️</span> Topics &amp; Subtopics</h2><table><tr><th>Topic</th><th>Subtopics</th></tr><tr><td>Tooling Landscape for the Enterprise Analyst</td><td>🧰 The Enterprise Analyst's Tool Stack: What Is What, 🧭 Choosing a Tool: Criteria and Pitfalls</td></tr><tr><td>Microsoft Excel for Financial Modeling — Foundations</td><td>📗 Model Architecture and Standards, 🧮 Essential Functions: What Is What, 🛡️ Error-Proofing: Checks, Validation and Auditing</td></tr><tr><td>Excel Advanced Modeling: Scenarios, Optimization & Simulation</td><td>🎛️ Scenarios, Data Tables and Goal Seek, 🎒 Solver for Portfolio Selection, 🎲 Monte Carlo Simulation and Dashboards</td></tr><tr><td>Gartner & Forrester Research Frameworks</td><td>📚 Why Analyst Research Is Used and Its Limits, 📈 Gartner Frameworks: What Is What, 🌊 Forrester Frameworks and Total Economic Impact, 🔍 Using Research in a Vendor Selection</td></tr><tr><td>Jira Portfolio (Advanced Roadmaps / Plans)</td><td>🧩 What It Is and the Hierarchy, 🛠️ Plans: Capacity, Dependencies, Scenarios, 🧠 Expert Practice with Jira Planning</td></tr><tr><td>Planview and Enterprise Portfolio Management</td><td>🏢 What Planview Is and Does, ⚖️ Jira Plans vs Planview: Who Does What?, 🏁 Implementation, Governance and Case Practice</td></tr></table></div></section><section class="panel" id="t3" data-toc='[["s3-1", "🧰 The Enterprise Analyst"s Tool Stack: What Is What"], ["s3-2", "🧭 Choosing a Tool: Criteria and Pitfalls"]]'><div class="panel-header"><div class="panel-eyebrow">Module 5 · Part 3 of 13</div><h1 class="panel-title">Tooling Landscape for the Enterprise Analyst</h1><p class="panel-subtitle">What each tool category does, how tools fit together across the strategy-to-delivery chain, and how to choose without becoming tool-dependent.</p></div><div class="section" id="s3-1"><h2><span class="sec-emoji">🧰</span> The Enterprise Analyst's Tool Stack: What Is What</h2><div class="level-row"><span class="level-tag fresher">Fresher</span></div><p>Tools do not create insight; they <strong>carry</strong> analysis. An Enterprise Analyst typically works across four tool families, each answering a different question.</p><table><tr><th>Family</th><th>Question it answers</th><th>Tools in this module</th><th>Typical output</th></tr><tr><td>Financial modeling</td><td>What does it cost and return?</td><td>Microsoft Excel</td><td>NPV/IRR model, scenarios, sensitivity</td></tr><tr><td>Research &amp; advisory</td><td>What does the market offer? What is proven?</td><td>Gartner, Forrester</td><td>Vendor shortlist, trend evidence, benchmarks</td></tr><tr><td>Delivery planning</td><td>What work, in what order, with whom?</td><td>Jira Portfolio (Advanced Roadmaps / Plans)</td><td>Roadmaps, capacity, dependency plans</td></tr><tr><td>Enterprise portfolio / PPM</td><td>Which investments do we fund and how are they performing?</td><td>Planview</td><td>Ranked portfolio, funding, benefits, resource view</td></tr></table><div class="diagram"><svg viewBox="0 0 700 90" xmlns="http://www.w3.org/2000/svg" role="img"><rect x="10" y="15" width="122" height="60" rx="8" fill="#eef1f7" stroke="#14213D"/><text x="71.0" y="50" text-anchor="middle" font-size="12" font-weight="600" fill="#14213D">Research</text><path d="M134 45 l10 0" stroke="#fca311" stroke-width="2.5" marker-end="url(#a)"/><rect x="146" y="15" width="122" height="60" rx="8" fill="#eef1f7" stroke="#14213D"/><text x="207.0" y="50" text-anchor="middle" font-size="12" font-weight="600" fill="#14213D">Excel model</text><path d="M270 45 l10 0" stroke="#fca311" stroke-width="2.5" marker-end="url(#a)"/><rect x="282" y="15" width="122" height="60" rx="8" fill="#eef1f7" stroke="#14213D"/><text x="343.0" y="50" text-anchor="middle" font-size="12" font-weight="600" fill="#14213D">Portfolio (Planview)</text><path d="M406 45 l10 0" stroke="#fca311" stroke-width="2.5" marker-end="url(#a)"/><rect x="418" y="15" width="122" height="60" rx="8" fill="#eef1f7" stroke="#14213D"/><text x="479.0" y="50" text-anchor="middle" font-size="12" font-weight="600" fill="#14213D">Delivery (Jira)</text><path d="M542 45 l10 0" stroke="#fca311" stroke-width="2.5" marker-end="url(#a)"/><rect x="554" y="15" width="122" height="60" rx="8" fill="#eef1f7" stroke="#14213D"/><text x="615.0" y="50" text-anchor="middle" font-size="12" font-weight="600" fill="#14213D">Benefits</text><defs><marker id="a" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6z" fill="#fca311"/></marker></defs></svg><div class="diagram-caption">How the tools connect from evidence to delivery to benefits</div></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Rule of thumb: <strong>Excel</strong> for analysis, <strong>research firms</strong> for evidence, <strong>PPM</strong> for decisions across projects, <strong>Jira</strong> for team-level delivery.</div></div></div><div class="section" id="s3-2"><h2><span class="sec-emoji">🧭</span> Choosing a Tool: Criteria and Pitfalls</h2><div class="level-row"><span class="level-tag inter">Intermediate</span></div><table><tr><th>Criterion</th><th>Questions</th></tr><tr><td>Fit to need</td><td>Does it solve our decision or planning problem — or just add features?</td></tr><tr><td>Users &amp; skills</td><td>Who maintains it? What training is needed?</td></tr><tr><td>Integration</td><td>Does it connect to Jira, ERP, finance, SSO, BI?</td></tr><tr><td>Data &amp; governance</td><td>Single source of truth? Access control, audit trail, retention?</td></tr><tr><td>Total cost</td><td>Licences, implementation, admin, training, integrations (TCO)</td></tr><tr><td>Scalability</td><td>Number of projects, users, portfolios</td></tr><tr><td>Vendor viability</td><td>Roadmap, support, references</td></tr></table><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Pitfall: buying a PPM platform before agreeing on <em>criteria, taxonomy and decision rights</em>. Tools automate a process; they cannot fix a missing one.</div></div></div></section><section class="panel" id="t4" data-toc='[["s4-1", "📗 Model Architecture and Standards"], ["s4-2", "🧮 Essential Functions: What Is What"], ["s4-3", "🛡️ Error-Proofing: Checks, Validation and Auditing"]]'><div class="panel-header"><div class="panel-eyebrow">Module 5 · Part 4 of 13</div><h1 class="panel-title">Microsoft Excel for Financial Modeling — Foundations</h1><p class="panel-subtitle">Model architecture, essential functions, formatting standards and error-proofing — from first formulas to a clean, auditable model.</p></div><div class="section" id="s4-1"><h2><span class="sec-emoji">📗</span> Model Architecture and Standards</h2><div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">Intermediate</span></div><p>A good financial model separates <strong>inputs</strong>, <strong>calculations</strong> and <strong>outputs</strong>, so any reviewer can trace a number back to its assumption.</p><table><tr><th>Sheet</th><th>Content</th><th>Rule</th></tr><tr><td>Cover / README</td><td>Purpose, owner, version, change log, colour legend</td><td>One page</td></tr><tr><td>Assumptions</td><td>All inputs: rates, volumes, prices, dates</td><td>Single source; units + source + owner</td></tr><tr><td>Calculations</td><td>Yearly/monthly cash flows</td><td>Same formula across a row; no hard-codes</td></tr><tr><td>Outputs</td><td>NPV, IRR, payback, charts, summary</td><td>Link only; no logic</td></tr><tr><td>Sensitivity</td><td>Data tables, scenarios, tornado</td><td>Driven from assumptions</td></tr><tr><td>Checks</td><td>Reconciliations and error flags</td><td>Master check cell = OK/ERROR</td></tr></table><table><tr><th>Convention</th><th>Meaning</th></tr><tr><td>Blue font</td><td>Hard-coded input</td></tr><tr><td>Black font</td><td>Formula</td></tr><tr><td>Green font</td><td>Link to other sheet</td></tr><tr><td>Yellow fill</td><td>Key assumption to review</td></tr><tr><td>Consistent timeline</td><td>Same columns = same period on every sheet</td></tr></table><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Industry standards such as <strong>FAST</strong> promote flat, consistent, transparent layouts. Fewer clever formulas, more readable ones.</div></div></div><div class="section" id="s4-2"><h2><span class="sec-emoji">🧮</span> Essential Functions: What Is What</h2><div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">Intermediate</span></div><table><tr><th>Function</th><th>Use</th><th>Example</th></tr><tr><td>NPV(rate, values)</td><td>Net present value, first value at end of period 1</td><td><code>=NPV(B2,D10:H10)+C10</code></td></tr><tr><td>IRR(values)</td><td>Internal rate of return, evenly spaced periods</td><td><code>=IRR(C10:H10)</code></td></tr><tr><td>XNPV / XIRR</td><td>NPV/IRR with actual dates</td><td><code>=XNPV(B2,C10:H10,C9:H9)</code></td></tr><tr><td>PMT / FV / PV / RATE</td><td>Loan and annuity maths</td><td><code>=PMT(0.09/12,60,-1000000)</code></td></tr><tr><td>SUMPRODUCT</td><td>Multiply and sum arrays (revenue = units × price)</td><td><code>=SUMPRODUCT(D5:H5,D6:H6)</code></td></tr><tr><td>SUMIFS / COUNTIFS</td><td>Conditional totals</td><td><code>=SUMIFS(Cost,Year,2027,Type,"Opex")</code></td></tr><tr><td>XLOOKUP / INDEX-MATCH</td><td>Look up assumptions or scenarios</td><td><code>=XLOOKUP(A2,Tbl[ID],Tbl[Cost])</code></td></tr><tr><td>IF / IFERROR / AND / OR</td><td>Logic and error handling</td><td><code>=IFERROR(B2/C2,0)</code></td></tr><tr><td>CHOOSE / INDEX</td><td>Scenario switch</td><td><code>=CHOOSE(Scenario,D5,E5,F5)</code></td></tr><tr><td>EDATE / EOMONTH</td><td>Dates and timelines</td><td><code>=EOMONTH(B2,0)</code></td></tr></table><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><code>NPV()</code> treats the first value as occurring at the <em>end</em> of period 1. Add the time-zero investment outside the function.</div></div></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🛡️</span> Error-Proofing: Checks, Validation and Auditing</h2><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Advanced</span></div><ul><li><strong>Data validation:</strong> drop-downs for scenario, discount-rate bounds, date rules.</li><li><strong>Named ranges / structured tables:</strong> <code>Discount_Rate</code> is clearer than <code>Assumptions!$C$7</code>.</li><li><strong>Check cells:</strong> total of years = total of lines; balance checks; <code>=IF(ABS(a-b)&lt;0.01,"OK","ERROR")</code>.</li><li><strong>Trace precedents/dependents</strong> and <strong>Evaluate Formula</strong> to audit.</li><li><strong>Sheet protection</strong> on calculation areas; input cells unlocked.</li><li><strong>Version control:</strong> file naming (v1.2), change log, save milestones.</li></ul><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Reviewer test: could a colleague understand and rerun the model in 30 minutes <em>without you</em>?</div></div></div></section><section class="panel" id="t5" data-toc='[["s5-1", "🎛️ Scenarios, Data Tables and Goal Seek"], ["s5-2", "🎒 Solver for Portfolio Selection"], ["s5-3", "🎲 Monte Carlo Simulation and Dashboards"]]'><div class="panel-header"><div class="panel-eyebrow">Module 5 · Part 5 of 13</div><h1 class="panel-title">Excel Advanced Modeling: Scenarios, Optimization & Simulation</h1><p class="panel-subtitle">Scenario switches, data tables, Goal Seek, Solver, Monte Carlo, dashboards and Power Query — for expert-level portfolio and investment analysis.</p></div><div class="section" id="s5-1"><h2><span class="sec-emoji">🎛️</span> Scenarios, Data Tables and Goal Seek</h2><div class="level-row"><span class="level-tag adv">Advanced</span></div><table><tr><th>Feature</th><th>What it does</th><th>Example use</th></tr><tr><td>Scenario switch</td><td>One cell selects Base/Best/Worst; formulas pick values with CHOOSE/INDEX</td><td>Switch whole model for the board</td></tr><tr><td>Scenario Manager</td><td>Stores named input sets and builds summary</td><td>Quick comparison table</td></tr><tr><td>One-variable Data Table</td><td>Recalculates output for a list of one input</td><td>NPV for discount rates 6–14%</td></tr><tr><td>Two-variable Data Table</td><td>Grid of two inputs</td><td>NPV by adoption rate × capex overrun</td></tr><tr><td>Goal Seek</td><td>Find the input that gives a target output</td><td>Break-even adoption rate for NPV = 0</td></tr><tr><td>Solver</td><td>Optimization with constraints</td><td>Choose projects maximizing value within budget</td></tr></table><pre><span class="pre-lang">data-table</span><code>Data &gt; What-If Analysis &gt; Data Table
+Row input cell  : Adoption%
+Column input cell: Capex
+          adoption -&gt;  60%    80%    100%
+capex 4.0M            -0.2   0.9    1.9
+capex 5.0M            -1.1  -0.1    0.9
+capex 6.0M            -2.0  -1.0    0.0   (NPV in M)</code></pre><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Data Tables recalculate all the time and slow large workbooks; set calculation to <em>Automatic except Data Tables</em> when needed.</div></div></div><div class="section" id="s5-2"><h2><span class="sec-emoji">🎒</span> Solver for Portfolio Selection</h2><div class="level-row"><span class="level-tag adv">Advanced</span><span class="level-tag adv">Expert</span></div><p>Excel <strong>Solver</strong> (add-in) finds the best decision values under constraints. For project selection use <strong>binary decision variables</strong> (1 = fund, 0 = not fund).</p><pre><span class="pre-lang">solver</span><code>Decision cells : X2:X9   (0/1 per project)
+Objective      : Max  =SUMPRODUCT(X2:X9, Score)
+Constraints    : =SUMPRODUCT(X2:X9, Cost) &lt;= Budget
+                 X2:X9 = binary
+                 X_P5 = 1             (mandatory)
+                 X_P3 &lt;= X_P6         (P3 requires P6)
+Method         : Simplex LP (or Evolutionary if non-linear)</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Always sanity-check Solver output by hand and keep the constraint list on the sheet for transparency.</div></div></div><div class="section" id="s5-3"><h2><span class="sec-emoji">🎲</span> Monte Carlo Simulation and Dashboards</h2><div class="level-row"><span class="level-tag adv">Expert</span></div><p>Replace single-point assumptions with distributions, run the model hundreds of times and read the spread of results.</p><pre><span class="pre-lang">monte-carlo</span><code>Adoption  =NORM.INV(RAND(), 0.75, 0.10)     // mean 75%, sd 10%
+Capex     =TRIANGULAR via inverse: min 4.0, mode 4.6, max 6.5
+Runs      Data Table with blank column input -&gt; 1,000 recalcs of NPV
+Outputs   =AVERAGE(NPVs)  =PERCENTILE.INC(NPVs,0.1)  =COUNTIF(NPVs,"&lt;0")/1000  // P(NPV&lt;0)</code></pre><ul><li>Report <strong>P10 / P50 / P90</strong> and the probability of negative NPV.</li><li><strong>Tornado charts</strong> show which assumption drives results.</li><li><strong>Waterfall charts</strong> explain bridges (budget → forecast).</li><li><strong>PivotTables + slicers</strong> for portfolio dashboards; <strong>Power Query</strong> to clean and refresh data from CSV/Jira exports; <strong>Power Pivot</strong> for large models.</li></ul><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Avoid volatile functions (<code>OFFSET</code>, <code>INDIRECT</code>) in big models and avoid VBA unless necessary — they hurt performance and auditability.</div></div></div></section><section class="panel" id="t6" data-toc='[["s6-1", "📚 Why Analyst Research Is Used and Its Limits"], ["s6-2", "📈 Gartner Frameworks: What Is What"], ["s6-3", "🌊 Forrester Frameworks and Total Economic Impact"], ["s6-4", "🔍 Using Research in a Vendor Selection"]]'><div class="panel-header"><div class="panel-eyebrow">Module 5 · Part 6 of 13</div><h1 class="panel-title">Gartner & Forrester Research Frameworks</h1><p class="panel-subtitle">How to read and use analyst research: Magic Quadrant, Hype Cycle, Wave, Total Economic Impact and application-rationalization models — and their limits.</p></div><div class="section" id="s6-1"><h2><span class="sec-emoji">📚</span> Why Analyst Research Is Used and Its Limits</h2><div class="level-row"><span class="level-tag fresher">Fresher</span></div><table class="pt"><tr><th>Point</th><th>Detail</th></tr><tr><td>What it is</td><td>Independent-style market research firms (e.g., Gartner, Forrester) that evaluate technologies, vendors and trends and publish frameworks, rankings and benchmarks.</td></tr><tr><td>Why it is used</td><td>Speeds vendor shortlisting, provides defensible evidence to executives, reveals maturity and risk of technologies.</td></tr><tr><td>How it works</td><td>Analysts survey vendors, customers and market data, apply a published methodology and publish reports/visuals; access is by subscription.</td></tr><tr><td>Limits</td><td>Generic criteria, not your context; vendors may be influenced by size and briefing activity; trends lag; reports are inputs, not decisions.</td></tr></table><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Do not copy a vendor's position into your recommendation. Test it against <strong>your</strong> requirements, references and a proof of concept.</div></div></div><div class="section" id="s6-2"><h2><span class="sec-emoji">📈</span> Gartner Frameworks: What Is What</h2><div class="level-row"><span class="level-tag inter">Intermediate</span></div><table><tr><th>Framework</th><th>Purpose</th><th>Structure</th></tr><tr><td>Magic Quadrant</td><td>Positions vendors in a market</td><td>Axes: Ability to Execute × Completeness of Vision → <strong>Leaders, Challengers, Visionaries, Niche Players</strong></td></tr><tr><td>Critical Capabilities</td><td>Scores products against use cases</td><td>Weighted capability scores by use case</td></tr><tr><td>Hype Cycle</td><td>Shows technology maturity and expectations</td><td>Innovation Trigger → Peak of Inflated Expectations → Trough of Disillusionment → Slope of Enlightenment → Plateau of Productivity</td></tr><tr><td>Peer Insights</td><td>Verified customer reviews</td><td>Ratings and written feedback</td></tr><tr><td>TIME model</td><td>Application portfolio disposition</td><td><strong>T</strong>olerate, <strong>I</strong>nvest, <strong>M</strong>igrate, <strong>E</strong>liminate</td></tr><tr><td>Pace-Layered Application Strategy</td><td>Manage apps by rate of change</td><td>Systems of Record, Differentiation, Innovation</td></tr><tr><td>5 Rs (cloud migration)</td><td>Choose migration path</td><td>Rehost, Refactor, Revise, Rebuild, Replace</td></tr></table><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Use the <strong>Magic Quadrant</strong> to build a long list, <strong>Critical Capabilities</strong> to compare fit, and <strong>Peer Insights</strong> to cross-check real experience.</div></div></div><div class="section" id="s6-3"><h2><span class="sec-emoji">🌊</span> Forrester Frameworks and Total Economic Impact</h2><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Advanced</span></div><table><tr><th>Framework</th><th>Purpose</th><th>Notes</th></tr><tr><td>Forrester Wave</td><td>Evaluates vendors in a category</td><td>Scored on <strong>current offering</strong>, <strong>strategy</strong> and <strong>market presence</strong>; vendors grouped as Leaders, Strong Performers, Contenders, Challengers</td></tr><tr><td>Now Tech / Landscape</td><td>Overview of vendors by segment</td><td>Market orientation rather than ranking</td></tr><tr><td>Total Economic Impact (TEI)</td><td>Financial value of a specific solution</td><td><strong>Benefits, Costs, Flexibility, Risks</strong>; risk-adjusted ROI/NPV from customer interviews (often vendor-commissioned)</td></tr><tr><td>Customer Experience Index (CX Index)</td><td>Measures CX quality</td><td>Benchmarks by industry</td></tr></table><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">TEI studies are frequently commissioned by vendors. Treat them as a <em>template and hypothesis source</em>, then rebuild the numbers with your own data.</div></div></div><div class="section" id="s6-4"><h2><span class="sec-emoji">🔍</span> Using Research in a Vendor Selection</h2><div class="level-row"><span class="level-tag adv">Advanced</span><span class="level-tag adv">Expert</span></div><ol><li><strong>Define requirements</strong> and weighted criteria first.</li><li><strong>Long list</strong> from Magic Quadrant / Wave / Now Tech.</li><li><strong>Shortlist</strong> 3–5 against must-haves; check Peer Insights and references.</li><li><strong>RFP / demos / PoC</strong> using your scenarios.</li><li><strong>Score</strong> with a weighted matrix; include TCO and risk.</li><li><strong>Negotiate &amp; decide;</strong> record the rationale.</li></ol><pre><span class="pre-lang">scorecard</span><code>Criterion (weight)            Vendor A   Vendor B   Vendor C
+Functional fit      (30%)       4          5          3
+Integration         (20%)       5          3          4
+TCO 5-yr            (20%)       3          4          5
+Vendor viability    (15%)       5          4          3
+Security/compliance (15%)       4          4          4
+Weighted                      4.20       4.15       3.75</code></pre></div></section><section class="panel" id="t7" data-toc='[["s7-1", "🧩 What It Is and the Hierarchy"], ["s7-2", "🛠️ Plans: Capacity, Dependencies, Scenarios"], ["s7-3", "🧠 Expert Practice with Jira Planning"]]'><div class="panel-header"><div class="panel-eyebrow">Module 5 · Part 7 of 13</div><h1 class="panel-title">Jira Portfolio (Advanced Roadmaps / Plans)</h1><p class="panel-subtitle">Planning work across teams in Jira: hierarchy, plans, capacity, dependencies, scenarios and reporting — and how it connects to portfolio governance.</p></div><div class="section" id="s7-1"><h2><span class="sec-emoji">🧩</span> What It Is and the Hierarchy</h2><div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">Intermediate</span></div><p><strong>Jira Portfolio</strong> was Atlassian's planning add-on for Jira Software; it evolved into <strong>Advanced Roadmaps</strong> and, in Jira Cloud, <strong>Plans</strong> (available in Premium/Enterprise editions). Names and features vary by edition and deployment (Cloud vs Data Center) — confirm in your tenant.</p><table><tr><th>Level</th><th>Jira issue type</th><th>Meaning</th><th>Example</th></tr><tr><td>Strategic (custom)</td><td>Theme / Initiative</td><td>Business objective or large investment</td><td>Reduce cost-to-serve</td></tr><tr><td>Epic</td><td>Epic</td><td>Large body of work for a team</td><td>Digital onboarding</td></tr><tr><td>Story / Task</td><td>Story, Task, Bug</td><td>Deliverable work item</td><td>KYC upload screen</td></tr><tr><td>Sub-task</td><td>Sub-task</td><td>Breakdown of an item</td><td>API integration</td></tr></table><table class="pt"><tr><th>Point</th><th>Detail</th></tr><tr><td>Why it is used</td><td>Visualizes cross-team plans, capacity and dependencies; supports ‘what-if’ planning without changing live data.</td></tr><tr><td>How it works</td><td>Pull issues via filters/boards/projects into a <strong>plan</strong>; add teams, releases, estimates; auto-schedule; create scenarios.</td></tr></table><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Add hierarchy levels above Epic (Initiative/Theme) to link delivery to <strong>strategic objectives</strong> — this is the traceability bridge to portfolio tools.</div></div></div><div class="section" id="s7-2"><h2><span class="sec-emoji">🛠️</span> Plans: Capacity, Dependencies, Scenarios</h2><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Advanced</span></div><table><tr><th>Feature</th><th>What it does</th><th>Analyst use</th></tr><tr><td>Issue sources</td><td>Boards, projects or JQL filters feeding the plan</td><td>Include only relevant work</td></tr><tr><td>Teams &amp; capacity</td><td>Team velocity or capacity (hours/story points) per sprint</td><td>Check over-allocation</td></tr><tr><td>Releases</td><td>Group work by release/version</td><td>Align with business milestones</td></tr><tr><td>Dependencies</td><td>‘Blocks / is blocked by’ links, shown on the timeline</td><td>Identify critical path, resequence</td></tr><tr><td>Auto-scheduling</td><td>Schedules items based on priority, estimates, capacity</td><td>First-cut roadmap</td></tr><tr><td>Scenarios</td><td>Draft changes in a sandbox before committing to Jira</td><td>Compare plan A (add team) vs plan B (cut scope)</td></tr><tr><td>Custom fields &amp; colour</td><td>Show risk, theme, status</td><td>Executive view</td></tr><tr><td>Reports</td><td>Release, capacity and dependency reports</td><td>Governance packs</td></tr></table><pre><span class="pre-lang">jql</span><code>project in (PAY, ONB) AND issuetype in (Initiative, Epic) AND statusCategory != Done ORDER BY Rank
+labels = "FY27-Strategic" AND fixVersion in unreleasedVersions()
+issueFunction in linkedIssuesOf("issuetype = Initiative", "is blocked by")  // requires ScriptRunner</code></pre><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">A plan is only as good as its data: inconsistent estimation, missing links and stale statuses give a beautiful but wrong roadmap.</div></div></div><div class="section" id="s7-3"><h2><span class="sec-emoji">🧠</span> Expert Practice with Jira Planning</h2><div class="level-row"><span class="level-tag adv">Advanced</span><span class="level-tag adv">Expert</span></div><ul><li><strong>Standardize estimation</strong> (story points or time) per team; mixing units breaks capacity views.</li><li><strong>Dependency discipline:</strong> require links for cross-team work; review in planning ceremonies.</li><li><strong>Use scenarios</strong> for budget/capacity trade-offs and take screenshots into portfolio packs.</li><li><strong>Limit scope of each plan</strong> (e.g., per value stream) for performance and clarity.</li><li><strong>Link to Excel / PPM:</strong> export plan data, validate cost and benefit assumptions, keep initiative IDs consistent.</li><li><strong>Governance:</strong> roadmap items are commitments or forecasts? Label them to manage expectations (Now / Next / Later).</li></ul><div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Jira shows <em>what the teams will do and when</em>; it does not by itself decide <em>which investments to fund</em> — that sits with portfolio governance (and tools like Planview).</div></div></div></section><section class="panel" id="t8" data-toc='[["s8-1", "🏢 What Planview Is and Does"], ["s8-2", "⚖️ Jira Plans vs Planview: Who Does What?"], ["s8-3", "🏁 Implementation, Governance and Case Practice"]]'><div class="panel-header"><div class="panel-eyebrow">Module 5 · Part 8 of 13</div><h1 class="panel-title">Planview and Enterprise Portfolio Management</h1><p class="panel-subtitle">Strategic portfolio management platforms: investment planning, resource and capacity management, financials, benefits and integration with delivery tools.</p></div><div class="section" id="s8-1"><h2><span class="sec-emoji">🏢</span> What Planview Is and Does</h2><div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">Intermediate</span></div><p><strong>Planview</strong> is a vendor of <strong>enterprise portfolio management (PPM / SPM)</strong> and work-management solutions. Its portfolio products (e.g., <em>Planview Portfolios</em>, formerly Enterprise One) help organizations plan, fund, govern and track investments; related products cover Agile/Lean work (e.g., AgilePlace) and collaboration (e.g., Projectplace). Product names and packaging change — verify against current vendor documentation.</p><table><tr><th>Capability</th><th>What it provides</th><th>Analyst use</th></tr><tr><td>Strategic planning</td><td>Objectives, strategic themes, alignment</td><td>Link initiatives to objectives</td></tr><tr><td>Demand &amp; intake</td><td>Request forms, workflow, scoring</td><td>Standard intake and scoring models</td></tr><tr><td>Investment &amp; scenario planning</td><td>Compare portfolios under budget/capacity constraints</td><td>Optimization and what-if</td></tr><tr><td>Resource &amp; capacity management</td><td>Demand vs supply by role/team</td><td>Prevent over-allocation</td></tr><tr><td>Financial planning</td><td>Budgets, forecasts, actuals, CapEx/OpEx</td><td>Track cost vs plan</td></tr><tr><td>Benefits &amp; value tracking</td><td>Benefit owners, KPIs, realization</td><td>Close the loop</td></tr><tr><td>Roadmaps &amp; dashboards</td><td>Executive and portfolio views</td><td>Board reporting</td></tr><tr><td>Integration</td><td>Connects to Jira, Azure DevOps, ERP, HR</td><td>Roll up delivery data</td></tr></table><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Planview-type tools answer: <strong>Are we funding the right mix? Do we have the people? Are benefits showing up?</strong></div></div></div><div class="section" id="s8-2"><h2><span class="sec-emoji">⚖️</span> Jira Plans vs Planview: Who Does What?</h2><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Advanced</span></div><table><tr><th>Dimension</th><th>Jira Plans / Advanced Roadmaps</th><th>Planview (enterprise PPM)</th></tr><tr><td>Primary level</td><td>Team and cross-team delivery</td><td>Enterprise investment portfolio</td></tr><tr><td>Main users</td><td>Delivery leads, product owners, RTEs</td><td>PMO, finance, executives, portfolio managers</td></tr><tr><td>Data</td><td>Issues, estimates, sprints, releases</td><td>Investments, budgets, resources, benefits, risks</td></tr><tr><td>Decision supported</td><td>What to build next, delivery sequencing</td><td>What to fund, stop, defer</td></tr><tr><td>Financials</td><td>Limited</td><td>Strong (budget, forecast, actuals)</td></tr><tr><td>Scenario focus</td><td>Schedule/capacity scenarios</td><td>Funding, capacity and value scenarios</td></tr><tr><td>Typical integration</td><td>Feeds delivery status upward</td><td>Receives delivery roll-up, sends approved scope/budget downward</td></tr></table><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Large organizations commonly use <strong>both</strong>: PPM for portfolio governance and Jira for execution, connected by consistent initiative/epic IDs.</div></div></div><div class="section" id="s8-3"><h2><span class="sec-emoji">🏁</span> Implementation, Governance and Case Practice</h2><div class="level-row"><span class="level-tag adv">Advanced</span><span class="level-tag adv">Expert</span></div><ol><li><strong>Agree the operating model first:</strong> intake, criteria, decision rights, cadence.</li><li><strong>Define taxonomy:</strong> investment types, strategic themes, benefit categories, standard fields.</li><li><strong>Start small:</strong> one portfolio, mandatory fields only; expand.</li><li><strong>Integrate</strong> with Jira/finance and define the system of record per data item.</li><li><strong>Data quality ownership:</strong> who updates what and when.</li><li><strong>Adoption:</strong> training, simple dashboards, retire shadow spreadsheets.</li><li><strong>Measure:</strong> data completeness, forecast accuracy, decision cycle time, benefit realization.</li></ol><table class="pt"><tr><th>Point</th><th>Detail</th></tr><tr><td>Mini case</td><td>FY27 planning: 42 requests; $60M demand vs $38M envelope.</td></tr><tr><td>Process</td><td>Intake in PPM → scoring model → Excel/Solver cross-check → capacity (resource module) → scenarios → board decision.</td></tr><tr><td>Delivery link</td><td>Approved initiatives created as Initiatives in Jira; teams plan epics in Plans; status rolls up weekly.</td></tr><tr><td>Benefits</td><td>Owners confirm KPIs quarterly; PIR at month 12.</td></tr></table><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Failure modes: over-customizing, too many mandatory fields, no data owner, duplicate sources of truth, tool treated as project rather than as an operating-model change.</div></div></div></section><section class="panel" id="t9" data-toc='[["s9-1", "📈 Intermediate Concepts"], ["s9-2", "🔄 End-to-End Workflow"], ["s9-3", "🚫 Pitfalls and Expert Checklist"]]'><div class="panel-header"><div class="panel-eyebrow">Module 5 · Part 9 of 13</div><h1 class="panel-title">Intermediate &amp; Advanced</h1><p class="panel-subtitle">Putting Excel, research, Jira and Planview together in one strategy-to-delivery workflow — with checklists and common pitfalls.</p></div><div class="section" id="s9-1"><h2><span class="sec-emoji">📈</span> Intermediate Concepts</h2><ul><li>Microsoft Excel for Financial Modeling — Foundations: Model architecture, essential functions, formatting standards and error-proofing — from first formulas to a clean, auditable model.</li><li>Excel Advanced Modeling: Scenarios, Optimization & Simulation: Scenario switches, data tables, Goal Seek, Solver, Monte Carlo, dashboards and Power Query — for expert-level portfolio and investment analysis.</li><li>Gartner & Forrester Research Frameworks: How to read and use analyst research: Magic Quadrant, Hype Cycle, Wave, Total Economic Impact and application-rationalization models — and their limits.</li><li>Jira Portfolio (Advanced Roadmaps / Plans): Planning work across teams in Jira: hierarchy, plans, capacity, dependencies, scenarios and reporting — and how it connects to portfolio governance.</li><li>Planview and Enterprise Portfolio Management: Strategic portfolio management platforms: investment planning, resource and capacity management, financials, benefits and integration with delivery tools.</li></ul><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Intermediate skill is choosing between options and justifying the choice, not just naming them.</div></div></div><div class="section" id="s9-2"><h2><span class="sec-emoji">🔄</span> End-to-End Workflow</h2><div class="level-row"><span class="level-tag adv">Advanced</span><span class="level-tag adv">Expert</span></div><table><tr><th>Step</th><th>Activity</th><th>Primary tool</th><th>Output</th></tr><tr><td>1</td><td>Market and technology scan</td><td>Gartner/Forrester</td><td>Long list, trend evidence</td></tr><tr><td>2</td><td>Requirements &amp; weighted scorecard</td><td>Excel</td><td>Vendor evaluation matrix</td></tr><tr><td>3</td><td>Business case and sensitivity</td><td>Excel (NPV/IRR, Data Tables)</td><td>Investment case</td></tr><tr><td>4</td><td>Intake, scoring, funding scenarios</td><td>Planview (+ Excel Solver)</td><td>Ranked, funded portfolio</td></tr><tr><td>5</td><td>Roadmap and capacity planning</td><td>Jira Plans</td><td>Team-level plan, dependencies</td></tr><tr><td>6</td><td>Status roll-up and benefits tracking</td><td>Planview + Jira</td><td>Dashboards, benefit KPIs</td></tr><tr><td>7</td><td>Post-implementation review</td><td>Excel + PPM</td><td>Actual vs. planned; lessons</td></tr></table><div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Keep <strong>one system of record</strong> per data type: strategy objectives and budgets in PPM, delivery items in Jira, assumptions and models in version-controlled Excel.</div></div></div><div class="section" id="s9-3"><h2><span class="sec-emoji">🚫</span> Pitfalls and Expert Checklist</h2><div class="level-row"><span class="level-tag adv">Expert</span></div><div class="compare"><div class="compare-col"><h4>Pitfalls</h4><ul><li>Excel models with hidden hard-codes</li><li>Treating analyst rankings as proof</li><li>Roadmaps without capacity data</li><li>Inconsistent IDs between tools</li><li>Duplicate spreadsheets alongside the PPM tool</li><li>Tool configuration before process agreement</li></ul></div><div class="compare-col"><h4>Checklist</h4><ul><li>Model separates inputs, calcs, outputs?</li><li>Checks and sensitivity in place?</li><li>Research validated with references/PoC?</li><li>Jira hierarchy linked to strategy?</li><li>PPM data owners and cadence defined?</li><li>Benefits tracked after go-live?</li></ul></div></div></div></section><section class="panel" id="t10" data-toc='[["s10-1", "🔍 Practical Examples"], ["s10-2", "🛠️ Hands-on Practice"], ["s10-3", "🏗️ Real-World Projects"]]'><div class="panel-header"><div class="panel-eyebrow">Module 5 · Part 10 of 13</div><h1 class="panel-title">Practice &amp; Projects</h1><p class="panel-subtitle">Examples, exercises and a project brief.</p></div><div class="section" id="s10-1"><h2><span class="sec-emoji">🔍</span> Practical Examples</h2><table><tr><th>Sheet</th><th>Content</th><th>Rule</th></tr><tr><td>Cover / README</td><td>Purpose, owner, version, change log, colour legend</td><td>One page</td></tr><tr><td>Assumptions</td><td>All inputs: rates, volumes, prices, dates</td><td>Single source; units + source + owner</td></tr><tr><td>Calculations</td><td>Yearly/monthly cash flows</td><td>Same formula across a row; no hard-codes</td></tr><tr><td>Outputs</td><td>NPV, IRR, payback, charts, summary</td><td>Link only; no logic</td></tr><tr><td>Sensitivity</td><td>Data tables, scenarios, tornado</td><td>Driven from assumptions</td></tr><tr><td>Checks</td><td>Reconciliations and error flags</td><td>Master check cell = OK/ERROR</td></tr></table><pre><span class="pre-lang">data-table</span><code>Data &gt; What-If Analysis &gt; Data Table
+Row input cell  : Adoption%
+Column input cell: Capex
+          adoption -&gt;  60%    80%    100%
+capex 4.0M            -0.2   0.9    1.9
+capex 5.0M            -1.1  -0.1    0.9
+capex 6.0M            -2.0  -1.0    0.0   (NPV in M)</code></pre><pre><span class="pre-lang">solver</span><code>Decision cells : X2:X9   (0/1 per project)
+Objective      : Max  =SUMPRODUCT(X2:X9, Score)
+Constraints    : =SUMPRODUCT(X2:X9, Cost) &lt;= Budget
+                 X2:X9 = binary
+                 X_P5 = 1             (mandatory)
+                 X_P3 &lt;= X_P6         (P3 requires P6)
+Method         : Simplex LP (or Evolutionary if non-linear)</code></pre></div><div class="section" id="s10-2"><h2><span class="sec-emoji">🛠️</span> Hands-on Practice</h2><ol><li>Build a scenario switch in Excel</li><li>Compare two options with a Gartner-style quadrant</li><li>Create a roadmap with dependencies in Jira Plans</li></ol></div><div class="section" id="s10-3"><h2><span class="sec-emoji">🏗️</span> Real-World Projects</h2><p><strong>Integrated tooling workflow for the annual plan</strong></p><ul><li>Excel scenario model</li><li>Framework comparison</li><li>Roadmap or portfolio view</li></ul></div></section><section class="panel" id="t11" data-toc='[["s11-1", "🔧 Tools &amp; Workflows"], ["s11-2", "✅ Testing &amp; Quality"], ["s11-3", "⭐ Best Practices"]]'><div class="panel-header"><div class="panel-eyebrow">Module 5 · Part 11 of 13</div><h1 class="panel-title">Tools, Quality &amp; Best Practices</h1><p class="panel-subtitle">Workflow, review checklist and habits.</p></div><div class="section" id="s11-1"><h2><span class="sec-emoji">🔧</span> Tools &amp; Workflows</h2><p>Model in Excel → validate with research frameworks → plan in Jira Portfolio → govern in Planview → report to executives.</p></div><div class="section" id="s11-2"><h2><span class="sec-emoji">✅</span> Testing &amp; Quality</h2><ul><li>Excel model has inputs, calculations and outputs separated</li><li>Research claims are cited</li><li>Roadmap dependencies and capacity are visible</li></ul></div><div class="section" id="s11-3"><h2><span class="sec-emoji">⭐</span> Best Practices</h2><ul><li>Separate inputs, calculations and outputs</li><li>Cite the research source and date</li><li>Keep one source of truth for portfolio data</li></ul></div></section><section class="panel" id="t12" data-toc='[["s12-1", "🩺 Common Errors &amp; Troubleshooting"], ["s12-2", "🎤 Interview Preparation"], ["s12-3", "🏁 Course Summary"]]'><div class="panel-header"><div class="panel-eyebrow">Module 5 · Part 12 of 13</div><h1 class="panel-title">Troubleshooting &amp; Interview Prep</h1><p class="panel-subtitle">Common mistakes, interview questions and a recap.</p></div><div class="section" id="s12-1"><h2><span class="sec-emoji">🩺</span> Common Errors &amp; Troubleshooting</h2><ul><li>Hard-coded numbers in formulas</li><li>Treating analyst quadrants as proof</li><li>Roadmaps ignoring capacity</li></ul><ol><li>Locate the issue in the artefact</li><li>Trace it to the objective or requirement</li><li>Fix, version and re-review</li></ol></div><div class="section" id="s12-2"><h2><span class="sec-emoji">🎤</span> Interview Preparation</h2><div class="qa"><b>Q1.</b> Be ready to explain: Excel scenarios vs Data Tables</div><div class="qa"><b>Q2.</b> Be ready to explain: Gartner vs Forrester use</div><div class="qa"><b>Q3.</b> Be ready to explain: Jira Plans vs Planview</div><div class="qa"><b>Q4.</b> Be ready to explain: How you choose a tool</div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Define it, give a one-line example, state a trade-off, then a real project use.</div></div></div><div class="section" id="s12-3"><h2><span class="sec-emoji">🏁</span> Course Summary</h2><ul><li>Tooling Landscape for the Enterprise Analyst</li><li>Microsoft Excel for Financial Modeling — Foundations</li><li>Excel Advanced Modeling: Scenarios, Optimization & Simulation</li><li>Gartner & Forrester Research Frameworks</li><li>Jira Portfolio (Advanced Roadmaps / Plans)</li><li>Planview and Enterprise Portfolio Management</li></ul><p>Next: redo the hands-on tasks, then take the assessment.</p></div></section><section class="panel" id="t13" data-toc='[["s13-1","Assessments"]]'><div class="panel-header"><div class="panel-eyebrow">Module 5</div><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">A timed, exam-style test covering everything in this module, with scenario-based questions and full explanations after you submit.</p></div><div class="section" id="s13-1"><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div><div class="assess-intro-text">Fullscreen, timed mock test with a question palette and mark-for-review.</div><ul class="assess-intro-list"><li><strong>50 multiple-choice questions</strong>, 45 minutes</li><li><strong>3 warnings</strong> for tab-switching or leaving fullscreen, then auto-submit</li><li>Results and explanations shown after submission</li></ul><button class="assess-start-btn" id="assessStartBtn">▶ Start Assessment</button></div></div></section></main></div>
+<script>
+/* =========================================================
+   Tab switching, dynamic TOC, scroll-spy, progress pill
+   ========================================================= */
+(function(){
+  const tabs   = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel');
+  const tocEl  = document.getElementById('toc');
+  const total  = tabs.length;
+  const progressText = document.getElementById('progressText');
+
+  function buildToc(panel){
+    const data = JSON.parse(panel.getAttribute('data-toc') || '[]');
+    tocEl.innerHTML = data.map(([id,label]) =>
+      `<li><a href="#${id}" data-target="${id}">${label}</a></li>`
+    ).join('');
+    // first link active by default
+    const first = tocEl.querySelector('a');
+    if(first) first.classList.add('active');
+  }
+
+  function activate(idx){
+    tabs.forEach((t,i)=>t.classList.toggle('active', i===idx));
+    panels.forEach((p,i)=>p.classList.toggle('active', i===idx));
+    buildToc(panels[idx]);
+    progressText.textContent = `${idx+1} / ${total}`;
+    tabs[idx].scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});window.scrollTo({top:0, behavior:'instant'});
+  }
+
+  tabs.forEach((t,i)=>{
+    t.addEventListener('click', ()=> activate(i));
+  });
+
+  // Smooth scroll inside the active tab
+  document.addEventListener('click', (e)=>{
+    const a = e.target.closest('.toc-list a');
+    if(!a) return;
+    e.preventDefault();
+    const id = a.getAttribute('data-target');
+    const el = document.getElementById(id);
+    tocEl.querySelectorAll('a').forEach(x=>x.classList.toggle('active',x===a));
+    if(el){
+      window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 130, behavior:'smooth'});
+    }
+  });
+
+  // Scroll spy — highlight the nearest visible section
+  let ticking = false;
+  function spy(){
+    const activePanel = document.querySelector('.panel.active');
+    if(!activePanel) return;
+    const sections = activePanel.querySelectorAll('.section');
+    const trigger  = 180; // px from top
+    let current = null;
+    sections.forEach(sec=>{
+      const rect = sec.getBoundingClientRect();
+      if(rect.top - trigger < 0) current = sec.id;
+    });
+    if(sections.length && (window.innerHeight+window.scrollY)>=document.documentElement.scrollHeight-6) current=sections[sections.length-1].id;
+    if(current){
+      tocEl.querySelectorAll('a').forEach(a=>{
+        a.classList.toggle('active', a.dataset.target === current);
+      });
+    }
+    ticking = false;
+  }
+  window.addEventListener('scroll', ()=>{
+    if(!ticking){ requestAnimationFrame(spy); ticking = true; }
+  }, {passive:true});
+
+  // Reset
+  window.resetProgress = function(){ activate(0); };
+
+  // Init
+  activate(0);
+})();
+
+</script><div id="scoreBoard" class="score-board" style="display:none;max-width:820px;margin:18px auto;padding:0 16px"></div><script>
+var __src='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+window.__openExamTab=function(){ try{ var u=URL.createObjectURL(new Blob([__src],{type:'text/html'}))+'#autoexam'; var w=window.open(u,'_blank'); if(!w){ alert('Popup blocked. Allow popups for this page, or download the file and open it in Chrome/Edge.'); } }catch(e){ alert('Could not open a new tab. Download the file and open it in Chrome/Edge.'); } };
+
+(function(){
+  /* =====================================================================
+     Module 5: Tooling -- full-screen, timed mock exam (MNC style).
+     Random 50/300 from the server (answers never in source).
+     Grading: all answers submitted at the end (server-side).
+     ===================================================================== */
+  const Q=[{"q": "In Excel, the NPV function assumes the first value occurs…", "options": ["At time zero", "Mid-year", "At the end of period 1", "On the start date"], "a": 2, "e": "Add the time-zero cash flow outside the NPV function."}, {"q": "Which Excel function computes IRR for irregularly dated cash flows?", "options": ["NPV", "PMT", "IRR", "XIRR"], "a": 3, "e": "XIRR uses actual dates."}, {"q": "Colour convention for hard-coded inputs in financial models is usually…", "options": ["Green font", "Blue font", "Black font", "Red fill"], "a": 1, "e": "Blue = inputs; black = formulas; green = cross-sheet links."}, {"q": "Why separate inputs, calculations and outputs?", "options": ["Faster typing", "Required by Excel", "Traceability and easier auditing", "Smaller file only"], "a": 2, "e": "Reviewers can trace outputs to assumptions."}, {"q": "Which function multiplies two arrays and sums the result?", "options": ["SUMIF", "INDEX", "COUNTIF", "SUMPRODUCT"], "a": 3, "e": "E.g., units × price."}, {"q": "Which feature finds the input needed to reach a target output?", "options": ["Slicer", "Data Table", "Pivot Table", "Goal Seek"], "a": 3, "e": "Goal Seek solves for one input."}, {"q": "Two-variable Data Tables are used to…", "options": ["Show output across a grid of two inputs", "Merge two sheets", "Sort data", "Join databases"], "a": 0, "e": "E.g., NPV by adoption and capex."}, {"q": "In Solver, a binary variable of 1 typically means…", "options": ["Delay the project", "Duplicate the project", "Fund / select the project", "Reject the project"], "a": 2, "e": "0/1 decision variables for selection."}, {"q": "Which constraint models 'P3 requires P6'?", "options": ["X_P6 = 0", "X_P3 ≤ X_P6", "X_P3 ≥ X_P6", "X_P3 = 2"], "a": 1, "e": "P3 can only be selected if P6 is selected."}, {"q": "Monte Carlo simulation in Excel commonly uses…", "options": ["Hyperlinks", "RAND/NORM.INV with repeated recalculation", "Conditional formatting", "VLOOKUP only"], "a": 1, "e": "Random draws feed many model runs."}, {"q": "P10, P50, P90 outputs describe…", "options": ["Priority levels", "Phases", "Project IDs", "Percentiles of simulated results"], "a": 3, "e": "They show the range of outcomes."}, {"q": "A tornado chart shows…", "options": ["Dependencies", "Which inputs most affect the output", "Org hierarchy", "Timeline"], "a": 1, "e": "Bars ranked by sensitivity."}, {"q": "Which function pair is volatile and best avoided in large models?", "options": ["SUM and AVERAGE", "OFFSET and INDIRECT", "NPV and IRR", "IF and AND"], "a": 1, "e": "Volatile functions recalc constantly."}, {"q": "Which Excel tool cleans and refreshes data from CSV/Jira exports?", "options": ["Track Changes", "Spell check", "Format Painter", "Power Query"], "a": 3, "e": "Power Query supports repeatable ETL."}, {"q": "What does a master 'check cell' do?", "options": ["Flags if reconciliations fail", "Creates charts", "Sorts data", "Formats the sheet"], "a": 0, "e": "It signals model errors at a glance."}, {"q": "Which is the best way to reference the discount rate in formulas?", "options": ["Copying values", "Typing 0.1 into each formula", "Using a random cell", "Named range like Discount_Rate"], "a": 3, "e": "Names improve readability and avoid hard-codes."}, {"q": "Waterfall charts are useful to…", "options": ["Show dependencies", "Replace NPV", "Show correlations", "Explain bridges between values"], "a": 3, "e": "E.g., budget to forecast."}, {"q": "Why set calculation to 'Automatic except Data Tables' in big models?", "options": ["To save formulas", "Data Tables slow recalculation", "Data Tables are invalid", "To hide errors"], "a": 1, "e": "Performance management."}, {"q": "Gartner's Magic Quadrant axes are…", "options": ["Size and Age", "Price and Quality", "Risk and Return", "Ability to Execute and Completeness of Vision"], "a": 3, "e": "They yield Leaders, Challengers, Visionaries, Niche Players."}, {"q": "In the Gartner Hype Cycle, which phase follows the 'Peak of Inflated Expectations'?", "options": ["Innovation Trigger", "Plateau of Productivity", "Trough of Disillusionment", "Slope of Enlightenment"], "a": 2, "e": "After the peak, expectations fall into the trough."}, {"q": "Gartner's TIME model categories are…", "options": ["Test, Install, Maintain, Exit", "Target, Identify, Measure, Execute", "Tolerate, Invest, Migrate, Eliminate", "Train, Implement, Monitor, Evaluate"], "a": 2, "e": "Application portfolio disposition."}, {"q": "Which is used to score products against use cases in Gartner research?", "options": ["Critical Capabilities", "Hype Cycle", "Pace-Layering", "Peer Insights"], "a": 0, "e": "It weights capabilities per use case."}, {"q": "Forrester Wave evaluates vendors on…", "options": ["Logo design", "Price only", "Employee count", "Current offering, strategy and market presence"], "a": 3, "e": "Three evaluation categories."}, {"q": "Forrester TEI stands for…", "options": ["Technical Enterprise Index", "Total Economic Impact", "Total Efficiency Indicator", "Tooling Evaluation Index"], "a": 1, "e": "A framework for the financial impact of a solution."}, {"q": "TEI covers which four elements?", "options": ["Tools, Employees, Integration, Revenue", "Benefits, Costs, Flexibility, Risks", "Targets, Evidence, Insights, Returns", "Time, Effort, Impact, Reach"], "a": 1, "e": "Risk-adjusted financial analysis."}, {"q": "Why be cautious with vendor-commissioned TEI studies?", "options": ["Assumptions may favour the vendor; rebuild with your data", "They are always wrong", "They have no numbers", "They are illegal"], "a": 0, "e": "Use them as templates, not proof."}, {"q": "Analyst reports should be used as…", "options": ["Legal opinions", "Contracts", "Final decisions", "Inputs to a decision tested against your requirements"], "a": 3, "e": "Context matters; validate with PoC."}, {"q": "Gartner Peer Insights provides…", "options": ["Vendor ranking by size", "Verified customer reviews", "Wave charts", "Hype curves"], "a": 1, "e": "Peer feedback cross-checks vendor claims."}, {"q": "What should be defined before building a vendor shortlist?", "options": ["Meeting dates", "Contract length", "Requirements and weighted criteria", "Logo colours"], "a": 2, "e": "Criteria first prevents bias."}, {"q": "In the 5 Rs of cloud migration, 'Replace' means…", "options": ["Retire entirely", "Rewrite from scratch", "Swap for a different (often SaaS) product", "Lift-and-shift unchanged"], "a": 2, "e": "Replace = move to a new packaged/SaaS solution."}, {"q": "Jira Portfolio's modern name in Jira Cloud is…", "options": ["Opsgenie", "Bitbucket", "Confluence", "Plans (formerly Advanced Roadmaps)"], "a": 3, "e": "Jira Portfolio → Advanced Roadmaps → Plans."}, {"q": "Which hierarchy order is correct in Jira?", "options": ["Epic > Initiative > Sub-task", "Initiative > Epic > Story > Sub-task", "Sub-task > Initiative > Epic", "Story > Epic > Initiative"], "a": 1, "e": "Higher strategic levels sit above epics."}, {"q": "Why add an Initiative level above Epic?", "options": ["Disable dependencies", "Remove teams", "Reduce licence cost", "Trace delivery to strategic objectives"], "a": 3, "e": "It links delivery to portfolio goals."}, {"q": "In a Plan, scenarios allow you to…", "options": ["Hide issues", "Merge licences", "Draft changes without altering live Jira data", "Delete projects"], "a": 2, "e": "Safe what-if planning."}, {"q": "What breaks capacity views in Jira planning?", "options": ["Mixing estimation units across teams", "Using epics", "Using labels", "Using releases"], "a": 0, "e": "Standardize story points or hours."}, {"q": "Which JQL clause restricts to unfinished work?", "options": ["statusCategory != Done", "assignee = none", "priority = high", "sprint is EMPTY"], "a": 0, "e": "It filters out completed issues."}, {"q": "Jira Plans primarily supports decisions about…", "options": ["Delivery sequencing and capacity", "Legal contracts", "Payroll", "Enterprise funding and benefits"], "a": 0, "e": "PPM tools handle funding decisions."}, {"q": "Planview is best described as…", "options": ["A programming language", "A database engine", "An enterprise portfolio and work management vendor", "A spreadsheet application"], "a": 2, "e": "It offers PPM/SPM and Agile/Lean work products."}, {"q": "Which Planview-type capability supports 'Do we have the people?'", "options": ["Data validation", "Resource and capacity management", "Hype cycle", "Goal Seek"], "a": 1, "e": "Demand vs supply analysis."}, {"q": "Typical integration pattern between PPM and Jira is…", "options": ["No integration", "Excel replaces both", "Approved scope/budget flows down; delivery status rolls up", "Jira approves funding"], "a": 2, "e": "Consistent IDs link them."}, {"q": "A key success factor before implementing a PPM tool is…", "options": ["Skipping training", "Customising every field", "Buying licences", "Agreeing intake, criteria and decision rights"], "a": 3, "e": "Tools automate a process; they need one."}, {"q": "Which is a PPM implementation failure mode?", "options": ["Starting small", "Too many mandatory fields and no data owner", "Integrating with finance", "Defining taxonomy"], "a": 1, "e": "Complexity and ownership gaps kill adoption."}, {"q": "One 'system of record' per data type means…", "options": ["Everything in email", "Everything in Excel", "No integration", "Each data item has one authoritative source"], "a": 3, "e": "Prevents conflicting versions."}, {"q": "In vendor scoring, the weighted score is…", "options": ["Sum of prices", "Number of features", "Average of ranks", "Σ (criterion score × weight)"], "a": 3, "e": "Weights reflect priorities."}, {"q": "Which statement about Magic Quadrant 'Leaders' is TRUE?", "options": ["They always fit every client", "They have no risks", "They are cheapest", "They are strong in execution and vision but may not fit your needs"], "a": 3, "e": "Fit depends on requirements and context."}, {"q": "The Gartner 'Pace-Layered Application Strategy' groups applications into…", "options": ["Gold, Silver, Bronze", "Cloud, On-prem, Hybrid", "Old, New, Future", "Systems of Record, Differentiation, Innovation"], "a": 3, "e": "Different change rates need different governance."}, {"q": "What is the benefit of Excel version control and change logs?", "options": ["Faster formulas", "Smaller file", "Prettier charts", "Auditability and rollback"], "a": 3, "e": "Know who changed what and when."}, {"q": "When Jira roadmap items are forecasts rather than commitments, you should…", "options": ["Remove dependencies", "Label them (e.g., Now/Next/Later) to manage expectations", "Hide dates", "Promise all dates"], "a": 1, "e": "Clarity prevents false commitments."}, {"q": "A common reason for inaccurate roadmaps is…", "options": ["Stale statuses, missing links and inconsistent estimates", "Using teams", "Using epics", "Using releases"], "a": 0, "e": "Garbage in, garbage out."}, {"q": "Which sequence best reflects the integrated workflow?", "options": ["Excel → Jira → PPM only", "PPM → research → Excel", "Jira → Excel → research", "Research → Excel business case → PPM funding → Jira delivery → benefits tracking"], "a": 3, "e": "Evidence precedes funding, which precedes delivery."}];
+  const API_Q='';
+  const API_S='';
+  const EXAM_SECONDS=60*45;                 // 45 minutes
+  const inIframe = window.self!==window.top;
+
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash h2{font-size:25px;font-weight:800;margin-bottom:8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin-bottom:12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:ecpop .18s ease}
+  @keyframes ecpop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+
+  function examConfirm(title,msg,okLabel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">
+        <button class="exam-btn nav" data-a="0">Cancel</button>
+        <button class="exam-btn primary" data-a="1">${okLabel||'Submit'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  /* ---- score history (localStorage, shared across the exam tab + guide) ---- */
+  const LS_KEY='ea_m5_scores';
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores();
+    a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: 3 warnings (tab switch / ESC fullscreen exit / screenshot) -> auto-submit ---- */
+  let warns=0, lastWarn=0, proctorOn=false;
+  function examWarn(title,msg,resume,sub){
+    if(!document.getElementById('examWarnCss')){ const st=document.createElement('style'); st.id='examWarnCss';
+      st.textContent='.exam-warnscreen{position:fixed;inset:0;z-index:2147483647;background:rgba(14,22,48,.94);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;font-family:"Noto Sans",system-ui,sans-serif;color:#fff;text-align:center}.exam-warnscreen .wbox{max-width:560px;padding:24px}.exam-warnscreen h3{margin:0 0 10px;font-size:26px;font-weight:700}.exam-warnscreen .wi{margin-right:8px}.exam-warnscreen p{margin:0 0 10px;font-size:14px;color:#e4e9f5;line-height:1.5}.exam-warnscreen .wsub{font-size:14px;margin-bottom:16px}.exam-warnscreen .wbtn{background:#14213D;color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:8px;padding:11px 20px;font:600 14px "Noto Sans",system-ui,sans-serif;cursor:pointer}.exam-warnscreen .wbtn:hover{background:#1c2f57}';
+      document.head.appendChild(st); }
+    hideCover(); document.querySelectorAll('.exam-warnscreen').forEach(x=>x.remove());
+    const d=document.createElement('div'); d.className='exam-warnscreen';
+    d.innerHTML='<div class="wbox"><h3><span class="wi">\u26A0\uFE0F</span>'+title+'</h3><p>'+msg+'</p>'+(sub?'<p class="wsub">'+sub+'</p>':'')+'<button class="wbtn" data-a="1">'+(resume?'Return to assessment':'OK')+'</button></div>';
+    document.body.appendChild(d);
+    d.addEventListener('click',function(e){ if(e.target.closest('[data-a]')){ d.remove(); if(resume&&examOn){ hideCover(); if(!document.fullscreenElement){ reqFS(); } } } });
+  }
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  var lastShot=0;
+  function countWarn(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<800)return; lastWarn=now;
+    warns++;
+    const M={
+      screenshot:['Screenshot detected','Taking screenshots is not allowed during the assessment.'],
+      fullscreen:['Fullscreen exited','The assessment must remain in fullscreen mode.'],
+      tab:['Tab switch detected','Switching tabs, leaving the window or taking screenshots is not allowed during the assessment.']
+    }[kind||'tab'];
+    if(warns>=3){ examWarn('Assessment submitted','You received 3 warnings ('+M[0].toLowerCase()+'). Your assessment has been auto-submitted.',false,''); submitExam(true); }
+    else { examWarn(M[0],M[1],true,'Warning '+warns+' of 3'); }
+  }
+  var lastMeta=0;
+  function shotWarn(){ lastShot=Date.now(); showCover(); countWarn('screenshot'); }
+  function fsHandler(){ if(examOn && !document.fullscreenElement){ showCover(); countWarn('fullscreen'); } }
+  function visHandler(){ if(document.hidden){ if(Date.now()-lastShot<1500)return; showCover(); countWarn('tab'); } else { hideCover(); } }
+  function blurHandler(){ if(Date.now()-lastShot<1500)return; showCover(); setTimeout(function(){ if(Date.now()-lastShot<1500)return; if(Date.now()-lastMeta<2500){ shotWarn(); return; } countWarn((!document.fullscreenElement&&!fsFail)?'fullscreen':'tab'); },150); }
+  function focusHandler(){ if(!document.querySelector('.exam-warnscreen')) hideCover(); }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function keyGuard(e){
+    const k=(e.key||'').toLowerCase();
+    if(e.metaKey&&e.shiftKey){ lastMeta=Date.now(); }
+    if(e.shiftKey&&(e.metaKey||e.getModifierState&&e.getModifierState('OS'))&&(e.code==='KeyS'||/^Digit[345]$/.test(e.code||''))){ e.preventDefault(); shotWarn(); return false; }
+    if(e.metaKey&&e.shiftKey&&['KeyS','Digit3','Digit4','Digit5'].includes(e.code)){ e.preventDefault(); shotWarn(); return false; }
+    if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; }
+    if(k==='printscreen'){ e.preventDefault(); shotWarn(); return false; }
+  }
+  function printGuard(e){
+    if((e.key||'')==='PrintScreen'){
+      if(Date.now()-lastShot>1500) shotWarn(); }
+  }
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    window.addEventListener('blur',blurHandler);
+    window.addEventListener('focus',focusHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('cut',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keyup',printGuard,true);
+  }
+  function stopProctor(){
+    proctorOn=false;
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    window.removeEventListener('blur',blurHandler);
+    window.removeEventListener('focus',focusHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('cut',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keyup',printGuard,true);
+    hideCover();
+  }
+
+  
+function startEntry(){ reqFS(); showSplash(); }
+  var fsFail=false;
+  function reqFS(){ try{ var r=document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen(); if(r&&r.catch){ r.catch(function(){ fsFail=true; var n=document.getElementById('fsNote'); if(n)n.style.display='block'; }); } else { fsFail=true; } }catch(e){ fsFail=true; } }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; Module 5: Tooling &mdash; Mock Test</h2>
+      <p>A timed, exam-style assessment modelled on real technical screening tests.</p>
+      <ul>
+        <li><b>${Q.length} questions</b> to attempt</li>
+        <li><b>45-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Results and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> &mdash; stay in fullscreen the whole time</li>
+        <li><b>No tab / window switching</b> and <b>no exiting fullscreen</b></li>
+        <li><b>3 warnings</b> (tab-switch or fullscreen-exit) &rarr; the test <b>auto-submits</b></li>
+        <li><b>Screenshots, copy and right-click are disabled</b></li>
+      </ul>
+      <div id="fsNote" style="display:${fsFail?'block':'none'};background:#fff4e5;border:1px solid #fcd9a0;color:#7a4a00;padding:12px 14px;border-radius:8px;font-size:13px;margin-bottom:12px">&#9888;&#65039; This preview blocks fullscreen. Open the test in a new tab to get automatic fullscreen.<br><button class="exam-btn nav" style="margin-top:8px" onclick="window.__openExamTab()">&#8599; Open test in new tab (fullscreen)</button></div>
+      <button class="exam-btn primary" id="examBegin" style="width:100%;padding:14px">Start Test &rarr;</button><button class="exam-btn nav" id="examCancel" style="width:100%;margin-top:8px">Cancel</button>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      reqFS();
+      sp.remove(); enterExam();
+    });
+    document.getElementById('examCancel').addEventListener('click',()=>{ sp.remove(); if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); } });
+  }
+
+  async function enterExam(){
+    injectCss();
+    let ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Loading your test&hellip;</div>';
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    items=Q.map((x,n)=>({id:n,q:x.q,options:x.options})).sort(()=>Math.random()-.5);
+    if(!items.length){ ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center">Could not load the test. Close and try again.</div>'; return; }
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">Module 5: Tooling &mdash; Mock Test</div><div class="et-sub">${Q.length} questions &middot; one attempt &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}${it.difficulty?`<span class="diff">${it.difficulty}</span>`:''}</div>
+      ${it.code?`<pre><code>${it.code}</code></pre>`:''}
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>el.addEventListener('click',()=>{
+      answers[id]=+el.dataset.i;
+      pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel'));
+      el.classList.add('sel'); refreshPalette();
+    }));
+    const prev=document.getElementById('examPrev'), next=document.getElementById('examNext');
+    if(prev)prev.addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    if(next)next.addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();refreshPalette();});
+    refreshPalette();
+  }
+
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examConfirm('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test');
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    const payload={answers:{}};
+    items.forEach(it=>{ payload.answers[it.id] = (it.id in answers)?answers[it.id]:-1; });
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Grading your test&hellip;</div>';
+    let sc=0,rs={}; items.forEach(it=>{const x=Q[it.id],ok=answers[it.id]===x.a; if(ok)sc++; rs[it.id]={correct:ok,answer:x.a,explanation:x.e};}); const data={score:sc,results:rs};
+    showResults(data);
+  }
+
+  function showResults(data){
+    const results=data.results||{}, total=items.length, score=data.score||0;
+    saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below and try again.';
+    if(pct>=85)msg='Outstanding &mdash; strong command of this module.';
+    else if(pct>=65)msg='Solid pass. A little more practice on the tricky ones and you are set.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the topics you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const r=results[it.id]||{}; const you=answers[it.id];
+      const attempted=(you!=null);
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      if(!attempted){
+        // Not attempted: reveal nothing (answer stays protected)
+        inner+='<div class="ra">Your answer: <i>Not answered</i></div>';
+        return '<div class="r no">'+inner+'</div>';
+      }
+      const youTxt=String.fromCharCode(65+you)+'. '+it.options[you];
+      const cor=(r.answer!=null&&r.answer>=0)?(String.fromCharCode(65+r.answer)+'. '+it.options[r.answer]):'';
+      inner+='<div class="ra '+(r.correct?'cor':'wrong')+'">Your answer: '+youTxt+'</div>'
+        +(r.correct?'':'<div class="ra cor">Correct: '+cor+'</div>')
+        +(r.explanation?'<div class="rx">'+r.explanation+'</div>':'');
+      return '<div class="r '+(r.correct?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; Module 5: Tooling Mock Test</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another test</button></div>
+          <div class="exam-rmsg" id="examRedirect" style="margin-top:8px;color:#94a3b8"></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    let left=30;
+    const rd=document.getElementById('examRedirect');
+    const setTxt=()=>{ if(rd)rd.textContent='Returning to the assessment page in '+left+'s…'; };
+    setTxt();
+    const rt=setInterval(()=>{ left--; setTxt(); if(left<=0){ clearInterval(rt); goBack(); } },1000);
+    function goBack(){
+      if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); }
+      closeExam();
+    }
+    document.getElementById('examRetry').addEventListener('click',()=>{ clearInterval(rt); document.getElementById('examOverlay').remove(); enterExam(); });
+    document.getElementById('examClose').addEventListener('click',()=>{ clearInterval(rt); goBack(); });
+  }
+
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',startEntry);
+  window.__mockExamStart=startEntry;
+  
+  if(location.hash==='#autoexam'){ document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active')}); showSplash(); }
+  renderScoreboard();
+  window.addEventListener('storage',e=>{ if(e.key===LS_KEY)renderScoreboard(); });
+  
+})();
+</script><script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+<style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body></html>

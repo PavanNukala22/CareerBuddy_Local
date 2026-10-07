@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>High-Level & Low-Level Design — SDE Learning Module</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#d9730d 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans',system-ui,sans-serif;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans',system-ui,sans-serif;font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'Noto Sans',system-ui,sans-serif;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'Noto Sans',system-ui,sans-serif;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'Noto Sans',system-ui,sans-serif;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'Noto Sans',system-ui,sans-serif;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'Noto Sans',system-ui,sans-serif;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'Noto Sans',system-ui,sans-serif;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+
+/* ============= Module additions (same visual language) ============= */
+.table-wrap{overflow-x:auto;margin:16px 0;-webkit-overflow-scrolling:touch}
+.table-wrap table{margin:0;min-width:560px}
+.formula{display:inline-block;font-size:12.5px;background:var(--bg-code);border:1px solid var(--line);padding:2px 8px;border-radius:4px;color:#14213D;font-weight:500}
+.saq-toggle{margin-top:10px}
+.mcq-opt:focus-visible,.btn:focus-visible,.tab:focus-visible,.assess-start-btn:focus-visible,.saq textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.example{border:1px solid var(--line);border-left:4px solid var(--orange);border-radius:var(--radius);padding:14px 18px;margin:16px 0;background:#fffdf9}
+.example-title{font-weight:700;font-size:13px;color:#a85a08;margin-bottom:6px;letter-spacing:.02em}
+.example p,.example ul{margin:6px 0;font-size:14.5px}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.expert{background:#14213D;color:#fff}
+.term{display:grid;grid-template-columns:190px 1fr;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.term:last-child{border-bottom:none}
+details{border:1px solid var(--line);border-radius:var(--radius);margin:10px 0;background:#fff}
+summary{cursor:pointer;padding:11px 16px;font-weight:600;font-size:15px}details[open] summary{border-bottom:1px solid var(--line)}details>div{padding:10px 16px 12px;font-size:14.5px;line-height:1.6;color:#3a3833}
+.term b{color:#14213D}
+.terms{border:1px solid var(--line);border-radius:var(--radius);padding:4px 16px;margin:16px 0;background:#fff}
+@media (max-width:720px){
+  .header-top{padding:12px 16px;flex-wrap:wrap}
+  .brand{font-size:14px;line-height:1.35}
+  .brand-sub{display:block;margin-left:0}
+  .panel-title{font-size:30px}
+  .section h2{font-size:22px}
+  .assess-modal-box{padding:0 18px 40px}
+  .term{grid-template-columns:1fr;gap:2px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+<style>
+/* Noto Sans everywhere */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,td,th,div,section,header,nav,aside,main,label,button,input,textarea,small,strong,b,em,i,code,pre,svg text{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif !important}
+</style>
+<style>
+/* SDE module additions */
+.cx{font-size:12.5px;background:var(--bg-code);border:1px solid var(--line);padding:1px 7px;border-radius:4px;color:#14213D;font-weight:600;white-space:nowrap}
+.step-list{counter-reset:st;list-style:none;padding:0 !important;margin:14px 0}
+.step-list li{counter-increment:st;position:relative;padding:8px 12px 8px 46px;margin:8px 0;border:1px solid var(--line);border-radius:var(--radius);background:#fff}
+.step-list li::before{content:counter(st);position:absolute;left:12px;top:8px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
+pre{white-space:pre}
+.hint{font-size:13px;color:var(--ink-soft);margin:4px 0 0}
+</style>
+<style id="cb-tabbar-scroll-css">
+/* Scrollable navbar: arrows + edge fades + drag/wheel scrolling */
+.tabbar-wrap{position:sticky;top:0;z-index:45;background:#fff}
+.tabbar-wrap .tabbar{position:static !important;z-index:auto !important;scroll-behavior:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.tabbar-wrap.is-overflow .tabbar{cursor:grab}
+.tabbar-wrap .tabbar.dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
+.tabbar-wrap .tabbar.dragging .tab{pointer-events:none}
+.tabbar-arrow{position:absolute;top:1px;bottom:0;width:44px;margin:0;padding:0;border:0;display:none;align-items:center;z-index:3;cursor:pointer;background:transparent;color:#14213D}
+.tabbar-arrow span{width:26px;height:26px;border-radius:50%;background:#fff;border:1px solid #d5dbe6;box-shadow:0 1px 4px rgba(20,33,61,.18);display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;padding-bottom:2px;transition:background .15s,border-color .15s}
+.tabbar-arrow:hover span,.tabbar-arrow:focus-visible span{background:#14213D;border-color:#14213D;color:#fff}
+.tabbar-arrow:focus-visible{outline:2px solid #FCA311;outline-offset:-2px}
+.tabbar-arrow.left{left:0;justify-content:flex-start;padding-left:6px;background:linear-gradient(90deg,#fff 50%,rgba(255,255,255,0))}
+.tabbar-arrow.right{right:0;justify-content:flex-end;padding-right:6px;background:linear-gradient(270deg,#fff 50%,rgba(255,255,255,0))}
+.tabbar-wrap.can-left .tabbar-arrow.left,.tabbar-wrap.can-right .tabbar-arrow.right{display:flex}
+@media (max-width:640px){.tabbar-arrow{width:36px}.tabbar-arrow span{width:24px;height:24px}}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-top">
+    <div class="brand"><div class="brand-mark">SDE</div><span>Engineering / Software Development Engineer (SDE)<span class="brand-sub"> · High-Level & Low-Level Design</span></span></div>
+    <div class="header-actions">
+      <span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 12</span></span>
+      <button class="btn" onclick="resetProgress()" title="Reset to first tab"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9"/><path d="M2 4v3.5h3.5"/></svg> Reset</button>
+    </div>
+  </div>
+  <div class="tabbar-wrap" id="tabbarWrap"><button type="button" class="tabbar-arrow left" aria-label="Scroll tabs left"><span aria-hidden="true">&#8249;</span></button><nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Foundations</button><button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> Scalability & LB</button><button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> Caching</button><button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> DB & Sharding</button><button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> CAP & Consistency</button><button class="tab" data-tab="t6" role="tab"><span class="tab-num">06</span> HLD Case Studies</button><button class="tab" data-tab="t7" role="tab"><span class="tab-num">07</span> OOP & SOLID</button><button class="tab" data-tab="t8" role="tab"><span class="tab-num">08</span> Design Patterns</button><button class="tab" data-tab="t9" role="tab"><span class="tab-num">09</span> LLD Case Studies</button><button class="tab" data-tab="t10" role="tab"><span class="tab-num">10</span> Interview Preparation</button><button class="tab" data-tab="t11" role="tab"><span class="tab-num">11</span> Practice</button><button class="tab" data-tab="t12" role="tab"><span class="tab-num">12</span> Assessment</button></nav><button type="button" class="tabbar-arrow right" aria-label="Scroll tabs right"><span aria-hidden="true">&#8250;</span></button></div>
+</header>
+<div class="layout">
+  <aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside>
+  <main class="main">
+    <section class="panel active" id="t1" data-toc='[["s1-1", "What is system design?"], ["s1-2", "Requirements: functional and non-functional"], ["s1-3", "Back-of-the-envelope estimation"], ["s1-4", "A framework to approach any design question"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag fresher">→ Fresher-friendly</span></div><div class="panel-eyebrow">Module 01 · Foundations</div><h1 class="panel-title">What is System Design?</h1><p class="panel-subtitle">Start from zero: what HLD and LLD are, how they differ, and the framework for approaching any design question.</p></div>
+<div class="section" id="s1-1"><h2><span class="sec-emoji">🧭</span> What is system design?</h2><p><strong>System design</strong> is the process of deciding how the parts of a software system — services, databases, caches, queues, classes — fit together so the system meets its requirements for <em>functionality, scale, reliability and cost</em>.</p><div class="compare"><div class="compare-col"><h4>🏙️ High-Level Design (HLD)</h4><p style="font-size:14px;color:var(--ink-soft);margin:0">The <strong>architecture</strong>: which services, databases, caches, queues and protocols; how data flows; how it scales and survives failure. Boxes and arrows.</p></div><div class="compare-col"><h4>🔧 Low-Level Design (LLD)</h4><p style="font-size:14px;color:var(--ink-soft);margin:0">The <strong>code structure</strong> of one component: classes, interfaces, relationships, design patterns, method signatures, state and concurrency.</p></div></div><div class="example"><div class="example-title">EXAMPLE · Designing "Uber"</div><ul><li><strong>HLD:</strong> rider app → API gateway → matching service, location service (geo-index), trip service, payment service; Kafka for events; sharded DBs; caches.</li><li><strong>LLD:</strong> classes <code>Rider</code>, <code>Driver</code>, <code>Trip</code>, <code>PricingStrategy</code>, <code>MatchingStrategy</code>, with state transitions of a trip.</li></ul></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">📋</span> Requirements: functional and non-functional</h2><div class="table-wrap"><table><tr><th>Type</th><th>Question</th><th>Examples</th></tr><tr><td>Functional</td><td>What must the system <em>do</em>?</td><td>Shorten a URL, redirect, post a tweet, send a message</td></tr><tr><td>Non-functional</td><td>How <em>well</em> must it do it?</td><td>Latency &lt; 200 ms, 99.99% availability, 10M DAU, durability, security, consistency</td></tr></table></div><div class="cards"><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">⚡</div><div class="card-title">Scalability</div><div class="card-desc">Handles growth in users, data, traffic.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🟢</div><div class="card-title">Availability</div><div class="card-desc">Uptime: 99.9% ≈ 8.8 h downtime/year; 99.99% ≈ 53 min.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#14213D">🕒</div><div class="card-title">Latency / Throughput</div><div class="card-desc">Time per request vs requests per second.</div></div><div class="card"><div class="card-icon" style="background:var(--pink-soft);color:#8c1a63">🛡️</div><div class="card-title">Reliability & Durability</div><div class="card-desc">Works correctly and never loses data.</div></div></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">🧮</span> Back-of-the-envelope estimation</h2><p>Quick maths to decide whether you need one server or a thousand. Learn a few anchors: 1 day ≈ 10⁵ seconds (86,400); 1M requests/day ≈ 12 requests/second; a read from RAM is ~100 ns, SSD ~100 µs, a network round trip within a data-centre ~0.5 ms, across continents ~150 ms.</p><div class="example"><div class="example-title">EXAMPLE · URL shortener: 100M new URLs per month, read:write = 100:1</div><ul><li>Write QPS = 100M / (30 × 86,400) ≈ <strong>40/s</strong>; read QPS ≈ <strong>4,000/s</strong>.</li><li>Storage for 5 years: 100M × 12 × 5 = 6B records × 500 bytes ≈ <strong>3 TB</strong>.</li><li>Conclusion: read-heavy → add a cache; 3 TB fits a sharded or distributed store.</li></ul></div><div class="callout note"><div class="callout-icon">📝</div><div class="callout-body">Always state assumptions and round generously. Interviewers care about reasoning, not exact digits.</div></div></div><div class="section" id="s1-4"><h2><span class="sec-emoji">🪜</span> A framework to approach any design question</h2><ol class="step-list"><li><strong>Clarify</strong> scope and requirements (functional + non-functional).</li><li><strong>Estimate</strong> scale: users, QPS, storage, bandwidth.</li><li><strong>API &amp; data model</strong>: main endpoints and entities.</li><li><strong>High-level architecture</strong>: draw the main components and data flow.</li><li><strong>Deep-dive</strong> the bottleneck: database, cache, queue, consistency.</li><li><strong>Failure &amp; scale</strong>: single points of failure, monitoring, trade-offs.</li></ol><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which is a NON-functional requirement?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Users can upload a photo</li><li class="mcq-opt"><span class="opt-letter">B</span> p99 latency under 200 ms</li><li class="mcq-opt"><span class="opt-letter">C</span> Users can follow others</li><li class="mcq-opt"><span class="opt-letter">D</span> Users can search</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — latency describes quality, not a feature."></div></div></div>
+    </section>
+    <section class="panel" id="t2" data-toc='[["s2-1", "Scaling: vertical vs horizontal"], ["s2-2", "Load balancing"], ["s2-3", "Other essential building blocks"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">→ Intermediate</span></div><div class="panel-eyebrow">Module 02 · Scalability Building Blocks</div><h1 class="panel-title">Scalability, Load Balancing & Core Components</h1><p class="panel-subtitle">Vertical vs horizontal scaling, stateless services, load balancer types and algorithms, reverse proxies, CDNs and API gateways.</p></div>
+<div class="section" id="s2-1"><h2><span class="sec-emoji">📈</span> Scaling: vertical vs horizontal</h2><div class="compare"><div class="compare-col"><h4>⬆️ Vertical (scale up)</h4><p style="font-size:14px;color:var(--ink-soft);margin:0">Bigger machine: more CPU/RAM. Simple, no code change, but has a hard ceiling, costs more per unit and is a single point of failure.</p></div><div class="compare-col"><h4>➡️ Horizontal (scale out)</h4><p style="font-size:14px;color:var(--ink-soft);margin:0">More machines behind a load balancer. Near-unlimited and fault tolerant, but needs stateless design, data partitioning and distributed-systems thinking.</p></div></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">To scale a service horizontally, make it <strong>stateless</strong>: keep session and data in external stores (Redis, DB) so any instance can serve any request.</div></div></div><div class="section" id="s2-2"><h2><span class="sec-emoji">⚖️</span> Load balancing</h2><p>A <strong>load balancer (LB)</strong> distributes incoming requests across multiple servers, removes unhealthy ones via <em>health checks</em>, and hides the server fleet behind one address.</p><div class="diagram"><svg viewBox="0 0 560 150" width="560"><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#787774"/></marker></defs><rect x="10" y="55" width="90" height="40" rx="8" fill="#eef1f7" stroke="#14213D"/><text x="55.0" y="79.0" font-size="12" text-anchor="middle" fill="#37352f">Clients</text><rect x="160" y="55" width="110" height="40" rx="8" fill="#fdecc8" stroke="#dfab01"/><text x="215.0" y="79.0" font-size="12" text-anchor="middle" fill="#37352f">Load Balancer</text><rect x="350" y="5" width="100" height="36" rx="8" fill="#eef1f7" stroke="#14213D"/><text x="400.0" y="27.0" font-size="12" text-anchor="middle" fill="#37352f">Server 1</text><rect x="350" y="57" width="100" height="36" rx="8" fill="#eef1f7" stroke="#14213D"/><text x="400.0" y="79.0" font-size="12" text-anchor="middle" fill="#37352f">Server 2</text><rect x="350" y="109" width="100" height="36" rx="8" fill="#eef1f7" stroke="#14213D"/><text x="400.0" y="131.0" font-size="12" text-anchor="middle" fill="#37352f">Server 3</text><line x1="100" y1="75" x2="160" y2="75" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/><line x1="270" y1="70" x2="350" y2="25" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/><line x1="270" y1="75" x2="350" y2="75" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/><line x1="270" y1="80" x2="350" y2="127" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/></svg><div class="diagram-caption">A load balancer spreads traffic and removes failed servers.</div></div><div class="table-wrap"><table><tr><th>Layer</th><th>Works on</th><th>Pros / use</th></tr><tr><td>L4 (transport)</td><td>IP + port (TCP/UDP)</td><td>Very fast, simple; no content awareness</td></tr><tr><td>L7 (application)</td><td>HTTP headers, path, cookies</td><td>Smart routing (/api vs /static), TLS termination, A/B routing</td></tr></table></div><div class="table-wrap"><table><tr><th>Algorithm</th><th>How it picks</th><th>Best for</th></tr><tr><td>Round robin</td><td>Next server in turn</td><td>Similar servers, similar requests</td></tr><tr><td>Weighted round robin</td><td>Proportional to capacity</td><td>Mixed hardware</td></tr><tr><td>Least connections</td><td>Server with fewest active requests</td><td>Long-lived or uneven requests</td></tr><tr><td>IP / consistent hash</td><td>Hash of client or key</td><td>Sticky sessions, cache locality</td></tr><tr><td>Random with 2 choices</td><td>Pick 2 randomly, choose less loaded</td><td>Large fleets, low overhead</td></tr></table></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">The load balancer itself can be a single point of failure — run it as an active-passive or active-active pair, or use DNS / anycast with multiple LBs.</div></div></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🧱</span> Other essential building blocks</h2><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#14213D">🌐</div><div class="card-title">DNS</div><div class="card-desc">Maps names to IPs; can route by geography or health (GeoDNS).</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🚚</div><div class="card-title">CDN</div><div class="card-desc">Caches static content near users; cuts latency and origin load.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🚪</div><div class="card-title">API Gateway</div><div class="card-desc">Single entry: auth, rate limiting, routing, request transformation.</div></div><div class="card"><div class="card-icon" style="background:var(--pink-soft);color:#8c1a63">🪞</div><div class="card-title">Reverse proxy</div><div class="card-desc">Sits in front of servers: TLS, compression, caching (Nginx, Envoy).</div></div><div class="card"><div class="card-icon" style="background:var(--yellow-soft);color:#8a6a00">📨</div><div class="card-title">Message queue</div><div class="card-desc">Decouples producers from consumers; absorbs spikes (Kafka, SQS, RabbitMQ).</div></div><div class="card"><div class="card-icon" style="background:var(--red-soft);color:#a01c1c">🔎</div><div class="card-title">Service discovery</div><div class="card-desc">Instances register and are found dynamically (Consul, Kubernetes DNS).</div></div></div><p><strong>Rate limiting</strong> protects services from overload and abuse. Common algorithms: <em>fixed window</em>, <em>sliding window</em>, <em>token bucket</em> (allows bursts, refills at a steady rate) and <em>leaky bucket</em> (smooths output).</p><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> A load balancer that routes /api to one pool and /images to another works at…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Layer 4</li><li class="mcq-opt"><span class="opt-letter">B</span> Layer 7</li><li class="mcq-opt"><span class="opt-letter">C</span> Layer 1</li><li class="mcq-opt"><span class="opt-letter">D</span> DNS only</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — routing by path needs HTTP awareness (L7)."></div></div></div>
+    </section>
+    <section class="panel" id="t3" data-toc='[["s3-1", "What is a cache?"], ["s3-2", "Caching patterns"], ["s3-3", "Eviction policies and invalidation"], ["s3-4", "Classic cache problems"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">→ Advanced</span></div><div class="panel-eyebrow">Module 03 · Caching</div><h1 class="panel-title">Caching Strategies</h1><p class="panel-subtitle">What a cache is, where to cache, read/write patterns, eviction policies and the classic cache problems.</p></div>
+<div class="section" id="s3-1"><h2><span class="sec-emoji">⚡</span> What is a cache?</h2><p>A <strong>cache</strong> is a fast, small store that keeps copies of frequently used data so future requests avoid slower sources (database, remote API, heavy computation). It works because of <em>locality of reference</em>: a small portion of data receives most of the traffic.</p><div class="table-wrap"><table><tr><th>Layer</th><th>Examples</th></tr><tr><td>Browser / client</td><td>HTTP cache headers, local storage</td></tr><tr><td>CDN / edge</td><td>CloudFront, Cloudflare, Akamai</td></tr><tr><td>Application (in-process)</td><td>Guava, Caffeine, <code>lru_cache</code></td></tr><tr><td>Distributed cache</td><td>Redis, Memcached</td></tr><tr><td>Database</td><td>Buffer pool, query cache, materialised views</td></tr></table></div><p>Key metric: <strong>hit ratio</strong> = hits / (hits + misses). Average latency = hit_ratio × cache_latency + (1 − hit_ratio) × DB_latency.</p></div><div class="section" id="s3-2"><h2><span class="sec-emoji">🔄</span> Caching patterns</h2><div class="table-wrap"><table><tr><th>Pattern</th><th>How it works</th><th>Trade-off</th></tr><tr><td><strong>Cache-aside (lazy)</strong></td><td>App checks cache; on miss reads DB and fills cache</td><td>Most common; stale data possible; first request slow</td></tr><tr><td><strong>Read-through</strong></td><td>Cache itself loads from DB on a miss</td><td>Simpler app code; cache library must know the DB</td></tr><tr><td><strong>Write-through</strong></td><td>Write goes to cache and DB synchronously</td><td>Consistent, but slower writes</td></tr><tr><td><strong>Write-back (behind)</strong></td><td>Write to cache, flush to DB asynchronously</td><td>Very fast writes; risk of data loss on cache crash</td></tr><tr><td><strong>Write-around</strong></td><td>Write to DB only; cache fills on read</td><td>Avoids polluting cache with rarely-read data</td></tr></table></div><pre><span class="pre-lang">python</span><code>def get_user(uid):                         # cache-aside
+    key = f"user:{uid}"
+    val = redis.get(key)
+    if val is not None: return json.loads(val)       # hit
+    row = db.query("SELECT * FROM users WHERE id=%s", uid)   # miss
+    redis.setex(key, 300, json.dumps(row))           # TTL = 5 minutes
+    return row
+
+def update_user(uid, data):
+    db.update(uid, data)
+    redis.delete(f"user:{uid}")                      # invalidate, do not update</code></pre></div><div class="section" id="s3-3"><h2><span class="sec-emoji">🗑️</span> Eviction policies and invalidation</h2><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#14213D">🕰️</div><div class="card-title">LRU</div><div class="card-desc">Evict least recently used. Best general default.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">📊</div><div class="card-title">LFU</div><div class="card-desc">Evict least frequently used. Good for stable hot sets.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">📥</div><div class="card-title">FIFO / TTL</div><div class="card-desc">Evict oldest or expired entries.</div></div></div><p>"There are only two hard things in computer science: cache invalidation and naming things." Strategies: <strong>TTL</strong> expiry, <strong>explicit invalidation</strong> on write, <strong>versioned keys</strong>, and <strong>event-driven invalidation</strong> via change-data-capture.</p></div><div class="section" id="s3-4"><h2><span class="sec-emoji">🌩️</span> Classic cache problems</h2><div class="table-wrap"><table><tr><th>Problem</th><th>What happens</th><th>Fix</th></tr><tr><td><strong>Cache stampede / thundering herd</strong></td><td>A hot key expires; thousands of requests hit the DB at once</td><td>Request coalescing / locks, early refresh, jittered TTL</td></tr><tr><td><strong>Cache penetration</strong></td><td>Requests for keys that never exist bypass the cache</td><td>Cache negative results, Bloom filter</td></tr><tr><td><strong>Cache avalanche</strong></td><td>Many keys expire together or the cache cluster fails</td><td>Randomise TTLs, replicate / cluster the cache</td></tr><tr><td><strong>Hot key</strong></td><td>One key overloads a single cache node</td><td>Replicate hot keys, local in-process cache</td></tr><tr><td><strong>Stale data</strong></td><td>Cache and DB disagree</td><td>Shorter TTL, invalidate on write, accept eventual consistency</td></tr></table></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which pattern risks data loss if the cache crashes?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Write-through</li><li class="mcq-opt"><span class="opt-letter">B</span> Write-back</li><li class="mcq-opt"><span class="opt-letter">C</span> Cache-aside</li><li class="mcq-opt"><span class="opt-letter">D</span> Read-through</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — write-back flushes later, so unflushed data can be lost."></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Best defence against a stampede on one expiring hot key?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Delete the cache</li><li class="mcq-opt"><span class="opt-letter">B</span> Request coalescing / locking with jittered TTL</li><li class="mcq-opt"><span class="opt-letter">C</span> Bigger DB</li><li class="mcq-opt"><span class="opt-letter">D</span> Disable TTL everywhere</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — only one request should rebuild the value."></div></div></div>
+    </section>
+    <section class="panel" id="t4" data-toc='[["s4-1", "Choosing a database"], ["s4-2", "Indexing"], ["s4-3", "Replication"], ["s4-4", "Sharding (partitioning)"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">→ Advanced</span></div><div class="panel-eyebrow">Module 04 · Data Storage & Partitioning</div><h1 class="panel-title">Databases, Replication & Sharding</h1><p class="panel-subtitle">SQL vs NoSQL, indexing, replication, partitioning strategies, consistent hashing and how to pick a datastore.</p></div>
+<div class="section" id="s4-1"><h2><span class="sec-emoji">🗄️</span> Choosing a database</h2><div class="table-wrap"><table><tr><th>Type</th><th>Examples</th><th>Best for</th></tr><tr><td>Relational (SQL)</td><td>PostgreSQL, MySQL</td><td>Structured data, joins, transactions (ACID)</td></tr><tr><td>Key-value</td><td>Redis, DynamoDB</td><td>Sessions, caches, simple fast lookups</td></tr><tr><td>Document</td><td>MongoDB, Firestore</td><td>Flexible schema, nested objects</td></tr><tr><td>Wide-column</td><td>Cassandra, HBase</td><td>Huge write-heavy, time-series, high availability</td></tr><tr><td>Graph</td><td>Neo4j</td><td>Relationships: social graph, recommendations</td></tr><tr><td>Search</td><td>Elasticsearch</td><td>Full-text search, analytics</td></tr><tr><td>Object store</td><td>S3</td><td>Images, videos, backups</td></tr></table></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Start with a relational database unless you have a clear reason not to. Move to NoSQL for scale patterns, flexible schemas, or specific access patterns — and remember most large systems are <strong>polyglot</strong> (several stores).</div></div></div><div class="section" id="s4-2"><h2><span class="sec-emoji">🔖</span> Indexing</h2><p>An <strong>index</strong> is an auxiliary structure (usually a B-tree) that makes lookups O(log n) instead of a full table scan, at the cost of extra storage and slower writes. Rules of thumb: index columns used in <code>WHERE</code>, <code>JOIN</code> and <code>ORDER BY</code>; use <em>composite indexes</em> ordered by selectivity and query shape; avoid indexing low-cardinality columns; use <code>EXPLAIN</code> to verify.</p><pre><span class="pre-lang">sql</span><code>CREATE INDEX idx_orders_user_date ON orders (user_id, created_at DESC);
+-- Fast: WHERE user_id = 42 ORDER BY created_at DESC LIMIT 20
+EXPLAIN ANALYZE SELECT * FROM orders WHERE user_id = 42 ORDER BY created_at DESC LIMIT 20;</code></pre></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🪞</span> Replication</h2><p><strong>Replication</strong> keeps copies of data on several nodes for availability and read scaling.</p><div class="table-wrap"><table><tr><th>Model</th><th>How</th><th>Notes</th></tr><tr><td>Leader–follower</td><td>Writes to the leader; followers replicate; reads from followers</td><td>Simple; replication lag causes stale reads; failover needed</td></tr><tr><td>Multi-leader</td><td>Several nodes accept writes</td><td>Good for multi-region; needs conflict resolution</td></tr><tr><td>Leaderless (quorum)</td><td>Write to W nodes, read from R nodes, with R + W &gt; N</td><td>Dynamo / Cassandra style; tunable consistency</td></tr></table></div><p>Replication can be <strong>synchronous</strong> (durable, slower) or <strong>asynchronous</strong> (fast, may lose the last writes on failover).</p></div><div class="section" id="s4-4"><h2><span class="sec-emoji">🔪</span> Sharding (partitioning)</h2><p><strong>Sharding</strong> splits one large dataset across many machines so that each holds a part (a <em>shard</em>), scaling storage and write throughput beyond one node.</p><div class="table-wrap"><table><tr><th>Strategy</th><th>How</th><th>Pros</th><th>Cons</th></tr><tr><td>Range-based</td><td>Key ranges (A–F, G–M…)</td><td>Range queries easy</td><td>Hotspots (e.g. recent timestamps)</td></tr><tr><td>Hash-based</td><td>shard = hash(key) mod N</td><td>Even distribution</td><td>Range queries hard; resharding moves most data</td></tr><tr><td>Directory / lookup</td><td>A map service tells where each key lives</td><td>Flexible</td><td>Lookup service is a dependency</td></tr><tr><td>Geo-based</td><td>By region of the user</td><td>Low latency, data residency</td><td>Uneven load, cross-region queries</td></tr></table></div><h3>Consistent hashing</h3><p>With <code>hash(key) mod N</code>, changing N remaps almost every key. <strong>Consistent hashing</strong> places servers and keys on a ring; each key belongs to the next server clockwise. Adding or removing a node moves only about <code>1/N</code> of keys. <em>Virtual nodes</em> spread each server at many points for balance.</p><div class="diagram"><svg viewBox="0 0 300 220" width="300"><circle cx="150" cy="110" r="80" fill="none" stroke="#d3d3d0" stroke-width="3"/>
+<circle cx="150" cy="30" r="10" fill="#14213D"/><text x="150" y="14" text-anchor="middle" font-size="12">Node A</text>
+<circle cx="230" cy="110" r="10" fill="#d9730d"/><text x="262" y="114" text-anchor="middle" font-size="12">Node B</text>
+<circle cx="110" cy="180" r="10" fill="#0f7b0f"/><text x="110" y="205" text-anchor="middle" font-size="12">Node C</text>
+<circle cx="200" cy="55" r="5" fill="#787774"/><text x="200" y="45" font-size="11" fill="#787774">k1 → B</text>
+<circle cx="76" cy="95" r="5" fill="#787774"/><text x="24" y="90" font-size="11" fill="#787774">k2 → C</text></svg><div class="diagram-caption">Each key is served by the next node clockwise on the ring.</div></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Sharding adds cost: cross-shard joins and transactions are hard, resharding is operationally heavy, and a poor shard key creates hotspots. Pick a key with high cardinality and even access, and shard only when a single node (with replicas and cache) can no longer cope.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Why use consistent hashing instead of hash(key) mod N?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> It is faster to compute</li><li class="mcq-opt"><span class="opt-letter">B</span> Adding/removing a node remaps only a small fraction of keys</li><li class="mcq-opt"><span class="opt-letter">C</span> It supports range queries</li><li class="mcq-opt"><span class="opt-letter">D</span> It avoids replication</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — the point is minimal data movement when the cluster changes."></div></div><div class="mcq" data-answer="0"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Quorum reads and writes guarantee overlap when…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> R + W > N</li><li class="mcq-opt"><span class="opt-letter">B</span> R + W < N</li><li class="mcq-opt"><span class="opt-letter">C</span> R = W = 1</li><li class="mcq-opt"><span class="opt-letter">D</span> N = 1 only</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — R + W &gt; N ensures read and write sets intersect."></div></div></div>
+    </section>
+    <section class="panel" id="t5" data-toc='[["s5-1", "CAP theorem"], ["s5-2", "PACELC: the full picture"], ["s5-3", "Consistency models"], ["s5-4", "ACID vs BASE"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 05 · Trade-offs</div><h1 class="panel-title">CAP Theorem & Consistency Models</h1><p class="panel-subtitle">The fundamental trade-offs of distributed data: CAP, PACELC, ACID vs BASE and the spectrum of consistency.</p></div>
+<div class="section" id="s5-1"><h2><span class="sec-emoji">🔺</span> CAP theorem</h2><p>In a distributed data store, when a <strong>network partition</strong> happens you cannot have both consistency and availability:</p><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#14213D">🔁</div><div class="card-title">Consistency (C)</div><div class="card-desc">Every read sees the latest write (linearizable).</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🟢</div><div class="card-title">Availability (A)</div><div class="card-desc">Every request to a live node gets a non-error response.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">✂️</div><div class="card-title">Partition tolerance (P)</div><div class="card-desc">System continues despite lost or delayed messages between nodes.</div></div></div><p>Partitions <em>will</em> happen on real networks, so the real choice is <strong>CP</strong> (refuse or delay requests to stay correct) or <strong>AP</strong> (keep answering, possibly with stale data).</p><div class="table-wrap"><table><tr><th>Choice</th><th>Behaviour during a partition</th><th>Examples</th></tr><tr><td>CP</td><td>Minority side stops accepting writes/reads</td><td>ZooKeeper, etcd, HBase, MongoDB (default), Spanner</td></tr><tr><td>AP</td><td>Both sides keep serving; reconcile later</td><td>Cassandra, DynamoDB (eventual), Riak, CouchDB</td></tr></table></div><div class="callout note"><div class="callout-icon">📝</div><div class="callout-body">CAP is often misquoted as "pick two of three". Without partitions you can have all three; CAP only describes the trade-off <em>during</em> a partition.</div></div></div><div class="section" id="s5-2"><h2><span class="sec-emoji">⏳</span> PACELC: the full picture</h2><p><strong>PACELC</strong> extends CAP: if there is a Partition choose Availability or Consistency; <strong>E</strong>lse (normal operation) choose <strong>L</strong>atency or <strong>C</strong>onsistency. Even without failures, stronger consistency costs latency because replicas must coordinate.</p></div><div class="section" id="s5-3"><h2><span class="sec-emoji">📚</span> Consistency models</h2><div class="table-wrap"><table><tr><th>Model</th><th>Guarantee</th><th>Cost</th></tr><tr><td>Strong / linearizable</td><td>Behaves like a single copy; reads see latest write</td><td>Highest latency, lower availability</td></tr><tr><td>Sequential</td><td>All see operations in one agreed order</td><td>Moderate</td></tr><tr><td>Causal</td><td>Related operations are seen in order</td><td>Lower</td></tr><tr><td>Read-your-writes</td><td>You see your own updates</td><td>Low</td></tr><tr><td>Eventual</td><td>Replicas converge if updates stop</td><td>Lowest latency, highest availability</td></tr></table></div><div class="example"><div class="example-title">EXAMPLE · Social media "likes" vs bank balance</div><ul><li>A like counter can be eventually consistent — a few seconds of stale count is harmless (AP).</li><li>A bank transfer needs strong consistency and transactions (CP).</li></ul></div></div><div class="section" id="s5-4"><h2><span class="sec-emoji">🧪</span> ACID vs BASE</h2><div class="compare"><div class="compare-col"><h4>🏦 ACID</h4><p style="font-size:14px;color:var(--ink-soft);margin:0"><strong>A</strong>tomicity, <strong>C</strong>onsistency, <strong>I</strong>solation, <strong>D</strong>urability. All-or-nothing transactions; typical of relational databases.</p></div><div class="compare-col"><h4>🌐 BASE</h4><p style="font-size:14px;color:var(--ink-soft);margin:0"><strong>B</strong>asically <strong>A</strong>vailable, <strong>S</strong>oft state, <strong>E</strong>ventual consistency. Favours availability and scale in distributed stores.</p></div></div><div class="table-wrap"><table><tr><th>Isolation level</th><th>Prevents</th><th>Still allows</th></tr><tr><td>Read committed</td><td>Dirty reads</td><td>Non-repeatable reads, phantoms</td></tr><tr><td>Repeatable read</td><td>Dirty + non-repeatable reads</td><td>Phantoms (DB-dependent)</td></tr><tr><td>Serializable</td><td>All anomalies</td><td>Lowest concurrency</td></tr></table></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> During a network partition, a CP system will…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Serve stale data from both sides</li><li class="mcq-opt"><span class="opt-letter">B</span> Reject or delay some requests to stay consistent</li><li class="mcq-opt"><span class="opt-letter">C</span> Ignore the partition</li><li class="mcq-opt"><span class="opt-letter">D</span> Lose consistency but stay available</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — CP prefers correctness over availability."></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which fits an eventually consistent design?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Bank ledger</li><li class="mcq-opt"><span class="opt-letter">B</span> Social media like counter</li><li class="mcq-opt"><span class="opt-letter">C</span> Inventory reservation at checkout</li><li class="mcq-opt"><span class="opt-letter">D</span> Payment capture</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — only tolerance for stale values is a fit."></div></div></div>
+    </section>
+    <section class="panel" id="t6" data-toc='[["s6-1", "Case 1 \u00b7 URL Shortener (TinyURL)"], ["s6-2", "Case 2 \u00b7 Distributed Rate Limiter"], ["s6-3", "Case 3 \u00b7 News Feed (Twitter / Instagram)"], ["s6-4", "Case 4 \u00b7 Chat System (WhatsApp)"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">Expert</span></div><div class="panel-eyebrow">Module 06 · High-Level Design Cases</div><h1 class="panel-title">High-Level Design Case Studies</h1><p class="panel-subtitle">Apply everything: four classic designs with requirements, estimates, architecture and trade-offs.</p></div>
+<div class="section" id="s6-1"><h2><span class="sec-emoji">🔗</span> Case 1 · URL Shortener (TinyURL)</h2><p><strong>Requirements:</strong> shorten a URL, redirect fast, optional custom alias, expiry; 100M new URLs/month, read-heavy (100:1), high availability.</p><ol class="step-list"><li><strong>API:</strong> <code>POST /shorten {url}</code> → short code; <code>GET /{code}</code> → 301/302 redirect.</li><li><strong>Code generation:</strong> base62 encode (a–z, A–Z, 0–9) of a unique ID. 7 chars → 62⁷ ≈ 3.5 trillion codes. Unique IDs from a counter service with ranges handed to app servers, or Snowflake-style IDs. Avoid plain hashing of the URL (collisions).</li><li><strong>Storage:</strong> key-value store (code → long URL, created, expiry) — DynamoDB / Cassandra / sharded SQL by code.</li><li><strong>Read path:</strong> CDN/edge + Redis cache in front of DB (hot links dominate). Use 302 if you need analytics, 301 to cut load.</li><li><strong>Scale:</strong> stateless app servers behind an LB; shard by code; rate-limit creation; background job deletes expired links.</li></ol><pre><span class="pre-lang">python</span><code>ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+def base62(n):
+    s = ""
+    while n: n, r = divmod(n, 62); s = ALPHABET[r] + s
+    return s or "0"</code></pre></div><div class="section" id="s6-2"><h2><span class="sec-emoji">🚦</span> Case 2 · Distributed Rate Limiter</h2><p><strong>Goal:</strong> limit each user/IP/API-key to N requests per window across many servers, with very low overhead.</p><ul><li><strong>Algorithm:</strong> token bucket (burst-friendly) or sliding-window counter.</li><li><strong>Shared state:</strong> Redis with atomic operations (<code>INCR</code> + <code>EXPIRE</code> or a Lua script) so all servers see one counter.</li><li><strong>Placement:</strong> API gateway / sidecar; return <code>429 Too Many Requests</code> with <code>Retry-After</code>.</li><li><strong>Trade-offs:</strong> exact global limits cost a network call per request; approximate with local counters synced periodically. Decide fail-open vs fail-closed if Redis is down.</li></ul><pre><span class="pre-lang">python</span><code># Token bucket in one Redis Lua script (atomic) — sketch
+# KEYS[1]=bucket  ARGV: capacity, refill_per_sec, now
+# tokens = min(capacity, tokens + (now-last)*refill); if tokens &gt;= 1: tokens -= 1; allow</code></pre></div><div class="section" id="s6-3"><h2><span class="sec-emoji">📰</span> Case 3 · News Feed (Twitter / Instagram)</h2><ul><li><strong>Fan-out on write (push):</strong> when a user posts, write the post ID into each follower's precomputed feed (Redis list). Reads are O(1) and fast; writes are expensive for celebrities with millions of followers.</li><li><strong>Fan-out on read (pull):</strong> compute the feed at read time by merging followees' recent posts. Cheap writes, slow reads.</li><li><strong>Hybrid:</strong> push for normal users, pull for celebrities, merge at read time.</li><li><strong>Components:</strong> post service + blob store/CDN for media, graph (follow) service, feed service + cache, async workers via Kafka, ranking service.</li><li><strong>Data:</strong> posts sharded by user or post ID; feed lists in Redis; cursor-based pagination.</li></ul></div><div class="section" id="s6-4"><h2><span class="sec-emoji">💬</span> Case 4 · Chat System (WhatsApp)</h2><ul><li><strong>Connection:</strong> WebSockets via a gateway fleet; a presence/session service maps user → gateway server.</li><li><strong>Message flow:</strong> sender → gateway → message service → persist (wide-column store keyed by conversation ID, ordered by message ID) → look up recipient's gateway → deliver; if offline, queue and send a push notification.</li><li><strong>Ordering and delivery:</strong> per-conversation sequence IDs; acks (sent / delivered / read); idempotent retries by message ID.</li><li><strong>Group chat:</strong> fan-out to members through a queue; limit group size or fan-out lazily.</li><li><strong>Media:</strong> upload to object storage, send only the reference. <strong>E2E encryption</strong> keeps servers blind to content.</li></ul><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">In every case: state requirements → estimate → API → data model → architecture → bottleneck deep-dive → trade-offs. Name the alternatives you rejected and why.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Why is plain hashing of a long URL a weak way to generate short codes?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Hashes are too short</li><li class="mcq-opt"><span class="opt-letter">B</span> Collisions need handling and codes are not guaranteed unique</li><li class="mcq-opt"><span class="opt-letter">C</span> Hashes cannot be base62</li><li class="mcq-opt"><span class="opt-letter">D</span> It is too slow</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — collisions are the issue; counters/IDs are safer."></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Celebrity posts in a feed system are best handled by…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Pure push to all followers</li><li class="mcq-opt"><span class="opt-letter">B</span> A hybrid: pull for celebrities, push for others</li><li class="mcq-opt"><span class="opt-letter">C</span> Deleting the feed</li><li class="mcq-opt"><span class="opt-letter">D</span> Using one DB node</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — pure push makes one post fan out to millions of writes."></div></div></div>
+    </section>
+    <section class="panel" id="t7" data-toc='[["s7-1", "What is Low-Level Design?"], ["s7-2", "The four pillars of OOP"], ["s7-3", "SOLID principles"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">→ Intermediate</span></div><div class="panel-eyebrow">Module 07 · Low-Level Design Basics</div><h1 class="panel-title">OOP Fundamentals & SOLID Principles</h1><p class="panel-subtitle">Objects, classes, the four pillars of OOP, relationships, UML basics and the five SOLID principles with before/after code.</p></div>
+<div class="section" id="s7-1"><h2><span class="sec-emoji">🧩</span> What is Low-Level Design?</h2><p><strong>LLD</strong> turns requirements into classes, interfaces and interactions that are easy to understand, change and test. You identify <em>entities</em> (nouns → classes), <em>behaviours</em> (verbs → methods), <em>relationships</em>, and the <em>rules</em> (invariants, state transitions).</p></div><div class="section" id="s7-2"><h2><span class="sec-emoji">🏛️</span> The four pillars of OOP</h2><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#14213D">📦</div><div class="card-title">Encapsulation</div><div class="card-desc">Bundle data with the methods that guard it; hide internals behind a public interface.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🎭</div><div class="card-title">Abstraction</div><div class="card-desc">Expose what an object does, hide how.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🧬</div><div class="card-title">Inheritance</div><div class="card-desc">A class reuses and extends another (is-a). Prefer composition when possible.</div></div><div class="card"><div class="card-icon" style="background:var(--pink-soft);color:#8c1a63">🔀</div><div class="card-title">Polymorphism</div><div class="card-desc">One interface, many implementations; the right method is chosen at runtime.</div></div></div><div class="table-wrap"><table><tr><th>Relationship</th><th>Meaning</th><th>Example</th></tr><tr><td>Association</td><td>Uses / knows</td><td>Teacher — Student</td></tr><tr><td>Aggregation</td><td>Has-a, parts can live independently</td><td>Team — Player</td></tr><tr><td>Composition</td><td>Owns; parts die with the whole</td><td>House — Room</td></tr><tr><td>Inheritance</td><td>Is-a</td><td>Car → Vehicle</td></tr><tr><td>Dependency</td><td>Temporarily uses</td><td>Service uses a Logger</td></tr></table></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><strong>Favour composition over inheritance</strong>: it keeps classes small, swappable and avoids fragile deep hierarchies.</div></div></div><div class="section" id="s7-3"><h2><span class="sec-emoji">🧱</span> SOLID principles</h2><h3>S · Single Responsibility Principle</h3><p>A class should have <strong>one reason to change</strong>.</p><pre><span class="pre-lang">python</span><code># Bad: one class does business logic, persistence and email
+class Order:
+    def total(self): ...
+    def save_to_db(self): ...
+    def send_email(self): ...
+
+# Good: separate responsibilities
+class Order: ...                      # domain logic
+class OrderRepository: ...            # persistence
+class OrderNotifier: ...              # notifications</code></pre><h3>O · Open/Closed Principle</h3><p>Open for extension, <strong>closed for modification</strong>: add new behaviour by adding code, not editing tested code.</p><pre><span class="pre-lang">python</span><code># Bad: every new shape changes this function
+def area(s):
+    if s.kind == "circle": return 3.14159 * s.r ** 2
+    elif s.kind == "rect": return s.w * s.h
+
+# Good: new shapes extend the abstraction
+class Shape:
+    def area(self): raise NotImplementedError
+class Circle(Shape):
+    def __init__(self, r): self.r = r
+    def area(self): return 3.14159 * self.r ** 2
+class Rect(Shape):
+    def __init__(self, w, h): self.w, self.h = w, h
+    def area(self): return self.w * self.h</code></pre><h3>L · Liskov Substitution Principle</h3><p>Subtypes must be usable wherever the base type is expected <em>without breaking behaviour</em>. The classic violation: <code>Square</code> extends <code>Rectangle</code> but setting width also changes height, breaking code that assumes independent sides. Fix: model them as separate shapes under a common interface.</p><h3>I · Interface Segregation Principle</h3><p>Prefer many small, specific interfaces over one fat interface. A <code>Printer</code> class should not be forced to implement <code>fax()</code> and <code>scan()</code> just because a <code>MultiFunctionDevice</code> interface demands it.</p><h3>D · Dependency Inversion Principle</h3><p>High-level modules should depend on <strong>abstractions</strong>, not concrete implementations. Inject dependencies instead of creating them inside.</p><pre><span class="pre-lang">python</span><code>class PaymentGateway:                      # abstraction
+    def charge(self, amount): ...
+
+class Stripe(PaymentGateway):
+    def charge(self, amount): ...
+class PayPal(PaymentGateway):
+    def charge(self, amount): ...
+
+class Checkout:
+    def __init__(self, gateway: PaymentGateway):   # injected
+        self.gateway = gateway
+    def pay(self, amount): self.gateway.charge(amount)   # easy to test with a fake</code></pre><div class="table-wrap"><table><tr><th>Principle</th><th>Smell it fixes</th></tr><tr><td>SRP</td><td>God classes, many reasons to change</td></tr><tr><td>OCP</td><td>Long if/else or switch chains on type</td></tr><tr><td>LSP</td><td>Subclasses throwing "not supported" or breaking assumptions</td></tr><tr><td>ISP</td><td>Empty or throwing methods forced by fat interfaces</td></tr><tr><td>DIP</td><td>new ConcreteClass() deep inside business logic, hard to test</td></tr></table></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> A long if/elif chain on object type that grows with each feature violates…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Single Responsibility</li><li class="mcq-opt"><span class="opt-letter">B</span> Open/Closed</li><li class="mcq-opt"><span class="opt-letter">C</span> Interface Segregation</li><li class="mcq-opt"><span class="opt-letter">D</span> Encapsulation</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — adding a type forces edits; use polymorphism (OCP)."></div></div><div class="mcq" data-answer="0"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Injecting a PaymentGateway interface into Checkout demonstrates…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Dependency Inversion</li><li class="mcq-opt"><span class="opt-letter">B</span> Liskov</li><li class="mcq-opt"><span class="opt-letter">C</span> Inheritance only</li><li class="mcq-opt"><span class="opt-letter">D</span> Singleton</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — depending on abstractions is DIP."></div></div></div>
+    </section>
+    <section class="panel" id="t8" data-toc='[["s8-1", "What are design patterns?"], ["s8-2", "Creational patterns"], ["s8-3", "Structural patterns"], ["s8-4", "Behavioural patterns"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">→ Advanced</span></div><div class="panel-eyebrow">Module 08 · Design Patterns</div><h1 class="panel-title">Design Patterns: Creational, Structural, Behavioural</h1><p class="panel-subtitle">Reusable solutions to recurring design problems — what each pattern is, when to use it and code to recognise it.</p></div>
+<div class="section" id="s8-1"><h2><span class="sec-emoji">📚</span> What are design patterns?</h2><p>A <strong>design pattern</strong> is a named, proven solution template for a common design problem. They give teams a shared vocabulary ("use a Strategy here"). Use them to solve a real problem — not to decorate code.</p><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#14213D">🏗️</div><div class="card-title">Creational</div><div class="card-desc">How objects are created: Singleton, Factory, Abstract Factory, Builder, Prototype.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🧱</div><div class="card-title">Structural</div><div class="card-desc">How objects are composed: Adapter, Decorator, Facade, Proxy, Composite.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🎬</div><div class="card-title">Behavioural</div><div class="card-desc">How objects interact: Strategy, Observer, Command, State, Template Method, Iterator.</div></div></div></div><div class="section" id="s8-2"><h2><span class="sec-emoji">🏗️</span> Creational patterns</h2><div class="table-wrap"><table><tr><th>Pattern</th><th>Intent</th><th>Use when</th></tr><tr><td>Singleton</td><td>Exactly one instance with global access</td><td>Config, logger, connection pool (beware global state & tests)</td></tr><tr><td>Factory Method</td><td>Subclass / method decides which class to create</td><td>Creation logic varies by type</td></tr><tr><td>Abstract Factory</td><td>Create families of related objects</td><td>UI themes, cross-platform kits</td></tr><tr><td>Builder</td><td>Construct complex objects step by step</td><td>Many optional parameters</td></tr><tr><td>Prototype</td><td>Clone an existing object</td><td>Costly creation</td></tr></table></div><pre><span class="pre-lang">python</span><code>class Notification: ...
+class Email(Notification): ...
+class Sms(Notification): ...
+
+def notification_factory(kind):            # Factory
+    return {"email": Email, "sms": Sms}[kind]()
+
+class Singleton:
+    _inst = None
+    def __new__(cls):
+        if cls._inst is None: cls._inst = super().__new__(cls)
+        return cls._inst
+
+class QueryBuilder:                        # Builder (fluent)
+    def __init__(self): self.parts = {}
+    def select(self, c): self.parts["select"] = c; return self
+    def frm(self, t): self.parts["from"] = t; return self
+    def where(self, w): self.parts["where"] = w; return self
+    def build(self): return f"SELECT {self.parts['select']} FROM {self.parts['from']} WHERE {self.parts.get('where', '1=1')}"</code></pre></div><div class="section" id="s8-3"><h2><span class="sec-emoji">🧱</span> Structural patterns</h2><div class="table-wrap"><table><tr><th>Pattern</th><th>Intent</th><th>Example</th></tr><tr><td>Adapter</td><td>Convert one interface into another</td><td>Wrap a legacy payment SDK to your interface</td></tr><tr><td>Decorator</td><td>Add behaviour dynamically by wrapping</td><td>Compression / encryption streams, middleware</td></tr><tr><td>Facade</td><td>Simple front for a complex subsystem</td><td><code>VideoConverter.convert(file)</code></td></tr><tr><td>Proxy</td><td>Stand-in that controls access</td><td>Lazy loading, caching, access control</td></tr><tr><td>Composite</td><td>Treat single and grouped objects uniformly</td><td>File / folder trees, UI components</td></tr></table></div><pre><span class="pre-lang">python</span><code>class Coffee:
+    def cost(self): return 50
+class MilkDecorator:                       # Decorator
+    def __init__(self, base): self.base = base
+    def cost(self): return self.base.cost() + 10
+class SugarDecorator:
+    def __init__(self, base): self.base = base
+    def cost(self): return self.base.cost() + 5
+
+drink = SugarDecorator(MilkDecorator(Coffee()))
+print(drink.cost())    # 65</code></pre></div><div class="section" id="s8-4"><h2><span class="sec-emoji">🎬</span> Behavioural patterns</h2><div class="table-wrap"><table><tr><th>Pattern</th><th>Intent</th><th>Example</th></tr><tr><td>Strategy</td><td>Swap algorithms at runtime</td><td>Pricing, sorting, routing, payment methods</td></tr><tr><td>Observer</td><td>Notify dependents when state changes</td><td>Event listeners, pub/sub, UI updates</td></tr><tr><td>Command</td><td>Encapsulate a request as an object</td><td>Undo/redo, job queues</td></tr><tr><td>State</td><td>Behaviour changes with internal state</td><td>Order status, vending machine, trip lifecycle</td></tr><tr><td>Template Method</td><td>Skeleton in base class, steps in subclasses</td><td>Data import pipelines</td></tr><tr><td>Iterator</td><td>Traverse without exposing structure</td><td>Collections, generators</td></tr></table></div><pre><span class="pre-lang">python</span><code>class PricingStrategy:                     # Strategy
+    def price(self, base): raise NotImplementedError
+class Regular(PricingStrategy):
+    def price(self, base): return base
+class Festival(PricingStrategy):
+    def price(self, base): return base * 0.8
+
+class Cart:
+    def __init__(self, strategy): self.strategy = strategy
+    def total(self, base): return self.strategy.price(base)
+
+class Subject:                             # Observer
+    def __init__(self): self._obs = []
+    def subscribe(self, fn): self._obs.append(fn)
+    def publish(self, event):
+        for fn in self._obs: fn(event)</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Match problem → pattern: "many if/else on type" → Strategy/State; "notify many on change" → Observer; "need undo" → Command; "wrap legacy API" → Adapter; "add features without subclass explosion" → Decorator.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Adding encryption and compression to a stream flexibly is the job of…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Singleton</li><li class="mcq-opt"><span class="opt-letter">B</span> Decorator</li><li class="mcq-opt"><span class="opt-letter">C</span> Factory</li><li class="mcq-opt"><span class="opt-letter">D</span> Iterator</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — wrapping to add behaviour is Decorator."></div></div><div class="mcq" data-answer="0"><div class="mcq-q"><span class="mcq-qnum">Q.</span> "Notify all subscribers when an order is placed" is…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Observer</li><li class="mcq-opt"><span class="opt-letter">B</span> Prototype</li><li class="mcq-opt"><span class="opt-letter">C</span> Facade</li><li class="mcq-opt"><span class="opt-letter">D</span> Builder</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — that is publish/subscribe, i.e. Observer."></div></div></div>
+    </section>
+    <section class="panel" id="t9" data-toc='[["s9-1", "LLD approach"], ["s9-2", "Case 1 \u00b7 Parking Lot"], ["s9-3", "Case 2 \u00b7 Elevator System"], ["s9-4", "Case 3 \u00b7 Rate Limiter (class design)"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">Expert</span></div><div class="panel-eyebrow">Module 09 · Low-Level Design Cases</div><h1 class="panel-title">Low-Level Design Case Studies</h1><p class="panel-subtitle">Turn a requirement into classes: parking lot, elevator and rate limiter — with the reasoning for each decision.</p></div>
+<div class="section" id="s9-1"><h2><span class="sec-emoji">🧠</span> LLD approach</h2><ol class="step-list"><li>Clarify requirements and use cases.</li><li>Extract <strong>entities</strong> (nouns) and <strong>actions</strong> (verbs).</li><li>Define classes, interfaces and relationships.</li><li>Spot variation points → Strategy / Factory / State.</li><li>Write core methods; handle concurrency and edge cases.</li><li>Walk through 2–3 scenarios to validate.</li></ol></div><div class="section" id="s9-2"><h2><span class="sec-emoji">🅿️</span> Case 1 · Parking Lot</h2><p><strong>Requirements:</strong> multiple floors, spot types (bike, car, truck), entry/exit gates, ticketing, fee calculation by duration, find nearest free spot.</p><pre><span class="pre-lang">python</span><code>from enum import Enum
+from datetime import datetime
+
+class VehicleType(Enum): BIKE = 1; CAR = 2; TRUCK = 3
+
+class Vehicle:
+    def __init__(self, plate, vtype): self.plate, self.type = plate, vtype
+
+class Spot:
+    def __init__(self, sid, vtype): self.id, self.type, self.vehicle = sid, vtype, None
+    def free(self): return self.vehicle is None
+
+class Ticket:
+    def __init__(self, vehicle, spot): self.vehicle, self.spot, self.entry = vehicle, spot, datetime.now()
+
+class FeeStrategy:                                   # Strategy for pricing
+    def fee(self, hours): raise NotImplementedError
+class HourlyFee(FeeStrategy):
+    def __init__(self, rate): self.rate = rate
+    def fee(self, hours): return max(1, hours) * self.rate
+
+class ParkingLot:
+    def __init__(self, spots, strategy): self.spots, self.strategy, self.active = spots, strategy, {}
+    def park(self, v):
+        spot = next((s for s in self.spots if s.free() and s.type == v.type), None)
+        if not spot: raise Exception("Lot full")
+        spot.vehicle = v
+        t = Ticket(v, spot); self.active[v.plate] = t; return t
+    def exit(self, plate):
+        t = self.active.pop(plate)
+        hours = (datetime.now() - t.entry).seconds // 3600 + 1
+        t.spot.vehicle = None
+        return self.strategy.fee(hours)</code></pre><ul><li><strong>Why Strategy for fees?</strong> pricing changes often (hourly, flat, weekend) — Open/Closed.</li><li><strong>Concurrency:</strong> two cars may take the same spot; use a lock per floor or an atomic compare-and-set on the spot.</li><li><strong>Extensions:</strong> a min-heap of free spots per type for nearest-spot in O(log n); EV-charging spots; payment service via DIP.</li></ul></div><div class="section" id="s9-3"><h2><span class="sec-emoji">🛗</span> Case 2 · Elevator System</h2><ul><li><strong>Entities:</strong> <code>Elevator</code> (state: IDLE, MOVING_UP, MOVING_DOWN, DOORS_OPEN), <code>Request</code> (floor, direction), <code>Controller</code>.</li><li><strong>State pattern:</strong> behaviour differs per state (a moving elevator ignores "open door").</li><li><strong>Scheduling strategy:</strong> the controller assigns a request to the elevator that is closest and heading the same way (SCAN / LOOK algorithm: keep going in one direction serving stops, then reverse).</li><li><strong>Data:</strong> each elevator keeps two sorted sets of stops (up, down).</li></ul><pre><span class="pre-lang">python</span><code>import bisect
+
+class Elevator:
+    def __init__(self): self.floor, self.dir, self.up, self.down = 0, "IDLE", [], []
+    def add_stop(self, f):
+        target = self.up if f &gt;= self.floor else self.down
+        if f not in target: bisect.insort(target, f)
+        if self.dir == "IDLE": self.dir = "UP" if f &gt;= self.floor else "DOWN"
+    def step(self):
+        if self.dir == "UP" and self.up:
+            self.floor = self.up.pop(0)
+            if not self.up: self.dir = "DOWN" if self.down else "IDLE"
+        elif self.dir == "DOWN" and self.down:
+            self.floor = self.down.pop()
+            if not self.down: self.dir = "UP" if self.up else "IDLE"</code></pre></div><div class="section" id="s9-4"><h2><span class="sec-emoji">🚦</span> Case 3 · Rate Limiter (class design)</h2><pre><span class="pre-lang">python</span><code>import time, threading
+
+class RateLimiter:                                   # interface
+    def allow(self, key): raise NotImplementedError
+
+class TokenBucket(RateLimiter):
+    def __init__(self, capacity, refill_per_sec):
+        self.cap, self.rate, self.buckets, self.lock = capacity, refill_per_sec, {}, threading.Lock()
+    def allow(self, key):
+        now = time.monotonic()
+        with self.lock:
+            tokens, last = self.buckets.get(key, (self.cap, now))
+            tokens = min(self.cap, tokens + (now - last) * self.rate)
+            if tokens &gt;= 1:
+                self.buckets[key] = (tokens - 1, now); return True
+            self.buckets[key] = (tokens, now); return False</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Always discuss: thread-safety, extensibility (new algorithms behind an interface), testing (inject a clock), and memory growth (evict idle keys).</div></div><div class="table-wrap"><table><tr><th>Design question</th><th>Pattern / principle</th></tr><tr><td>Many pricing / matching rules</td><td>Strategy (OCP)</td></tr><tr><td>Object has lifecycle states</td><td>State pattern</td></tr><tr><td>Notify other components of events</td><td>Observer</td></tr><tr><td>Create objects by type</td><td>Factory</td></tr><tr><td>Swap implementations in tests</td><td>Dependency Injection (DIP)</td></tr></table></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> In the parking lot design, fee calculation is best isolated using…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> A giant if/else</li><li class="mcq-opt"><span class="opt-letter">B</span> Strategy pattern</li><li class="mcq-opt"><span class="opt-letter">C</span> Singleton</li><li class="mcq-opt"><span class="opt-letter">D</span> Global variables</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — pricing rules change; Strategy keeps the lot closed to modification."></div></div></div>
+    </section>
+    <section class="panel" id="t10" data-toc='[["s10-1", "High-level design questions"], ["s10-2", "Low-level design questions"], ["s10-3", "How to perform in a design round"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 10 · Interview Preparation</div><h1 class="panel-title">Interview Preparation</h1><p class="panel-subtitle">Click a question to reveal a model answer.</p></div>
+<div class="section" id="s10-1"><h2><span class="sec-emoji">🏙️</span> High-level design questions</h2><details><summary>How do you scale a read-heavy system?</summary><div>Cache aggressively (CDN, Redis), add read replicas, denormalise hot read models, paginate, and move expensive work to async precomputation.</div></details><details><summary>How do you scale a write-heavy system?</summary><div>Shard by a well-distributed key, batch and queue writes (Kafka), use append-friendly stores (LSM / wide-column), and avoid hot partitions.</div></details><details><summary>Explain the CAP theorem with an example.</summary><div>During a partition you choose consistency or availability. A bank ledger picks CP (reject operations rather than diverge); a shopping-cart or like counter picks AP (accept writes and reconcile later).</div></details><details><summary>SQL or NoSQL?</summary><div>Start with SQL for relational data and transactions. Choose NoSQL for massive scale, flexible schemas, or specific access patterns (key-value, wide-column). Often use both.</div></details><details><summary>What is consistent hashing and why?</summary><div>A ring-based key placement where adding or removing nodes moves only ~1/N keys, unlike mod-N hashing which reshuffles nearly everything.</div></details><details><summary>How do you make a service highly available?</summary><div>Remove single points of failure: redundant instances across zones, load balancing with health checks, replicated data, graceful degradation, timeouts/retries/circuit breakers, and automated failover.</div></details></div><div class="section" id="s10-2"><h2><span class="sec-emoji">🔧</span> Low-level design questions</h2><details><summary>Explain SOLID briefly.</summary><div>S: one reason to change. O: extend without modifying. L: subtypes are substitutable. I: small focused interfaces. D: depend on abstractions, inject dependencies.</div></details><details><summary>Composition vs inheritance?</summary><div>Inheritance models is-a but couples subclass to parent. Composition models has-a, is more flexible and testable. Prefer composition; use inheritance for true is-a and shared contracts.</div></details><details><summary>Why can Singleton be harmful?</summary><div>It is hidden global state: hard to test, tightly couples code and can hurt concurrency. Prefer dependency injection with a single instance managed by the container.</div></details><details><summary>Strategy vs State pattern?</summary><div>Both swap behaviour objects. Strategy is chosen by the client (algorithm choice); State transitions internally as the object's state changes.</div></details><details><summary>How do you make a class thread-safe?</summary><div>Prefer immutability; otherwise guard shared mutable state with locks or atomics, minimise lock scope, avoid shared state, and use concurrent collections.</div></details><details><summary>Design a cache with LRU eviction at class level.</summary><div>A <code>Cache</code> interface with <code>EvictionPolicy</code> strategy; storage = hash map + doubly linked list for O(1) get/put; make operations thread-safe; support TTL and metrics.</div></details></div><div class="section" id="s10-3"><h2><span class="sec-emoji">🗣️</span> How to perform in a design round</h2><ul><li>Spend the first minutes on requirements and scale — never jump to boxes.</li><li>Draw a simple end-to-end flow first, then deepen one or two hard parts.</li><li>Make trade-offs explicit: "I choose X because Y; the cost is Z."</li><li>Talk about failure: what if the cache, queue or region goes down?</li><li>For LLD, show the class diagram first, then code the core flow cleanly.</li></ul></div>
+    </section>
+    <section class="panel" id="t11" data-toc='[["s11-1", "Task 1 \u00b7 Estimation"], ["s11-2", "Task 2 \u00b7 HLD"], ["s11-3", "Task 3 \u00b7 LLD"], ["s11-4", "Task 4 \u00b7 Trade-offs"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 11 · Practice</div><h1 class="panel-title">Practice: Design It Yourself</h1><p class="panel-subtitle">Attempt each task first, then compare with the model answer.</p></div>
+      <div class="quiz-progress"><span class="quiz-score">0 / 0 correct</span><div class="quiz-bar-track"><div class="quiz-bar-fill"></div></div><button class="btn quiz-reset-btn">↻ Reset answers</button></div><div class="section" id="s11-1"><h2><span class="sec-emoji">🏋️</span> Task 1 · Estimation</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> A photo app has 50M daily active users, each uploading 2 photos/day of 2 MB. Estimate daily storage, 5-year storage and upload QPS.</div><textarea placeholder="Show your numbers…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Photos/day = 100M → 200 TB/day. 5 years ≈ 200 TB × 365 × 5 ≈ <strong>365 PB</strong> (before compression/replication; store in object storage with tiering). Average upload QPS = 100M / 86,400 ≈ <strong>1,160/s</strong>; peak ≈ 3× → ~3,500/s.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Estimates help you decide…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> The colour of the UI</li><li class="mcq-opt"><span class="opt-letter">B</span> Whether you need caching, sharding or a queue</li><li class="mcq-opt"><span class="opt-letter">C</span> Which language to use</li><li class="mcq-opt"><span class="opt-letter">D</span> The company name</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — scale numbers drive architecture choices."></div></div></div><div class="section" id="s11-2"><h2><span class="sec-emoji">🏋️</span> Task 2 · HLD</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Design a notification system (push, email, SMS) for 10M users that must not lose messages.</div><textarea placeholder="Components and flow…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Producers (services) → notification API → <strong>Kafka</strong> topics per channel → channel workers → third-party providers (FCM/APNs, SES, Twilio). Store user preferences and templates; dedupe with an idempotency key; retry with exponential backoff and a <strong>dead-letter queue</strong>; rate-limit per user/channel; track status in a DB; autoscale workers by queue lag.</div></div><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> You get a spike of 10× traffic on one product page. List five actions.</div><textarea placeholder="Your list…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> CDN-cache the page; cache product data in Redis with jittered TTL; request coalescing for the hot key; autoscale stateless servers; rate-limit abusive clients; degrade non-critical widgets (recommendations); queue non-urgent writes.</div></div></div><div class="section" id="s11-3"><h2><span class="sec-emoji">🏋️</span> Task 3 · LLD</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Which pattern would you use to add Email, SMS and Push channels to the notification system without changing existing code? Sketch the classes.</div><textarea placeholder="Pattern and classes…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> <strong>Strategy + Factory</strong> (and Open/Closed): interface <code>Channel.send(user, msg)</code> with <code>EmailChannel</code>, <code>SmsChannel</code>, <code>PushChannel</code>; a <code>ChannelFactory</code> returns the implementation by name; <code>NotificationService</code> depends on the <code>Channel</code> abstraction (DIP). New channels add a class only.</div></div><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Refactor: a <code>Report</code> class has methods <code>generate()</code>, <code>saveToPdf()</code>, <code>emailToBoss()</code>.</div><textarea placeholder="Which principle and how…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Violates <strong>SRP</strong>. Split into <code>Report</code> (data/generation), <code>PdfExporter</code> and <code>EmailSender</code> (or an <code>Exporter</code> interface + injected dependencies).</div></div></div><div class="section" id="s11-4"><h2><span class="sec-emoji">🏋️</span> Task 4 · Trade-offs</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> A shopping cart service must stay available during a regional outage. CP or AP? Justify.</div><textarea placeholder="Choice and reasoning…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> <strong>AP.</strong> A cart can tolerate temporary inconsistency; losing the ability to add items costs revenue. Use replicated stores with eventual consistency and merge conflicting carts (e.g. union of items / CRDT). Make <em>checkout/payment</em> strongly consistent (CP) instead.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> You shard users by hash(user_id) mod 16 and need to add a 17th shard. The main problem is…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Nothing</li><li class="mcq-opt"><span class="opt-letter">B</span> Almost all keys remap</li><li class="mcq-opt"><span class="opt-letter">C</span> Reads stop working forever</li><li class="mcq-opt"><span class="opt-letter">D</span> Indexes vanish</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — modulus changes remap most keys; use consistent hashing or virtual shards."></div></div></div>
+    </section>
+    <section class="panel" id="t12" data-toc='[["sA-1","Take the Assessment"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag expert">→ Expert</span></div><p class="panel-eyebrow">Module 12</p><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">Test yourself on scalability, caching, sharding, CAP, SOLID, design patterns and design cases — from basic to expert.</p></div>
+      <div class="section" id="sA-1"><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div><div class="assess-intro-text">A timed, full-screen, proctored assessment with a question palette and mark-for-review.</div>
+        <ul class="assess-intro-list"><li><strong>50 questions</strong> per attempt, picked randomly from a 55-question bank; questions and options are shuffled every attempt</li><li><strong>60-minute</strong> timer — auto-submits when time is up</li><li>Runs in <strong>fullscreen</strong>; do not switch tabs/windows or exit fullscreen</li><li><strong>3 warnings</strong> (tab/window switch, leaving fullscreen) auto-submit the assessment</li><li>Copy, cut, paste, right-click and screenshot/print shortcuts are blocked</li><li>Answers and the correct key are shown only after you submit</li></ul>
+        <button class="assess-start-btn" id="assessStartBtn">▶ Start Assessment</button></div></div>
+    </section>
+  </main>
+</div>
+<script>
+
+/* Tabs, dynamic TOC, scroll-spy, progress pill */
+(function(){
+  const tabs=document.querySelectorAll('.tab'),panels=document.querySelectorAll('.panel'),tocEl=document.getElementById('toc'),total=tabs.length,pt=document.getElementById('progressText');
+  function buildToc(panel){const data=JSON.parse(panel.getAttribute('data-toc')||'[]');tocEl.innerHTML=data.map(([id,l])=>`<li><a href="#${id}" data-target="${id}">${l}</a></li>`).join('');const f=tocEl.querySelector('a');if(f)f.classList.add('active');}
+  function activate(i){tabs.forEach((t,k)=>{t.classList.toggle('active',k===i);t.setAttribute('aria-selected',k===i)});panels.forEach((p,k)=>p.classList.toggle('active',k===i));buildToc(panels[i]);pt.textContent=`Tab ${i+1} of ${total}`;window.scrollTo({top:0,behavior:'instant'});}
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{const a=e.target.closest('.toc-list a');if(!a)return;e.preventDefault();const el=document.getElementById(a.dataset.target);if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});});
+  let tk=false;function spy(){const ap=document.querySelector('.panel.active');if(!ap)return;let cur=null;ap.querySelectorAll('.section').forEach(s=>{if(s.getBoundingClientRect().top-180<0)cur=s.id});if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));tk=false;}
+  window.addEventListener('scroll',()=>{if(!tk){requestAnimationFrame(spy);tk=true}},{passive:true});
+  window.resetProgress=()=>activate(0);activate(0);
+})();
+/* Inline MCQs, per-panel score, model answers */
+(function(){
+  function update(panel){const bar=panel.querySelector('.quiz-progress');if(!bar||bar.id)return;const all=panel.querySelectorAll('.mcq').length,done=panel.querySelectorAll('.mcq.answered').length,okc=panel.querySelectorAll('.mcq.answered[data-correct="1"]').length;bar.querySelector('.quiz-score').textContent=`${okc} / ${all} correct`;bar.querySelector('.quiz-bar-fill').style.width=(all?done/all*100:0)+'%';}
+  document.querySelectorAll('.mcq').forEach(m=>{const ans=+m.dataset.answer,opts=m.querySelectorAll('.mcq-opt'),fb=m.querySelector('.mcq-feedback');
+    opts.forEach((o,i)=>{o.tabIndex=0;o.setAttribute('role','button');const go=()=>{if(m.classList.contains('answered'))return;m.classList.add('answered');const r=i===ans;m.dataset.correct=r?'1':'0';opts[ans].classList.add('correct');if(!r)o.classList.add('incorrect');fb.className='mcq-feedback '+(r?'ok':'bad');fb.textContent=r?fb.dataset.ok:fb.dataset.bad;update(m.closest('.panel'));};
+      o.addEventListener('click',go);o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});});});
+  document.querySelectorAll('.panel').forEach(p=>{update(p);const rb=p.querySelector('.quiz-reset-btn');if(rb)rb.addEventListener('click',()=>{p.querySelectorAll('.mcq').forEach(m=>{m.classList.remove('answered');delete m.dataset.correct;m.querySelectorAll('.mcq-opt').forEach(o=>o.classList.remove('correct','incorrect'));const fb=m.querySelector('.mcq-feedback');fb.className='mcq-feedback';fb.textContent='';});p.querySelectorAll('.saq textarea').forEach(t=>t.value='');p.querySelectorAll('.saq-model').forEach(x=>x.classList.remove('show'));p.querySelectorAll('.saq-toggle').forEach(b=>b.textContent='Show model answer');update(p);});});
+  document.querySelectorAll('.saq-toggle').forEach(b=>b.addEventListener('click',()=>{const s=b.nextElementSibling.classList.toggle('show');b.textContent=s?'Hide model answer':'Show model answer';}));
+})();
+/* =============================================================
+   Role Assessment — full-screen, timed, proctored exam
+   (rules & security ported from the CareerBuddy reference assessment)
+   ============================================================= */
+(function(){
+  const ROLE = "High-Level & Low-Level Design";
+  const QUESTION_BANK = [{"q": "A non-functional requirement is…", "options": ["Upload a photo", "p99 latency < 200 ms", "Follow a user", "Search posts"], "answer": 1, "id": "hld-001"}, {"q": "Horizontal scaling means…", "options": ["Bigger server", "More servers behind a load balancer", "Faster disk", "Larger cache only"], "answer": 1, "id": "hld-002"}, {"q": "A load balancer routing by URL path operates at…", "options": ["L4", "L7", "L2", "DNS"], "answer": 1, "id": "hld-003"}, {"q": "Best algorithm for bursty rate limiting is…", "options": ["Token bucket", "Bubble sort", "Round robin", "Binary search"], "answer": 0, "id": "hld-004"}, {"q": "Cache-aside means…", "options": ["Cache writes to DB asynchronously", "App checks cache first and fills it on a miss", "DB pushes to cache", "No TTL is used"], "answer": 1, "id": "hld-005"}, {"q": "Which cache issue is a \"stampede\"?", "options": ["Cold start", "Many requests rebuild an expired hot key at once", "Low TTL", "Slow disk"], "answer": 1, "id": "hld-006"}, {"q": "Write-back caching risks…", "options": ["Slow reads", "Data loss if the cache fails before flushing", "Stale reads always", "No eviction"], "answer": 1, "id": "hld-007"}, {"q": "Consistent hashing minimises…", "options": ["CPU usage", "Key remapping when nodes change", "Disk space", "Network cables"], "answer": 1, "id": "hld-008"}, {"q": "A leaderless quorum guarantees overlap when…", "options": ["R + W > N", "R + W < N", "R = 0", "W = 0"], "answer": 0, "id": "hld-009"}, {"q": "CAP: during a partition a CP system…", "options": ["Serves both sides", "Sacrifices some availability to stay consistent", "Drops consistency", "Stops being distributed"], "answer": 1, "id": "hld-010"}, {"q": "Which fits eventual consistency?", "options": ["Account balance", "Like counter", "Seat reservation", "Payment ledger"], "answer": 1, "id": "hld-011"}, {"q": "Fan-out on write is expensive for…", "options": ["Users with few followers", "Celebrities with millions of followers", "Anonymous users", "Read replicas"], "answer": 1, "id": "hld-012"}, {"q": "Base62 encoding of a unique ID is used in…", "options": ["URL shortener", "Sorting", "Load balancing", "Garbage collection"], "answer": 0, "id": "hld-013"}, {"q": "SRP says a class should have…", "options": ["One reason to change", "One method", "One field", "No dependencies"], "answer": 0, "id": "hld-014"}, {"q": "A violation of Liskov Substitution is…", "options": ["A subclass breaking the base type's expected behaviour", "Using interfaces", "Using composition", "Writing tests"], "answer": 0, "id": "hld-015"}, {"q": "Dependency Inversion is best shown by…", "options": ["new Stripe() inside Checkout", "Injecting a PaymentGateway abstraction", "A global variable", "Static methods only"], "answer": 1, "id": "hld-016"}, {"q": "Which pattern lets you swap pricing algorithms at runtime?", "options": ["Strategy", "Singleton", "Prototype", "Facade"], "answer": 0, "id": "hld-017"}, {"q": "Which pattern adds behaviour by wrapping an object?", "options": ["Decorator", "Iterator", "Builder", "Adapter"], "answer": 0, "id": "hld-018"}, {"q": "Order lifecycle (Created → Paid → Shipped) fits…", "options": ["State pattern", "Singleton", "Flyweight", "Proxy"], "answer": 0, "id": "hld-019"}, {"q": "Prefer composition over inheritance because it…", "options": ["Is more flexible and testable", "Is always faster", "Avoids interfaces", "Needs no classes"], "answer": 0, "id": "hld-020"}, {"q": "What is the first step in a system design interview?", "options": ["Pick a programming language", "Clarify requirements and constraints", "Choose a cloud vendor", "Draw the database schema"], "answer": 1, "id": "hld-021"}, {"q": "A functional requirement describes…", "options": ["How fast it must be", "Who pays for it", "What the system should do", "How it is deployed"], "answer": 2, "id": "hld-022"}, {"q": "Back-of-the-envelope estimation is used to…", "options": ["Write exact code", "Replace load tests", "Size storage, traffic and bandwidth roughly", "Pick colours"], "answer": 2, "id": "hld-023"}, {"q": "If a service gets 10M requests per day, average QPS is about…", "options": ["10,000", "1", "1,150", "115"], "answer": 3, "id": "hld-024"}, {"q": "Read-heavy systems benefit most from…", "options": ["Removing indexes", "More write locks", "Caching and read replicas", "Synchronous logging"], "answer": 2, "id": "hld-025"}, {"q": "Write-heavy systems often benefit from…", "options": ["Disabling replication", "Sharding and append-friendly storage", "Only bigger caches", "Single-node storage"], "answer": 1, "id": "hld-026"}, {"q": "A URL shortener typically generates short keys using…", "options": ["Random numbers with no storage", "Email addresses", "Long URLs only", "A counter encoded in base62 or hashing with collision handling"], "answer": 3, "id": "hld-027"}, {"q": "In a news feed design, fan-out on write means…", "options": ["Deleting old posts", "Computing the feed at read time only", "Using no cache", "Pushing a post into followers' feeds at write time"], "answer": 3, "id": "hld-028"}, {"q": "Fan-out on read is better when…", "options": ["All users have few followers", "No one reads", "Feeds are static", "A user has millions of followers (celebrity)"], "answer": 3, "id": "hld-029"}, {"q": "A rate limiter in system design is placed…", "options": ["At the gateway or edge", "Inside the database only", "After the response", "In the browser only"], "answer": 0, "id": "hld-030"}, {"q": "An API gateway commonly handles…", "options": ["Authentication, routing and throttling", "Compiling code", "Schema design", "Disk partitioning"], "answer": 0, "id": "hld-031"}, {"q": "SQL is preferred when you need…", "options": ["Complex joins and strong transactions", "No schema ever", "Pure key lookups only", "Unstructured blobs only"], "answer": 0, "id": "hld-032"}, {"q": "A NoSQL key-value store is a fit for…", "options": ["Strong relational integrity", "Complex joins", "Ad-hoc multi-table reports", "Simple high-throughput lookups by key"], "answer": 3, "id": "hld-033"}, {"q": "Object storage (like S3) is best for…", "options": ["Low-latency row updates", "Relational joins", "In-memory counters", "Large unstructured files such as images and videos"], "answer": 3, "id": "hld-034"}, {"q": "To store user-uploaded images at scale you would typically…", "options": ["Keep them on one web server", "Store them in SQL text columns", "Use object storage with a CDN", "Email them"], "answer": 2, "id": "hld-035"}, {"q": "A unique ID generator such as Snowflake ensures IDs are…", "options": ["Reused after deletion", "Sequential on one DB only", "Random strings with collisions", "Roughly time-ordered and unique across nodes"], "answer": 3, "id": "hld-036"}, {"q": "Denormalisation trades…", "options": ["Storage and write cost for faster reads", "Reads for fewer indexes", "Consistency for nothing", "Speed for correctness always"], "answer": 0, "id": "hld-037"}, {"q": "A bloom filter can tell you…", "options": ["An item is definitely present", "An item is definitely not present or possibly present", "Items in sorted order", "The exact count of items"], "answer": 1, "id": "hld-038"}, {"q": "Which is a High-Level Design artifact?", "options": ["Unit test", "Component and data-flow diagram", "Variable name", "Method body"], "answer": 1, "id": "hld-039"}, {"q": "Which is a Low-Level Design artifact?", "options": ["Class diagram with responsibilities", "Cost forecast", "Marketing plan", "Network topology only"], "answer": 0, "id": "hld-040"}, {"q": "In a parking lot LLD, which entities are natural?", "options": ["Socket, Thread, Pipe", "Router, Switch, Cable", "Index, Shard, Replica", "ParkingLot, Level, Spot, Vehicle, Ticket"], "answer": 3, "id": "hld-041"}, {"q": "Which pattern fits an elevator controller choosing scheduling algorithms?", "options": ["Flyweight", "Singleton", "Prototype", "Strategy"], "answer": 3, "id": "hld-042"}, {"q": "The State pattern is useful for…", "options": ["Creating families of objects", "Caching results", "Objects whose behaviour depends on a lifecycle state", "Logging"], "answer": 2, "id": "hld-043"}, {"q": "The Factory pattern is used to…", "options": ["Serialise data", "Observe changes", "Wrap interfaces", "Create objects without exposing concrete classes"], "answer": 3, "id": "hld-044"}, {"q": "A Singleton should be used…", "options": ["Everywhere for convenience", "Sparingly, since it adds hidden global state", "To avoid tests", "Instead of dependency injection always"], "answer": 1, "id": "hld-045"}, {"q": "The Builder pattern helps when…", "options": ["Notifying observers", "Choosing algorithms at runtime", "Constructing complex objects step by step", "Adapting interfaces"], "answer": 2, "id": "hld-046"}, {"q": "Dependency injection improves…", "options": ["Memory layout", "Network speed", "Testability and loose coupling", "Compile time only"], "answer": 2, "id": "hld-047"}, {"q": "Which is a sign of a God class?", "options": ["An interface with one method", "A small focused class", "One class doing too many unrelated things", "An immutable value object"], "answer": 2, "id": "hld-048"}, {"q": "High cohesion means…", "options": ["A module's elements belong together", "No interfaces exist", "Modules depend on many others", "Classes are huge"], "answer": 0, "id": "hld-049"}, {"q": "Low coupling means…", "options": ["Classes call each other freely", "No abstractions", "Modules depend minimally on each other's internals", "Everything shares one global"], "answer": 2, "id": "hld-050"}, {"q": "In a chat system, WebSockets are preferred over polling because they…", "options": ["Never disconnect", "Keep a persistent bidirectional connection", "Are stateless", "Use no servers"], "answer": 1, "id": "hld-051"}, {"q": "For a notification system, a queue is useful because it…", "options": ["Stores images", "Removes the need for workers", "Guarantees instant delivery", "Smooths bursts and enables retries"], "answer": 3, "id": "hld-052"}, {"q": "To avoid a single database becoming the bottleneck, you can…", "options": ["Use one big table only", "Remove indexes", "Increase font size", "Add replicas, cache, and shard"], "answer": 3, "id": "hld-053"}, {"q": "A search system commonly uses an inverted index to…", "options": ["Schedule jobs", "Store passwords", "Map terms to the documents containing them", "Compress images"], "answer": 2, "id": "hld-054"}, {"q": "When presenting trade-offs in a design, you should…", "options": ["Avoid alternatives", "Only mention costs", "Claim there are no downsides", "Explain why you chose an option and what you give up"], "answer": 3, "id": "hld-055"}];
+  const TOTAL = Math.min(50, QUESTION_BANK.length);
+  const EXAM_SECONDS = 60*60;
+  const LS_KEY = 'sdeAssessment:' + ROLE;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false, warns=0, proctorOn=false, lastWarn=0;
+  const MAX_WARN = 3;
+  const esc = s => String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const fmt=t=>{const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s};
+  const css=`
+  .cb-exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .cb-exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .cb-exam-top .et-title{font-size:16px;font-weight:800}.cb-exam-top .et-sub{font-size:12px;color:#cdd5e5}.cb-exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}.cb-exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:cbpulse 1s infinite}@keyframes cbpulse{50%{opacity:.5}}
+  .cb-exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}.cb-exam-q-pane{padding:28px 36px;overflow:auto}.cb-exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}.cb-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}.cb-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}.cb-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}.cb-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}.cb-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}.cb-opt:hover{border-color:#14213D;background:#f9f9ff}.cb-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}.cb-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}.cb-opt.sel .k{background:#14213D;color:#fff}.cb-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}.cb-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}.cb-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}.cb-btn.nav:disabled{opacity:.4;cursor:not-allowed}.cb-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}.cb-btn.mark.on{background:#FCA311;color:#14213D}.cb-btn.submit{background:#FCA311;color:#14213D}.cb-btn.primary{background:#14213D;color:#fff}.cb-side-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}.cb-count{font-size:13px;color:#4a5568;font-weight:600}.cb-count b{color:#14213D}.cb-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.cb-pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}.cb-pal.answered{background:#14213D;color:#fff;border-color:#14213D}.cb-pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}.cb-pal.cur{outline:2px solid #14213D;outline-offset:1px}.cb-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}.cb-legend span{display:inline-flex;align-items:center;gap:8px}.cb-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}.cb-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}.cb-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}.cb-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}.cb-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}.cb-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}.cb-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}.cb-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}.cb-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}.cb-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}.cb-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}.cb-rev .r.ok{border-left-color:#38a169}.cb-rev .r.no{border-left-color:#e53e3e}.cb-rev .rq{font-weight:700;margin-bottom:6px}.cb-rev .ra{font-size:13px;margin:2px 0}.cb-rev .ra.wrong{color:#c53030}.cb-rev .ra.cor{color:#276749}.cb-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}.cb-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}.cb-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}.cb-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}.cb-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}.cb-confirm .row{display:flex;gap:10px;justify-content:flex-end}.cb-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}.cb-cover small{font-weight:500;color:#cdd5e5;font-size:14px}.cb-assess-intro{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}.cb-assess-intro h3{margin:0 0 8px;font-size:21px}.cb-assess-intro p{margin:6px 0;color:var(--ink-soft)}.cb-assess-intro ul{margin:12px 0 18px}.cb-start{border:0;background:#14213D;color:#fff;border-radius:9px;padding:12px 18px;font:700 14px inherit;cursor:pointer}.cb-start:hover{opacity:.92}
+  @media(max-width:820px){.cb-exam-main{grid-template-columns:1fr}.cb-exam-side{border-left:none;border-top:1px solid #e2e8f0}.cb-exam-q-pane{padding:22px 18px}.cb-exam-top{padding:10px 14px}}
+  
+.cb-exam-overlay,.cb-exam-overlay *{-webkit-user-select:none;user-select:none}
+`;
+  function injectCss(){if(document.getElementById('cbExamCss'))return;const s=document.createElement('style');s.id='cbExamCss';s.textContent=css;document.head.appendChild(s)}
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function buildAttempt(){
+    return shuffle(QUESTION_BANK.slice()).slice(0,TOTAL).map(q=>{
+      const c=JSON.parse(JSON.stringify(q));
+      const pairs=c.options.map((o,i)=>({o,i}));shuffle(pairs);
+      c.options=pairs.map(x=>x.o);c.answer=pairs.findIndex(x=>x.i===q.answer);return c});
+  }
+  function confirmBox(title,msg,okLabel){return new Promise(resolve=>{injectCss();const d=document.createElement('div');d.className='cb-confirm';d.innerHTML=`<div class="box"><h3>${esc(title)}</h3><p>${esc(msg)}</p><div class="row"><button class="cb-btn nav" data-a="0">Cancel</button><button class="cb-btn primary" data-a="1">${esc(okLabel||'Confirm')}</button></div></div>`;document.body.appendChild(d);d.addEventListener('click',e=>{if(e.target===d){d.remove();resolve(false);return}const b=e.target.closest('[data-a]');if(!b)return;d.remove();resolve(b.dataset.a==='1')})})}
+  function startEntry(){showSplash()}
+  function showSplash(){injectCss();const sp=document.createElement('div');sp.className='cb-splash';sp.id='cbExamSplash';
+    sp.innerHTML=`<div class="card"><h2>🎯 ${esc(ROLE)} — Assessment</h2><p>A timed, full-screen assessment based on this module.</p><ul><li><b>${TOTAL} questions</b> selected randomly from a <b>${QUESTION_BANK.length}-question</b> module bank</li><li><b>${Math.round(EXAM_SECONDS/60)}-minute</b> timer — the assessment auto-submits when time is up</li><li>Navigate freely, answer questions, and <b>mark questions for review</b></li><li>Questions and answer options are shuffled on every attempt</li></ul><p style="font-weight:700;color:#14213D;margin-bottom:6px">Assessment rules</p><ul style="margin-top:0"><li>The assessment runs in <b>fullscreen</b>.</li><li>Do not switch tabs/windows or exit fullscreen.</li><li><b>${MAX_WARN} warnings</b> for tab/window switching or leaving fullscreen will auto-submit the assessment.</li><li>Copy, cut, right-click and common screenshot/print shortcuts are blocked during the assessment.</li></ul><button class="cb-btn primary" id="cbExamBegin" style="width:100%;padding:14px">Start Assessment →</button></div>`;
+    document.body.appendChild(sp);
+    document.getElementById('cbExamBegin').addEventListener('click',()=>{if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});sp.remove();enterExam()})}
+  function enterExam(){injectCss();items=buildAttempt();answers={};marked={};cur=0;remaining=EXAM_SECONDS;examOn=true;document.body.style.overflow='hidden';
+    const ov=document.createElement('div');ov.className='cb-exam-overlay';ov.id='cbExamOverlay';
+    ov.innerHTML=`<div class="cb-exam-top"><div><div class="et-title">${esc(ROLE)} — Assessment</div><div class="et-sub">${TOTAL} questions · one attempt · module question bank</div></div><div class="cb-exam-timer" id="cbExamTimer">${fmt(remaining)}</div></div><div class="cb-exam-main"><div class="cb-exam-q-pane" id="cbExamQ"></div><div class="cb-exam-side"><div class="cb-count">Answered <b id="cbExamAnsN">0</b> / ${TOTAL}</div><h4 class="cb-side-title">Question palette</h4><div class="cb-palette" id="cbExamPal"></div><div class="cb-legend"><span><i style="background:#14213D;border-color:#14213D"></i> Answered</span><span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span><span><i></i> Not answered</span></div><button class="cb-btn submit" id="cbExamSubmit" style="width:100%">Submit Assessment</button></div></div>`;
+    document.body.appendChild(ov);buildPalette();renderQ();timerId=setInterval(tick,1000);window.addEventListener('beforeunload',beforeUnload);startProctor();document.getElementById('cbExamSubmit').addEventListener('click',()=>submitExam(false))}
+  function beforeUnload(e){if(examOn){e.preventDefault();e.returnValue=''}}
+  function tick(){remaining--;const el=document.getElementById('cbExamTimer');if(el){el.textContent=fmt(Math.max(remaining,0));if(remaining<=300||remaining<=EXAM_SECONDS*0.1)el.classList.add('warn')}if(remaining<=0)submitExam(true)}
+  function buildPalette(){const pal=document.getElementById('cbExamPal');pal.innerHTML='';items.forEach((it,n)=>{const b=document.createElement('button');b.className='cb-pal';b.textContent=n+1;b.dataset.n=n;b.addEventListener('click',()=>{cur=n;renderQ()});pal.appendChild(b)});refreshPalette()}
+  function refreshPalette(){document.querySelectorAll('#cbExamPal .cb-pal').forEach(b=>{const n=+b.dataset.n,id=items[n].id;b.classList.toggle('answered',id in answers);b.classList.toggle('marked',!!marked[id]);b.classList.toggle('cur',n===cur)});const el=document.getElementById('cbExamAnsN');if(el)el.textContent=Object.keys(answers).length}
+  function renderQ(){const it=items[cur],id=it.id,pane=document.getElementById('cbExamQ');
+    pane.innerHTML=`<div class="cb-qnum">Question ${cur+1} of ${items.length}</div><div class="cb-qtext">${esc(it.q)}${it.difficulty?`<span class="diff">${esc(it.difficulty)}</span>`:''}</div><div class="cb-opts" id="cbExamOpts">${it.options.map((o,i)=>`<div class="cb-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${esc(o)}</span></div>`).join('')}</div><div class="cb-actions"><button class="cb-btn nav" id="cbPrev" ${cur===0?'disabled':''}>← Previous</button><button class="cb-btn mark${marked[id]?' on':''}" id="cbMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button><button class="cb-btn nav" id="cbNext" ${cur===items.length-1?'disabled':''}>Next →</button></div>`;
+    pane.querySelectorAll('.cb-opt').forEach(el=>el.addEventListener('click',()=>{answers[id]=+el.dataset.i;pane.querySelectorAll('.cb-opt').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');refreshPalette()}));
+    document.getElementById('cbPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ()}});
+    document.getElementById('cbNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ()}});
+    document.getElementById('cbMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ()});refreshPalette()}
+  async function submitExam(auto){if(!examOn)return;const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){const ok=await confirmBox('Submit assessment?',unanswered?`You have ${unanswered} unanswered question(s). Once submitted, you cannot change your answers.`:'Once submitted, you cannot change your answers.','Submit Assessment');if(!ok)return}
+    if(!examOn)return;
+    examOn=false;clearInterval(timerId);window.removeEventListener('beforeunload',beforeUnload);stopProctor();
+    const score=items.reduce((n,it)=>n+(answers[it.id]===it.answer?1:0),0);saveScore(score,items.length);showResults(score,auto)}
+  function saveScore(score,total){try{const a=JSON.parse(localStorage.getItem(LS_KEY)||'[]');a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)))}catch(e){}}
+  function showResults(score,auto){const total=items.length,pct=Math.round(score/total*100);
+    let msg='Keep practising — review the questions you missed and try again.';
+    if(pct>=85)msg='Outstanding — strong command of this module.';else if(pct>=65)msg='Solid performance. Review the harder areas and try another attempt.';else if(pct>=50)msg='Borderline — revisit the module topics and retake the assessment.';
+    const rev=items.map((it,n)=>{const you=answers[it.id],attempted=you!=null;const your=attempted?String.fromCharCode(65+you)+'. '+esc(it.options[you]):'<i>Not answered</i>';const cor=String.fromCharCode(65+it.answer)+'. '+esc(it.options[it.answer]);
+      return `<div class="r ${attempted&&you===it.answer?'ok':'no'}"><div class="rq">Q${n+1}. ${esc(it.q)}</div><div class="ra ${attempted&&you===it.answer?'cor':'wrong'}">Your answer: ${your}</div>${attempted&&you!==it.answer?`<div class="ra cor">Correct: ${cor}</div>`:''}${it.explanation?`<div class="rx">${esc(it.explanation)}</div>`:''}</div>`}).join('');
+    const ov=document.getElementById('cbExamOverlay');
+    ov.innerHTML=`<div class="cb-exam-top"><div class="et-title">Result — ${esc(ROLE)} Assessment</div><button class="cb-btn" id="cbClose" style="background:rgba(255,255,255,.15);color:#fff">✕ Close</button></div><div class="cb-exam-q-pane" style="flex:1"><div class="cb-result"><div class="cb-score">${score} / ${total}</div><div class="cb-rmsg">${pct}% correct — ${msg}</div>${auto?'<div class="cb-rmsg" style="margin-top:6px">The assessment was submitted automatically (time up or warning limit reached).</div>':''}<div style="margin-top:16px"><button class="cb-btn primary" id="cbRetry">↻ Take another assessment</button></div><div class="cb-rev">${rev}</div></div></div>`;
+    document.getElementById('cbRetry').addEventListener('click',()=>{ov.remove();if(document.documentElement.requestFullscreen&&!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});enterExam()});
+    document.getElementById('cbClose').addEventListener('click',()=>closeExam())}
+  function closeExam(){stopProctor();const ov=document.getElementById('cbExamOverlay');if(ov)ov.remove();document.body.style.overflow='';if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}
+  /* ---------- proctoring / security ---------- */
+  function warning(title,msg){if(!proctorOn||!examOn)return;const now=Date.now();if(now-lastWarn<1200)return;lastWarn=now;warns++;
+    const cover=document.getElementById('cbExamCover')||document.createElement('div');cover.className='cb-cover';cover.id='cbExamCover';cover.style.display='flex';
+    cover.innerHTML=`<div>⚠️ ${esc(title)}</div><small>${esc(msg)}</small><small>Warning ${warns} of ${MAX_WARN}</small><button class="cb-btn primary" id="cbResume">Return to assessment</button>`;
+    document.body.appendChild(cover);
+    document.getElementById('cbResume').onclick=()=>{cover.style.display='none';if(document.documentElement.requestFullscreen&&!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});if(warns>=MAX_WARN)submitExam(true)};
+    if(warns>=MAX_WARN)setTimeout(()=>submitExam(true),500)}
+  function visHandler(){if(document.hidden)warning('Tab or window switch detected','Please stay on the assessment screen. Repeated violations will submit the assessment automatically.')}
+  function fsHandler(){if(examOn&&!document.fullscreenElement)warning('Fullscreen exited','The assessment must remain in fullscreen mode.')}
+  function blurHandler(){if(examOn)warning('Focus changed','Please keep the assessment window active.')}
+  function blockEvt(e){if(examOn){e.preventDefault();warning('Action blocked','Copy, cut, paste and right-click are disabled during the assessment.')}}
+  function keyGuard(e){if(!examOn)return;const k=(e.key||'').toLowerCase();
+    if((e.ctrlKey||e.metaKey)&&['c','x','v','p','s','u'].includes(k)){e.preventDefault();warning('Shortcut blocked','This assessment disables copy, print, save and source shortcuts.')}
+    if(k==='f12'||((e.ctrlKey||e.metaKey)&&e.shiftKey&&['i','j','c'].includes(k))){e.preventDefault();warning('Developer tools shortcut blocked','This action is disabled during the assessment.')}}
+  function printGuard(e){if(examOn&&e.key==='PrintScreen'){e.preventDefault();try{navigator.clipboard&&navigator.clipboard.writeText('').catch(function(){})}catch(_){}warning('Screenshot action blocked','Screenshot capture is restricted during the assessment.')}}
+  function startProctor(){warns=0;lastWarn=0;proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);document.addEventListener('fullscreenchange',fsHandler);window.addEventListener('blur',blurHandler);
+    document.addEventListener('contextmenu',blockEvt,true);document.addEventListener('copy',blockEvt,true);document.addEventListener('cut',blockEvt,true);document.addEventListener('paste',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);document.addEventListener('keyup',printGuard,true)}
+  function stopProctor(){proctorOn=false;
+    document.removeEventListener('visibilitychange',visHandler);document.removeEventListener('fullscreenchange',fsHandler);window.removeEventListener('blur',blurHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);document.removeEventListener('copy',blockEvt,true);document.removeEventListener('cut',blockEvt,true);document.removeEventListener('paste',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);document.removeEventListener('keyup',printGuard,true);const c=document.getElementById('cbExamCover');if(c)c.remove()}
+  document.getElementById('assessStartBtn').addEventListener('click',e=>{e.preventDefault();startEntry()});
+  window.addEventListener('keydown',e=>{if(e.key==='Escape'&&examOn)e.preventDefault()});
+})();
+
+</script>
+<script id="cb-tabbar-scroll-js">
+(function(){
+  const wrap=document.getElementById('tabbarWrap'),bar=document.getElementById('tabbar');
+  if(!wrap||!bar)return;
+  const L=wrap.querySelector('.tabbar-arrow.left'),R=wrap.querySelector('.tabbar-arrow.right');
+  const maxScroll=()=>bar.scrollWidth-bar.clientWidth;
+  function update(){
+    const max=maxScroll();
+    wrap.classList.toggle('is-overflow',max>2);
+    wrap.classList.toggle('can-left',bar.scrollLeft>2);
+    wrap.classList.toggle('can-right',bar.scrollLeft<max-2);
+  }
+  function by(dir){bar.scrollBy({left:dir*Math.max(160,bar.clientWidth*0.6),behavior:'smooth'})}
+  L.addEventListener('click',()=>by(-1));
+  R.addEventListener('click',()=>by(1));
+  bar.addEventListener('scroll',update,{passive:true});
+  window.addEventListener('resize',update);
+  if(window.ResizeObserver)new ResizeObserver(update).observe(bar);
+  /* keep the active tab in view / centred whenever the tab changes */
+  function reveal(smooth){
+    const a=bar.querySelector('.tab.active');if(!a||maxScroll()<=2)return;
+    const x=a.getBoundingClientRect().left-bar.getBoundingClientRect().left+bar.scrollLeft;
+    bar.scrollTo({left:Math.max(0,x-(bar.clientWidth-a.offsetWidth)/2),behavior:smooth===false?'auto':'smooth'});
+  }
+  if(window.MutationObserver)new MutationObserver(()=>reveal(true)).observe(bar,{attributes:true,attributeFilter:['class'],subtree:true});
+  /* mouse wheel scrolls the tabs sideways while the pointer is over them */
+  bar.addEventListener('wheel',e=>{
+    const max=maxScroll();if(max<=2||Math.abs(e.deltaY)<=Math.abs(e.deltaX))return;
+    if((e.deltaY<0&&bar.scrollLeft>0)||(e.deltaY>0&&bar.scrollLeft<max-1)){e.preventDefault();bar.scrollLeft+=e.deltaY}
+  },{passive:false});
+  /* click-and-drag with a mouse (touch already scrolls natively) */
+  let down=false,moved=false,sx=0,sl=0;
+  bar.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0||maxScroll()<=2)return;down=true;moved=false;sx=e.clientX;sl=bar.scrollLeft});
+  window.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-sx;if(!moved&&Math.abs(dx)>5){moved=true;bar.classList.add('dragging')}if(moved)bar.scrollLeft=sl-dx});
+  window.addEventListener('pointerup',()=>{if(!down)return;down=false;bar.classList.remove('dragging')});
+  bar.addEventListener('click',e=>{if(moved){e.stopPropagation();e.preventDefault();moved=false}},true);
+  update();reveal(false);
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{update();reveal(false)});
+})();
+</script>
+</body>
+</html><script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+<style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body>
+</html>

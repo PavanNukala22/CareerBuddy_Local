@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cloud Architecture — Cloud Architect Course</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff; --bg-soft:#f7f6f3; --bg-block:#f1f1ef;
+  --ink:#37352f; --ink-soft:#787774; --ink-mute:#9b9a97;
+  --line:#e9e9e7; --line-strong:#d3d3d0;
+  --accent:#14213D; --accent-soft:#eef1f7;
+  --green:#0f7b0f; --green-soft:#ddedea;
+  --orange:#d9730d; --orange-soft:#fadec9;
+  --red:#e03e3e; --red-soft:#ffe2dd;
+  --purple:#22345f; --purple-soft:#eef1f7;
+  --yellow:#dfab01; --yellow-soft:#fdecc8;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body,button,input,textarea,select,table,th,td,h1,h2,h3,h4,p,li,div,span,a,strong,em,small{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
+body{background:var(--bg);color:var(--ink);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+code,pre,pre *,code *{font-family:'Noto Sans Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+
+/* Header */
+.header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand-mark{width:34px;height:34px;display:grid;place-items:center;background:linear-gradient(135deg,#14213D 0%,#2f6fdb 100%);border-radius:8px;color:#fff;font-weight:800;font-size:13px;box-shadow:var(--shadow-sm)}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500;color:var(--ink-soft)}
+.progress-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-soft);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--bg-soft)}
+.tabbar{display:flex;gap:2px;padding:6px 24px;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--line);background:#fff}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{padding:9px 15px;background:transparent;border:none;border-radius:8px;font-size:13.5px;font-weight:500;color:#4a5568;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.tab:hover{background:var(--accent-soft);color:var(--accent)}
+.tab.active{background:var(--accent);color:#fff;font-weight:700}
+
+/* Layout */
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr)}
+@media (max-width:960px){.layout{grid-template-columns:1fr}.toc{display:none}}
+.toc{position:sticky;top:112px;align-self:start;height:calc(100vh - 124px);overflow-y:auto;padding:30px 16px 30px 28px;border-right:1px solid var(--line);scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);font-weight:700;margin-bottom:12px;padding-left:8px}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{display:block;padding:5px 10px;font-size:13px;color:var(--ink-soft);text-decoration:none;border-radius:4px;line-height:1.4}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{color:#fff;background:#16233f;font-weight:600;border-radius:12px;padding:9px 14px}
+.main{padding:44px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:28px 18px 60px}.header-top{padding:12px 16px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel-header{margin-bottom:34px}
+.panel-eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);margin:0 0 8px}
+.panel-title{font-size:38px;line-height:1.15;font-weight:700;letter-spacing:-.02em;margin:0 0 14px}
+.panel-subtitle{font-size:17px;color:var(--ink-soft);margin:0;max-width:760px;line-height:1.6}
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.level-tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.inter{background:#e3ecfb;color:#1d4f9f}
+.level-tag.adv{background:#f5e0e9;color:#8c1a63}
+
+.section{margin-top:46px;scroll-margin-top:140px}
+.section h2{font-size:27px;font-weight:700;letter-spacing:-.01em;margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.section h2 .sec-emoji{font-size:23px}
+.section h3{font-size:18px;font-weight:700;margin:26px 0 8px}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:5px 0}
+.lvl{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.03em;text-transform:uppercase}
+.lvl.b{background:var(--green-soft);color:#0a5f0a}
+.lvl.i{background:#e3ecfb;color:#1d4f9f}
+.lvl.e{background:#f5e0e9;color:#8c1a63}
+
+code{font-size:.87em;background:#f6f5f4;border:1px solid var(--line);padding:1px 6px;border-radius:4px;color:#c2410c}
+pre{background:#1f2430;color:#e6e6e3;padding:18px 20px;border-radius:var(--radius);overflow-x:auto;font-size:13px;line-height:1.65;margin:14px 0;box-shadow:var(--shadow-sm);position:relative}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{position:absolute;top:8px;right:12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9aa3b5;font-weight:700}
+.c{color:#7f8ba3;font-style:italic}
+
+.callout{display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start;background:var(--bg-block);border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout-icon{width:28px;height:28px;display:grid;place-items:center;background:#fff;border-radius:6px;font-size:16px;border:1px solid var(--line)}
+.callout-body{font-size:14.5px;line-height:1.6}
+.callout.tip{background:var(--accent-soft);border-color:#c7d2ea}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.card-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:8px;font-size:18px;margin-bottom:10px}
+.card-title{font-weight:700;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.55}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;border:1px solid var(--line)}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--bg-soft);font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+.table-wrap{overflow-x:auto}
+
+.diagram{background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin:18px 0;text-align:center}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{font-size:12px;color:var(--ink-soft);margin-top:10px;font-style:italic}
+
+.badge{display:inline-block;padding:2px 8px;font-size:11px;font-weight:700;border-radius:4px}
+.badge.blue{background:var(--accent-soft);color:#1d4f9f}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.red{background:var(--red-soft);color:#a82e2e}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:760px){.compare{grid-template-columns:1fr}}
+.compare-col{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.compare-col h4{margin:0 0 8px;font-size:15px;font-weight:700}
+.compare-col p{font-size:13.5px;margin:6px 0}
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{padding:4px 10px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500}
+
+/* stepper (flow list) */
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}
+.flow .st{background:var(--accent);color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600}
+.flow .ar{color:var(--ink-mute);font-weight:700}
+
+/* quiz */
+.quiz-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px 28px;box-shadow:var(--shadow-sm);margin-top:18px}
+.quiz-bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin:10px 0 20px}
+.quiz-bar>div{height:100%;width:0;background:var(--accent);transition:width .3s}
+.qmeta{font-size:12px;font-weight:700;color:var(--ink-soft);letter-spacing:.05em;text-transform:uppercase}
+.qtext{font-size:17px;font-weight:600;margin:6px 0 14px}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;gap:12px;align-items:center;padding:11px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg-soft);cursor:pointer;font-size:14.5px}
+.opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt .k{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0}
+.opt.correct{background:var(--green-soft);border-color:var(--green);font-weight:600}
+.opt.wrong{background:var(--red-soft);border-color:var(--red);font-weight:600}
+.opts.done .opt{pointer-events:none}
+.qexp{margin-top:14px;padding:12px 14px;border-radius:8px;background:var(--accent-soft);font-size:14px;display:none}
+.qbtn{margin-top:16px;background:var(--accent);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
+.qscore{font-size:44px;font-weight:800;text-align:center;margin:14px 0 4px}
+
+.ex{border:1px solid #c7d2ea;border-left:5px solid var(--accent);background:#fff;border-radius:var(--radius);padding:16px 18px;margin:18px 0;box-shadow:var(--shadow-sm)}
+.ex-h{font-weight:700;font-size:15.5px;margin-bottom:8px}
+.ex-tag{display:inline-block;background:var(--accent);color:#fff;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-right:8px;vertical-align:1px}
+.ex-b p,.ex-s p{margin:6px 0}
+.ex details{margin-top:10px;border-top:1px dashed var(--line-strong);padding-top:10px}
+.ex summary{cursor:pointer;font-weight:700;font-size:13.5px;color:var(--accent)}
+.ex-s{margin-top:8px;background:var(--green-soft);border-radius:8px;padding:10px 14px;font-size:14.5px}
+.ex-s ul,.ex-s ol{margin:6px 0}
+.tool{background:var(--bg-soft);border:1px solid var(--line-strong);border-radius:12px;padding:18px;margin:18px 0}
+.tool input[type=number],.tool input[type=text]{padding:7px 10px;border:1px solid var(--line-strong);border-radius:6px;font-size:14px;width:110px}
+.tool label{font-size:13px;font-weight:600;margin-right:6px}
+.tool .out{margin-top:12px}
+.sm td,.sm th{padding:7px 10px;font-size:13px}
+.kbd{font-family:'Noto Sans Mono',monospace;font-size:.85em;background:#fff;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;padding:0 5px}
+.ok{color:var(--green);font-weight:700}.no{color:var(--red);font-weight:700}
+.takeaway{background:linear-gradient(135deg,#14213D,#22345f);color:#fff;border-radius:var(--radius);padding:16px 20px;margin:20px 0}
+.takeaway strong{color:#fff}.takeaway ul{margin:6px 0;padding-left:20px;color:#fff}.takeaway li{color:#fff}
+@media print{.header,.toc{display:none}.panel{display:block!important}}
+
+/* ===== Final assessment start card (same pattern as Royal HRMS) ===== */
+.assess-start-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px}
+.assess-intro-title{font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;border:none;padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease}
+.assess-start-btn:hover{opacity:.9}
+@media print{.exam-overlay,.exam-splash,.exam-cover{display:none!important}}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-top">
+    <div class="brand"><div class="brand-mark">CA</div><span>Cloud Architecture<span class="brand-sub"> · Cloud Architect course</span></span></div>
+    <div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 7</span></span><button class="btn" onclick="resetProgress()">↺ Reset</button></div>
+  </div>
+  <nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1">Cloud Fundamentals</button><button class="tab" data-tab="t2">Well-Architected</button><button class="tab" data-tab="t3">High Availability</button><button class="tab" data-tab="t4">Multi-Region</button><button class="tab" data-tab="t5">Disaster Recovery</button><button class="tab" data-tab="t6">Practice Lab</button><button class="tab" data-tab="t7">Assessment</button></nav>
+</header>
+<div class="layout">
+  <aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside>
+  <main class="main">
+<section class="panel active" id="t1" data-toc='[["s1-1", "What is cloud computing?"], ["s1-2", "Service models: IaaS, PaaS, SaaS, FaaS"], ["s1-3", "Deployment models"], ["s1-4", "Shared responsibility model"], ["s1-5", "Global infrastructure: regions, zones, edge"], ["s1-6", "Service name cheat-sheet across clouds"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span></div><p class="panel-eyebrow">Module 01 · Foundations</p><h1 class="panel-title">Cloud Fundamentals</h1><p class="panel-subtitle">What cloud is, service and deployment models, shared responsibility, regions and zones — plus a cross-cloud service cheat-sheet.</p></div>
+<div class="section" id="s1-1"><h2><span class="sec-emoji">☁️</span> What is cloud computing? <span class="lvl b">Basic</span></h2>
+<p><strong>Cloud computing</strong> means renting computing resources — servers, storage, databases, networking, AI — over the internet from a provider, <em>on demand</em>, and paying only for what you use, instead of buying and running your own data centre.</p>
+<div class="callout tip"><div class="callout-icon">🔌</div><div class="callout-body"><strong>Analogy:</strong> electricity. You don't build a power plant; you plug in and pay per unit. Cloud is compute-as-a-utility: switch on 100 servers for an hour, then switch them off.</div></div>
+<h3>Five essential characteristics (NIST)</h3>
+<div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🖱️</div><div class="card-title">On-demand self-service</div><div class="card-desc">Provision resources yourself in minutes, no ticket to a vendor.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft)">🌐</div><div class="card-title">Broad network access</div><div class="card-desc">Reachable over the network from many device types.</div></div><div class="card"><div class="card-icon" style="background:var(--yellow-soft)">🧮</div><div class="card-title">Resource pooling</div><div class="card-desc">Provider shares hardware across many customers (multi-tenancy).</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft)">📈</div><div class="card-title">Rapid elasticity</div><div class="card-desc">Scale out and in automatically as demand changes.</div></div><div class="card"><div class="card-icon" style="background:var(--red-soft)">📏</div><div class="card-title">Measured service</div><div class="card-desc">Metered usage, pay-as-you-go billing.</div></div></div>
+<p><strong>Example:</strong> a ticket-booking site expects 50× traffic on a film release day. On-premises you must buy servers for the peak and they idle the other 364 days. In the cloud you scale to 200 instances for the day and back to 4 afterward.</p></div><div class="section" id="s1-2"><h2><span class="sec-emoji">🥞</span> Service models: IaaS, PaaS, SaaS, FaaS <span class="lvl b">Basic</span></h2>
+<p>The models differ in <em>how much you manage</em> versus the provider.</p>
+<div class="table-wrap"><table class="sm"><tr><th>Model</th><th>You manage</th><th>Provider manages</th><th>Examples (AWS / Azure / GCP)</th></tr><tr><td><strong>IaaS</strong> — Infrastructure</td><td>OS, runtime, app, data</td><td>Hardware, virtualisation, network</td><td>EC2 / Virtual Machines / Compute Engine</td></tr><tr><td><strong>PaaS</strong> — Platform</td><td>App and data</td><td>OS, runtime, scaling, patches</td><td>Elastic Beanstalk, RDS / App Service, Azure SQL / App Engine, Cloud SQL</td></tr><tr><td><strong>CaaS</strong> — Containers</td><td>Containers, config</td><td>Orchestrator control plane</td><td>EKS, ECS / AKS / GKE</td></tr><tr><td><strong>FaaS / Serverless</strong></td><td>Function code</td><td>Everything else, scale to zero</td><td>Lambda / Functions / Cloud Functions, Cloud Run</td></tr><tr><td><strong>SaaS</strong> — Software</td><td>Users and settings</td><td>The whole application</td><td>Microsoft 365, Salesforce, Gmail</td></tr></table></div>
+<p><strong>Analogy — pizza:</strong> IaaS = buy a kitchen and make it yourself; PaaS = take-and-bake; SaaS = eat at the restaurant.</p></div><div class="section" id="s1-3"><h2><span class="sec-emoji">🏢</span> Deployment models <span class="lvl b">Basic</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Model</th><th>What it is</th><th>Example</th></tr><tr><td>Public cloud</td><td>Shared provider infrastructure</td><td>Startup runs entirely on AWS</td></tr><tr><td>Private cloud</td><td>Dedicated to one organisation (on-prem or hosted)</td><td>Bank runs OpenStack / VMware in its own data centre</td></tr><tr><td>Hybrid cloud</td><td>Private + public, connected and managed together</td><td>Core banking on-prem; web channels on Azure</td></tr><tr><td>Multi-cloud</td><td>Services from 2+ public providers</td><td>Analytics on GCP BigQuery; apps on AWS</td></tr><tr><td>Community cloud</td><td>Shared by organisations with common needs</td><td>Government / healthcare cloud</td></tr></table></div></div><div class="section" id="s1-4"><h2><span class="sec-emoji">🤝</span> Shared responsibility model <span class="lvl b">Basic</span></h2>
+<p>Security in the cloud is split. The provider secures <strong>"of the cloud"</strong> (data centres, hardware, hypervisor). You secure <strong>"in the cloud"</strong> (your data, identities, configuration, network rules).</p>
+<div class="compare"><div class="compare-col" style="background:var(--accent-soft)"><h4>🏭 Provider's job</h4><p>• Physical security of data centres</p><p>• Power, cooling, hardware</p><p>• Hypervisor and core network</p><p>• Managed-service software patching (PaaS)</p></div><div class="compare-col" style="background:var(--yellow-soft)"><h4>🧑‍💻 Your job</h4><p>• IAM and access policies</p><p>• Data classification and encryption choices</p><p>• Network rules (security groups / firewalls)</p><p>• OS patching on IaaS VMs</p><p>• Application code and configuration</p></div></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Most real cloud breaches are <strong>customer misconfiguration</strong> — a public storage bucket, an over-permissive role — not provider failures.</div></div></div><div class="section" id="s1-5"><h2><span class="sec-emoji">🗺️</span> Global infrastructure: regions, zones, edge <span class="lvl b">Basic</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Concept</th><th>Meaning</th><th>AWS / Azure / GCP</th></tr><tr><td><strong>Region</strong></td><td>Geographic area with multiple data centres, e.g. Mumbai, Hyderabad</td><td>Region / Region / Region</td></tr><tr><td><strong>Availability Zone (AZ)</strong></td><td>Isolated data-centre group inside a region (separate power, cooling, network)</td><td>AZ / Availability Zone / Zone</td></tr><tr><td><strong>Edge location</strong></td><td>Small sites near users for CDN, DNS, caching</td><td>CloudFront PoPs / Front Door & CDN PoPs / Cloud CDN</td></tr><tr><td><strong>Local / sovereign zones</strong></td><td>Extensions for low latency or data residency</td><td>Local Zones, Outposts / Edge Zones / Distributed Cloud</td></tr></table></div>
+<p><strong>Choosing a region:</strong> latency to users · data-residency law (e.g. keep data in India) · service availability · price · carbon intensity.</p></div><div class="section" id="s1-6"><h2><span class="sec-emoji">🔀</span> Service name cheat-sheet across clouds <span class="lvl i">Intermediate</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Capability</th><th>AWS</th><th>Azure</th><th>GCP</th></tr><tr><td>Virtual machines</td><td>EC2</td><td>Virtual Machines</td><td>Compute Engine</td></tr><tr><td>Object storage</td><td>S3</td><td>Blob Storage</td><td>Cloud Storage</td></tr><tr><td>Relational DB (managed)</td><td>RDS / Aurora</td><td>Azure SQL / PostgreSQL Flexible</td><td>Cloud SQL / AlloyDB / Spanner</td></tr><tr><td>NoSQL</td><td>DynamoDB</td><td>Cosmos DB</td><td>Firestore / Bigtable</td></tr><tr><td>Kubernetes</td><td>EKS</td><td>AKS</td><td>GKE</td></tr><tr><td>Serverless functions</td><td>Lambda</td><td>Functions</td><td>Cloud Functions / Cloud Run</td></tr><tr><td>Load balancer</td><td>ELB (ALB/NLB)</td><td>Load Balancer / App Gateway</td><td>Cloud Load Balancing</td></tr><tr><td>DNS</td><td>Route 53</td><td>Azure DNS / Traffic Manager</td><td>Cloud DNS</td></tr><tr><td>CDN</td><td>CloudFront</td><td>Front Door / CDN</td><td>Cloud CDN</td></tr><tr><td>Identity</td><td>IAM / Identity Center</td><td>Microsoft Entra ID + RBAC</td><td>Cloud IAM</td></tr><tr><td>Monitoring</td><td>CloudWatch</td><td>Azure Monitor</td><td>Cloud Monitoring</td></tr><tr><td>IaC native</td><td>CloudFormation / CDK</td><td>Bicep / ARM</td><td>Infrastructure Manager (Terraform)</td></tr></table></div><div class="takeaway"><strong>🎯 Key takeaways</strong><ul><li>Cloud = on-demand, elastic, metered resources.</li><li>IaaS → PaaS → SaaS shifts responsibility to the provider.</li><li>Regions contain multiple AZs; design across AZs.</li><li>Shared responsibility: you own configuration, identity and data.</li></ul></div></div>
+</section>
+<section class="panel" id="t2" data-toc='[["s2-1", "What is a Well-Architected Framework?"], ["s2-2", "AWS Well-Architected \u2014 six pillars"], ["s2-3", "Azure Well-Architected \u2014 five pillars"], ["s2-4", "Google Cloud Well-Architected Framework"], ["s2-5", "Side-by-side comparison"], ["s2-6", "Applying a WAF \u2014 worked example"], ["s2-7", "Expert: trade-offs and design principles"], ["s2-8", "Practice"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 02 · Frameworks</p><h1 class="panel-title">Well-Architected Frameworks</h1><p class="panel-subtitle">The AWS, Azure and Google Cloud frameworks: pillars, examples, comparison and how to run a review.</p></div>
+<div class="section" id="s2-1"><h2><span class="sec-emoji">🏛️</span> What is a Well-Architected Framework? <span class="lvl b">Basic</span></h2>
+<p>A <strong>Well-Architected Framework (WAF)</strong> is a provider-published set of <strong>pillars, design principles and review questions</strong> that help you judge whether a workload is secure, reliable, efficient and cost-effective. All three major clouds publish one.</p>
+<div class="callout tip"><div class="callout-icon">🏗️</div><div class="callout-body"><strong>Analogy:</strong> a building-code checklist. It doesn't draw your house, but it tells the inspector what to check: fire exits (reliability), locks (security), electricity bill (cost).</div></div>
+<p>It is a <em>conversation tool</em>, not a certification: you review a workload, find <strong>risks</strong>, and plan improvements. Trade-offs between pillars are expected — e.g. higher reliability costs more.</p></div><div class="section" id="s2-2"><h2><span class="sec-emoji">🟧</span> AWS Well-Architected — six pillars <span class="lvl b">Basic</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Pillar</th><th>Core question</th><th>Example practice</th></tr><tr><td><strong>Operational Excellence</strong></td><td>How do we run and improve operations?</td><td>Infrastructure as code; small frequent deployments; runbooks; post-incident learning</td></tr><tr><td><strong>Security</strong></td><td>How do we protect data and systems?</td><td>Least-privilege IAM, encryption at rest/in transit, CloudTrail logging, MFA</td></tr><tr><td><strong>Reliability</strong></td><td>How does the workload recover from failure?</td><td>Multi-AZ, auto scaling, health checks, tested backups, quotas monitoring</td></tr><tr><td><strong>Performance Efficiency</strong></td><td>Are resources right for the job?</td><td>Right-size instances, caching, CDN, pick managed services, load test</td></tr><tr><td><strong>Cost Optimization</strong></td><td>Do we avoid unnecessary spend?</td><td>Budgets & tags, Savings Plans/Reserved, shut down dev at night, S3 lifecycle</td></tr><tr><td><strong>Sustainability</strong></td><td>Do we minimise environmental impact?</td><td>Efficient hardware (Graviton), higher utilisation, regions with cleaner energy</td></tr></table></div>
+<p>AWS provides the <strong>Well-Architected Tool</strong> in the console and <em>lenses</em> for serverless, SaaS, machine learning, data analytics, etc.</p></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🟦</span> Azure Well-Architected — five pillars <span class="lvl b">Basic</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Pillar</th><th>Focus</th><th>Example</th></tr><tr><td><strong>Reliability</strong></td><td>Resilience and availability; recover from failures</td><td>Availability Zones, health probes, retry policies, backup vault</td></tr><tr><td><strong>Security</strong></td><td>Confidentiality, integrity, availability of data</td><td>Entra ID, Managed Identities, Private Link, Key Vault, Defender for Cloud</td></tr><tr><td><strong>Cost Optimization</strong></td><td>Maximise value, remove waste</td><td>Azure Advisor, Reservations, auto-shutdown, budgets</td></tr><tr><td><strong>Operational Excellence</strong></td><td>Processes keeping systems running</td><td>Bicep/Terraform, Azure DevOps/GitHub Actions, Azure Monitor alerts</td></tr><tr><td><strong>Performance Efficiency</strong></td><td>Scale to meet demand</td><td>Autoscale, Redis cache, Front Door, load testing</td></tr></table></div>
+<p>Azure tooling: <strong>Azure Well-Architected Review</strong>, <strong>Azure Advisor</strong> (recommendations per pillar), and workload guides for AKS, SAP, AI, etc.</p></div><div class="section" id="s2-4"><h2><span class="sec-emoji">🟥</span> Google Cloud Well-Architected Framework <span class="lvl b">Basic</span></h2>
+<p>Google's framework has a <strong>System design</strong> foundation plus five pillars:</p>
+<div class="table-wrap"><table class="sm"><tr><th>Pillar</th><th>Focus</th><th>Example</th></tr><tr><td><strong>Operational excellence</strong></td><td>Efficiently deploy, operate, monitor, manage</td><td>CI/CD, SRE practices, Cloud Monitoring, runbooks</td></tr><tr><td><strong>Security, privacy and compliance</strong></td><td>Secure by design; meet regulations</td><td>IAM, VPC Service Controls, CMEK, Org Policy</td></tr><tr><td><strong>Reliability</strong></td><td>Resilient and highly available</td><td>Regional/multi-regional services, SLOs, error budgets</td></tr><tr><td><strong>Cost optimization</strong></td><td>Maximise business value</td><td>Committed use discounts, labels, billing export, rightsizing recommender</td></tr><tr><td><strong>Performance optimization</strong></td><td>Meet performance needs</td><td>Cloud CDN, autoscaling, Spanner/Bigtable choice, profiling</td></tr></table></div>
+<p>Google adds <strong>perspectives</strong> for AI/ML and industries. Its SRE culture (SLI/SLO/error budget) strongly shapes the Reliability pillar.</p></div><div class="section" id="s2-5"><h2><span class="sec-emoji">⚖️</span> Side-by-side comparison <span class="lvl i">Intermediate</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Theme</th><th>AWS</th><th>Azure</th><th>GCP</th></tr><tr><td>Pillar count</td><td>6</td><td>5</td><td>5 + system design</td></tr><tr><td>Operational</td><td>Operational Excellence</td><td>Operational Excellence</td><td>Operational excellence</td></tr><tr><td>Security</td><td>Security</td><td>Security</td><td>Security, privacy, compliance</td></tr><tr><td>Resilience</td><td>Reliability</td><td>Reliability</td><td>Reliability</td></tr><tr><td>Speed</td><td>Performance Efficiency</td><td>Performance Efficiency</td><td>Performance optimization</td></tr><tr><td>Money</td><td>Cost Optimization</td><td>Cost Optimization</td><td>Cost optimization</td></tr><tr><td>Environment</td><td>Sustainability (own pillar)</td><td>Covered within pillars / guidance</td><td>Sustainability guidance across pillars</td></tr><tr><td>Review tool</td><td>Well-Architected Tool</td><td>WAF Review / Advisor</td><td>Architecture Center + recommenders</td></tr></table></div><div class="callout note"><div class="callout-icon">📝</div><div class="callout-body">The ideas are <strong>the same everywhere</strong>. Learn one deeply (e.g. AWS) and the others take a day. In interviews, name the pillar, then give a concrete example.</div></div></div><div class="section" id="s2-6"><h2><span class="sec-emoji">🔬</span> Applying a WAF — worked example <span class="lvl i">Intermediate</span></h2>
+<p><strong>Workload:</strong> an online store on one EC2 server, one database, public IP, admin credentials in code.</p>
+<div class="table-wrap"><table class="sm"><tr><th>Pillar</th><th>Finding (risk)</th><th>Fix</th></tr><tr><td>Reliability</td><td>Single server and DB = single point of failure</td><td>Two AZs, load balancer, Auto Scaling, RDS Multi-AZ</td></tr><tr><td>Security</td><td>Credentials in source code; wide-open security group</td><td>Secrets Manager; least-privilege IAM role; SG allows only LB</td></tr><tr><td>Operations</td><td>Manual deployments by SSH</td><td>IaC + CI/CD pipeline, blue/green</td></tr><tr><td>Performance</td><td>All images served from the server</td><td>S3 + CloudFront CDN, ElastiCache</td></tr><tr><td>Cost</td><td>Server sized for peak, runs 24/7</td><td>Auto scaling, Savings Plan for baseline</td></tr><tr><td>Sustainability</td><td>Low utilisation</td><td>Right-size, Graviton instances</td></tr></table></div>
+<h3>Review process</h3>
+<div class="flow"><span class="st">Define workload</span><span class="ar">→</span><span class="st">Answer pillar questions</span><span class="ar">→</span><span class="st">Identify risks (High/Med)</span><span class="ar">→</span><span class="st">Prioritise improvement plan</span><span class="ar">→</span><span class="st">Implement</span><span class="ar">→</span><span class="st">Re-review regularly</span></div></div><div class="section" id="s2-7"><h2><span class="sec-emoji">🧠</span> Expert: trade-offs and design principles <span class="lvl e">Expert</span></h2>
+<ul><li><strong>Pillars conflict.</strong> Multi-region active-active (Reliability) multiplies cost and complexity. Architects document the decision with an <strong>ADR (Architecture Decision Record)</strong>: context, options, decision, consequences.</li><li><strong>Design by business criticality:</strong> a payroll batch job and a payment API deserve different availability targets. Tier workloads (Tier 0–3) with explicit SLOs.</li><li><strong>Shift-left WAF:</strong> encode pillars as automated guardrails — policy-as-code, IaC scanning, budget alerts — not only annual reviews.</li><li><strong>Common principles:</strong> stop guessing capacity · test at production scale · automate everything · evolve architectures · drive by data · rehearse failure ("game days").</li></ul><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Anti-patterns: treating the WAF as a one-time audit; "lift and shift" without re-architecting for the cloud; ignoring cost until the first big bill; designing for 99.999% when the business only needs 99.9%.</div></div><div class="takeaway"><strong>🎯 Key takeaways</strong><ul><li>WAF = pillars + questions + review, not a certificate.</li><li>AWS has 6 pillars, Azure 5, GCP 5 plus system design.</li><li>Every finding should map to a concrete fix.</li><li>Document trade-offs; automate guardrails.</li></ul></div></div><div class="section" id="s2-8"><h2><span class="sec-emoji">🏋️</span> Practice <span class="lvl b">Basic</span></h2>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 2.1 — Map practice to pillar</div><div class="ex-b"><p>Which pillar: (a) tagging all resources by cost-centre; (b) enabling MFA on root; (c) running chaos experiments; (d) choosing Graviton/ARM instances to cut energy; (e) adding a CDN.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>(a) Cost Optimization · (b) Security · (c) Reliability (and Operational Excellence) · (d) Sustainability / Cost · (e) Performance Efficiency.</p></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 2.2 — Review a design</div><div class="ex-b"><p>A hospital app stores patient files in a public bucket, runs in one AZ, deployments are manual. List top 3 risks and fixes.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><ol><li><strong>Security (High):</strong> public bucket with PHI → block public access, encryption with KMS, access via signed URLs / IAM, audit logging.</li><li><strong>Reliability (High):</strong> single AZ → multi-AZ with load balancer and Multi-AZ DB; tested backups.</li><li><strong>Operations (Medium):</strong> manual deployments → CI/CD + IaC, rollback plan.</li></ol></div></details></div></div>
+</section>
+<section class="panel" id="t3" data-toc='[["s3-1", "What is high availability?"], ["s3-2", "Building blocks of an HA architecture"], ["s3-3", "Calculating availability"], ["s3-4", "HA patterns: active-active vs active-passive"], ["s3-5", "Failure domains and graceful degradation"], ["s3-6", "Expert: static stability, cell-based design, SLOs"], ["s3-7", "Practice"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 03 · Resilience</p><h1 class="panel-title">High Availability</h1><p class="panel-subtitle">Availability maths, redundancy, multi-AZ design, resilience patterns and expert-level static stability and cells.</p></div>
+<div class="section" id="s3-1"><h2><span class="sec-emoji">⏱️</span> What is high availability? <span class="lvl b">Basic</span></h2>
+<p><strong>High availability (HA)</strong> is designing a system so it keeps working — with little or no downtime — when components fail. You can't prevent failures; you design so that <em>one failure does not stop the service</em>.</p>
+<div class="callout tip"><div class="callout-icon">🏥</div><div class="callout-body"><strong>Analogy:</strong> a hospital with a backup generator, two entrances and several doctors on shift. If one fails, patients are still treated.</div></div>
+<h3>Availability and the "nines"</h3>
+<div class="table-wrap"><table class="sm"><tr><th>Availability</th><th>Downtime / year</th><th>Downtime / month</th><th>Typical target</th></tr><tr><td>99%</td><td>3.65 days</td><td>~7.3 hours</td><td>Dev/test, batch</td></tr><tr><td>99.9%</td><td>8.76 hours</td><td>~43 minutes</td><td>Standard business apps</td></tr><tr><td>99.95%</td><td>4.38 hours</td><td>~22 minutes</td><td>Important apps</td></tr><tr><td>99.99%</td><td>52.6 minutes</td><td>~4.4 minutes</td><td>Payments, core APIs</td></tr><tr><td>99.999%</td><td>5.26 minutes</td><td>~26 seconds</td><td>Telecom, trading — very costly</td></tr></table></div>
+<p><em>Formula:</em> Availability = Uptime ÷ (Uptime + Downtime).</p>
+<h3>Vocabulary</h3>
+<div class="table-wrap"><table class="sm"><tr><th>Term</th><th>Meaning</th></tr><tr><td>SPOF</td><td>Single Point of Failure — one component whose failure stops everything</td></tr><tr><td>Redundancy</td><td>Extra copies so another can take over</td></tr><tr><td>Failover</td><td>Automatic switch from failed to healthy component</td></tr><tr><td>Fault tolerance</td><td>Keeps running <em>without any</em> interruption when a part fails (stronger than HA)</td></tr><tr><td>Resilience</td><td>Ability to recover quickly from disruption</td></tr><tr><td>SLA / SLO / SLI</td><td>Contract / internal target / measured indicator</td></tr></table></div></div><div class="section" id="s3-2"><h2><span class="sec-emoji">🧱</span> Building blocks of an HA architecture <span class="lvl b">Basic</span></h2>
+<div class="diagram"><svg viewBox="0 0 780 330" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans" font-size="12.5" font-weight="600">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs>
+<rect x="150" y="105" width="300" height="210" rx="12" fill="#f7f6f3" stroke="#d3d3d0" stroke-dasharray="5 4"/><text x="300" y="124" text-anchor="middle" fill="#787774">Availability Zone A</text>
+<rect x="470" y="105" width="300" height="210" rx="12" fill="#f7f6f3" stroke="#d3d3d0" stroke-dasharray="5 4"/><text x="620" y="124" text-anchor="middle" fill="#787774">Availability Zone B</text>
+<g fill="#eef1f7" stroke="#14213D" stroke-width="1.6"><rect x="20" y="20" width="110" height="46" rx="8"/><rect x="190" y="20" width="220" height="46" rx="8" fill="#fdecc8" stroke="#dfab01"/></g>
+<g fill="#ddedea" stroke="#0f7b0f" stroke-width="1.6"><rect x="175" y="140" width="250" height="50" rx="8"/><rect x="495" y="140" width="250" height="50" rx="8"/></g>
+<g fill="#eef1f7" stroke="#14213D" stroke-width="1.6"><rect x="175" y="205" width="250" height="40" rx="8"/><rect x="495" y="205" width="250" height="40" rx="8"/></g>
+<g fill="#f5e0e9" stroke="#8c1a63" stroke-width="1.6"><rect x="175" y="258" width="250" height="44" rx="8"/><rect x="495" y="258" width="250" height="44" rx="8"/></g>
+<g stroke="#37352f" stroke-width="1.6" fill="none" marker-end="url(#ar)"><line x1="130" y1="43" x2="190" y2="43"/><path d="M270 66 L270 140"/><path d="M330 66 C330 100 560 90 600 140"/><line x1="300" y1="245" x2="300" y2="258"/><line x1="620" y1="245" x2="620" y2="258"/></g>
+<path d="M425 280 L495 280" stroke="#8c1a63" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#ar)" fill="none"/>
+<g text-anchor="middle" fill="#14213D"><text x="75" y="48">Users</text><text x="300" y="48">Load balancer (multi-AZ)</text><text x="300" y="170">Web / App servers</text><text x="620" y="170">Web / App servers</text><text x="300" y="230" font-weight="400">Auto Scaling group</text><text x="620" y="230" font-weight="400">Auto Scaling group</text><text x="300" y="285">DB primary</text><text x="620" y="285">DB standby</text><text x="460" y="273" font-size="10" font-weight="400" fill="#8c1a63">sync copy</text></g></svg><div class="diagram-caption">Classic multi-AZ web architecture: no single point of failure at any tier.</div></div>
+<div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft)">⚖️</div><div class="card-title">Load balancer</div><div class="card-desc">Spreads traffic across healthy instances in multiple AZs; removes failed ones via health checks.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft)">📈</div><div class="card-title">Auto Scaling</div><div class="card-desc">Replaces failed instances and adds capacity under load.</div></div><div class="card"><div class="card-icon" style="background:var(--yellow-soft)">🧬</div><div class="card-title">Stateless apps</div><div class="card-desc">Session data in Redis/DB, not on the server — any instance can serve any user.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft)">🗄️</div><div class="card-title">Multi-AZ database</div><div class="card-desc">Synchronous standby in another AZ with automatic failover (RDS Multi-AZ, Azure zone-redundant HA, Cloud SQL HA).</div></div><div class="card"><div class="card-icon" style="background:var(--red-soft)">📦</div><div class="card-title">Shared / replicated storage</div><div class="card-desc">S3 / Blob / GCS replicate across AZs automatically.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">❤️</div><div class="card-title">Health checks</div><div class="card-desc">Detect failure quickly: HTTP /health, TCP, deep checks.</div></div></div></div><div class="section" id="s3-3"><h2><span class="sec-emoji">🧮</span> Calculating availability <span class="lvl i">Intermediate</span></h2>
+<p><strong>Serial</strong> (all must work): multiply availabilities. <strong>Parallel</strong> (any one is enough): 1 − (1−A)<sup>n</sup>.</p>
+<pre><span class="pre-lang">worked example</span><code>Serial:   Web 99.9% × App 99.9% × DB 99.9%  = 0.999^3 = 99.70%    (worse than each part!)
+Parallel: two web servers, each 99.9%        = 1 - (0.001)^2 = 99.9999%
+Mixed:    LB 99.99% × [2 x App 99.9% in parallel = 99.9999%] × DB Multi-AZ 99.95%
+          = 0.9999 × 0.999999 × 0.9995 ≈ 99.94%</code></pre><div class="callout note"><div class="callout-icon">📝</div><div class="callout-body">Real availability is limited by the <strong>weakest shared dependency</strong> (one DNS provider, one deployment pipeline, one region) and by <strong>human error</strong> — most outages come from bad changes, not hardware.</div></div></div><div class="section" id="s3-4"><h2><span class="sec-emoji">🔁</span> HA patterns: active-active vs active-passive <span class="lvl i">Intermediate</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Pattern</th><th>How</th><th>Pros</th><th>Cons</th><th>Example</th></tr><tr><td><strong>Active-Active</strong></td><td>All nodes serve traffic simultaneously</td><td>No idle capacity; instant failover; scales</td><td>Needs stateless/replicated design; capacity headroom</td><td>Web tier behind ALB across 3 AZs</td></tr><tr><td><strong>Active-Passive</strong></td><td>Primary serves; standby waits</td><td>Simpler for stateful systems</td><td>Standby idle; failover takes seconds–minutes</td><td>RDS primary + standby</td></tr><tr><td><strong>N+1 / N+M</strong></td><td>N needed + spare(s)</td><td>Cost-efficient</td><td>Capacity during multiple failures</td><td>Cluster with 1 spare node</td></tr><tr><td><strong>Quorum / consensus</strong></td><td>Majority must agree (3 or 5 nodes)</td><td>Avoids split-brain</td><td>Needs odd number</td><td>etcd, Kafka, Cosmos DB</td></tr></table></div>
+<h3>Examples per cloud</h3>
+<div class="table-wrap"><table class="sm"><tr><th>Need</th><th>AWS</th><th>Azure</th><th>GCP</th></tr><tr><td>Spread VMs across zones</td><td>Auto Scaling group with 3 AZs</td><td>VM Scale Set — zone-redundant</td><td>Regional Managed Instance Group</td></tr><tr><td>HA load balancing</td><td>ALB / NLB (multi-AZ)</td><td>Standard LB zone-redundant / App Gateway v2</td><td>Regional external Application LB</td></tr><tr><td>HA relational DB</td><td>RDS Multi-AZ / Aurora (6 copies across 3 AZs)</td><td>Azure SQL zone-redundant</td><td>Cloud SQL HA / Spanner regional</td></tr><tr><td>Shared file storage</td><td>EFS (multi-AZ)</td><td>Azure Files ZRS</td><td>Filestore regional</td></tr></table></div></div><div class="section" id="s3-5"><h2><span class="sec-emoji">🧯</span> Failure domains and graceful degradation <span class="lvl i">Intermediate</span></h2>
+<div class="flow"><span class="st">Instance</span><span class="ar">→</span><span class="st">Rack / host</span><span class="ar">→</span><span class="st">Availability Zone</span><span class="ar">→</span><span class="st">Region</span><span class="ar">→</span><span class="st">Provider / global</span></div>
+<p>Each step is a bigger <strong>failure domain</strong>. Spread replicas across at least two (preferably three) AZs. Use <strong>graceful degradation</strong>: if recommendations service fails, show the product page without it — don't fail the whole page.</p>
+<h3>Resilience patterns</h3>
+<div class="table-wrap"><table class="sm"><tr><th>Pattern</th><th>What it does</th></tr><tr><td>Retry with exponential backoff + jitter</td><td>Retries transient errors without overwhelming the service</td></tr><tr><td>Timeout</td><td>Never wait forever</td></tr><tr><td>Circuit breaker</td><td>Stop calling a failing dependency; fail fast; recover later</td></tr><tr><td>Bulkhead</td><td>Isolate resource pools so one failure can't consume everything</td></tr><tr><td>Queue / buffer</td><td>Absorb spikes; decouple producers from consumers</td></tr><tr><td>Idempotency</td><td>Safe retries (same request twice = same result)</td></tr></table></div></div><div class="section" id="s3-6"><h2><span class="sec-emoji">🧠</span> Expert: static stability, cell-based design, SLOs <span class="lvl e">Expert</span></h2>
+<ul><li><strong>Static stability:</strong> after an AZ failure the system keeps working with <em>pre-provisioned</em> capacity — don't depend on scaling up in a crisis (control-plane may be impaired).</li><li><strong>Cell-based architecture:</strong> split customers into independent "cells" (full stacks). A bad deploy or noisy tenant hits one cell, limiting blast radius to e.g. 5% of users.</li><li><strong>Deployment safety:</strong> canary / blue-green, automatic rollback, change freezes; most incidents are caused by changes.</li><li><strong>SLO engineering:</strong> define SLI (e.g. % requests &lt; 300 ms and non-5xx), target SLO 99.9%, <strong>error budget</strong> = 0.1% ≈ 43 min/month. Budget burned → freeze features, fix reliability.</li><li><strong>Dependency mapping:</strong> compute each dependency's availability; a hard dependency on a 99.5% service caps you at 99.5%.</li><li><strong>Quotas &amp; capacity:</strong> request quota increases and capacity reservations in advance for failover regions/AZs.</li></ul><div class="takeaway"><strong>🎯 Key takeaways</strong><ul><li>HA = no single point of failure across tiers and AZs.</li><li>Serial dependencies reduce availability; parallel redundancy raises it.</li><li>Use stateless apps, health checks, auto scaling, Multi-AZ data.</li><li>Expert level: static stability, cells, SLOs and safe deployments.</li></ul></div></div><div class="section" id="s3-7"><h2><span class="sec-emoji">🏋️</span> Practice <span class="lvl b">Basic</span></h2>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 3.1 — Find the SPOFs</div><div class="ex-b"><p>Architecture: one DNS provider, one ALB (multi-AZ), 2 app servers both in AZ-a, one RDS instance (no standby), one NAT gateway in AZ-a. List SPOFs.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><ul><li>App servers all in AZ-a → place across AZs.</li><li>RDS single instance → enable Multi-AZ.</li><li>NAT gateway in one AZ → one NAT per AZ.</li><li>Single DNS provider → consider secondary DNS for critical domains (optional).</li></ul></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 3.2 — Calculate</div><div class="ex-b"><p>Two independent app servers at 99.5% each in parallel, then a DB at 99.95% in series. Overall?</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>Parallel: 1 − 0.005² = 99.9975%. Overall: 0.999975 × 0.9995 ≈ <strong>99.947%</strong>.</p></div></details></div></div>
+</section>
+<section class="panel" id="t4" data-toc='[["s4-1", "Why multi-region?"], ["s4-2", "Multi-region patterns"], ["s4-3", "Global traffic routing"], ["s4-4", "Data replication & consistency"], ["s4-5", "Example: multi-region e-commerce"], ["s4-6", "Expert: operating multi-region"], ["s4-7", "Practice"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 04 · Global design</p><h1 class="panel-title">Multi-Region Redundancy</h1><p class="panel-subtitle">When and how to go multi-region: patterns, global routing, data replication, consistency and operations.</p></div>
+<div class="section" id="s4-1"><h2><span class="sec-emoji">🌍</span> Why multi-region? <span class="lvl b">Basic</span></h2>
+<p>A region is large but not immortal: power events, networking faults, severe weather or faulty provider changes can affect a whole region. <strong>Multi-region</strong> architecture runs your workload in two or more regions.</p>
+<div class="cards"><div class="card"><div class="card-icon" style="background:var(--red-soft)">🛡️</div><div class="card-title">Disaster survival</div><div class="card-desc">Region-wide outage does not stop the business.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">⚡</div><div class="card-title">Lower latency</div><div class="card-desc">Serve users from the nearest region (India + Europe + US).</div></div><div class="card"><div class="card-icon" style="background:var(--yellow-soft)">⚖️</div><div class="card-title">Compliance / data residency</div><div class="card-desc">Keep EU data in EU, Indian data in India.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft)">📈</div><div class="card-title">Capacity & scale</div><div class="card-desc">Spread load; avoid single-region limits.</div></div></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Multi-region is <strong>expensive and complex</strong>. Many workloads are better served by a well-built multi-AZ design plus a tested DR plan. Choose multi-region only when the business requirement (RTO/RPO, latency, regulation) justifies it.</div></div></div><div class="section" id="s4-2"><h2><span class="sec-emoji">🏗️</span> Multi-region patterns <span class="lvl i">Intermediate</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Pattern</th><th>Description</th><th>Example</th><th>RTO</th></tr><tr><td><strong>Active-Passive (failover)</strong></td><td>Primary region serves; secondary standby with replicated data</td><td>Mumbai primary, Hyderabad standby</td><td>Minutes</td></tr><tr><td><strong>Active-Active</strong></td><td>Both regions serve users; data replicated both ways</td><td>Global SaaS with users in Asia and Europe</td><td>Near zero</td></tr><tr><td><strong>Read-local, write-global</strong></td><td>Reads served locally; writes go to one primary region</td><td>Content site: global reads, one write region</td><td>Minutes for writes</td></tr><tr><td><strong>Geo-partitioned (sharded by region)</strong></td><td>Each user's data lives in a home region</td><td>EU customers → Frankfurt only</td><td>Per-region</td></tr><tr><td><strong>Follow-the-sun</strong></td><td>Compute shifts between regions by time-of-day</td><td>Batch/analytics jobs</td><td>n/a</td></tr></table></div></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🧭</span> Global traffic routing <span class="lvl i">Intermediate</span></h2>
+<p>Users must be sent to a healthy, close region. Use <strong>global DNS</strong> or <strong>global load balancers</strong>:</p>
+<div class="table-wrap"><table class="sm"><tr><th>Capability</th><th>AWS</th><th>Azure</th><th>GCP</th></tr><tr><td>DNS routing policies</td><td>Route 53: latency, failover, weighted, geolocation</td><td>Traffic Manager (DNS-based)</td><td>Cloud DNS routing policies</td></tr><tr><td>Global anycast load balancing</td><td>Global Accelerator, CloudFront</td><td>Front Door</td><td>Global external Application LB</td></tr><tr><td>Health-based failover</td><td>Route 53 health checks + failover records</td><td>Probes in Front Door / TM</td><td>LB health checks, backend failover</td></tr></table></div>
+<pre><span class="pre-lang">example</span><code><span class="c"># Route 53 failover (conceptual)</span>
+app.example.com  PRIMARY    -&gt; ALB in ap-south-1   (health check: /health)
+app.example.com  SECONDARY  -&gt; ALB in ap-south-2   (used only if primary unhealthy)
+TTL: 30-60 s   (low TTL = faster failover; DNS caching can still delay some clients)</code></pre></div><div class="section" id="s4-4"><h2><span class="sec-emoji">🔄</span> Data replication & consistency <span class="lvl i">Intermediate</span></h2>
+<p>Compute is easy to duplicate; <strong>data is the hard part</strong>. Two key terms:</p>
+<ul><li><strong>Synchronous replication:</strong> write confirmed only after both copies saved → RPO ≈ 0 but higher latency (needs short distance).</li><li><strong>Asynchronous replication:</strong> write confirmed locally, copied later → fast but small data loss (RPO seconds) on failure.</li></ul>
+<div class="table-wrap"><table class="sm"><tr><th>Need</th><th>AWS</th><th>Azure</th><th>GCP</th></tr><tr><td>Object storage replication</td><td>S3 Cross-Region Replication</td><td>Blob GRS / RA-GRS, object replication</td><td>Dual-/multi-region buckets, Turbo replication</td></tr><tr><td>Relational DB</td><td>Aurora Global Database, RDS cross-region read replica</td><td>Azure SQL geo-replication / failover groups</td><td>Cloud SQL cross-region replica, Spanner multi-region</td></tr><tr><td>NoSQL global writes</td><td>DynamoDB Global Tables</td><td>Cosmos DB multi-region writes</td><td>Firestore multi-region, Bigtable replication, Spanner</td></tr><tr><td>Container images</td><td>ECR replication</td><td>ACR geo-replication</td><td>Artifact Registry multi-region</td></tr></table></div>
+<h3>CAP theorem in one minute</h3>
+<p>During a network partition between regions you must choose: <strong>Consistency</strong> (reject some requests to stay correct) or <strong>Availability</strong> (accept requests, resolve conflicts later). Banks choose consistency; social feeds usually choose availability (<em>eventual consistency</em>).</p>
+<p><strong>Conflict handling in active-active:</strong> last-writer-wins, versioning/CRDTs, or partition ownership (each record has a "home" region).</p></div><div class="section" id="s4-5"><h2><span class="sec-emoji">🧪</span> Example: multi-region e-commerce <span class="lvl i">Intermediate</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Layer</th><th>Design</th></tr><tr><td>DNS / edge</td><td>Route 53 latency routing + CloudFront; health checks per region</td></tr><tr><td>Compute</td><td>Same container image deployed to EKS in Mumbai and Singapore via CI/CD</td></tr><tr><td>Sessions</td><td>Stateless JWT; or DynamoDB Global Tables</td></tr><tr><td>Catalogue DB</td><td>Aurora Global Database: primary writer Mumbai, read replicas Singapore (RPO ≈ 1 s)</td></tr><tr><td>Orders</td><td>DynamoDB Global Tables with order-id keyed to home region</td></tr><tr><td>Media</td><td>S3 CRR to the second region</td></tr><tr><td>Config & secrets</td><td>Replicated Secrets Manager / Parameter Store</td></tr><tr><td>Deploy</td><td>Pipeline deploys to Region B first (canary), then A</td></tr><tr><td>Failover test</td><td>Quarterly game day: disable region A, watch region B handle 100%</td></tr></table></div></div><div class="section" id="s4-6"><h2><span class="sec-emoji">🧠</span> Expert: operating multi-region <span class="lvl e">Expert</span></h2>
+<ul><li><strong>Region independence:</strong> avoid shared global dependencies in the data path (a global control plane or a single identity provider is a hidden SPOF). Know which services are global vs regional.</li><li><strong>Control plane vs data plane:</strong> during large outages, <em>data planes</em> (serving requests) are far more reliable than <em>control planes</em> (creating resources, changing DNS). Pre-provision and use <strong>static stability</strong>; keep failover as a simple data-plane action (health-check driven).</li><li><strong>Split-brain:</strong> two regions both think they are primary → conflicting writes. Use fencing, quorum or a witness.</li><li><strong>Cost control:</strong> data transfer between regions is billed — compress, replicate only what is needed, tier non-critical data to async or backup-only.</li><li><strong>Compliance:</strong> verify replication doesn't move regulated data to a non-permitted country; use Org Policy / SCP region restrictions.</li><li><strong>Testing:</strong> regular, automated failover and failback drills; measure actual RTO/RPO; chaos engineering (AWS Fault Injection Service, Azure Chaos Studio, Gremlin).</li></ul><div class="takeaway"><strong>🎯 Key takeaways</strong><ul><li>Use multi-region only when RTO/RPO, latency or law demand it.</li><li>Global DNS / anycast routes users to healthy regions.</li><li>Replication choice (sync vs async) sets RPO and latency.</li><li>Prefer data-plane failover and pre-provisioned capacity.</li></ul></div></div><div class="section" id="s4-7"><h2><span class="sec-emoji">🏋️</span> Practice <span class="lvl b">Basic</span></h2>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 4.1 — Choose a pattern</div><div class="ex-b"><p>(a) Internal HR portal, India only, can tolerate 4 h downtime. (b) Global gaming leaderboard needing &lt;100 ms writes anywhere. (c) EU bank under data-residency law.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>(a) Single region multi-AZ + backups in another region. (b) Active-active with a globally distributed DB (DynamoDB Global Tables / Spanner / Cosmos) and conflict rules. (c) Geo-partitioned: EU data stays in EU regions; DR within EU region pair.</p></div></details></div></div>
+</section>
+<section class="panel" id="t5" data-toc='[["s5-1", "What is disaster recovery (DR)?"], ["s5-2", "The four DR strategies"], ["s5-3", "Backups done right"], ["s5-4", "Building a DR plan \u2014 step by step"], ["s5-5", "Example: pilot light on AWS"], ["s5-6", "Expert: resilience engineering and cyber-recovery"], ["s5-7", "Practice"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 05 · Recovery</p><h1 class="panel-title">Disaster Recovery</h1><p class="panel-subtitle">RTO, RPO, the four DR strategies, backups, planning, drills and cyber-recovery.</p></div>
+<div class="section" id="s5-1"><h2><span class="sec-emoji">🌪️</span> What is disaster recovery (DR)? <span class="lvl b">Basic</span></h2>
+<p><strong>Disaster Recovery</strong> is the plan, tools and practice for restoring systems and data after a serious disruption — region outage, ransomware, accidental deletion, data corruption, human error.</p>
+<div class="compare"><div class="compare-col" style="background:var(--accent-soft)"><h4>🛡️ High availability (HA)</h4><p>• Handles <em>small</em> failures (server, AZ)</p><p>• Automatic, seconds</p><p>• Continuous operation</p></div><div class="compare-col" style="background:var(--orange-soft)"><h4>🆘 Disaster recovery (DR)</h4><p>• Handles <em>large</em> disasters (region, data loss, attack)</p><p>• Often a controlled declaration + runbook</p><p>• Restore service within agreed limits</p></div></div>
+<h3>The two numbers that drive everything</h3>
+<div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft)">⏳</div><div class="card-title">RTO — Recovery Time Objective</div><div class="card-desc">Maximum acceptable <strong>downtime</strong>. "We must be back within 1 hour."</div></div><div class="card"><div class="card-icon" style="background:var(--red-soft)">💾</div><div class="card-title">RPO — Recovery Point Objective</div><div class="card-desc">Maximum acceptable <strong>data loss</strong> measured in time. "We can lose at most 5 minutes of data."</div></div></div>
+<pre><span class="pre-lang">timeline</span><code>  last good backup        disaster          service restored
+        |&lt;------ RPO -------&gt;|&lt;------- RTO -------&gt;|
+   (data you lose)                   (time you are down)</code></pre>
+<p>Related: <strong>RLO</strong> (recovery level — what % of functionality), <strong>MTD</strong> (maximum tolerable downtime), <strong>BIA</strong> (Business Impact Analysis — which systems matter and what an hour of downtime costs).</p></div><div class="section" id="s5-2"><h2><span class="sec-emoji">🪜</span> The four DR strategies <span class="lvl b">Basic</span></h2>
+<div class="diagram"><svg viewBox="0 0 780 190" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans" font-size="12.5" font-weight="600">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs>
+<g stroke="#37352f" stroke-width="1.6" marker-end="url(#ar)"><line x1="20" y1="165" x2="760" y2="165"/></g>
+<g stroke-width="1.6"><rect x="20" y="30" width="170" height="100" rx="10" fill="#ddedea" stroke="#0f7b0f"/><rect x="215" y="30" width="170" height="100" rx="10" fill="#e3ecfb" stroke="#1d4f9f"/><rect x="410" y="30" width="170" height="100" rx="10" fill="#fdecc8" stroke="#dfab01"/><rect x="605" y="30" width="155" height="100" rx="10" fill="#ffe2dd" stroke="#e03e3e"/></g>
+<g text-anchor="middle" fill="#14213D"><text x="105" y="55">Backup &amp; Restore</text><text x="105" y="78" font-weight="400">RTO: hours–days</text><text x="105" y="98" font-weight="400">Cost: $</text>
+<text x="300" y="55">Pilot Light</text><text x="300" y="78" font-weight="400">RTO: tens of minutes</text><text x="300" y="98" font-weight="400">Cost: $$</text>
+<text x="495" y="55">Warm Standby</text><text x="495" y="78" font-weight="400">RTO: minutes</text><text x="495" y="98" font-weight="400">Cost: $$$</text>
+<text x="682" y="55">Active-Active</text><text x="682" y="78" font-weight="400">RTO: ~zero</text><text x="682" y="98" font-weight="400">Cost: $$$$</text>
+<text x="390" y="184" fill="#787774" font-weight="400">← cheaper, slower recovery · costlier, faster recovery →</text></g></svg><div class="diagram-caption">The DR spectrum — pay more for faster recovery and less data loss.</div></div>
+<div class="table-wrap"><table class="sm"><tr><th>Strategy</th><th>What is running in DR region</th><th>RPO</th><th>RTO</th><th>Use for</th></tr><tr><td><strong>Backup & Restore</strong></td><td>Only backups (copied cross-region)</td><td>Hours</td><td>Hours – days</td><td>Non-critical, dev/test, archives</td></tr><tr><td><strong>Pilot Light</strong></td><td>Core data replicated; minimal infra (DB), app servers OFF but defined as IaC/AMIs</td><td>Minutes</td><td>10s of minutes</td><td>Important systems, moderate budget</td></tr><tr><td><strong>Warm Standby</strong></td><td>Scaled-down full copy running continuously</td><td>Seconds–minutes</td><td>Minutes</td><td>Business-critical apps</td></tr><tr><td><strong>Multi-site Active-Active</strong></td><td>Full capacity in both regions, serving users</td><td>Near zero</td><td>Near zero</td><td>Mission-critical, global</td></tr></table></div>
+<p><strong>Analogy:</strong> backup &amp; restore = spare-parts in a box; pilot light = the gas pilot flame, ready to ignite the full burner; warm standby = a second car idling; active-active = two engines running the plane together.</p></div><div class="section" id="s5-3"><h2><span class="sec-emoji">💾</span> Backups done right <span class="lvl b">Basic</span></h2>
+<ul><li><strong>3-2-1 rule:</strong> 3 copies, on 2 different media/accounts, 1 off-site (other region/account).</li><li><strong>Immutability:</strong> WORM / object lock / vault lock so ransomware or an admin cannot delete backups.</li><li><strong>Separate account / subscription</strong> for backup vault; restricted roles.</li><li><strong>Encrypt</strong> with keys also available in DR region.</li><li><strong>Test restores</strong> — an untested backup is a hope, not a backup.</li><li><strong>Retention</strong> by policy: daily 35 days, monthly 12, yearly 7 (compliance driven).</li></ul>
+<div class="table-wrap"><table class="sm"><tr><th>Service</th><th>AWS</th><th>Azure</th><th>GCP</th></tr><tr><td>Central backup</td><td>AWS Backup (vault lock)</td><td>Azure Backup (Recovery Services / Backup vault)</td><td>Backup and DR Service</td></tr><tr><td>DB snapshots</td><td>RDS automated backups + PITR</td><td>SQL PITR, LTR</td><td>Cloud SQL backups + PITR</td></tr><tr><td>VM replication / DR</td><td>AWS Elastic Disaster Recovery (DRS)</td><td>Azure Site Recovery</td><td>Backup and DR / VM Migration based</td></tr></table></div></div><div class="section" id="s5-4"><h2><span class="sec-emoji">📘</span> Building a DR plan — step by step <span class="lvl i">Intermediate</span></h2>
+<div class="flow"><span class="st">BIA: rank systems</span><span class="ar">→</span><span class="st">Set RTO/RPO per tier</span><span class="ar">→</span><span class="st">Choose strategy</span><span class="ar">→</span><span class="st">Automate (IaC)</span><span class="ar">→</span><span class="st">Document runbooks</span><span class="ar">→</span><span class="st">Test regularly</span><span class="ar">→</span><span class="st">Improve</span></div>
+<div class="table-wrap"><table class="sm"><tr><th>Tier</th><th>Example systems</th><th>RTO / RPO</th><th>Strategy</th></tr><tr><td>Tier 0</td><td>Payments, auth</td><td>< 5 min / ~0</td><td>Active-active</td></tr><tr><td>Tier 1</td><td>Order management</td><td>< 30 min / < 5 min</td><td>Warm standby</td></tr><tr><td>Tier 2</td><td>Reporting, internal tools</td><td>4 h / 1 h</td><td>Pilot light</td></tr><tr><td>Tier 3</td><td>Archive, dev</td><td>24–72 h / 24 h</td><td>Backup & restore</td></tr></table></div>
+<h3>Runbook contents</h3>
+<ul><li>Who declares a disaster (decision authority, criteria).</li><li>Contact tree, communication templates (customers, regulator).</li><li>Step-by-step failover commands and expected output.</li><li>DNS / traffic switch procedure; data validation checks.</li><li>Failback procedure (returning to primary) — often forgotten!</li></ul></div><div class="section" id="s5-5"><h2><span class="sec-emoji">🧪</span> Example: pilot light on AWS <span class="lvl i">Intermediate</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Step</th><th>Action</th></tr><tr><td>Normal state</td><td>Primary region ap-south-1 serves traffic. RDS in primary has a cross-region read replica in ap-south-2. AMIs and container images copied to ap-south-2. Terraform code defines the full stack.</td></tr><tr><td>Disaster</td><td>Region-wide event declared.</td></tr><tr><td>1</td><td>Promote the read replica to a standalone primary (RPO ≈ seconds of lag).</td></tr><tr><td>2</td><td>Run IaC pipeline: create ALB, Auto Scaling groups from replicated AMIs, caches.</td></tr><tr><td>3</td><td>Smoke-test the app via a test hostname.</td></tr><tr><td>4</td><td>Update Route 53 to the DR ALB (failover record or manual switch).</td></tr><tr><td>5</td><td>Monitor, communicate, plan failback.</td></tr></table></div>
+<p><strong>Measured outcome:</strong> drill achieved RTO 28 min / RPO 4 s. The target was RTO 30 min — pass, but note that DNS TTL of 300 s contributed 5 minutes; reduce to 60 s.</p></div><div class="section" id="s5-6"><h2><span class="sec-emoji">🧠</span> Expert: resilience engineering and cyber-recovery <span class="lvl e">Expert</span></h2>
+<ul><li><strong>DR for ransomware / corruption</strong> differs from DR for outage: replicas copy the corruption too. Use <strong>point-in-time recovery</strong>, immutable backups, and a <strong>clean-room</strong> restore with scanning.</li><li><strong>Automated failover</strong> vs <strong>decision-gated:</strong> automate detection; keep a human decision for region failover if false positives are costly.</li><li><strong>Game days &amp; chaos engineering:</strong> inject failure deliberately (AWS FIS, Azure Chaos Studio) and measure real RTO/RPO; track results as KPIs.</li><li><strong>Dependency DR:</strong> identity (IdP), DNS, certificates, secrets, CI/CD, monitoring and third-party APIs must also survive the disaster. If your pipeline lives in the failed region you can't deploy.</li><li><strong>Data consistency across services:</strong> restore DB, queue and object store to a consistent point; plan reconciliation jobs.</li><li><strong>Cost model:</strong> DR cost ≈ standby infra + replication + data transfer + testing effort — compare with cost of downtime per hour from the BIA.</li><li><strong>Governance:</strong> evidence for auditors (ISO 22301, SOC 2, RBI/IRDAI guidelines in India): dated test reports and remediation.</li></ul><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Common DR failures: backups never restored; DR region without quota; keys/secrets not replicated; runbooks outdated; failback never practised; DNS TTL too high; shared dependency in the failed region.</div></div><div class="takeaway"><strong>🎯 Key takeaways</strong><ul><li>RTO = how long down; RPO = how much data lost.</li><li>Four strategies from cheap/slow to expensive/fast.</li><li>Immutable, isolated, tested backups defend against ransomware.</li><li>A DR plan that is not tested regularly does not exist.</li></ul></div></div><div class="section" id="s5-7"><h2><span class="sec-emoji">🏋️</span> Practice <span class="lvl b">Basic</span></h2>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 5.1 — Choose the strategy</div><div class="ex-b"><p>(a) Payment gateway: RTO 2 min, RPO 0. (b) Intranet wiki: RTO 24 h, RPO 12 h. (c) Order system: RTO 20 min, RPO 2 min, moderate budget.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>(a) Active-active (synchronous or globally consistent DB). (b) Backup &amp; restore. (c) Pilot light or warm standby with async cross-region DB replication.</p></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 5.2 — Compute RPO</div><div class="ex-b"><p>Backups are taken every 6 hours; disaster hits 5 h after the last backup. Data lost? Which RPO does the design meet?</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>Lost 5 hours (worst case 6). Design supports RPO ≈ 6 h; for RPO ≤ 15 min use continuous replication / PITR.</p></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 5.3 — Write a mini DR plan</div><div class="ex-b"><p>Application: web app + PostgreSQL in Mumbai. RTO 1 h, RPO 15 min.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><ul><li>Strategy: pilot light / warm standby in Hyderabad.</li><li>DB: cross-region replica (lag alert &gt; 5 min); PITR enabled.</li><li>IaC to launch app tier; images replicated.</li><li>Route 53 failover with 60 s TTL.</li><li>Quarterly drill; measure RTO/RPO; document failback.</li></ul></div></details></div></div>
+</section>
+<section class="panel" id="t6" data-toc='[["s6-1", "Capstone \u2014 design a bank&#39;s customer portal"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 06 · Hands-on</p><h1 class="panel-title">Practice Lab</h1><p class="panel-subtitle">Design a regulated, highly available portal end to end and compare with the model answer.</p></div>
+<div class="section" id="s6-1"><h2><span class="sec-emoji">🧪</span> Capstone — design a bank's customer portal <span class="lvl e">Expert</span></h2>
+<p><strong>Requirements:</strong> 2 M users, peak 3,000 req/s, SLO 99.95%, RPO 5 min, RTO 30 min, data must stay in India, PII encrypted, monthly budget limited.</p>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Task A — Choose regions and HA design</div><div class="ex-b"></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>Primary Mumbai (3 AZs), DR Hyderabad (both in India satisfy residency). Multi-AZ everywhere in primary. 99.95% ≈ 4.4 h/year allows a multi-AZ design — multi-region active-active not required.</p></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Task B — Pick DR strategy and justify</div><div class="ex-b"></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>Warm standby: scaled-down app tier + continuous cross-region DB replica (RPO ≈ seconds, satisfies 5 min); automated IaC scale-up meets RTO 30 min. Active-active is over-engineered/costly; pilot light might be borderline for 30 min RTO.</p></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Task C — Map to WAF pillars</div><div class="ex-b"></div><details><summary>▶ Show solution</summary><div class="ex-s"><ul><li>Security: KMS CMKs, private subnets, WAF, least-privilege roles, CloudTrail.</li><li>Reliability: Multi-AZ, health checks, DR drills.</li><li>Performance: CDN for static, Redis cache, autoscaling.</li><li>Cost: Savings Plan for baseline, scale-down DR, S3 lifecycle.</li><li>Operations: IaC, CI/CD, dashboards, alerts on SLO burn.</li><li>Sustainability: Graviton, right-sizing.</li></ul></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Task D — Draw it</div><div class="ex-b"></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>Diagram: Users → Route 53 + CloudFront + WAF → ALB (3 AZ) → ECS/EKS tasks (3 AZ) → Aurora PostgreSQL Multi-AZ (primary Mumbai) → cross-region replica Hyderabad; S3 CRR; Secrets Manager replicated; DR runbook + quarterly game day.</p></div></details></div></div>
+</section>
+<section class="panel" id="t7" data-toc='[["sq", "Final Assessment"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 07 · Assessment</p><h1 class="panel-title">Final Assessment</h1><p class="panel-subtitle">20 multiple-choice questions on this course &mdash; timed, proctored and graded in your browser.</p></div><div class="section" id="sq"><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div><div class="assess-intro-text">A timed, exam-style final assessment for the Cloud Architecture module. Questions and options are shuffled on every attempt.</div><ul class="assess-intro-list"><li><strong>20 Multiple-Choice questions</strong> &mdash; concept checks and scenario-based judgement calls</li><li>Difficulty ranges from <strong>Basic</strong> to <strong>Expert</strong></li><li>Timer, question palette, mark-for-review, full explanations after you submit</li><li>Runs in <strong>fullscreen</strong> &mdash; 3 tab/window-switch warnings auto-submit the test</li><li>Your attempts and top score are saved in this browser</li></ul><button class="assess-start-btn" id="assessStartBtn" type="button">&#9654; Start Assessment</button></div><div id="scoreBoard" class="score-board"></div></div>
+</section>
+  </main>
+</div>
+<script>
+/* ---------- Tabs, TOC, scroll spy ---------- */
+(function(){
+  const tabs=document.querySelectorAll('.tab'), panels=document.querySelectorAll('.panel');
+  const tocEl=document.getElementById('toc'), total=tabs.length, pt=document.getElementById('progressText');
+  function buildToc(panel){
+    const data=JSON.parse(panel.getAttribute('data-toc')||'[]');
+    tocEl.innerHTML=data.map(([id,l])=>`<li><a href="#${id}" data-target="${id}">${l}</a></li>`).join('');
+    const f=tocEl.querySelector('a'); if(f)f.classList.add('active');
+  }
+  let manual=null;
+  function activate(i){
+    tabs.forEach((t,k)=>t.classList.toggle('active',k===i));
+    panels.forEach((p,k)=>p.classList.toggle('active',k===i));
+    manual=null; buildToc(panels[i]); pt.textContent=`Tab ${i+1} of ${total}`;
+    window.scrollTo({top:0,behavior:'instant'});
+    tabs[i].scrollIntoView({inline:'center',block:'nearest'});
+  }
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('.toc-list a'); if(!a)return; e.preventDefault();
+    const el=document.getElementById(a.dataset.target);
+    manual=a.dataset.target; tocEl.querySelectorAll('a').forEach(x=>x.classList.toggle('active',x===a));
+    if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});
+  });
+  let tick=false;
+  function spy(){
+    if(manual){tick=false;return;}
+    const p=document.querySelector('.panel.active'); if(!p){tick=false;return;}
+    let cur=null; const secs=[...p.querySelectorAll('.section')];
+    secs.forEach(s=>{ if(s.getBoundingClientRect().top-180<0)cur=s.id; });
+    if(secs.length && window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-4) cur=secs[secs.length-1].id;
+    if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));
+    tick=false;
+  }
+  window.addEventListener('scroll',()=>{ if(!tick){requestAnimationFrame(spy);tick=true;} },{passive:true});
+  ['wheel','touchstart','keydown','pointerdown'].forEach(ev=>window.addEventListener(ev,e=>{if(e.target&&e.target.closest&&e.target.closest('.toc-list a'))return;manual=null},{passive:true}));
+  window.resetProgress=()=>activate(0);
+  activate(0);
+})();
+
+
+/* ---------- Quiz ---------- */
+
+/* =====================================================================
+   Final assessment — proctored, timed, full-screen (graded in-browser)
+   Anti-malpractice model copied from the Royal HRMS assessment:
+   fullscreen, tab/window-switch strikes (3 -> auto-submit), copy / right-click
+   blocked, shuffled questions, answers revealed only after submit.
+   ===================================================================== */
+(function(){
+  const C = {title:"Cloud Architecture", slug:"cloud_1_architecture"};
+  const RAW = [{"q": "Which cloud service model gives you the most control over the OS?", "o": ["SaaS", "PaaS", "IaaS", "FaaS"], "a": "MjpjbG91ZF8xX2FyY2hpdGVjdHVyZTow", "e": "IaaS provides virtual machines where you manage the OS and above."}, {"q": "In the shared responsibility model, who secures IAM policies and data classification?", "o": ["The provider", "The customer", "Both equally", "Nobody"], "a": "MTpjbG91ZF8xX2FyY2hpdGVjdHVyZTox", "e": "Customers are responsible for security 'in' the cloud: identities, data, configuration."}, {"q": "Availability of 99.9% allows about how much downtime per year?", "o": ["3.65 days", "8.76 hours", "52 minutes", "5 minutes"], "a": "MTpjbG91ZF8xX2FyY2hpdGVjdHVyZToy", "e": "0.1% of a year ≈ 8.76 hours."}, {"q": "Three components in series, each 99.9%. Overall availability is about:", "o": ["99.9%", "99.97%", "99.70%", "100%"], "a": "MjpjbG91ZF8xX2FyY2hpdGVjdHVyZToz", "e": "Serial dependencies multiply: 0.999³ ≈ 0.9970."}, {"q": "Which AWS Well-Architected pillar is NOT in the Azure framework as a separate pillar?", "o": ["Security", "Reliability", "Sustainability", "Cost Optimization"], "a": "MjpjbG91ZF8xX2FyY2hpdGVjdHVyZTo0", "e": "AWS has six pillars including Sustainability; Azure lists five."}, {"q": "A typical way to eliminate a single point of failure in the web tier is:", "o": ["A bigger server", "Instances in multiple AZs behind a load balancer", "Turning off health checks", "One public IP"], "a": "MTpjbG91ZF8xX2FyY2hpdGVjdHVyZTo1", "e": "Multi-AZ instances with a load balancer and health checks give redundancy."}, {"q": "Why should application servers be stateless?", "o": ["To save disk", "Any instance can serve any request, enabling scaling and replacement", "To avoid HTTPS", "To reduce IAM"], "a": "MTpjbG91ZF8xX2FyY2hpdGVjdHVyZTo2", "e": "Externalising state allows instances to be added or replaced freely."}, {"q": "RPO measures:", "o": ["Maximum acceptable downtime", "Maximum acceptable data loss (time)", "Backup size", "Cost"], "a": "MTpjbG91ZF8xX2FyY2hpdGVjdHVyZTo3", "e": "RPO = how far back in time data may be lost; RTO = how long you may be down."}, {"q": "Which DR strategy keeps core data replicated but app servers switched off until needed?", "o": ["Backup & Restore", "Pilot Light", "Warm Standby", "Active-Active"], "a": "MTpjbG91ZF8xX2FyY2hpdGVjdHVyZTo4", "e": "Pilot light keeps the 'flame' (data/core) running; the rest is started on disaster."}, {"q": "Which strategy offers near-zero RTO and RPO but highest cost?", "o": ["Backup & Restore", "Pilot Light", "Warm Standby", "Multi-site Active-Active"], "a": "MzpjbG91ZF8xX2FyY2hpdGVjdHVyZTo5", "e": "Full capacity runs in several sites simultaneously."}, {"q": "The 3-2-1 backup rule means:", "o": ["3 backups, 2 media/accounts, 1 off-site", "3 days, 2 weeks, 1 month", "3 regions, 2 AZs, 1 VPC", "3 admins, 2 keys, 1 vault"], "a": "MDpjbG91ZF8xX2FyY2hpdGVjdHVyZToxMA==", "e": "Three copies, on two different media or accounts, with one held off-site."}, {"q": "Asynchronous cross-region replication generally means:", "o": ["Zero latency, zero RPO", "Fast writes with a small possible data loss on failover", "No replication", "Higher consistency than synchronous"], "a": "MTpjbG91ZF8xX2FyY2hpdGVjdHVyZToxMQ==", "e": "Async acknowledges before the remote copy completes, so recent writes may be lost."}, {"q": "Route 53 failover routing is used to:", "o": ["Encrypt traffic", "Send traffic to a secondary endpoint when the primary health check fails", "Create VPCs", "Back up S3"], "a": "MTpjbG91ZF8xX2FyY2hpdGVjdHVyZToxMg==", "e": "Health checks drive DNS-level failover between primary and secondary."}, {"q": "Which statement about multi-region is TRUE?", "o": ["Always required", "Adds cost and complexity; use when requirements demand it", "Is free", "Replaces backups"], "a": "MTpjbG91ZF8xX2FyY2hpdGVjdHVyZToxMw==", "e": "Business RTO/RPO, latency or compliance should justify it."}, {"q": "A key reason to test DR regularly is:", "o": ["Auditors like paper", "Untested plans fail — you measure real RTO/RPO and fix gaps", "It lowers cost", "It removes the need for backups"], "a": "MTpjbG91ZF8xX2FyY2hpdGVjdHVyZToxNA==", "e": "Drills reveal missing keys, quotas, outdated runbooks and slow DNS."}, {"q": "Static stability means:", "o": ["No changes ever", "Staying up after failure using pre-provisioned capacity without needing control-plane actions", "Using static IPs", "Disabling auto scaling"], "a": "MTpjbG91ZF8xX2FyY2hpdGVjdHVyZToxNQ==", "e": "Don't rely on scaling or creating resources during an incident."}, {"q": "A cell-based architecture primarily limits:", "o": ["Cost", "Blast radius of failures or bad deployments", "Latency", "Storage"], "a": "MTpjbG91ZF8xX2FyY2hpdGVjdHVyZToxNg==", "e": "Independent cells contain failures to a subset of customers."}, {"q": "Which is an anti-pattern?", "o": ["Documenting trade-offs in ADRs", "Designing 99.999% for a low-value internal tool", "Automating guardrails", "Game days"], "a": "MTpjbG91ZF8xX2FyY2hpdGVjdHVyZToxNw==", "e": "Over-engineering availability wastes money; match design to business need."}, {"q": "Backup vault with object lock/immutability protects mainly against:", "o": ["Latency", "Ransomware or malicious deletion", "Cost", "DNS errors"], "a": "MTpjbG91ZF8xX2FyY2hpdGVjdHVyZToxOA==", "e": "Immutable backups cannot be altered or deleted within the retention period."}, {"q": "Google Cloud Well-Architected includes a foundation called:", "o": ["System design", "Billing", "Edge", "Landing zone"], "a": "MDpjbG91ZF8xX2FyY2hpdGVjdHVyZToxOQ==", "e": "It combines a system design category with five pillars."}];
+  const dec = s => { try{ return parseInt(atob(s).split(':')[0],10); }catch(e){ return -1; } };
+  const BANK = RAW.map((q,i)=>({id:'q'+i, q:q.q, options:q.o, ans:q.a, exp:q.e}));
+  delete window.__BANK; 
+  const EXAM_SECONDS = 1500;
+  const MAX_WARN = 3;
+  const LS_KEY = 'cicd_scores_' + C.slug;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-right{display:flex;align-items:center;gap:12px}
+  .exam-strikes{font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);padding:6px 10px;border-radius:8px}
+  .exam-strikes.hot{background:#e53e3e}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif;overflow:auto}
+  .exam-splash .xcard{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash h2{font-size:24px;font-weight:800;margin:0 0 8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9;padding:0}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-fswarn{position:fixed;inset:0;z-index:100003;background:rgba(15,23,42,.92);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#fff;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fswarn .fw-box{max-width:520px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .exam-fswarn h3{font-size:30px;font-weight:800;margin:0;display:flex;align-items:center;gap:12px;color:#fff}
+  .exam-fswarn p{margin:0;font-size:16px;color:#e2e8f0;line-height:1.5}
+  .exam-fswarn .fw-count{font-size:16px;font-weight:600;color:#fff}
+  .exam-fswarn .fw-btn{margin-top:6px;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:15px 26px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+  .exam-fswarn .fw-btn:hover{background:#000}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  .exam-sb{display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:14px}
+  .exam-sb .best{flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:16px 22px;text-align:center}
+  .exam-sb .best .l{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311}
+  .exam-sb .best .v{font-size:32px;font-weight:800;line-height:1.1;margin-top:4px}
+  .exam-sb .best .v span{font-size:17px;color:#cdd5e5}
+  .exam-sb .hist{flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px 18px}
+  .exam-sb .hist .l{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px}
+  .exam-sb .hist div.row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px}
+  .assess-start{margin-top:14px}
+  .assess-rules{margin:10px 0 0 18px;font-size:14px;line-height:1.8;color:var(--ink2)}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}.exam-q-pane{padding:20px}}
+  @media print{.exam-overlay,.exam-splash,.exam-cover{display:none!important}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){t=Math.max(t,0);const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+  function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function examDialog(title,msg,okLabel,cancel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">${cancel?'<button class="exam-btn nav" data-a="0">Cancel</button>':''}<button class="exam-btn primary" data-a="1">${okLabel||'OK'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d && cancel){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total,warnCount,auto){
+    const a=loadScores(); a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now(),warns:warnCount,auto:!!auto});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.innerHTML=''; return; }
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`<div class="exam-sb">
+      <div class="best"><div class="l">Top score</div><div class="v">${best.score}<span>/${best.total}</span></div><div style="font-size:12px;color:#cdd5e5">${best.pct}%</div></div>
+      <div class="hist"><div class="l">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+      ${last5.map(x=>`<div class="row"><span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%${x.warns?' &middot; '+x.warns+' warning'+(x.warns>1?'s':''):''}${x.auto?' &middot; auto-submitted':''}</span></span><span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}</div></div>`;
+  }
+
+  /* ---- proctoring: tab-switch / window-blur / fullscreen-exit strikes (3 -> auto-submit) ---- */
+  let warns=0, lastWarn=0, proctorOn=false, fsWanted=false;
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function updStrikes(){ const s=document.getElementById('examStrikes'); if(s){ s.textContent='Warnings '+warns+'/'+MAX_WARN; s.classList.toggle('hot',warns>0); } }
+  function hideFsWarn(){ const w=document.getElementById('examFsWarn'); if(w)w.remove(); }
+  function showFsWarn(n){
+    injectCss(); hideFsWarn();
+    const w=document.createElement('div'); w.className='exam-fswarn'; w.id='examFsWarn';
+    w.innerHTML='<div class="fw-box"><h3><span>&#9888;&#65039;</span> Fullscreen exited</h3>'+
+      '<p>The assessment must remain in fullscreen mode.</p>'+
+      '<div class="fw-count">Warning '+n+' of '+MAX_WARN+'</div>'+
+      '<button class="fw-btn" id="examFsReturn">Return to assessment</button></div>';
+    document.body.appendChild(w);
+    const btn=document.getElementById('examFsReturn');
+    btn.addEventListener('click',()=>{
+      const el=document.documentElement;
+      const done=()=>{ fsWanted=true; hideFsWarn(); hideCover(); };
+      if(el.requestFullscreen){ el.requestFullscreen().then(done).catch(()=>{}); } else { done(); }
+    });
+    try{btn.focus();}catch(e){}
+  }
+  function countWarn(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<1500)return; lastWarn=now;
+    warns++; updStrikes();
+    if(warns>=MAX_WARN){ hideFsWarn(); examDialog('Test submitted','You left the test '+MAX_WARN+' times. It has been auto-submitted.'); submitExam(true); }
+    else if(kind==='fs'){ showFsWarn(warns); }
+    else { examDialog('Warning '+warns+' of '+MAX_WARN,'Switching tabs or leaving the window is not allowed. After '+MAX_WARN+' warnings the test is auto-submitted.'); }
+  }
+  function fsHandler(){
+    if(!examOn)return;
+    if(document.fullscreenElement){ hideFsWarn(); hideCover(); return; }
+    if(fsWanted){ countWarn('fs'); }
+  }
+  function visHandler(){ if(document.hidden){ showCover(); countWarn(); } else { hideCover(); } }
+  function blurHandler(){ if(examOn && !document.hidden){ showCover(); countWarn(); } }
+  function focusHandler(){ if(!document.hidden && (document.fullscreenElement||!fsWanted)) hideCover(); }
+  function blockEvt(e){ e.preventDefault(); e.stopPropagation(); return false; }
+  function keyGuard(e){
+    const k=(e.key||'').toLowerCase(), mod=e.ctrlKey||e.metaKey;
+    const bad = (mod && ['c','x','v','a','s','p','u','f','g'].includes(k))
+             || (mod && e.shiftKey && ['i','j','c','k'].includes(k))
+             || k==='f12' || k==='printscreen' || k==='f5' || (mod && k==='r');
+    if(bad){ e.preventDefault(); e.stopPropagation(); if(k==='printscreen'){ try{navigator.clipboard.writeText('');}catch(_){} } return false; }
+  }
+  const EVTS=['contextmenu','copy','cut','paste','selectstart','dragstart','drop'];
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true; updStrikes();
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    window.addEventListener('blur',blurHandler);
+    window.addEventListener('focus',focusHandler);
+    EVTS.forEach(n=>document.addEventListener(n,blockEvt,true));
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keyup',keyGuard,true);
+  }
+  function stopProctor(){
+    proctorOn=false; hideFsWarn();
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    window.removeEventListener('blur',blurHandler);
+    window.removeEventListener('focus',focusHandler);
+    EVTS.forEach(n=>document.removeEventListener(n,blockEvt,true));
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keyup',keyGuard,true);
+    hideCover();
+  }
+
+  function showSplash(){
+    injectCss();
+    if(document.getElementById('examSplash'))return;
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="xcard">
+      <h2>&#127919; ${C.title} &mdash; Final Assessment</h2>
+      <p>A timed, proctored assessment on this module.</p>
+      <ul>
+        <li><b>${BANK.length} questions</b>, questions and options shuffled every attempt</li>
+        <li><b>${Math.round(EXAM_SECONDS/60)}-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Correct answers and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> where your browser allows it</li>
+        <li><b>No tab / window switching</b> and <b>no exiting fullscreen (Esc)</b> &mdash; ${MAX_WARN} warnings and the test <b>auto-submits</b></li>
+        <li>Copy, paste, right-click, select, print and developer shortcuts are disabled during the test</li>
+        <li>Refreshing or closing the page abandons the attempt</li>
+      </ul>
+      <div style="display:flex;gap:10px"><button class="exam-btn nav" id="examCancel" style="flex:0 0 auto">Cancel</button>
+      <button class="exam-btn primary" id="examBegin" style="flex:1;padding:14px">Start Test &rarr;</button></div>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examCancel').addEventListener('click',()=>sp.remove());
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      fsWanted=false;
+      if(document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().then(()=>{fsWanted=true;}).catch(()=>{}); }
+      sp.remove(); enterExam();
+    });
+  }
+
+  function enterExam(){
+    injectCss();
+    // shuffle questions AND options; keep track of the correct option after shuffling
+    items = shuffle(BANK).map(b=>{
+      const correct = b.options[dec(b.ans)];
+      const opts = shuffle(b.options);
+      return {id:b.id, q:b.q, options:opts, answer:opts.indexOf(correct), exp:b.exp};
+    });
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    const ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">${C.title} &mdash; Final Assessment</div><div class="et-sub">${items.length} questions &middot; one sitting &middot; good luck</div></div>
+        <div class="exam-right"><div class="exam-strikes" id="examStrikes">Warnings 0/${MAX_WARN}</div><div class="exam-timer" id="examTimer">${fmt(remaining)}</div></div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(remaining); if(remaining<=60)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}</div>
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}" tabindex="0"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>{
+      const pick=()=>{ answers[id]=+el.dataset.i; pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); refreshPalette(); };
+      el.addEventListener('click',pick);
+      el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();} });
+    });
+    document.getElementById('examPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    document.getElementById('examNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();});
+    refreshPalette();
+    pane.scrollTop=0;
+  }
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examDialog('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test', true);
+      if(!ok)return;
+    }
+    if(!examOn)return;
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    const usedWarns=warns;
+    stopProctor();
+    let score=0; items.forEach(it=>{ if(answers[it.id]===it.answer) score++; });
+    showResults(score,usedWarns,auto);
+  }
+  function showResults(score,usedWarns,auto){
+    const total=items.length; saveScore(score,total,usedWarns,auto);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below, revisit the module and try again.';
+    if(pct>=85)msg='Outstanding &mdash; you are operating at an expert level.';
+    else if(pct>=65)msg='Solid pass. Review the questions you missed and you are interview-ready.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the sections you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const you=answers[it.id], attempted=(you!=null), ok=attempted&&you===it.answer;
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      inner+= attempted ? '<div class="ra '+(ok?'cor':'wrong')+'">Your answer: '+String.fromCharCode(65+you)+'. '+it.options[you]+'</div>' : '<div class="ra wrong">Your answer: <i>Not answered</i></div>';
+      if(!ok) inner+='<div class="ra cor">Correct: '+String.fromCharCode(65+it.answer)+'. '+it.options[it.answer]+'</div>';
+      if(it.exp) inner+='<div class="rx">'+it.exp+'</div>';
+      return '<div class="r '+(ok?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; ${C.title}</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1;flex:1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          ${auto&&usedWarns>=MAX_WARN?'<div class="exam-rmsg" style="color:#c53030;font-weight:700">Auto-submitted after '+MAX_WARN+' warnings.</div>':''}
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another attempt</button></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    document.getElementById('examRetry').addEventListener('click',()=>{ closeExam(); showSplash(); });
+    document.getElementById('examClose').addEventListener('click',closeExam);
+  }
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',showSplash);
+  renderScoreboard();
+})();
+
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+<style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body>
+</html>

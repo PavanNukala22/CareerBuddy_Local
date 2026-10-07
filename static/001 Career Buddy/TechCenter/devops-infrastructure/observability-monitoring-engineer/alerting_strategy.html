@@ -1,0 +1,457 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alerting Strategy: Hygiene, Fatigue, Anomaly Detection, Dynamic Thresholds</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--soft:#f7f6f3;--block:#f1f1ef;--ink:#37352f;--ink2:#787774;--mute:#9b9a97;--line:#e9e9e7;--line2:#d3d3d0;--acc:#14213D;--accs:#eef1f7;--g:#0f7b0f;--gs:#ddedea;--o:#d9730d;--os:#fadec9;--r:#e03e3e;--rs:#ffe2dd;--y:#fdecc8}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:'Noto Sans',-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--ink);font-size:16px;line-height:1.65;background:var(--bg);-webkit-font-smoothing:antialiased}
+code,pre{font-family:'Noto Sans Mono','Noto Sans',ui-monospace,Consolas,monospace}
+.header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.ht{display:flex;justify-content:space-between;align-items:center;padding:12px 32px;gap:16px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:17px}
+.mark{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;background:linear-gradient(135deg,#14213D,#e6522c)}
+.brand small{color:var(--ink2);font-weight:400;font-size:13px}
+.ha{display:flex;gap:10px;align-items:center}
+.pill{padding:5px 12px;border:1px solid var(--line);border-radius:99px;background:var(--block);font-size:12px;font-weight:500;color:var(--ink2)}
+.btn{padding:6px 12px;border:1px solid var(--line2);border-radius:6px;background:#fff;font:500 13px 'Noto Sans',sans-serif;cursor:pointer}.btn:hover{background:var(--soft)}
+.tabbar{display:flex;gap:2px;padding:6px 24px;overflow-x:auto;border-top:1px solid var(--line);scrollbar-width:none}.tabbar::-webkit-scrollbar{display:none}
+.tab{padding:9px 16px;background:transparent;border:0;border-radius:8px;font:500 13.5px 'Noto Sans',sans-serif;color:#4a5568;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.tab b{font-size:11px;color:var(--mute);margin-right:6px}.tab:hover{background:#eef1f7;color:#14213D}.tab.on{background:#14213D;color:#fff;font-weight:700}.tab.on b{color:#FCA311}
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr);max-width:1400px;margin:0 auto}
+.toc{position:sticky;top:112px;align-self:start;height:calc(100vh - 120px);overflow:auto;padding:28px 16px 28px 32px;border-right:1px solid var(--line)}
+.toc h6{margin:0 0 10px 8px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.toc a{display:block;padding:5px 10px;font-size:13px;color:var(--ink2);text-decoration:none;border-radius:6px;line-height:1.4}
+.toc a:hover{background:var(--soft);color:var(--ink)}.toc a.on{background:#16233f;color:#fff;font-weight:600}
+@media(max-width:960px){.layout{grid-template-columns:1fr}.toc{display:none}}
+.main{padding:44px 56px 80px;min-width:0}@media(max-width:720px){.main{padding:28px 18px 60px}.ht{padding:10px 16px}}
+.panel{display:none}.panel.on{display:block;animation:f .3s ease}@keyframes f{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.ptitle{font-size:38px;line-height:1.15;font-weight:800;letter-spacing:-.02em;margin:6px 0 10px}
+.psub{font-size:17px;color:var(--ink2);max-width:760px;margin:0}
+.section{margin-top:44px;scroll-margin-top:140px}
+.section h2{font-size:25px;font-weight:700;margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center}
+.section h3{font-size:17.5px;font-weight:700;margin:24px 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.section p{margin:10px 0}.section ul,.section ol{padding-left:22px;margin:10px 0}.section li{margin:4px 0}
+code{font-size:.88em;background:#f6f5f4;border:1px solid var(--line);padding:1px 6px;border-radius:4px;color:#c4432b}
+pre{background:#2b2a28;color:#e6e6e3;padding:20px;border-radius:10px;overflow-x:auto;font-size:13.2px;line-height:1.6;margin:14px 0;position:relative}
+pre code{background:none;border:0;color:inherit;padding:0}
+.pre-lang{position:absolute;top:6px;right:12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9b9a97;font-weight:600}
+.lvl{font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px}.lvl.b{background:var(--gs);color:var(--g)}.lvl.i{background:var(--os);color:#a85a08}.lvl.e{background:var(--rs);color:#b42b2b}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0}
+.card{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fff;box-shadow:0 1px 2px rgba(15,15,15,.06)}
+.cicon{width:34px;height:34px;border-radius:8px;background:var(--accs);display:grid;place-items:center;font-size:18px;margin-bottom:8px}
+.ct{font-weight:700;font-size:14.5px}.cd{font-size:13.5px;color:var(--ink2);margin-top:3px;line-height:1.5}
+.callout{display:grid;grid-template-columns:32px 1fr;gap:6px;padding:14px 16px;border-radius:8px;margin:16px 0;font-size:15px}
+.callout.tip{background:var(--gs)}.callout.warn{background:var(--y)}.callout.key{background:var(--accs)}.callout.bad{background:var(--rs)}
+.tw{overflow-x:auto;margin:14px 0}table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}th{background:var(--soft);font-weight:700}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0}
+.flow span{background:var(--acc);color:#fff;padding:8px 14px;border-radius:8px;font-size:13.5px;font-weight:600}
+.flow i{font-style:normal;color:var(--mute);font-weight:700}
+.qbar{position:sticky;top:104px;z-index:5;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:20px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.track{flex:1;min-width:140px;height:8px;background:var(--block);border-radius:99px;overflow:hidden}.fill{height:100%;width:0;background:var(--acc);transition:width .3s}
+.q{border:1px solid var(--line);border-radius:10px;padding:18px;margin:14px 0}
+.qn{font-size:12px;font-weight:700;color:var(--mute);letter-spacing:.06em}.qq{font-weight:600;margin:4px 0 12px}
+.opt{display:block;width:100%;text-align:left;padding:10px 14px;margin:6px 0;border:1px solid var(--line2);border-radius:8px;background:#fff;font:15px 'Noto Sans',sans-serif;cursor:pointer;color:var(--ink)}
+.opt:hover:not(:disabled){background:var(--soft)}.opt.ok{background:var(--gs);border-color:var(--g)}.opt.no{background:var(--rs);border-color:var(--r)}
+.fb{display:none;margin-top:10px;padding:10px 14px;border-radius:8px;background:var(--accs);font-size:14.5px}.fb.show{display:block}
+.res{display:none;text-align:center;border:2px solid var(--acc);border-radius:12px;padding:24px;margin:20px 0}.res.show{display:block}.res h3{font-size:34px;margin:0;justify-content:center}
+</style><style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head><body>
+<header class="header"><div class="ht"><div class="brand"><div class="mark">Al</div><span>Alerting Strategy<small> · Observability / Monitoring Engineer</small></span></div>
+<div class="ha"><span class="pill" id="ptxt"></span><button class="btn" id="rst">&#8635; Reset</button></div></div>
+<nav class="tabbar"><button class="tab" data-tab="t1"><b>01</b>Alerting Basics</button><button class="tab" data-tab="t2"><b>02</b>Alert Hygiene & Fatigue</button><button class="tab" data-tab="t3"><b>03</b>Thresholds & Anomaly Detection</button><button class="tab" data-tab="t4"><b>04</b>On-Call & Alert Operations</button><button class="tab" data-tab="t5"><b>05</b>Assessment</button></nav></header>
+<div class="layout"><aside class="toc"><h6>On this page</h6><div id="toc"></div></aside><main class="main"><section class="panel" id="t1"><div><div class="eyebrow">Module 01 · Fundamentals</div><h1 class="ptitle">Alerting Fundamentals</h1><p class="psub">What an alert is, what deserves to wake a human, and how SLIs and SLOs give alerts a purpose.</p></div><div class="section" id="a1"><h2><span>🚨</span> What Is an Alert?</h2><p>An alert is an automated notification that a condition needs <strong>human attention</strong>. If no human action is needed, it is not an alert; it is a log line, a dashboard or a ticket.</p><div class="flow"><span>Signal (metric/log/trace)</span><i>→</i><span>Rule evaluates</span><i>→</i><span>Alert fires</span><i>→</i><span>Route and notify</span><i>→</i><span>Human acts (runbook)</span></div><div class="cards"><div class="card"><div class="cicon">📟</div><div class="ct">Page</div><div class="cd">Wake someone now. Users are impacted or soon will be.</div></div><div class="card"><div class="cicon">🎫</div><div class="ct">Ticket</div><div class="cd">Needs action within days. No immediate user impact.</div></div><div class="card"><div class="cicon">📊</div><div class="ct">Dashboard / Log</div><div class="cd">Informational. Nobody is notified.</div></div></div></div><div class="section" id="a2"><h2><span>🎯</span> Symptoms vs Causes</h2><p>Page on <strong>symptoms</strong> (what users feel) and investigate <strong>causes</strong> on dashboards.</p><div class="tw"><table><tr><th></th><th>Symptom alert (good)</th><th>Cause alert (use sparingly)</th></tr><tr><td>Example</td><td>Checkout error rate &gt; 2% for 5m</td><td>CPU on node-7 &gt; 90%</td></tr><tr><td>Why</td><td>Directly maps to user pain</td><td>High CPU may be harmless</td></tr><tr><td>Risk</td><td>Fewer, higher-quality pages</td><td>Noisy, many false positives</td></tr></table></div><div class="callout key"><div class="ci">💡</div><div>Exceptions: cause alerts are fine when they predict an imminent symptom, e.g. "disk will be full in 4 hours".</div></div></div><div class="section" id="a3"><h2><span>📏</span> SLI, SLO, Error Budget</h2><ul><li><strong>SLI</strong> (indicator): a measured number, e.g. % of requests under 300 ms.</li><li><strong>SLO</strong> (objective): the target, e.g. 99.9% over 30 days.</li><li><strong>Error budget</strong>: the allowed failure = 100% − SLO. For 99.9% over 30 days that is ≈ 43 minutes of full outage.</li></ul><p>SLO-based alerting pages you when you are <em>burning the budget too fast</em>, not on every blip.</p></div><div class="section" id="a4"><h2><span>🔔</span> Severity Levels and Anatomy of a Good Alert</h2><div class="tw"><table><tr><th>Sev</th><th>Meaning</th><th>Response</th></tr><tr><td>SEV1 / P1</td><td>Major outage or data loss</td><td>Page immediately, 24/7</td></tr><tr><td>SEV2 / P2</td><td>Partial degradation</td><td>Page in business hours or on-call</td></tr><tr><td>SEV3 / P3</td><td>Minor, no user impact</td><td>Ticket</td></tr></table></div><p>Every alert should carry: <strong>what</strong> is wrong, <strong>impact</strong>, <strong>severity</strong>, <strong>owner/team</strong>, <strong>dashboard link</strong>, <strong>runbook link</strong>.</p><pre><span class="pre-lang">yaml</span><code>- alert: HighErrorRate
+  expr: sum(rate(http_requests_total{status=~&quot;5..&quot;}[5m])) / sum(rate(http_requests_total[5m])) &gt; 0.02
+  for: 5m
+  labels: {severity: page, team: payments}
+  annotations:
+    summary: &quot;Checkout 5xx ratio above 2% for 5m&quot;
+    runbook_url: https://wiki.example.com/runbooks/high-error-rate</code></pre></div></section><section class="panel" id="t2"><div><div class="eyebrow">Module 02 · Operational Excellence</div><h1 class="ptitle">Alert Hygiene and Avoiding Alert Fatigue</h1><p class="psub">Alert fatigue makes on-call engineers ignore real incidents. Hygiene is the discipline that keeps alerts trustworthy.</p></div><div class="section" id="h1"><h2><span>😵</span> What Is Alert Fatigue?</h2><p>When on-call receives too many low-value alerts, they start to <strong>ignore, mute or delay</strong> responses. Eventually a real outage is missed. Signs: alerts auto-acknowledged without action, channels muted, &gt; 2 actionable pages per 12-hour shift (a commonly cited SRE guideline), burned-out engineers.</p><div class="callout bad"><div class="ci">🔥</div><div><strong>Real-world pattern:</strong> hundreds of "CPU high" emails per week train people to filter them to a folder, and the one critical email is filtered too.</div></div></div><div class="section" id="h2"><h2><span>🧼</span> Alert Hygiene Checklist</h2><ol><li><strong>Actionable:</strong> a human must do something. If the answer to "what do I do?" is "nothing", delete it.</li><li><strong>Urgent:</strong> needs action <em>now</em>, otherwise make it a ticket.</li><li><strong>Real:</strong> low false-positive rate. Use <code>for:</code> durations to ignore blips.</li><li><strong>Owned:</strong> has a team and escalation path.</li><li><strong>Documented:</strong> links a runbook and dashboard.</li><li><strong>Reviewed:</strong> regular pruning (monthly alert review, track per-alert noise).</li></ol><div class="tw"><table><tr><th>Bad alert</th><th>Better alert</th></tr><tr><td>CPU &gt; 80% on any host</td><td>p95 latency SLO burning, plus ticket for sustained saturation</td></tr><tr><td>Pod restarted</td><td>Crash-looping &gt; 5 restarts in 15m, or replicas unavailable &gt; 5m</td></tr><tr><td>Disk &gt; 80%</td><td><code>predict_linear</code>: full within 4 hours</td></tr><tr><td>Single failed health check</td><td>Failure for 3 consecutive checks across 2 regions</td></tr></table></div></div><div class="section" id="h3"><h2><span>🧯</span> Noise-Reduction Techniques </h2><div class="tw"><table><tr><th>Technique</th><th>What it does</th><th>Example</th></tr><tr><td>Grouping</td><td>Bundles related alerts into one notification</td><td>50 pod alerts → 1 "service X degraded"</td></tr><tr><td>Deduplication</td><td>Same alert fires once, not on every evaluation</td><td>Fingerprint by alertname + labels</td></tr><tr><td>Inhibition</td><td>Suppresses symptoms when a root-cause alert fires</td><td>Node down mutes all pod alerts on it</td></tr><tr><td>Silencing</td><td>Temporary mute for maintenance</td><td>Deploy window, planned DB upgrade</td></tr><tr><td>Routing</td><td>Sends to the right team/channel by label</td><td>severity=page → PagerDuty; ticket → Jira/Slack</td></tr><tr><td>Flap damping</td><td><code>for:</code> duration and hysteresis</td><td>Fire at &gt;90%, resolve at &lt;80%</td></tr><tr><td>Escalation</td><td>Re-notify next level if unacknowledged</td><td>Primary 5m → secondary 10m → manager</td></tr></table></div><pre><span class="pre-lang">yaml</span><code># Alertmanager
+route:
+  receiver: slack-default
+  group_by: [alertname, cluster, service]
+  group_wait: 30s        # wait to collect similar alerts
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - matchers: [severity=&quot;page&quot;]
+      receiver: pagerduty
+inhibit_rules:
+  - source_matchers: [alertname=&quot;NodeDown&quot;]
+    target_matchers: [severity=&quot;warning&quot;]
+    equal: [node]</code></pre></div><div class="section" id="h4"><h2><span>🔁</span> Process: Keep Hygiene Over Time</h2><ul><li><span class="lvl b">Basic</span> Track <strong>pages per shift</strong> and the ratio of actionable to non-actionable.</li><li><span class="lvl i">Intermediate</span> <strong>Post-incident review:</strong> did the alert fire on time, was it clear, was it missing? Fix or delete noisy alerts after each rotation.</li><li><span class="lvl i">Intermediate</span> <strong>Alerts as code</strong> (Prometheus rules, Terraform, Grafana provisioning) with code review and tests (<code>promtool test rules</code>).</li><li><span class="lvl e">Expert</span> Per-alert metrics (<code>ALERTS</code> series, MTTA, MTTR, flap count) and an automated "noisy alert" report; error-budget policy tying reliability work to alert volume.</li></ul></div></section><section class="panel" id="t3"><div><div class="eyebrow">Module 03 · Smarter Alerts</div><h1 class="ptitle">Dynamic Thresholds and Anomaly Detection</h1><p class="psub">From a fixed number, to baselines that learn your traffic patterns, to SLO burn-rate alerts used by mature SRE teams.</p></div><div class="section" id="d1"><h2><span>📌</span> Static Thresholds </h2><p>A fixed number: "alert if latency &gt; 500 ms". Simple and predictable, but blind to context.</p><div class="tw"><table><tr><th>Pros</th><th>Cons</th></tr><tr><td>Easy to understand and test</td><td>Traffic is seasonal: 500 req/s is a crisis at 3 AM and normal at noon</td></tr><tr><td>Great for hard limits (disk 95%, cert expiry)</td><td>Needs constant retuning as the system grows</td></tr></table></div><div class="callout tip"><div class="ci">💡</div><div>Use static thresholds for <strong>hard limits</strong>: certificates expiring, disk full, quota usage, SLO targets.</div></div></div><div class="section" id="d2"><h2><span>🌊</span> Dynamic (Adaptive) Thresholds</h2><p>The threshold moves with the data: it is computed from a <strong>baseline</strong> of recent or historical behaviour.</p><h3>Basic: compare with the past <span class="lvl b">Basic</span></h3><pre><span class="pre-lang">promql</span><code># Traffic now is less than 50% of the same time last week
+sum(rate(http_requests_total[5m]))
+  &lt; 0.5 * sum(rate(http_requests_total[5m] offset 1w))</code></pre><h3>Intermediate: statistical bands (z-score) <span class="lvl i">Intermediate</span></h3><p>A z-score says how many standard deviations a value is from its mean. Alert if |z| &gt; 3.</p><pre><span class="pre-lang">promql</span><code>(
+  sum(rate(http_requests_total[5m]))
+  - avg_over_time(job:http_requests:rate5m[1d])
+) / stddev_over_time(job:http_requests:rate5m[1d]) &gt; 3</code></pre><h3>Expert: seasonality and forecasting <span class="lvl e">Expert</span></h3><p>Real traffic has daily and weekly cycles. Compare against the same hour of previous days, or use <strong>Holt-Winters / ARIMA / Prophet</strong> to forecast an expected band. <code>predict_linear</code> handles trends (capacity), e.g.:</p><pre><span class="pre-lang">promql</span><code>predict_linear(node_filesystem_avail_bytes{mountpoint=&quot;/&quot;}[6h], 4*3600) &lt; 0</code></pre></div><div class="section" id="d3"><h2><span>🤖</span> Anomaly Detection</h2><p>Automatically flags behaviour that deviates from learned normal. Types of anomaly:</p><div class="cards"><div class="card"><div class="cicon">📍</div><div class="ct">Point</div><div class="cd">One value far outside the range (single latency spike).</div></div><div class="card"><div class="cicon">📈</div><div class="ct">Contextual</div><div class="cd">Normal value at the wrong time (high traffic at 3 AM).</div></div><div class="card"><div class="cicon">🔗</div><div class="ct">Collective</div><div class="cd">A pattern is abnormal even if each point looks fine (gradual leak).</div></div></div><div class="tw"><table><tr><th>Approach</th><th>How</th><th>Tools</th></tr><tr><td>Statistical</td><td>Mean/stddev, EWMA, MAD, percentiles</td><td>PromQL, Grafana</td></tr><tr><td>Seasonal</td><td>Holt-Winters, STL decomposition</td><td>Grafana Alerting, custom jobs</td></tr><tr><td>Machine learning</td><td>Isolation Forest, autoencoders, learned baselines</td><td>Datadog Watchdog/anomalies(), Dynatrace Davis, New Relic baseline, Elastic ML, OpenSearch Anomaly Detection</td></tr></table></div><div class="callout warn"><div class="ci">⚠️</div><div><strong>Trade-offs:</strong> anomaly detection needs history (cold-start), can learn bad behaviour as "normal", and is harder to explain at 3 AM. Pair it with SLO alerts and always test sensitivity on past incidents.</div></div></div><div class="section" id="d4"><h2><span>🔥</span> Expert: Multi-Window, Multi-Burn-Rate SLO Alerts</h2><p><strong>Burn rate</strong> = how fast you consume the error budget. Burn rate 1 uses exactly the whole budget by the end of the window; 14.4 burns 2% of a 30-day budget in 1 hour. Using a long and a short window avoids both slow detection and noisy flapping (the short window confirms it is still happening).</p><div class="tw"><table><tr><th>Severity</th><th>Long window</th><th>Short window</th><th>Burn rate</th><th>Budget used</th></tr><tr><td>Page</td><td>1h</td><td>5m</td><td>14.4</td><td>2%</td></tr><tr><td>Page</td><td>6h</td><td>30m</td><td>6</td><td>5%</td></tr><tr><td>Ticket</td><td>3d</td><td>6h</td><td>1</td><td>10%</td></tr></table></div><pre><span class="pre-lang">promql</span><code># 99.9% SLO (budget 0.001), fast-burn page
+(
+  sum(rate(http_requests_total{status=~&quot;5..&quot;}[1h])) / sum(rate(http_requests_total[1h])) &gt; (14.4 * 0.001)
+)
+and
+(
+  sum(rate(http_requests_total{status=~&quot;5..&quot;}[5m])) / sum(rate(http_requests_total[5m])) &gt; (14.4 * 0.001)
+)</code></pre><div class="callout key"><div class="ci">💡</div><div>This pattern is described in the Google SRE Workbook and is the recommended starting point for SLO alerting. Tools like Sloth and Pyrra generate these rules for you.</div></div></div></section><section class="panel" id="t4"><div><div class="eyebrow">Module 04 · Putting It Into Practice</div><h1 class="ptitle">On-Call, Runbooks and Alert Operations</h1><p class="psub">Good alert rules are only half the job. This module covers the humans, the process and the testing around them.</p></div><div class="section" id="o1"><h2><span>👥</span> On-Call Practices</h2><ul><li><strong>Rotation:</strong> primary + secondary, typically weekly shifts; follow-the-sun across time zones to avoid night pages.</li><li><strong>Escalation policy:</strong> primary (5 min) → secondary (10 min) → engineering manager. No page should rely on one person.</li><li><strong>Handoff:</strong> outgoing engineer shares open incidents, flaky alerts and recent changes.</li><li><strong>Compensation and load:</strong> cap pages per shift; sustained overload is a staffing/design problem, not a heroics problem.</li></ul><div class="tw"><table><tr><th>Metric</th><th>Meaning</th><th>Use</th></tr><tr><td>MTTD</td><td>Mean time to detect</td><td>Quality of detection</td></tr><tr><td>MTTA</td><td>Mean time to acknowledge</td><td>On-call responsiveness, routing quality</td></tr><tr><td>MTTR</td><td>Mean time to resolve/recover</td><td>Overall incident handling and runbook quality</td></tr></table></div><p>Typical paging tools: PagerDuty, Opsgenie (Atlassian), Splunk On-Call, Grafana IRM. Vendor lineups change, so verify current offerings before standardising.</p></div><div class="section" id="o2"><h2><span>📘</span> Runbook Template</h2><p>Every paging alert links a runbook. Keep it short and executable at 3 AM.</p><pre><span class="pre-lang">text</span><code>ALERT: HighErrorRate (checkout)
+IMPACT:     Customers cannot pay. Revenue loss ~ $X/min.
+CHECK:      1. Dashboard &lt;link&gt;  2. Recent deploys?  3. Dependency status (payments API)
+MITIGATE:   - Roll back last deploy: &lt;command&gt;
+            - Fail over to region B: &lt;command&gt;
+ESCALATE:   If not mitigated in 15 min -&gt; payments-lead, then incident commander
+OWNER:      payments-team  |  LAST REVIEWED: 2026-09-01</code></pre></div><div class="section" id="o3"><h2><span>🧪</span> Testing and Validating Alert Rules</h2><p>Treat alerts as code: lint and unit-test them in CI.</p><pre><span class="pre-lang">bash</span><code>promtool check rules alerts.yml
+promtool test rules alert_tests.yml</code></pre><pre><span class="pre-lang">yaml</span><code># alert_tests.yml
+rule_files: [alerts.yml]
+evaluation_interval: 1m
+tests:
+  - interval: 1m
+    input_series:
+      - series: &#x27;up{job=&quot;api&quot;,instance=&quot;a&quot;}&#x27;
+        values: &#x27;1 1 0 0 0 0 0&#x27;          # goes down at minute 2
+    alert_rule_test:
+      - eval_time: 5m                    # rule has &quot;for: 3m&quot; so it fires at minute 5
+        alertname: InstanceDown
+        exp_alerts:
+          - exp_labels: {severity: page, job: api, instance: a}</code></pre><p><strong>Also:</strong> trigger a game-day / chaos test to prove the whole path (rule → Alertmanager → pager → human) works, and enable a <em>dead-man's-switch</em> alert (always firing) so you know when alerting itself breaks.</p></div><div class="section" id="o4"><h2><span>🕰️</span> Routing by Time and Team, and a Worked Example</h2><pre><span class="pre-lang">yaml</span><code>route:
+  receiver: team-slack
+  routes:
+    - matchers: [severity=&quot;page&quot;, team=&quot;payments&quot;]
+      receiver: payments-pagerduty
+      mute_time_intervals: []
+    - matchers: [severity=&quot;ticket&quot;]
+      receiver: jira-webhook
+      mute_time_intervals: [weekends]
+time_intervals:
+  - name: weekends
+    time_intervals: [{weekdays: [&#x27;saturday&#x27;, &#x27;sunday&#x27;]}]</code></pre><h3>Worked example: cleaning up a noisy rotation</h3><div class="tw"><table><tr><th></th><th>Before</th><th>After</th></tr><tr><td>Alerts per week</td><td>420</td><td>35</td></tr><tr><td>Actionable</td><td>~12%</td><td>~85%</td></tr><tr><td>Pages per night shift</td><td>9</td><td>1</td></tr><tr><td>Changes made</td><td></td><td>Deleted 60 never-actioned alerts; moved 150 cause-alerts to dashboards/tickets; grouped by service; added burn-rate SLO pages; added runbooks</td></tr></table></div><div class="callout key"><div class="ci">💡</div><div>Make the numbers visible: report pages per shift and % actionable to the team each month. What gets measured gets pruned.</div></div></div></section><section class="panel" id="t5"><div><div class="eyebrow">Module 05 · Test Yourself</div><h1 class="ptitle">Final Assessment: Alerting Strategy</h1><p class="psub">25 timed, proctored questions on alerting strategy, hygiene, dynamic thresholds, anomaly detection and on-call operations. Questions and options are shuffled on every attempt.</p></div><div class="section" id="t5-a"><h2><span>📝</span> Take the Assessment</h2><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div><div class="assess-intro-text">A timed, proctored, exam-style assessment on alerting strategy, hygiene, dynamic thresholds, anomaly detection and on-call operations. Questions <strong>and answer options are shuffled on every attempt</strong>.</div><ul class="assess-intro-list"><li><strong>25 multiple-choice questions</strong>: concept checks, scenario and query-reading questions</li><li>Difficulty ranges from <strong>Basic</strong> to <strong>Expert</strong></li><li><strong>30-minute</strong> timer, question palette, mark-for-review</li><li>Runs <strong>fullscreen</strong>; tab switching and leaving the window are tracked (3 warnings = auto-submit)</li><li>Answers and explanations are shown <strong>only after you submit</strong>; attempts and top score are saved in this browser</li></ul><button class="assess-start-btn" id="assessStartBtn" type="button">&#9654; Start Assessment</button></div><div id="scoreBoard" style="display:none"></div></div></section></main></div>
+<script>
+const tabs=[...document.querySelectorAll('.tab')],panels=[...document.querySelectorAll('.panel')],toc=document.getElementById('toc');
+let manual=null;function show(id){manual=null;tabs.forEach(t=>t.classList.toggle('on',t.dataset.tab===id));panels.forEach(p=>p.classList.toggle('on',p.id===id));
+const p=document.getElementById(id);toc.innerHTML=[...p.querySelectorAll('.section')].map(s=>`<a href="#${s.id}">${s.querySelector('h2').textContent.trim()}</a>`).join('');
+document.getElementById('ptxt').textContent='Tab '+(tabs.findIndex(t=>t.dataset.tab===id)+1)+' of '+tabs.length;scrollTo(0,0)}
+tabs.forEach(t=>t.onclick=()=>show(t.dataset.tab));
+addEventListener('scroll',()=>{if(manual)return;let c=null;const ss=[...document.querySelectorAll('.panel.on .section')];ss.forEach(s=>{if(s.getBoundingClientRect().top<170)c=s.id});if(ss.length&&innerHeight+scrollY>=document.documentElement.scrollHeight-4)c=ss[ss.length-1].id;toc.querySelectorAll('a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+c))});
+toc.addEventListener('click',e=>{const a=e.target.closest('a');if(!a)return;manual=a.getAttribute('href').slice(1);toc.querySelectorAll('a').forEach(x=>x.classList.toggle('on',x===a))});
+['wheel','touchstart','keydown','pointerdown'].forEach(ev=>window.addEventListener(ev,e=>{if(e.target&&e.target.closest&&e.target.closest('#toc a'))return;manual=null},{passive:true}));
+document.getElementById('rst').onclick=()=>show(tabs[0].dataset.tab);show(tabs[0].dataset.tab);
+</script><style>
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.rvw{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.rvw.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash .card:hover{transform:none}
+  .exam-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9;padding:0}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-fswarn{position:fixed;inset:0;z-index:100003;background:rgba(15,23,42,.92);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#fff;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fswarn .fw-box{max-width:520px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .exam-fswarn h3{font-size:30px;font-weight:800;margin:0;display:flex;align-items:center;gap:12px;color:#fff}
+  .exam-fswarn p{margin:0;font-size:16px;color:#e2e8f0;line-height:1.5}
+  .exam-fswarn .fw-count{font-size:16px;font-weight:600;color:#fff}
+  .exam-fswarn .fw-btn{margin-top:6px;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:15px 26px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+  .exam-fswarn .fw-btn:hover{background:#000}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}.exam-q-pane{padding:20px}}
+  
+.assess-start-card{border:1px solid #e9e9e7;border-radius:14px;padding:26px;background:#f7f6f3;max-width:760px}
+.assess-intro-title{font-size:20px;font-weight:700;margin-bottom:10px}.assess-intro-text{font-size:14.5px;color:#787774;margin-bottom:12px}
+.assess-intro-list{font-size:14px;color:#787774;line-height:1.9;margin:0 0 20px 18px;padding:0}
+.assess-start-btn{background:#14213D;color:#fff;border:0;border-radius:9px;padding:13px 26px;font:700 15px 'Noto Sans',sans-serif;cursor:pointer}.assess-start-btn:hover{opacity:.9}
+.exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none}
+@media print{.exam-overlay,.exam-splash{display:none!important}}
+</style><script>
+(function(){
+  const RAW=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob('W3siZCI6ICJCYXNpYyIsICJxIjogIkFuIGFsZXJ0IHNob3VsZCBwcmltYXJpbHkgYmUgdHJpZ2dlcmVkIHdoZW46IiwgIm8iOiBbIkEgZGVwbG95IGhhcHBlbnMiLCAiQSBodW1hbiBuZWVkcyB0byB0YWtlIGFjdGlvbiIsICJBbnkgbWV0cmljIGNoYW5nZXMiLCAiQ1BVIGV4Y2VlZHMgNTAlIl0sICJhIjogMSwgImUiOiAiSWYgbm8gaHVtYW4gYWN0aW9uIGlzIG5lZWRlZCwgaXQgc2hvdWxkIGJlIGEgZGFzaGJvYXJkIG9yIHRpY2tldCwgbm90IGFuIGFsZXJ0LiJ9LCB7ImQiOiAiQmFzaWMiLCAicSI6ICJXaGljaCBpcyBhIHN5bXB0b20tYmFzZWQgYWxlcnQ/IiwgIm8iOiBbIkNoZWNrb3V0IGVycm9yIHJhdGUgYWJvdmUgMiUgZm9yIDUgbWludXRlcyIsICJQb2QgbWVtb3J5IGFib3ZlIDcwJSIsICJEaXNrIElPIHdhaXQgaGlnaCIsICJOb2RlIENQVSBhYm92ZSA5MCUiXSwgImEiOiAwLCAiZSI6ICJTeW1wdG9tcyByZWZsZWN0IHVzZXItdmlzaWJsZSBpbXBhY3Q7IHRoZSBvdGhlcnMgYXJlIHBvdGVudGlhbCBjYXVzZXMuIn0sIHsiZCI6ICJCYXNpYyIsICJxIjogIkFsZXJ0IGZhdGlndWUgaXMgYmVzdCBkZXNjcmliZWQgYXM6IiwgIm8iOiBbIk9uLWNhbGwgaWdub3JpbmcgYWxlcnRzIGJlY2F1c2UgdG9vIG1hbnkgYXJlIG5vaXN5IG9yIG5vdCBhY3Rpb25hYmxlIiwgIkFsZXJ0cyB1c2luZyB0b28gbXVjaCBDUFUiLCAiVG9vIGZldyBhbGVydHMiLCAiQWxlcnRzIGZhaWxpbmcgdG8gc2VuZCJdLCAiYSI6IDAsICJlIjogIk5vaXNlIGVyb2RlcyB0cnVzdCBzbyByZWFsIGluY2lkZW50cyBnZXQgaWdub3JlZC4ifSwgeyJkIjogIkJhc2ljIiwgInEiOiAiQSA5OS45JSBTTE8gb3ZlciAzMCBkYXlzIGdpdmVzIGFuIGVycm9yIGJ1ZGdldCBvZiByb3VnaGx5OiIsICJvIjogWyIxMCBzZWNvbmRzIiwgIjcgbWludXRlcyIsICI0LjMgaG91cnMiLCAiNDMgbWludXRlcyJdLCAiYSI6IDMsICJlIjogIjAuMSUgb2YgMzAgZGF5cyDiiYggNDMgbWludXRlcy4ifSwgeyJkIjogIkJhc2ljIiwgInEiOiAiV2hhdCBkb2VzIHRoZSA8Y29kZT5mb3I6IDEwbTwvY29kZT4gY2xhdXNlIGluIGEgUHJvbWV0aGV1cyBhbGVydCBkbz8iLCAibyI6IFsiU2lsZW5jZXMgZm9yIDEwIG1pbnV0ZXMiLCAiUmVwZWF0cyB0aGUgYWxlcnQgZm9yIDEwIG1pbnV0ZXMiLCAiUmVxdWlyZXMgdGhlIGNvbmRpdGlvbiB0byBob2xkIGZvciAxMCBtaW51dGVzIGJlZm9yZSBmaXJpbmciLCAiU2V0cyByZXRlbnRpb24iXSwgImEiOiAyLCAiZSI6ICI8Y29kZT5mb3I8L2NvZGU+IGZpbHRlcnMgb3V0IHNob3J0IGJsaXBzIGFuZCByZWR1Y2VzIGZsYXBwaW5nLiJ9LCB7ImQiOiAiSW50ZXJtZWRpYXRlIiwgInEiOiAiSW5oaWJpdGlvbiBpbiBBbGVydG1hbmFnZXIgaXMgdXNlZCB0bzoiLCAibyI6IFsiRW5jcnlwdCBub3RpZmljYXRpb25zIiwgIkluY3JlYXNlIHNldmVyaXR5IiwgIkRlbGV0ZSBvbGQgYWxlcnRzIiwgIlN1cHByZXNzIGRlcGVuZGVudCBhbGVydHMgd2hlbiBhIHJvb3QtY2F1c2UgYWxlcnQgaXMgZmlyaW5nIl0sICJhIjogMywgImUiOiAiRm9yIGV4YW1wbGUsIGEgTm9kZURvd24gYWxlcnQgY2FuIGluaGliaXQgYWxsIHBvZCBhbGVydHMgb24gdGhhdCBub2RlLiJ9LCB7ImQiOiAiSW50ZXJtZWRpYXRlIiwgInEiOiAiV2hpY2ggdGVjaG5pcXVlIGJ1bmRsZXMgbWFueSByZWxhdGVkIGFsZXJ0cyBpbnRvIG9uZSBub3RpZmljYXRpb24/IiwgIm8iOiBbIkdyb3VwaW5nIiwgIlNhbXBsaW5nIiwgIkVzY2FsYXRpb24iLCAiU2lsZW5jaW5nIl0sICJhIjogMCwgImUiOiAiR3JvdXBpbmcgKGdyb3VwX2J5KSBzZW5kcyBvbmUgY29tYmluZWQgbm90aWZpY2F0aW9uLiJ9LCB7ImQiOiAiSW50ZXJtZWRpYXRlIiwgInEiOiAiQmVzdCB1c2Ugb2YgYSBzdGF0aWMgdGhyZXNob2xkOiIsICJvIjogWyJDb21wYXJpbmcgd2l0aCBsYXN0IHdlZWsiLCAiU2Vhc29uYWwgdHJhZmZpYyB2b2x1bWUiLCAiRGV0ZWN0aW5nIHNsb3cgbWVtb3J5IGxlYWtzIiwgIkhhcmQgbGltaXRzIGxpa2UgZGlzayBmdWxsIG9yIGNlcnRpZmljYXRlIGV4cGlyeSJdLCAiYSI6IDMsICJlIjogIkhhcmQgbGltaXRzIGhhdmUgYSBmaXhlZCBtZWFuaW5nIHRoYXQgZG9lcyBub3QgZGVwZW5kIG9uIHRyYWZmaWMgcGF0dGVybnMuIn0sIHsiZCI6ICJJbnRlcm1lZGlhdGUiLCAicSI6ICJXaHkgYXJlIGR5bmFtaWMgdGhyZXNob2xkcyBoZWxwZnVsIGZvciB0cmFmZmljIG1ldHJpY3M/IiwgIm8iOiBbIlRoZXkgYWRhcHQgdG8gZGFpbHkvd2Vla2x5IHNlYXNvbmFsaXR5IiwgIlRoZXkgbmV2ZXIgY3JlYXRlIGZhbHNlIGFsZXJ0cyIsICJUaGV5IGFyZSBhbHdheXMgY2hlYXBlciIsICJUaGV5IHJlcGxhY2UgU0xPcyJdLCAiYSI6IDAsICJlIjogIkJhc2VsaW5lcyBhY2NvdW50IGZvciBwYXR0ZXJucyBsaWtlIGxvdyB0cmFmZmljIGF0IG5pZ2h0LiJ9LCB7ImQiOiAiSW50ZXJtZWRpYXRlIiwgInEiOiAiQSB6LXNjb3JlIG9mIDMuNSBvbiBhIG1ldHJpYyBtZWFuczoiLCAibyI6IFsiSXQgaXMgMy41IHN0YW5kYXJkIGRldmlhdGlvbnMgZnJvbSB0aGUgbWVhbiIsICIzLjUlIGVycm9yIiwgIkFsZXJ0IHNldmVyaXR5IDMuNSIsICJUaGUgdmFsdWUgaXMgMy41IHRpbWVzIGF2ZXJhZ2UiXSwgImEiOiAwLCAiZSI6ICJ6ID0gKHZhbHVlIOKIkiBtZWFuKSAvIHN0YW5kYXJkIGRldmlhdGlvbi4ifSwgeyJkIjogIkV4cGVydCIsICJxIjogIldoaWNoIFByb21RTCBmdW5jdGlvbiBmb3JlY2FzdHMgd2hlbiBhIGRpc2sgd2lsbCBmaWxsPyIsICJvIjogWyJ0b3BrKCkiLCAicmF0ZSgpIiwgInByZWRpY3RfbGluZWFyKCkiLCAiYWJzZW50KCkiXSwgImEiOiAyLCAiZSI6ICI8Y29kZT5wcmVkaWN0X2xpbmVhcjwvY29kZT4gZXh0cmFwb2xhdGVzIGEgbGluZWFyIHRyZW5kLiJ9LCB7ImQiOiAiRXhwZXJ0IiwgInEiOiAiQSBcImNvbGxlY3RpdmUgYW5vbWFseVwiIGlzOiIsICJvIjogWyJBIGR1cGxpY2F0ZSBhbGVydCIsICJBIGdyb3VwIG9mIHBvaW50cyB0aGF0IGlzIGFibm9ybWFsIHRvZ2V0aGVyIiwgIkEgdGVhbSBpbmNpZGVudCIsICJBIHNpbmdsZSBleHRyZW1lIHZhbHVlIl0sICJhIjogMSwgImUiOiAiRWFjaCBwb2ludCBtYXkgbG9vayBub3JtYWwsIGJ1dCB0aGUgcGF0dGVybiBhcyBhIHdob2xlIGlzIHVudXN1YWwgKGUuZy4gc2xvdyBsZWFrKS4ifSwgeyJkIjogIkV4cGVydCIsICJxIjogIkEgYnVybiByYXRlIG9mIDE0LjQgb24gYSAzMC1kYXkgU0xPIGNvbnN1bWVzIGhvdyBtdWNoIGJ1ZGdldCBpbiAxIGhvdXI/IiwgIm8iOiBbIjUwJSIsICIxNC40JSIsICIwLjElIiwgIjIlIl0sICJhIjogMywgImUiOiAiMTQuNCDDlyAoMWggLyA3MjBoKSA9IDIlIG9mIHRoZSBidWRnZXQuIn0sIHsiZCI6ICJFeHBlcnQiLCAicSI6ICJXaHkgY29tYmluZSBhIGxvbmcgYW5kIGEgc2hvcnQgd2luZG93IGluIGJ1cm4tcmF0ZSBhbGVydHM/IiwgIm8iOiBbIkxvbmcgd2luZG93IGdpdmVzIHNpZ25pZmljYW5jZSwgc2hvcnQgd2luZG93IGNvbmZpcm1zIHRoZSBwcm9ibGVtIGlzIHN0aWxsIGhhcHBlbmluZyIsICJUbyBhdm9pZCBkYXNoYm9hcmRzIiwgIlRvIHVzZSBtb3JlIG1lbW9yeSIsICJQcm9tZXRoZXVzIHJlcXVpcmVzIGl0Il0sICJhIjogMCwgImUiOiAiSXQgcmVkdWNlcyBmYWxzZSBwb3NpdGl2ZXMgYW5kIHNwZWVkcyB1cCByZXNvbHV0aW9uIG9mIHRoZSBhbGVydCBvbmNlIGZpeGVkLiJ9LCB7ImQiOiAiRXhwZXJ0IiwgInEiOiAiV2hpY2ggaXMgYSBkb3duc2lkZSBvZiBNTCBhbm9tYWx5IGRldGVjdGlvbj8iLCAibyI6IFsiTmVlZHMgaGlzdG9yeSBhbmQgY2FuIGJlIGhhcmQgdG8gZXhwbGFpbiBvciB0dW5lIiwgIkl0IGlzIGFsd2F5cyBmcmVlIiwgIkl0IG9ubHkgd29ya3MgZm9yIGxvZ3MiLCAiSXQgY2Fubm90IGRldGVjdCBhbnl0aGluZyJdLCAiYSI6IDAsICJlIjogIkNvbGQtc3RhcnQsIGxlYXJuaW5nIGJhZCBub3JtYWxzIGFuZCBleHBsYWluYWJpbGl0eSBhcmUgY29tbW9uIGNoYWxsZW5nZXMuIn0sIHsiZCI6ICJCYXNpYyIsICJxIjogIldoYXQgaXMgYW4gZXNjYWxhdGlvbiBwb2xpY3k/IiwgIm8iOiBbIkEgbGlzdCBvZiBkYXNoYm9hcmRzIiwgIldobyBpcyBub3RpZmllZCBuZXh0IGlmIG5vYm9keSBhY2tub3dsZWRnZXMgd2l0aGluIGEgc2V0IHRpbWUiLCAiQSByZXRlbnRpb24gcnVsZSIsICJBIFByb21ldGhldXMgcmVjb3JkaW5nIHJ1bGUiXSwgImEiOiAxLCAiZSI6ICJJdCBkZWZpbmVzIHRoZSBjaGFpbjogcHJpbWFyeSDihpIgc2Vjb25kYXJ5IOKGkiBtYW5hZ2VyIHdpdGggdGltZW91dHMuIn0sIHsiZCI6ICJCYXNpYyIsICJxIjogIk1UVEEgbWVhc3VyZXM6IiwgIm8iOiBbIlRpbWUgdG8gZGV0ZWN0IiwgIlRpbWUgdG8gYXJjaGl2ZSIsICJUaW1lIHRvIGFja25vd2xlZGdlIGFuIGFsZXJ0IiwgIlRpbWUgdG8gZGVwbG95Il0sICJhIjogMiwgImUiOiAiTWVhbiB0aW1lIHRvIGFja25vd2xlZGdlIHJlZmxlY3RzIG9uLWNhbGwgcmVzcG9uc2l2ZW5lc3MgYW5kIHJvdXRpbmcuIn0sIHsiZCI6ICJJbnRlcm1lZGlhdGUiLCAicSI6ICJXaGljaCBjb21tYW5kIHZhbGlkYXRlcyBhbGVydCBydWxlIHN5bnRheD8iLCAibyI6IFsiZ3JhZmFuYS1jbGkgcnVsZXMiLCAicHJvbXRvb2wgY2hlY2sgcnVsZXMgYWxlcnRzLnltbCIsICJwcm9tZXRoZXVzIC0tbGludCIsICJrdWJlY3RsIGFsZXJ0Il0sICJhIjogMSwgImUiOiAiPGNvZGU+cHJvbXRvb2wgY2hlY2sgcnVsZXM8L2NvZGU+IGxpbnRzIHJ1bGUgZmlsZXM7IDxjb2RlPnByb210b29sIHRlc3QgcnVsZXM8L2NvZGU+IHVuaXQtdGVzdHMgdGhlbS4ifSwgeyJkIjogIkV4cGVydCIsICJxIjogIldoeSBhZGQgYSBkZWFkLW1hbidzLXN3aXRjaCAoYWx3YXlzLWZpcmluZykgYWxlcnQ/IiwgIm8iOiBbIlRvIHJlZHVjZSBzdG9yYWdlIiwgIlRvIGFubm95IG9uLWNhbGwiLCAiVG8gcmFpc2Ugc2V2ZXJpdHkiLCAiVG8gZGV0ZWN0IHRoYXQgdGhlIGFsZXJ0aW5nIHBpcGVsaW5lIGl0c2VsZiBoYXMgZmFpbGVkIl0sICJhIjogMywgImUiOiAiSWYgdGhlIGhlYXJ0YmVhdCBzdG9wcyBhcnJpdmluZywgYWxlcnRpbmcgaXMgYnJva2VuIGFuZCB5b3UgZmluZCBvdXQuIn0sIHsiZCI6ICJCYXNpYyIsICJxIjogIldoaWNoIGlzIGFuIGl0ZW0gYSBnb29kIHJ1bmJvb2sgc2hvdWxkIGNvbnRhaW4/IiwgIm8iOiBbIkhSIHBvbGljeSIsICJJbXBhY3QsIGRpYWdub3N0aWMgc3RlcHMsIG1pdGlnYXRpb24sIGVzY2FsYXRpb24sIG93bmVyIiwgIlNvdXJjZSBjb2RlIiwgIk1hcmtldGluZyBwbGFuIl0sICJhIjogMSwgImUiOiAiQSBydW5ib29rIG11c3QgbGV0IGEgdGlyZWQgZW5naW5lZXIgYWN0IHF1aWNrbHk6IGltcGFjdCwgY2hlY2tzLCBtaXRpZ2F0aW9uLCBlc2NhbGF0aW9uLiJ9LCB7ImQiOiAiSW50ZXJtZWRpYXRlIiwgInEiOiAiUm91dGluZyBhIG5vbi11cmdlbnQgdGlja2V0IGFsZXJ0IHRvIG11dGUgb24gd2Vla2VuZHMgdXNlczoiLCAibyI6IFsiaW5oaWJpdF9ydWxlcyIsICJncm91cF93YWl0IiwgInRpbWVfaW50ZXJ2YWxzIC8gbXV0ZV90aW1lX2ludGVydmFscyIsICJyZWNvcmRpbmcgcnVsZXMiXSwgImEiOiAyLCAiZSI6ICJBbGVydG1hbmFnZXIgdGltZSBpbnRlcnZhbHMgbXV0ZSBub3RpZmljYXRpb25zIGR1cmluZyBkZWZpbmVkIHBlcmlvZHMuIn0sIHsiZCI6ICJJbnRlcm1lZGlhdGUiLCAicSI6ICJBZnRlciBjbGVhbnVwLCBhIHJvdGF0aW9uIHdlbnQgZnJvbSA0MjAgdG8gMzUgd2Vla2x5IGFsZXJ0cy4gV2hpY2ggc3RlcCBtb3N0IGxpa2VseSBjb250cmlidXRlZD8iLCAibyI6IFsiRGVsZXRpbmcgbmV2ZXItYWN0aW9uZWQgYWxlcnRzIGFuZCBtb3ZpbmcgY2F1c2UtYWxlcnRzIHRvIGRhc2hib2FyZHMiLCAiQnV5aW5nIGEgYmlnZ2VyIHNlcnZlciIsICJBZGRpbmcgbW9yZSBjaGFubmVscyIsICJSYWlzaW5nIGV2ZXJ5IHRocmVzaG9sZCB0byBpbmZpbml0eSJdLCAiYSI6IDAsICJlIjogIlJlbW92aW5nIG5vbi1hY3Rpb25hYmxlIGFsZXJ0cyBhbmQga2VlcGluZyBzeW1wdG9tIGFsZXJ0cyBpcyB0aGUgY29yZSBvZiBoeWdpZW5lLiJ9LCB7ImQiOiAiRXhwZXJ0IiwgInEiOiAiQSBjaGFvcyBvciBnYW1lLWRheSB0ZXN0IG9mIGFsZXJ0aW5nIHZlcmlmaWVzOiIsICJvIjogWyJPbmx5IHRoZSBydW5ib29rIHRleHQiLCAiVGhlIGZ1bGwgcGF0aCBmcm9tIHJ1bGUgdG8gQWxlcnRtYW5hZ2VyIHRvIHBhZ2VyIHRvIGh1bWFuIiwgIk9ubHkgdGhlIGRhc2hib2FyZCIsICJEaXNrIHNwZWVkIl0sICJhIjogMSwgImUiOiAiSXQgcHJvdmVzIHRoZSBlbnRpcmUgY2hhaW4gd29ya3MgZW5kIHRvIGVuZCB1bmRlciByZWFsaXN0aWMgY29uZGl0aW9ucy4ifSwgeyJkIjogIkludGVybWVkaWF0ZSIsICJxIjogIlN1c3RhaW5lZCBoaWdoIHBhZ2VzIHBlciBzaGlmdCBpcyBiZXN0IHRyZWF0ZWQgYXM6IiwgIm8iOiBbIk5vcm1hbCIsICJBIHJlYXNvbiB0byBtdXRlIHRoZSBjaGFubmVsIiwgIkEgcmVhc29uIHRvIGRlbGV0ZSB0aGUgU0xPIiwgIkEgc3lzdGVtL3Byb2Nlc3MgcHJvYmxlbSB0byBmaXgsIG5vdCBpbmRpdmlkdWFsIGhlcm9pY3MiXSwgImEiOiAzLCAiZSI6ICJDaHJvbmljIG92ZXJsb2FkIG5lZWRzIHJlbGlhYmlsaXR5IHdvcmsgYW5kIGFsZXJ0IHBydW5pbmcuIn0sIHsiZCI6ICJFeHBlcnQiLCAicSI6ICJJbiBhIDxjb2RlPnByb210b29sIHRlc3QgcnVsZXM8L2NvZGU+IGNhc2UsIHdoYXQgZG9lcyA8Y29kZT5leHBfYWxlcnRzPC9jb2RlPiBkZWZpbmU/IiwgIm8iOiBbIlNjcmFwZSB0YXJnZXRzIiwgIkV4cGVjdGVkIGZpcmluZyBhbGVydHMgYW5kIHRoZWlyIGxhYmVscyBhdCB0aGUgZXZhbCB0aW1lIiwgIk5vdGlmaWNhdGlvbiB0ZW1wbGF0ZXMiLCAiR3JhZmFuYSBwYW5lbHMiXSwgImEiOiAxLCAiZSI6ICJJdCBsaXN0cyB0aGUgYWxlcnRzIGV4cGVjdGVkIHRvIGJlIGZpcmluZyBhdCA8Y29kZT5ldmFsX3RpbWU8L2NvZGU+IHdpdGggZXhhY3QgbGFiZWxzLiJ9XQ=='),c=>c.charCodeAt(0))));
+  const TITLE="Alerting Strategy", LS_KEY='obs_scores_alerting', EXAM_SECONDS=30*60;
+  let items=[],answers={},marked={},cur=0,remaining=EXAM_SECONDS,timerId=null,examOn=false;
+  const fmt=t=>{const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s};
+  function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function build(){ // shuffle questions AND options, remap the answer
+    return shuffle(RAW.map((x,i)=>{const idx=shuffle(x.o.map((_,k)=>k));return {id:'q'+i,d:x.d,q:x.q,options:idx.map(k=>x.o[k]),answer:idx.indexOf(x.a),exp:x.e}}))}
+  function dlg(title,msg,ok,cancel){return new Promise(res=>{const d=document.createElement('div');d.className='exam-confirm';
+    d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">${cancel?'<button class="exam-btn nav" data-a="0">Cancel</button>':''}<button class="exam-btn primary" data-a="1">${ok||'OK'}</button></div></div>`;
+    document.body.appendChild(d);d.addEventListener('click',e=>{if(e.target===d&&cancel){d.remove();res(false);return}const b=e.target.closest('[data-a]');if(!b)return;d.remove();res(b.dataset.a==='1')})})}
+  const load=()=>{try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]')}catch(e){return[]}};
+  function save(score,total){const a=load();a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)))}catch(e){}board()}
+  function board(){const el=document.getElementById('scoreBoard');if(!el)return;const a=load();if(!a.length){el.style.display='none';return}
+    el.style.display='block';const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]),l5=a.slice(0,5);
+    const f=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})};
+    el.innerHTML=`<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:18px;max-width:760px"><div style="min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center"><div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div><div style="font-size:34px;font-weight:800">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div><div style="font-size:12px;color:#cdd5e5">${best.pct}%</div></div>
+    <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px"><div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${l5.length} attempt${l5.length>1?'s':''}</div>${l5.map(x=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px"><span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b">&middot; ${x.pct}%</span></span><span style="color:#94a3b8">${f(x.ts)}</span></div>`).join('')}</div></div>`}
+  /* proctoring: tab switch / blur / fullscreen exit = warning, 3 strikes = auto-submit; copy, cut, print, save, view-source, right-click, drag disabled */
+  let warns=0,lastWarn=0,proctor=false,fsWanted=false;
+  function cover(on){let c=document.getElementById('examCover');if(on){if(!examOn)return;if(!c){c=document.createElement('div');c.id='examCover';c.className='exam-cover';c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';document.body.appendChild(c)}c.style.display='flex'}else if(c)c.style.display='none'}
+  function hideFsWarn(){const w=document.getElementById('examFsWarn');if(w)w.remove()}
+  function showFsWarn(n){hideFsWarn();const w=document.createElement('div');w.className='exam-fswarn';w.id='examFsWarn';
+    w.innerHTML='<div class="fw-box"><h3><span>&#9888;&#65039;</span> Fullscreen exited</h3><p>The assessment must remain in fullscreen mode.</p><div class="fw-count">Warning '+n+' of 3</div><button class="fw-btn" id="examFsReturn">Return to assessment</button></div>';
+    document.body.appendChild(w);const b=document.getElementById('examFsReturn');
+    b.addEventListener('click',()=>{const el=document.documentElement;const done=()=>{fsWanted=true;hideFsWarn();cover(false)};
+      if(el.requestFullscreen){el.requestFullscreen().then(done).catch(()=>{})}else done()});
+    try{b.focus()}catch(e){}}
+  function warn(kind){if(!proctor||!examOn)return;const n=Date.now();if(n-lastWarn<1500)return;lastWarn=n;warns++;
+    if(warns>=3){hideFsWarn();dlg('Test submitted','You left the test 3 times. It has been auto-submitted.');submit(true)}
+    else if(kind==='fs')showFsWarn(warns);
+    else dlg('Warning '+warns+' of 3','Switching tabs or leaving the window is not allowed. After 3 warnings the test is auto-submitted.')}
+  const onFs=()=>{if(!examOn)return;if(document.fullscreenElement){hideFsWarn();cover(false);return}if(fsWanted)warn('fs')};
+  const onVis=()=>{if(document.hidden){cover(true);warn()}else cover(false)};
+  const onBlur=()=>{if(examOn&&document.hasFocus&&!document.hasFocus()&&!document.hidden){cover(true);warn()}};
+  const onFocus=()=>cover(false);
+  const stop=e=>{e.preventDefault();return false};
+  const keyg=e=>{const k=(e.key||'').toLowerCase();if(((e.ctrlKey||e.metaKey)&&['c','x','s','p','u','a'].includes(k))||k==='f12'||((e.ctrlKey||e.metaKey)&&e.shiftKey&&['i','j','c'].includes(k))){e.preventDefault();return false}};
+  const EV=[['visibilitychange',onVis,document],['fullscreenchange',onFs,document],['blur',onBlur,window],['focus',onFocus,window],['contextmenu',stop,document],['copy',stop,document],['cut',stop,document],['dragstart',stop,document],['keydown',keyg,document]];
+  function pOn(){warns=0;lastWarn=0;proctor=true;EV.forEach(([n,f,t])=>t.addEventListener(n,f,true))}
+  function pOff(){proctor=false;hideFsWarn();EV.forEach(([n,f,t])=>t.removeEventListener(n,f,true));cover(false)}
+  function splash(){const sp=document.createElement('div');sp.className='exam-splash';sp.id='examSplash';
+    sp.innerHTML=`<div class="card"><h2>&#127919; ${TITLE} &mdash; Final Assessment</h2><p>A timed, exam-style assessment modelled on real hiring screens for Observability / SRE roles.</p>
+    <ul><li><b>${RAW.length} questions</b>, questions and options shuffled every attempt</li><li><b>30-minute</b> timer; the test auto-submits when time is up</li><li>Navigate freely, <b>mark questions for review</b>, then submit</li><li>Correct answers and explanations are shown only after you submit</li></ul>
+    <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p><ul style="margin-top:0"><li>The test runs in <b>fullscreen</b> where your browser allows it</li><li><b>No tab / window switching</b> and <b>no exiting fullscreen (Esc)</b>: 3 warnings and the test <b>auto-submits</b></li><li>Copy, print, save, right-click and developer shortcuts are disabled during the test</li></ul>
+    <div style="display:flex;gap:10px"><button class="exam-btn nav" id="exC" style="flex:0 0 auto">Cancel</button><button class="exam-btn primary" id="exB" style="flex:1;padding:14px">Start Test &rarr;</button></div></div>`;
+    document.body.appendChild(sp);document.getElementById('exC').onclick=()=>sp.remove();
+    document.getElementById('exB').onclick=()=>{fsWanted=false;if(document.documentElement.requestFullscreen){document.documentElement.requestFullscreen().then(()=>{fsWanted=true}).catch(()=>{})}sp.remove();enter()}}
+  function enter(){items=build();answers={};marked={};cur=0;remaining=EXAM_SECONDS;examOn=true;
+    const ov=document.createElement('div');ov.className='exam-overlay';ov.id='examOverlay';
+    ov.innerHTML=`<div class="exam-top"><div><div class="et-title">${TITLE} &mdash; Final Assessment</div><div class="et-sub">${items.length} questions &middot; one attempt &middot; good luck</div></div><div class="exam-timer" id="examTimer">${fmt(remaining)}</div></div>
+    <div class="exam-main"><div class="exam-q-pane" id="examQ"></div><div class="exam-side"><div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div><h4>Question palette</h4><div class="exam-palette" id="examPal"></div>
+    <div class="exam-legend"><span><i style="background:#14213D;border-color:#14213D"></i> Answered</span><span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span><span><i></i> Not answered</span></div>
+    <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button></div></div>`;
+    document.body.appendChild(ov);document.body.style.overflow='hidden';
+    document.getElementById('examSubmit').onclick=()=>submit(false);pal();show();timerId=setInterval(tick,1000);addEventListener('beforeunload',bu);pOn()}
+  const bu=e=>{if(examOn){e.preventDefault();e.returnValue=''}};
+  function tick(){remaining--;const el=document.getElementById('examTimer');if(el){el.textContent=fmt(Math.max(remaining,0));if(remaining<=300)el.classList.add('warn')}if(remaining<=0)submit(true)}
+  function pal(){const p=document.getElementById('examPal');p.innerHTML='';items.forEach((it,n)=>{const b=document.createElement('button');b.className='pal';b.textContent=n+1;b.dataset.n=n;b.onclick=()=>{cur=n;show()};p.appendChild(b)});refresh()}
+  function refresh(){document.querySelectorAll('#examPal .pal').forEach(b=>{const n=+b.dataset.n,id=items[n].id;b.classList.toggle('answered',id in answers);b.classList.toggle('marked',!!marked[id]);b.classList.toggle('cur',n===cur)});const e=document.getElementById('examAnsN');if(e)e.textContent=Object.keys(answers).length}
+  function show(){const it=items[cur],id=it.id,pane=document.getElementById('examQ');
+    pane.innerHTML=`<div class="exam-qnum">Question ${cur+1} of ${items.length} &middot; ${it.d}</div><div class="exam-qtext">${it.q}</div>
+    <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}" tabindex="0"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+    <div class="exam-actions"><button class="exam-btn nav" id="exP" ${cur===0?'disabled':''}>&larr; Previous</button><button class="exam-btn rvw${marked[id]?' on':''}" id="exM">${marked[id]?'&#9733; Marked':'&#9734; Mark for review'}</button><button class="exam-btn nav" id="exN" ${cur===items.length-1?'disabled':''}>Next &rarr;</button></div>`;
+    pane.querySelectorAll('.exam-opt').forEach(el=>{const pick=()=>{answers[id]=+el.dataset.i;pane.querySelectorAll('.exam-opt').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');refresh()};el.onclick=pick;el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick()}}});
+    document.getElementById('exP').onclick=()=>{if(cur>0){cur--;show()}};document.getElementById('exN').onclick=()=>{if(cur<items.length-1){cur++;show()}};document.getElementById('exM').onclick=()=>{marked[id]=!marked[id];show()};refresh();pane.scrollTop=0}
+  async function submit(auto){if(!examOn)return;const un=items.length-Object.keys(answers).length;
+    if(!auto){const ok=await dlg('Submit test?',(un>0?'You have '+un+' unanswered question(s). ':'')+'Once submitted, you can\'t change your answers.','Submit test',true);if(!ok)return}
+    examOn=false;clearInterval(timerId);removeEventListener('beforeunload',bu);pOff();let s=0;items.forEach(it=>{if(answers[it.id]===it.answer)s++});results(s)}
+  function results(score){const total=items.length;save(score,total);const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below, revisit the modules and try again.';
+    if(pct>=85)msg='Outstanding &mdash; you are operating at an expert level for this role.';else if(pct>=65)msg='Solid pass. Review the questions you missed and you are interview-ready.';else if(pct>=50)msg='Borderline &mdash; revisit the modules you missed and retake.';
+    const rev=items.map((it,n)=>{const you=answers[it.id],att=you!=null,ok=att&&you===it.answer;let h='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      h+=att?'<div class="ra '+(ok?'cor':'wrong')+'">Your answer: '+String.fromCharCode(65+you)+'. '+it.options[you]+'</div>':'<div class="ra wrong">Your answer: <i>Not answered</i></div>';
+      if(!ok)h+='<div class="ra cor">Correct: '+String.fromCharCode(65+it.answer)+'. '+it.options[it.answer]+'</div>';if(it.exp)h+='<div class="rx">'+it.exp+'</div>';return '<div class="r '+(ok?'ok':'no')+'">'+h+'</div>'}).join('');
+    document.getElementById('examOverlay').innerHTML=`<div class="exam-top"><div class="et-title">Result &mdash; ${TITLE}</div><button class="exam-btn" id="exX" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+    <div class="exam-q-pane" style="grid-column:1/-1"><div class="exam-result"><div class="exam-score">${score} / ${total}</div><div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div><div style="margin-top:16px"><button class="exam-btn primary" id="exR">&#8635; Take another attempt</button></div><div class="exam-rev">${rev}</div></div></div>`;
+    document.getElementById('exR').onclick=()=>{close();splash()};document.getElementById('exX').onclick=close}
+  function close(){pOff();const o=document.getElementById('examOverlay');if(o)o.remove();document.body.style.overflow='';if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}
+  const sb=document.getElementById('assessStartBtn');if(sb)sb.addEventListener('click',splash);board();
+})();
+</script><script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+<style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body></html>

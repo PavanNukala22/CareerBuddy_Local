@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RPO Implementation Manager — A Visual Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300..800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============= Theme (same system as the previous guide) ============= */
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;
+  --accent-soft:#eef1f7;
+  --amber:#FCA311;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Outfit',system-ui,-apple-system,'Segoe UI',sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:600;font-size:18px;letter-spacing:-.01em}
+.brand-mark{
+  width:34px;height:34px;display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#2b4170 60%,#FCA311 100%);
+  border-radius:9px;color:#fff;font-weight:700;font-size:12px;letter-spacing:.02em;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;padding:6px 12px;
+  background:var(--bg-block);border:1px solid var(--line);border-radius:999px;
+  font-size:12px;font-weight:500;color:var(--ink-soft);
+}
+.progress-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-soft);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;
+  border:1px solid var(--line-strong);border-radius:6px;font-size:13px;font-weight:500;
+  color:var(--ink);cursor:pointer;transition:all .15s ease;font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;gap:2px;padding:0 24px;overflow-x:auto;scrollbar-width:none;
+  border-top:1px solid var(--line);background:#fff;
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  padding:11px 16px;background:transparent;border:none;border-radius:8px;
+  font-family:inherit;font-size:13.5px;font-weight:500;color:#4a5568;
+  cursor:pointer;white-space:nowrap;transition:background .15s,color .15s;margin:6px 0;
+}
+.tab:hover{background:#eef1f7;color:#14213D}
+.tab.active{background:#14213D;color:#fff;font-weight:700}
+.tab.active:hover{background:#0b1526}
+
+/* ============= Layout ============= */
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:0}
+@media (max-width:960px){.layout{grid-template-columns:1fr}.toc{display:none}}
+
+.toc{
+  position:sticky;top:118px;align-self:start;height:calc(100vh - 130px);overflow-y:auto;
+  padding:32px 16px 32px 32px;border-right:1px solid var(--line);
+  scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent;
+}
+.toc-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);font-weight:600;margin-bottom:12px;padding-left:8px}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;padding:5px 10px;font-size:13px;color:var(--ink-soft);text-decoration:none;
+  border-radius:4px;line-height:1.4;transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{color:#fff;background:#16233f;font-weight:600;border-radius:12px;padding:10px 14px}
+
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel.active .section:last-child{min-height:calc(100vh - 260px)}
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:8px}
+.panel-title{font-size:42px;line-height:1.1;font-weight:700;letter-spacing:-.02em;margin:0 0 14px;color:var(--ink)}
+.panel-subtitle{font-size:17px;color:var(--ink-soft);margin:0;max-width:720px;line-height:1.55}
+
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-size:28px;font-weight:600;letter-spacing:-.01em;margin:0 0 8px;padding-bottom:6px;
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px}
+.section h3{font-size:18px;font-weight:600;margin:24px 0 10px}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+code{
+  font-family:'JetBrains Mono',monospace;font-size:.88em;background:var(--bg-code);
+  border:1px solid var(--line);padding:1px 6px;border-radius:4px;color:#b34a1e;
+}
+pre{
+  font-family:'JetBrains Mono',monospace;background:#2b2a28;color:#e6e6e3;padding:18px 20px;
+  border-radius:var(--radius);overflow-x:auto;font-size:13.5px;line-height:1.6;margin:14px 0;
+  box-shadow:var(--shadow-sm);position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{position:absolute;top:8px;right:12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9b9a97;font-weight:600}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#8d9bc4;font-style:italic}.tok-f{color:#50fa7b}
+
+/* Callouts */
+.callout{
+  display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start;background:var(--bg-block);
+  border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid var(--line);
+}
+.callout-icon{width:28px;height:28px;display:grid;place-items:center;background:#fff;border-radius:6px;font-size:16px;border:1px solid var(--line)}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#c7d0e4}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:8px;font-size:18px;margin-bottom:10px}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--bg-soft);font-weight:600;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+.table-wrap{overflow-x:auto}
+
+/* Diagrams */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);border:1px solid var(--line);
+  border-radius:var(--radius);padding:20px;margin:18px 0;text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{font-size:12px;color:var(--ink-soft);margin-top:10px;font-style:italic;letter-spacing:.01em}
+
+/* Badges, pills */
+.badge{display:inline-block;padding:2px 8px;font-size:11px;font-weight:600;border-radius:4px;letter-spacing:.02em;font-family:'JetBrains Mono',monospace}
+.badge.blue{background:var(--accent-soft);color:#14213D}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.red{background:var(--red-soft);color:#a82e2e}
+.badge.purple{background:var(--purple-soft);color:#22345f}
+
+/* Compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.compare-col p,.compare-col ul{font-size:14px;margin:6px 0}
+
+/* Level tags */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase}
+.level-tag.inter{background:var(--accent-soft);color:#14213D}
+.level-tag.adv{background:var(--yellow-soft);color:#8a6100}
+
+/* Checklist */
+.checklist{list-style:none;padding:0!important;margin:12px 0!important}
+.checklist li{display:flex;gap:10px;align-items:flex-start;padding:8px 12px;border:1px solid var(--line);border-radius:8px;margin:6px 0!important;background:#fff;font-size:14.5px}
+.checklist li::before{content:"☐";color:var(--accent);font-size:16px;line-height:1.3}
+
+/* ============= Assessment ============= */
+.assess-start-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px}
+.assess-intro-title{font-size:20px;font-weight:700;margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+.assess-modal-overlay{display:none;position:fixed;inset:0;z-index:1000;background:var(--bg);overflow-y:auto}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:820px;margin:0 auto;padding:0 28px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-size:19px;font-weight:600}
+.assess-modal-close{background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;cursor:pointer}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+.quiz-progress{display:flex;align-items:center;gap:14px;background:var(--bg-block);border:1px solid var(--line);border-radius:var(--radius);padding:14px 18px}
+.quiz-score{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:17px;line-height:1.5;margin-bottom:14px}
+.assess-tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-bottom:10px}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14.5px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt-letter{
+  width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;flex-shrink:0;color:var(--ink-soft);
+}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-why{margin-top:10px;font-size:14px;color:#4a5568;line-height:1.55;padding:0 4px}
+.assess-next-btn{
+  background:var(--amber);color:#14213D;border:none;padding:10px 22px;border-radius:8px;font-weight:700;
+  font-size:13.5px;cursor:pointer;font-family:inherit;margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'JetBrains Mono',monospace;font-size:44px;font-weight:700;text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14.5px;color:var(--ink-soft);text-align:center;margin-bottom:22px;line-height:1.5}
+.assess-retry-btn{display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit}
+.assess-retry-btn:hover{opacity:.9}
+.score-board{max-width:820px;margin:18px 0 0}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- Shared SVG marker definitions -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker>
+  </defs>
+</svg>
+
+<!-- ============= STICKY HEADER ============= -->
+<header class="header">
+  <div class="header-top">
+    <div class="brand">
+      <div class="brand-mark">RPO</div>
+      <span>RPO Implementation Manager<span class="brand-sub"> · a visual guide</span></span>
+    </div>
+    <div class="header-actions">
+      <span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 6</span></span>
+      <button class="btn" onclick="resetProgress()" title="Reset to first tab">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9"/><path d="M2 4v3.5h3.5"/></svg>
+        Reset
+      </button>
+    </div>
+  </div>
+  <nav class="tabbar" role="tablist" id="tabbar">
+    <button class="tab active" data-tab="t1" role="tab">Role Overview</button>
+    <button class="tab" data-tab="t2" role="tab">Process Re-engineering</button>
+    <button class="tab" data-tab="t3" role="tab">ATS/CRM Migration</button>
+    <button class="tab" data-tab="t4" role="tab">SLA Configuration</button>
+    <button class="tab" data-tab="t5" role="tab">Change Management</button>
+    <button class="tab" data-tab="t6" role="tab">Assessment</button>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="toc">
+    <div class="toc-title">On this page</div>
+    <ul class="toc-list" id="toc"></ul>
+  </aside>
+
+  <main class="main">
+
+    <!-- ============================================================ -->
+    <!-- TAB 1: ROLE OVERVIEW                                         -->
+    <!-- ============================================================ -->
+    <section class="panel active" id="t1" data-toc='[
+      ["s1-1","What is an RPO Implementation Manager?"],
+      ["s1-2","The implementation journey"],
+      ["s1-3","The four core skills"],
+      ["s1-4","How the skills connect"],
+      ["s1-5","Who you work with"]
+    ]'>
+      <div class="panel-header">
+        <div class="panel-eyebrow">Module 01 · Foundations</div>
+        <h1 class="panel-title">The RPO Implementation Manager Role</h1>
+        <p class="panel-subtitle">The person who takes a signed RPO contract and turns it into a working service: redesigned processes, a configured and migrated system, service levels that measure correctly, and a client team ready to use it all.</p>
+      </div>
+
+      <div class="section" id="s1-1">
+        <h2><span class="sec-emoji">🏗️</span> What is an RPO Implementation Manager?</h2>
+        <p>When a company outsources hiring to an RPO provider, the first months decide whether the partnership works. The <strong>Implementation Manager</strong> leads that transition, from contract signature to a stable, running service, and then hands it to the Account Director and delivery team.</p>
+        <p>It is a project role with a specific shape: a fixed start, a go-live date, many dependencies, and a client whose own people and systems are changing at the same time.</p>
+        <div class="cards">
+          <div class="card"><div class="card-icon" style="background:var(--accent-soft)">🧩</div><div class="card-title">Process designer</div><div class="card-desc">Turns the client's current hiring process into a leaner, agreed future process.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--green-soft)">💾</div><div class="card-title">Technology lead</div><div class="card-desc">Runs the ATS/CRM setup, data migration, integrations and cutover.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--yellow-soft)">⏱️</div><div class="card-title">Service-level builder</div><div class="card-desc">Makes sure contract SLAs are defined precisely and measured by the system.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--orange-soft)">🤝</div><div class="card-title">Change leader</div><div class="card-desc">Brings the client's talent team along so the new way of working sticks.</div></div>
+        </div>
+      </div>
+
+      <div class="section" id="s1-2">
+        <h2><span class="sec-emoji">🛣️</span> The Implementation Journey</h2>
+        <p>Every provider names the phases a little differently, but most implementations move through the same six steps. Lengths vary with client size, the number of countries and how much technology is involved.</p>
+
+        <div class="diagram">
+          <svg viewBox="0 0 740 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Six implementation phases from discovery to hand-over">
+            <text x="370" y="26" text-anchor="middle" font-family="Outfit" font-weight="600" font-size="17" fill="#37352f">From signature to steady state</text>
+            <g font-family="Outfit" text-anchor="middle">
+              <rect x="10" y="50" width="108" height="110" rx="12" fill="#eef1f7" stroke="#14213D" stroke-width="2"/>
+              <text x="64" y="78" font-weight="700" font-size="13" fill="#14213D">1 · Discover</text>
+              <text x="64" y="100" font-size="11" fill="#37352f">Current process,</text>
+              <text x="64" y="115" font-size="11" fill="#37352f">systems, data,</text>
+              <text x="64" y="130" font-size="11" fill="#37352f">stakeholders</text>
+
+              <rect x="130" y="50" width="108" height="110" rx="12" fill="#eef1f7" stroke="#14213D" stroke-width="2"/>
+              <text x="184" y="78" font-weight="700" font-size="13" fill="#14213D">2 · Design</text>
+              <text x="184" y="100" font-size="11" fill="#37352f">Future process,</text>
+              <text x="184" y="115" font-size="11" fill="#37352f">SLA definitions,</text>
+              <text x="184" y="130" font-size="11" fill="#37352f">system blueprint</text>
+
+              <rect x="250" y="50" width="108" height="110" rx="12" fill="#ddedea" stroke="#0f7b0f" stroke-width="2"/>
+              <text x="304" y="78" font-weight="700" font-size="13" fill="#0a5f0a">3 · Build</text>
+              <text x="304" y="100" font-size="11" fill="#37352f">Configure ATS/CRM,</text>
+              <text x="304" y="115" font-size="11" fill="#37352f">integrations,</text>
+              <text x="304" y="130" font-size="11" fill="#37352f">reports, training</text>
+
+              <rect x="370" y="50" width="108" height="110" rx="12" fill="#ddedea" stroke="#0f7b0f" stroke-width="2"/>
+              <text x="424" y="78" font-weight="700" font-size="13" fill="#0a5f0a">4 · Test</text>
+              <text x="424" y="100" font-size="11" fill="#37352f">UAT, data checks,</text>
+              <text x="424" y="115" font-size="11" fill="#37352f">SLA dry run,</text>
+              <text x="424" y="130" font-size="11" fill="#37352f">pilot group</text>
+
+              <rect x="490" y="50" width="108" height="110" rx="12" fill="#fdecc8" stroke="#dfab01" stroke-width="2"/>
+              <text x="544" y="78" font-weight="700" font-size="13" fill="#8a6100">5 · Go-live</text>
+              <text x="544" y="100" font-size="11" fill="#37352f">Cutover plan,</text>
+              <text x="544" y="115" font-size="11" fill="#37352f">launch, early</text>
+              <text x="544" y="130" font-size="11" fill="#37352f">support</text>
+
+              <rect x="610" y="50" width="120" height="110" rx="12" fill="#14213D"/>
+              <text x="670" y="78" font-weight="700" font-size="13" fill="#FCA311">6 · Hand over</text>
+              <text x="670" y="100" font-size="11" fill="#fff">Stabilize, close</text>
+              <text x="670" y="115" font-size="11" fill="#fff">issues, transfer to</text>
+              <text x="670" y="130" font-size="11" fill="#fff">steady-state team</text>
+            </g>
+            <g stroke="#37352f" stroke-width="2" marker-end="url(#arr)">
+              <line x1="119" y1="105" x2="127" y2="105"/><line x1="239" y1="105" x2="247" y2="105"/>
+              <line x1="359" y1="105" x2="367" y2="105"/><line x1="479" y1="105" x2="487" y2="105"/>
+              <line x1="599" y1="105" x2="607" y2="105"/>
+            </g>
+            <rect x="130" y="185" width="468" height="30" rx="15" fill="#f1f1ef" stroke="#d3d3d0"/>
+            <text x="364" y="205" text-anchor="middle" font-family="Outfit" font-size="12.5" fill="#37352f">Change management runs underneath every phase, from the first workshop to hand-over</text>
+            <text x="370" y="238" text-anchor="middle" font-family="Outfit" font-style="italic" font-size="12" fill="#787774">Phase names and lengths differ by provider and by client.</text>
+          </svg>
+          <div class="diagram-caption">Figure 1.1 · The six phases of a typical implementation</div>
+        </div>
+      </div>
+
+      <div class="section" id="s1-3">
+        <h2><span class="sec-emoji">🧰</span> The Four Core Skills</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Skill</th><th>The question it answers</th><th>Where to read</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Process re-engineering</strong></td><td>What should the hiring process look like, and why?</td><td>Tab 2</td></tr>
+            <tr><td><strong>ATS/CRM technology migration</strong></td><td>How do we move the process, and its data, into the right systems safely?</td><td>Tab 3</td></tr>
+            <tr><td><strong>SLA configuration</strong></td><td>Can the system measure every service level exactly as the contract states it?</td><td>Tab 4</td></tr>
+            <tr><td><strong>Change management for client talent teams</strong></td><td>Will the people who use all of this actually adopt it?</td><td>Tab 5</td></tr>
+          </tbody>
+        </table></div>
+        <p>ATS stands for <strong>Applicant Tracking System</strong>, which manages requisitions, applications and offers. CRM here means a <strong>Candidate Relationship Management</strong> tool, which manages talent pools and ongoing candidate engagement.</p>
+      </div>
+
+      <div class="section" id="s1-4">
+        <h2><span class="sec-emoji">🔗</span> How the Skills Connect</h2>
+        <p>The four skills depend on each other. A redesigned process cannot work until it is built into a system. A system cannot report an SLA that has not been defined. And none of it delivers value if the people involved do not use it.</p>
+
+        <div class="diagram">
+          <svg viewBox="0 0 720 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Process feeds technology, technology measures SLAs, and change management surrounds all three">
+            <text x="360" y="26" text-anchor="middle" font-family="Outfit" font-weight="600" font-size="17" fill="#37352f">Each skill builds on the one before</text>
+            <rect x="20" y="44" width="680" height="170" rx="16" fill="#fdecc8" stroke="#dfab01" stroke-width="1.5" stroke-dasharray="6 4"/>
+            <text x="360" y="68" text-anchor="middle" font-family="Outfit" font-weight="700" font-size="13" fill="#8a6100">Change management: people adopt it at every step</text>
+            <g font-family="Outfit" text-anchor="middle">
+              <rect x="50" y="86" width="180" height="100" rx="12" fill="#eef1f7" stroke="#14213D" stroke-width="2"/>
+              <text x="140" y="116" font-weight="700" font-size="14" fill="#14213D">Process</text>
+              <text x="140" y="136" font-size="12" fill="#37352f">Design the future way</text>
+              <text x="140" y="152" font-size="12" fill="#37352f">of hiring</text>
+
+              <rect x="270" y="86" width="180" height="100" rx="12" fill="#ddedea" stroke="#0f7b0f" stroke-width="2"/>
+              <text x="360" y="116" font-weight="700" font-size="14" fill="#0a5f0a">Technology</text>
+              <text x="360" y="136" font-size="12" fill="#37352f">Build it into the ATS/CRM</text>
+              <text x="360" y="152" font-size="12" fill="#37352f">and migrate the data</text>
+
+              <rect x="490" y="86" width="180" height="100" rx="12" fill="#14213D"/>
+              <text x="580" y="116" font-weight="700" font-size="14" fill="#FCA311">SLAs</text>
+              <text x="580" y="136" font-size="12" fill="#fff">Measure delivery exactly</text>
+              <text x="580" y="152" font-size="12" fill="#fff">as the contract says</text>
+            </g>
+            <line x1="232" y1="136" x2="267" y2="136" stroke="#37352f" stroke-width="2" marker-end="url(#arr)"/>
+            <line x1="452" y1="136" x2="487" y2="136" stroke="#37352f" stroke-width="2" marker-end="url(#arr)"/>
+          </svg>
+          <div class="diagram-caption">Figure 1.2 · Process, technology and SLAs, wrapped in change management</div>
+        </div>
+      </div>
+
+      <div class="section" id="s1-5">
+        <h2><span class="sec-emoji">👥</span> Who You Work With</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Group</th><th>What they need from you</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Client sponsor</strong> (often CHRO or Head of Talent)</td><td>A clear plan, honest progress reports, and early warning of risk</td></tr>
+            <tr><td><strong>Client talent acquisition team</strong></td><td>Clarity on how their work changes, and support through the transition</td></tr>
+            <tr><td><strong>Client IT, HRIS and security</strong></td><td>Precise integration requirements and realistic timelines</td></tr>
+            <tr><td><strong>Hiring managers</strong></td><td>A simple process, short training and a reason to care</td></tr>
+            <tr><td><strong>Your delivery and technology teams</strong></td><td>Stable requirements, clear priorities, and decisions made on time</td></tr>
+            <tr><td><strong>Account Director</strong></td><td>A clean hand-over, with SLAs that work and a team the client trusts</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout tip">
+          <div class="callout-icon">💡</div>
+          <div class="callout-body"><strong>A useful test:</strong> six months after go-live, would the Account Director say you left them a service they can run, or a list of open issues? An Implementation Manager is judged by what happens after they have moved on.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TAB 2: PROCESS RE-ENGINEERING                                -->
+    <!-- ============================================================ -->
+    <section class="panel" id="t2" data-toc='[
+      ["s2-1","Why re-engineer?"],
+      ["s2-2","Mapping the as-is process"],
+      ["s2-3","Finding waste"],
+      ["s2-4","Designing the to-be process"],
+      ["s2-5","Defining roles and ownership"]
+    ]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Core skill 1</span></div>
+        <div class="panel-eyebrow">Module 02 · Process</div>
+        <h1 class="panel-title">Process Re-engineering</h1>
+        <p class="panel-subtitle">Putting a broken process into a new system only makes it fail faster. Re-engineering means looking at how hiring really works today, removing what adds no value, and designing a process that both the client and the provider can run.</p>
+      </div>
+
+      <div class="section" id="s2-1">
+        <h2><span class="sec-emoji">🎯</span> Why Re-engineer?</h2>
+        <p>Most clients arrive with a hiring process that grew over years: steps added after each problem, approvals nobody remembers the reason for, and differences between teams and countries. Moving that process unchanged into a new system carries all of it forward.</p>
+        <div class="callout warn">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-body"><strong>Do not simply "lift and shift".</strong> If the old process was slow because of extra approvals, a faster ATS will not fix it. The design work has to come before the configuration work.</div>
+        </div>
+        <p>Good re-engineering balances four goals, and a design that ignores one of them usually fails in practice:</p>
+        <div class="cards">
+          <div class="card"><div class="card-icon" style="background:var(--green-soft)">⚡</div><div class="card-title">Speed</div><div class="card-desc">Fewer days between a role opening and a hire starting.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--accent-soft)">🎓</div><div class="card-title">Quality</div><div class="card-desc">The right candidates, assessed fairly and consistently.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--yellow-soft)">😊</div><div class="card-title">Experience</div><div class="card-desc">Easy for candidates and hiring managers to take part in.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--orange-soft)">🛡️</div><div class="card-title">Compliance</div><div class="card-desc">Meets legal, data protection and client policy requirements.</div></div>
+        </div>
+      </div>
+
+      <div class="section" id="s2-2">
+        <h2><span class="sec-emoji">🗺️</span> Mapping the As-Is Process</h2>
+        <p>Before designing anything, document how hiring actually works today. "Actually" matters: the written policy and the real practice are often different.</p>
+        <ol>
+          <li><strong>Interview the people who do the work,</strong> not only the managers who describe it. Recruiters, coordinators and hiring managers each see a different part.</li>
+          <li><strong>Walk through real requisitions</strong> from open to hire and note every step, handoff and wait.</li>
+          <li><strong>Record who does each step,</strong> which system or tool they use, and how long it takes.</li>
+          <li><strong>Collect the data:</strong> time between steps, drop-off rates, and the number of requisitions that follow each path.</li>
+          <li><strong>Capture the variations</strong> across regions, business units and job types.</li>
+        </ol>
+        <div class="callout tip">
+          <div class="callout-icon">🔍</div>
+          <div class="callout-body"><strong>Ask "why" three times.</strong> When someone says "we always get VP approval at this step", ask what happens if it is skipped, and when the rule began. Often the original reason no longer applies.</div>
+        </div>
+      </div>
+
+      <div class="section" id="s2-3">
+        <h2><span class="sec-emoji">🗑️</span> Finding Waste</h2>
+        <p>Once the as-is map exists, look for the places where time and effort are lost. The same patterns appear in most organizations.</p>
+        <div class="cards">
+          <div class="card"><div class="card-icon" style="background:var(--red-soft)">⏳</div><div class="card-title">Waiting</div><div class="card-desc">Requisitions or candidates sitting idle for approval or feedback.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--orange-soft)">🔄</div><div class="card-title">Rework</div><div class="card-desc">Steps repeated because information was missing or wrong the first time.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--yellow-soft)">📋</div><div class="card-title">Duplicate entry</div><div class="card-desc">The same data typed into several systems or spreadsheets.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--accent-soft)">🏃</div><div class="card-title">Handoffs</div><div class="card-desc">Each handoff between people or teams adds delay and risk of error.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--green-soft)">✍️</div><div class="card-title">Extra approvals</div><div class="card-desc">Sign-offs that add time but no real control.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--purple-soft)">❓</div><div class="card-title">Unclear ownership</div><div class="card-desc">Nobody knows who is responsible, so nothing moves.</div></div>
+        </div>
+      </div>
+
+      <div class="section" id="s2-4">
+        <h2><span class="sec-emoji">✨</span> Designing the To-Be Process</h2>
+        <p>The to-be design removes the waste while keeping the controls the client genuinely needs. Here is a simplified example of what the change can look like for requisition approval.</p>
+
+        <div class="diagram">
+          <svg viewBox="0 0 740 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="As-is process with five approvals compared with a to-be process with two">
+            <text x="370" y="24" text-anchor="middle" font-family="Outfit" font-weight="600" font-size="17" fill="#37352f">Example: requisition approval, before and after</text>
+            <text x="30" y="62" font-family="Outfit" font-weight="700" font-size="13" fill="#a82e2e">AS-IS</text>
+            <g font-family="Outfit" text-anchor="middle" font-size="11.5">
+              <rect x="30" y="72" width="105" height="48" rx="8" fill="#ffe2dd" stroke="#e03e3e"/><text x="82" y="101" fill="#37352f">Manager emails HR</text>
+              <rect x="155" y="72" width="105" height="48" rx="8" fill="#ffe2dd" stroke="#e03e3e"/><text x="207" y="101" fill="#37352f">HR checks budget</text>
+              <rect x="280" y="72" width="105" height="48" rx="8" fill="#ffe2dd" stroke="#e03e3e"/><text x="332" y="101" fill="#37352f">Director approves</text>
+              <rect x="405" y="72" width="105" height="48" rx="8" fill="#ffe2dd" stroke="#e03e3e"/><text x="457" y="101" fill="#37352f">VP approves</text>
+              <rect x="530" y="72" width="105" height="48" rx="8" fill="#ffe2dd" stroke="#e03e3e"/><text x="582" y="101" fill="#37352f">Finance approves</text>
+              <rect x="655" y="72" width="60" height="48" rx="8" fill="#e03e3e"/><text x="685" y="101" fill="#fff" font-weight="700">Open</text>
+            </g>
+            <g stroke="#37352f" stroke-width="1.6" marker-end="url(#arr)">
+              <line x1="136" y1="96" x2="152" y2="96"/><line x1="261" y1="96" x2="277" y2="96"/>
+              <line x1="386" y1="96" x2="402" y2="96"/><line x1="511" y1="96" x2="527" y2="96"/><line x1="636" y1="96" x2="652" y2="96"/>
+            </g>
+            <text x="370" y="142" text-anchor="middle" font-family="Outfit" font-size="12" fill="#a82e2e">Five touches, mostly by email, with waiting between each</text>
+
+            <text x="30" y="182" font-family="Outfit" font-weight="700" font-size="13" fill="#0a5f0a">TO-BE</text>
+            <g font-family="Outfit" text-anchor="middle" font-size="11.5">
+              <rect x="30" y="192" width="140" height="48" rx="8" fill="#ddedea" stroke="#0f7b0f"/><text x="100" y="213" fill="#37352f">Manager raises requisition</text><text x="100" y="228" fill="#37352f">in the ATS</text>
+              <rect x="210" y="192" width="140" height="48" rx="8" fill="#ddedea" stroke="#0f7b0f"/><text x="280" y="213" fill="#37352f">Auto-check against</text><text x="280" y="228" fill="#37352f">approved headcount</text>
+              <rect x="390" y="192" width="140" height="48" rx="8" fill="#ddedea" stroke="#0f7b0f"/><text x="460" y="213" fill="#37352f">Single approval by</text><text x="460" y="228" fill="#37352f">budget owner</text>
+              <rect x="570" y="192" width="100" height="48" rx="8" fill="#0f7b0f"/><text x="620" y="221" fill="#fff" font-weight="700">Open</text>
+            </g>
+            <g stroke="#37352f" stroke-width="1.6" marker-end="url(#arr)">
+              <line x1="172" y1="216" x2="207" y2="216"/><line x1="352" y1="216" x2="387" y2="216"/><line x1="532" y1="216" x2="567" y2="216"/>
+            </g>
+            <text x="370" y="266" text-anchor="middle" font-family="Outfit" font-size="12" fill="#0a5f0a">Two human touches, one system, a clear record of who approved what</text>
+          </svg>
+          <div class="diagram-caption">Figure 2.1 · Illustrative example. Your client's controls will differ.</div>
+        </div>
+
+        <div class="compare">
+          <div class="compare-col" style="background:var(--green-soft);border-color:#bdd9d2">
+            <h4>✅ Good design principles</h4>
+            <ul>
+              <li>Fewer handoffs and approvals, each with a clear purpose</li>
+              <li>Standard steps with agreed local exceptions</li>
+              <li>Data entered once and reused</li>
+              <li>Decision owners named for every stage</li>
+            </ul>
+          </div>
+          <div class="compare-col" style="background:var(--red-soft);border-color:#f5b8b0">
+            <h4>❌ Common design mistakes</h4>
+            <ul>
+              <li>Designing without the people who do the work</li>
+              <li>Removing a control the client legally needs</li>
+              <li>Building a different process for every region</li>
+              <li>Producing a design too complex to train</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" id="s2-5">
+        <h2><span class="sec-emoji">🧑‍🤝‍🧑</span> Defining Roles and Ownership</h2>
+        <p>A process is only as good as the clarity of who does what. A <strong>RACI</strong> table is the simplest way to record it: <em>Responsible</em> (does the work), <em>Accountable</em> (owns the outcome), <em>Consulted</em> (gives input) and <em>Informed</em> (kept up to date).</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Step</th><th>Hiring manager</th><th>RPO recruiter</th><th>Client HR</th><th>Implementation / delivery lead</th></tr></thead>
+          <tbody>
+            <tr><td>Raise requisition</td><td>A / R</td><td>I</td><td>C</td><td>I</td></tr>
+            <tr><td>Intake and job brief</td><td>C</td><td>A / R</td><td>I</td><td>I</td></tr>
+            <tr><td>Source and screen</td><td>I</td><td>A / R</td><td>I</td><td>C</td></tr>
+            <tr><td>Interview and decide</td><td>A / R</td><td>R</td><td>I</td><td>I</td></tr>
+            <tr><td>Offer approval</td><td>R</td><td>C</td><td>A</td><td>I</td></tr>
+          </tbody>
+        </table></div>
+        <p>This table is an example. Agree the real version with the client in the design phase, and make sure every row has exactly one <strong>A</strong>.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TAB 3: ATS/CRM MIGRATION                                     -->
+    <!-- ============================================================ -->
+    <section class="panel" id="t3" data-toc='[
+      ["s3-1","ATS and CRM: what each does"],
+      ["s3-2","The migration approach"],
+      ["s3-3","Data migration"],
+      ["s3-4","Integrations"],
+      ["s3-5","Testing and cutover"],
+      ["s3-6","Common risks"]
+    ]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag adv">Core skill 2</span></div>
+        <div class="panel-eyebrow">Module 03 · Technology</div>
+        <h1 class="panel-title">ATS/CRM Technology Migration</h1>
+        <p class="panel-subtitle">Moving a client's hiring onto a new Applicant Tracking System and Candidate Relationship Management tool is the riskiest part of an implementation. This module covers how to plan it, move the data cleanly, connect the systems, and switch over without losing a single candidate.</p>
+      </div>
+
+      <div class="section" id="s3-1">
+        <h2><span class="sec-emoji">🖥️</span> ATS and CRM: What Each Does</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>System</th><th>Main purpose</th><th>Typical data</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge blue">ATS</span> Applicant Tracking System</td><td>Manages the active hiring process, from requisition to offer and hire</td><td>Requisitions, applications, interview feedback, offers, compliance records</td></tr>
+            <tr><td><span class="badge green">CRM</span> Candidate Relationship Management</td><td>Builds and nurtures talent pools before roles exist</td><td>Prospects, talent communities, engagement history, campaigns</td></tr>
+          </tbody>
+        </table></div>
+        <p>Some platforms combine both. Others are separate tools that must be connected. Either way, the migration has to decide which system is the <strong>source of truth</strong> for each type of data.</p>
+        <div class="callout note">
+          <div class="callout-icon">📌</div>
+          <div class="callout-body">In many RPO engagements the provider uses its <strong>own</strong> ATS for the service, while in others it works inside the client's system. That choice changes the whole migration plan, so settle it before anything else.</div>
+        </div>
+      </div>
+
+      <div class="section" id="s3-2">
+        <h2><span class="sec-emoji">🧭</span> The Migration Approach</h2>
+        <p>A migration is a project within the project. Keep it structured, and keep each stage's exit criteria written down.</p>
+
+        <div class="diagram">
+          <svg viewBox="0 0 740 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Five stages of an ATS migration">
+            <text x="370" y="24" text-anchor="middle" font-family="Outfit" font-weight="600" font-size="17" fill="#37352f">Five stages of a system migration</text>
+            <g font-family="Outfit" text-anchor="middle">
+              <rect x="12" y="46" width="132" height="100" rx="12" fill="#eef1f7" stroke="#14213D" stroke-width="2"/>
+              <text x="78" y="74" font-weight="700" font-size="13" fill="#14213D">1 · Scope</text>
+              <text x="78" y="96" font-size="11.5" fill="#37352f">What moves, what</text>
+              <text x="78" y="112" font-size="11.5" fill="#37352f">stays, what is retired</text>
+
+              <rect x="156" y="46" width="132" height="100" rx="12" fill="#eef1f7" stroke="#14213D" stroke-width="2"/>
+              <text x="222" y="74" font-weight="700" font-size="13" fill="#14213D">2 · Configure</text>
+              <text x="222" y="96" font-size="11.5" fill="#37352f">Workflows, fields,</text>
+              <text x="222" y="112" font-size="11.5" fill="#37352f">roles, templates</text>
+
+              <rect x="300" y="46" width="132" height="100" rx="12" fill="#ddedea" stroke="#0f7b0f" stroke-width="2"/>
+              <text x="366" y="74" font-weight="700" font-size="13" fill="#0a5f0a">3 · Migrate data</text>
+              <text x="366" y="96" font-size="11.5" fill="#37352f">Clean, map,</text>
+              <text x="366" y="112" font-size="11.5" fill="#37352f">load, reconcile</text>
+
+              <rect x="444" y="46" width="132" height="100" rx="12" fill="#ddedea" stroke="#0f7b0f" stroke-width="2"/>
+              <text x="510" y="74" font-weight="700" font-size="13" fill="#0a5f0a">4 · Test</text>
+              <text x="510" y="96" font-size="11.5" fill="#37352f">UAT, integrations,</text>
+              <text x="510" y="112" font-size="11.5" fill="#37352f">reports, security</text>
+
+              <rect x="588" y="46" width="140" height="100" rx="12" fill="#14213D"/>
+              <text x="658" y="74" font-weight="700" font-size="13" fill="#FCA311">5 · Cut over</text>
+              <text x="658" y="96" font-size="11.5" fill="#fff">Switch, verify,</text>
+              <text x="658" y="112" font-size="11.5" fill="#fff">support, retire old</text>
+            </g>
+            <g stroke="#37352f" stroke-width="2" marker-end="url(#arr)">
+              <line x1="145" y1="96" x2="153" y2="96"/><line x1="289" y1="96" x2="297" y2="96"/>
+              <line x1="433" y1="96" x2="441" y2="96"/><line x1="577" y1="96" x2="585" y2="96"/>
+            </g>
+            <text x="370" y="180" text-anchor="middle" font-family="Outfit" font-style="italic" font-size="12" fill="#787774">Do not move to the next stage until the exit criteria for the current one are met and signed off.</text>
+          </svg>
+          <div class="diagram-caption">Figure 3.1 · Scope, configure, migrate, test, cut over</div>
+        </div>
+      </div>
+
+      <div class="section" id="s3-3">
+        <h2><span class="sec-emoji">📦</span> Data Migration</h2>
+        <p>Data is where most migrations go wrong. Moving poor data into a new system only gives you the same problems in a new place.</p>
+        <h3>Decide what to move</h3>
+        <div class="compare">
+          <div class="compare-col">
+            <h4>➡️ Usually migrate</h4>
+            <ul>
+              <li>Open requisitions and their candidates in progress</li>
+              <li>Recent candidate records within retention limits</li>
+              <li>Offer and hire records needed for reporting or compliance</li>
+              <li>Talent pool contacts with valid consent</li>
+            </ul>
+          </div>
+          <div class="compare-col">
+            <h4>🗄️ Usually archive or leave</h4>
+            <ul>
+              <li>Records past the legal retention period</li>
+              <li>Duplicates and obviously invalid contacts</li>
+              <li>Candidates without consent to be contacted</li>
+              <li>Old, closed requisitions with no reporting value</li>
+            </ul>
+          </div>
+        </div>
+        <h3>Map, clean and reconcile</h3>
+        <ol>
+          <li><strong>Field mapping:</strong> for each field in the old system, state where it goes in the new one, and how values are converted.</li>
+          <li><strong>Cleansing:</strong> remove duplicates, fix formats (dates, phone numbers, country names) and fill required fields.</li>
+          <li><strong>Trial loads:</strong> run the migration into a test environment, at least twice, before the real one.</li>
+          <li><strong>Reconciliation:</strong> compare counts and sample records between old and new, and sign off the differences.</li>
+        </ol>
+<pre><span class="pre-lang">mapping example</span><code><span class="tok-c">Old system field        →  New system field        Rule</span>
+<span class="tok-k">Cand_Status</span> = "Intvw 1"   →  <span class="tok-k">Stage</span> = "First interview"   Map 14 old statuses to 9 new stages
+<span class="tok-k">Phone</span>                    →  <span class="tok-k">Mobile</span>                  Standardize to international format
+<span class="tok-k">Applied_On</span>               →  <span class="tok-k">Application date</span>        Keep the original date; do not overwrite</code></pre>
+        <div class="callout warn">
+          <div class="callout-icon">🔐</div>
+          <div class="callout-body"><strong>Data protection comes first.</strong> Candidate data is personal data. Confirm with the client's legal and privacy teams what can be moved, where it may be stored, and how consent and retention rules apply, before any data leaves the old system.</div>
+        </div>
+      </div>
+
+      <div class="section" id="s3-4">
+        <h2><span class="sec-emoji">🔌</span> Integrations</h2>
+        <p>The ATS rarely works alone. Each connection is a mini-project with its own owner, testing and risk.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Connects to</th><th>Why</th><th>Check carefully</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Client HRIS</strong></td><td>Pass hired candidates in as employees, and sync org and headcount data</td><td>Which system owns each field, and sync timing</td></tr>
+            <tr><td><strong>Job boards and career site</strong></td><td>Post roles and receive applications</td><td>Posting rules, duplicate applications, branding</td></tr>
+            <tr><td><strong>Assessment and interview tools</strong></td><td>Send tests and scheduling links, and bring results back</td><td>Candidate data sharing and result mapping</td></tr>
+            <tr><td><strong>Background check and onboarding</strong></td><td>Trigger checks and onboarding tasks at the right stage</td><td>Consent, regional rules, and error handling</td></tr>
+            <tr><td><strong>Single sign-on and access control</strong></td><td>Let the right people in, and no one else</td><td>Roles, permissions, and joiner/leaver process</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <div class="section" id="s3-5">
+        <h2><span class="sec-emoji">🧪</span> Testing and Cutover</h2>
+        <p>Cutover is the moment the old system stops being used and the new one takes over. Prepare for it like a launch, with a written plan and a way back.</p>
+        <ul class="checklist">
+          <li>User acceptance testing completed with real recruiters and hiring managers, with defects triaged</li>
+          <li>Two full trial data loads reconciled and signed off by the client</li>
+          <li>Every integration tested end to end, including failure cases</li>
+          <li>Security, access roles and data protection checks completed</li>
+          <li>Reports and SLA measures verified against known sample data (see Tab 4)</li>
+          <li>Cutover plan written, with times, owners and a communication schedule</li>
+          <li>Rollback plan agreed: what triggers it, and how it is done</li>
+          <li>Support team ready for the first days, with a clear escalation route</li>
+        </ul>
+        <div class="callout tip">
+          <div class="callout-icon">🧯</div>
+          <div class="callout-body"><strong>Plan the quiet weekend.</strong> Many teams cut over outside peak hiring periods, freeze changes before the date, and keep the old system read-only for a defined period afterward so nothing is lost.</div>
+        </div>
+      </div>
+
+      <div class="section" id="s3-6">
+        <h2><span class="sec-emoji">⚠️</span> Common Risks</h2>
+        <div class="cards">
+          <div class="card"><div class="card-icon" style="background:var(--red-soft)">🧹</div><div class="card-title">Dirty data</div><div class="card-desc">Duplicates and gaps surface only after go-live, when it is hard to fix.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--orange-soft)">🎛️</div><div class="card-title">Scope creep</div><div class="card-desc">"Just one more field" requests that push the date or the budget.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--yellow-soft)">⏰</div><div class="card-title">Late IT dependencies</div><div class="card-desc">Client IT access, security reviews or HRIS changes arriving after the plan assumed.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--accent-soft)">🧪</div><div class="card-title">Short testing</div><div class="card-desc">Testing squeezed to protect the date, so defects reach live users.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--green-soft)">🙋</div><div class="card-title">No business owner</div><div class="card-desc">Nobody on the client side with authority to decide on design questions.</div></div>
+        </div>
+        <p>Keep a risk log from the first week, with an owner and a response for each risk, and review it in every status meeting.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TAB 4: SLA CONFIGURATION                                     -->
+    <!-- ============================================================ -->
+    <section class="panel" id="t4" data-toc='[
+      ["s4-1","From contract to configuration"],
+      ["s4-2","Defining each SLA precisely"],
+      ["s4-3","Building it in the system"],
+      ["s4-4","Reporting and reconciliation"],
+      ["s4-5","The pre go-live SLA dry run"]
+    ]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag adv">Core skill 3</span></div>
+        <div class="panel-eyebrow">Module 04 · Service levels</div>
+        <h1 class="panel-title">SLA Configuration</h1>
+        <p class="panel-subtitle">A service level written in a contract is only useful if the system can measure it, exactly as written, without manual workarounds. SLA configuration turns contract language into stages, timestamps, rules and reports.</p>
+      </div>
+
+      <div class="section" id="s4-1">
+        <h2><span class="sec-emoji">📜</span> From Contract to Configuration</h2>
+        <p>Contracts describe SLAs in business language, such as "time to shortlist" or "offer acceptance rate". A system cannot measure an idea. It measures events with timestamps. Your job is to translate the first into the second.</p>
+
+        <div class="diagram">
+          <svg viewBox="0 0 740 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Contract SLA translated into definition, system events, and report">
+            <text x="370" y="24" text-anchor="middle" font-family="Outfit" font-weight="600" font-size="17" fill="#37352f">Translating an SLA into something a system can measure</text>
+            <g font-family="Outfit" text-anchor="middle">
+              <rect x="15" y="46" width="160" height="90" rx="12" fill="#eef1f7" stroke="#14213D" stroke-width="2"/>
+              <text x="95" y="74" font-weight="700" font-size="13" fill="#14213D">Contract wording</text>
+              <text x="95" y="96" font-size="11.5" fill="#37352f">"Shortlist delivered</text>
+              <text x="95" y="112" font-size="11.5" fill="#37352f">within X days"</text>
+
+              <rect x="205" y="46" width="160" height="90" rx="12" fill="#fdecc8" stroke="#dfab01" stroke-width="2"/>
+              <text x="285" y="74" font-weight="700" font-size="13" fill="#8a6100">Precise definition</text>
+              <text x="285" y="96" font-size="11.5" fill="#37352f">Start event, stop event,</text>
+              <text x="285" y="112" font-size="11.5" fill="#37352f">exclusions, calendar</text>
+
+              <rect x="395" y="46" width="160" height="90" rx="12" fill="#ddedea" stroke="#0f7b0f" stroke-width="2"/>
+              <text x="475" y="74" font-weight="700" font-size="13" fill="#0a5f0a">System setup</text>
+              <text x="475" y="96" font-size="11.5" fill="#37352f">Stages, timestamps,</text>
+              <text x="475" y="112" font-size="11.5" fill="#37352f">rules, alerts</text>
+
+              <rect x="585" y="46" width="140" height="90" rx="12" fill="#14213D"/>
+              <text x="655" y="74" font-weight="700" font-size="13" fill="#FCA311">Report</text>
+              <text x="655" y="96" font-size="11.5" fill="#fff">Both sides see</text>
+              <text x="655" y="112" font-size="11.5" fill="#fff">the same number</text>
+            </g>
+            <g stroke="#37352f" stroke-width="2" marker-end="url(#arr)">
+              <line x1="177" y1="91" x2="202" y2="91"/><line x1="367" y1="91" x2="392" y2="91"/><line x1="557" y1="91" x2="582" y2="91"/>
+            </g>
+            <text x="370" y="172" text-anchor="middle" font-family="Outfit" font-style="italic" font-size="12" fill="#787774">Most SLA disputes begin with a definition nobody wrote down.</text>
+          </svg>
+          <div class="diagram-caption">Figure 4.1 · Four steps from a contract sentence to a trusted report</div>
+        </div>
+      </div>
+
+      <div class="section" id="s4-2">
+        <h2><span class="sec-emoji">📐</span> Defining Each SLA Precisely</h2>
+        <p>For every SLA, write a one-page specification covering the points below, and have the client sign it off. If two reasonable people could read a definition two ways, it is not finished.</p>
+<pre><span class="pre-lang">SLA specification</span><code><span class="tok-k">Name:</span>             Time to shortlist
+<span class="tok-k">Contract clause:</span>   (reference to the exact clause)
+<span class="tok-k">Target:</span>            (as stated in the contract)
+<span class="tok-k">Clock starts:</span>      (the exact event, e.g. requisition status = "Approved and open")
+<span class="tok-k">Clock stops:</span>       (the exact event, e.g. first qualified candidate submitted to the manager)
+<span class="tok-k">Calendar:</span>          Business days or calendar days? Which holidays?
+<span class="tok-k">Pauses:</span>            When the clock stops for client delay (e.g. intake not completed)
+<span class="tok-k">Exclusions:</span>        Roles or situations outside the SLA (e.g. on-hold requisitions)
+<span class="tok-k">Data source:</span>       Which system field(s) the measure is calculated from
+<span class="tok-k">Reported:</span>          Frequency, format, and who receives it
+<span class="tok-k">Sign-off:</span>          Client owner and provider owner, with date</code></pre>
+        <div class="callout warn">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-body"><strong>Watch for client-side delays.</strong> If the client takes a week to give feedback, the provider should not be penalized for it. Agree in advance which delays pause the clock, and make the system able to record them.</div>
+        </div>
+      </div>
+
+      <div class="section" id="s4-3">
+        <h2><span class="sec-emoji">⚙️</span> Building It in the System</h2>
+        <p>Once definitions are signed off, build them into the ATS. The aim is that SLA data is recorded automatically as a by-product of normal work, not typed in afterwards.</p>
+        <div class="cards">
+          <div class="card"><div class="card-icon" style="background:var(--accent-soft)">🔖</div><div class="card-title">Status and stage model</div><div class="card-desc">Stages that match the agreed process, with clear entry and exit rules.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--green-soft)">🕒</div><div class="card-title">Timestamps</div><div class="card-desc">Every event an SLA depends on is time-stamped automatically.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--yellow-soft)">🔒</div><div class="card-title">Required fields</div><div class="card-desc">Mandatory data, such as pause reasons, so recruiters cannot skip them.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--orange-soft)">🔔</div><div class="card-title">Alerts</div><div class="card-desc">Warnings when a requisition is close to breaching its target.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--purple-soft)">📊</div><div class="card-title">Reports and dashboards</div><div class="card-desc">Scorecards built from the same logic the specification describes.</div></div>
+        </div>
+        <p>Keep the setup as simple as the measures allow. Every extra mandatory field is something recruiters have to fill in under time pressure.</p>
+      </div>
+
+      <div class="section" id="s4-4">
+        <h2><span class="sec-emoji">🧾</span> Reporting and Reconciliation</h2>
+        <p>Before anyone relies on an SLA report, prove it is right. Take a sample of real requisitions, calculate each measure by hand from the raw records, and compare with what the report shows.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Check</th><th>What to confirm</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Hand calculation</strong></td><td>The report matches a manual calculation on a sample of requisitions</td></tr>
+            <tr><td><strong>Edge cases</strong></td><td>Paused clocks, holidays, cancelled and reopened requisitions behave as specified</td></tr>
+            <tr><td><strong>Totals</strong></td><td>Counts in reports match counts in the system's own lists</td></tr>
+            <tr><td><strong>Both sides agree</strong></td><td>Client and provider both accept the sample results in writing</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout tip">
+          <div class="callout-icon">💡</div>
+          <div class="callout-body">A report that only the provider trusts is a source of argument. Walk the client's analysts through the sample calculations so they can verify the logic for themselves.</div>
+        </div>
+      </div>
+
+      <div class="section" id="s4-5">
+        <h2><span class="sec-emoji">🧪</span> The Pre Go-Live SLA Dry Run</h2>
+        <p>Run the new process and reports in a pilot or parallel period, ahead of go-live, with contract SLAs measured but not yet penalized. This reveals three things:</p>
+        <ul>
+          <li><strong>Definition gaps:</strong> situations the specification did not cover.</li>
+          <li><strong>Data gaps:</strong> recruiters who are not recording the events that SLAs depend on.</li>
+          <li><strong>Realistic targets:</strong> whether the contract's targets are achievable with the redesigned process.</li>
+        </ul>
+        <div class="callout success">
+          <div class="callout-icon">✅</div>
+          <div class="callout-body"><strong>Exit rule:</strong> do not go live until every contractual SLA has a signed definition, a working measure, and at least one reconciled report. Hand the Account Director a measurement system they can trust on day one.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TAB 5: CHANGE MANAGEMENT                                     -->
+    <!-- ============================================================ -->
+    <section class="panel" id="t5" data-toc='[
+      ["s5-1","Why people resist change"],
+      ["s5-2","Assessing the impact"],
+      ["s5-3","Communication plan"],
+      ["s5-4","Training that works"],
+      ["s5-5","Adoption and hypercare"]
+    ]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag adv">Core skill 4</span></div>
+        <div class="panel-eyebrow">Module 05 · People</div>
+        <h1 class="panel-title">Change Management for Client Talent Teams</h1>
+        <p class="panel-subtitle">The client's recruiters and coordinators are being asked to change how they work, and sometimes their role itself. A technically perfect implementation still fails if those people do not adopt it, or quietly keep working around it.</p>
+      </div>
+
+      <div class="section" id="s5-1">
+        <h2><span class="sec-emoji">🧠</span> Why People Resist Change</h2>
+        <p>Resistance is rarely stubbornness. It usually has an understandable reason, and the reasons are different for different people.</p>
+        <div class="cards">
+          <div class="card"><div class="card-icon" style="background:var(--red-soft)">😟</div><div class="card-title">Job security</div><div class="card-desc">Outsourcing can feel like a threat to the client team's own roles.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--orange-soft)">🧭</div><div class="card-title">Loss of control</div><div class="card-desc">People who ran the process now share it, or no longer own it.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--yellow-soft)">❓</div><div class="card-title">Uncertainty</div><div class="card-desc">Not knowing what will change, or when, creates anxiety.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--accent-soft)">📉</div><div class="card-title">Extra workload</div><div class="card-desc">Learning a new system while still delivering today's hires.</div></div>
+          <div class="card"><div class="card-icon" style="background:var(--green-soft)">🏛️</div><div class="card-title">Past experience</div><div class="card-desc">Earlier projects that promised much and delivered little.</div></div>
+        </div>
+        <div class="callout tip">
+          <div class="callout-icon">💡</div>
+          <div class="callout-body"><strong>Listen first.</strong> Run short, open conversations with the client's team early, and ask what worries them. Concerns you hear in week one are far cheaper to address than ones that surface after go-live.</div>
+        </div>
+      </div>
+
+      <div class="section" id="s5-2">
+        <h2><span class="sec-emoji">🔬</span> Assessing the Impact</h2>
+        <p>For each group of people, work out what changes for them, how big the change is, and what they will need. A simple impact table keeps the plan honest.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Group</th><th>What changes</th><th>Likely concern</th><th>What helps</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Client recruiters</strong></td><td>New ATS, new process, new roles alongside the RPO team</td><td>Role clarity and job security</td><td>Clear role descriptions, early involvement in design, honest messages from leadership</td></tr>
+            <tr><td><strong>Recruiting coordinators</strong></td><td>Scheduling and admin moves to new tools</td><td>Learning curve and workload</td><td>Hands-on training, quick-reference guides, a named helper</td></tr>
+            <tr><td><strong>Hiring managers</strong></td><td>Raise requisitions and give feedback in the system, within agreed timings</td><td>Extra work and loss of control</td><td>Short sessions, simple steps, evidence that it saves them time</td></tr>
+            <tr><td><strong>Client HR leaders</strong></td><td>New reports and governance</td><td>Visibility and trust in the data</td><td>Early sight of dashboards and the SLA definitions</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <div class="section" id="s5-3">
+        <h2><span class="sec-emoji">📣</span> Communication Plan</h2>
+        <p>Communicate earlier, more often, and more simply than feels necessary. Use the client sponsor's voice for the "why", and your team's voice for the "how".</p>
+
+        <div class="diagram">
+          <svg viewBox="0 0 740 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Communication timeline from announcement to hypercare">
+            <text x="370" y="24" text-anchor="middle" font-family="Outfit" font-weight="600" font-size="17" fill="#37352f">What people hear, and when</text>
+            <line x1="40" y1="100" x2="700" y2="100" stroke="#14213D" stroke-width="3"/>
+            <g font-family="Outfit" text-anchor="middle">
+              <circle cx="70" cy="100" r="9" fill="#14213D"/>
+              <text x="70" y="74" font-weight="700" font-size="12.5" fill="#14213D">Announce</text>
+              <text x="70" y="132" font-size="11" fill="#37352f">Sponsor explains</text><text x="70" y="146" font-size="11" fill="#37352f">the why and the plan</text>
+
+              <circle cx="220" cy="100" r="9" fill="#14213D"/>
+              <text x="220" y="74" font-weight="700" font-size="12.5" fill="#14213D">Involve</text>
+              <text x="220" y="132" font-size="11" fill="#37352f">Workshops and</text><text x="220" y="146" font-size="11" fill="#37352f">design reviews</text>
+
+              <circle cx="370" cy="100" r="9" fill="#0f7b0f"/>
+              <text x="370" y="74" font-weight="700" font-size="12.5" fill="#0a5f0a">Prepare</text>
+              <text x="370" y="132" font-size="11" fill="#37352f">Training, demos,</text><text x="370" y="146" font-size="11" fill="#37352f">"what changes for me"</text>
+
+              <circle cx="520" cy="100" r="9" fill="#dfab01"/>
+              <text x="520" y="74" font-weight="700" font-size="12.5" fill="#8a6100">Launch</text>
+              <text x="520" y="132" font-size="11" fill="#37352f">Go-live notice,</text><text x="520" y="146" font-size="11" fill="#37352f">where to get help</text>
+
+              <circle cx="670" cy="100" r="9" fill="#FCA311"/>
+              <text x="670" y="74" font-weight="700" font-size="12.5" fill="#8a6100">Reinforce</text>
+              <text x="670" y="132" font-size="11" fill="#37352f">Early wins, fixes,</text><text x="670" y="146" font-size="11" fill="#37352f">user feedback</text>
+            </g>
+            <text x="370" y="184" text-anchor="middle" font-family="Outfit" font-style="italic" font-size="12" fill="#787774">Two-way: every message should invite questions, and every question should get an answer.</text>
+          </svg>
+          <div class="diagram-caption">Figure 5.1 · Announce, involve, prepare, launch, reinforce</div>
+        </div>
+      </div>
+
+      <div class="section" id="s5-4">
+        <h2><span class="sec-emoji">🎓</span> Training That Works</h2>
+        <p>Training is where people decide whether the new way of working is manageable. Make it practical, role-specific and close to the go-live date.</p>
+        <div class="compare">
+          <div class="compare-col" style="background:var(--green-soft);border-color:#bdd9d2">
+            <h4>✅ What works</h4>
+            <ul>
+              <li>Role-based sessions: each group sees only what it needs</li>
+              <li>Hands-on practice in a safe test environment</li>
+              <li>Short job aids and quick-reference guides</li>
+              <li>Super users on each team who can help colleagues</li>
+              <li>Training held within a couple of weeks of go-live</li>
+            </ul>
+          </div>
+          <div class="compare-col" style="background:var(--red-soft);border-color:#f5b8b0">
+            <h4>❌ What does not</h4>
+            <ul>
+              <li>One generic demo for everyone</li>
+              <li>Training months before people use the system</li>
+              <li>Slides with no chance to try the tool</li>
+              <li>No support route after the session</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" id="s5-5">
+        <h2><span class="sec-emoji">📈</span> Adoption and Hypercare</h2>
+        <p><strong>Hypercare</strong> is the heightened support period straight after go-live, when questions and small problems peak. Staff it generously, and keep the hand-over to steady state conditional on stability.</p>
+        <p>Measure adoption, not just attendance at training:</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Adoption measure</th><th>What it tells you</th></tr></thead>
+          <tbody>
+            <tr><td>Share of requisitions raised in the system, not by email</td><td>Whether managers are using the new process</td></tr>
+            <tr><td>Share of interview feedback given within the agreed time</td><td>Whether client-side commitments are being met</td></tr>
+            <tr><td>Number and type of support requests</td><td>Where training or design needs fixing</td></tr>
+            <tr><td>Workarounds spotted (spreadsheets, side emails)</td><td>Places where the process or system does not fit real work</td></tr>
+            <tr><td>User feedback and satisfaction pulse</td><td>How the client's team feels about it</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout success">
+          <div class="callout-icon">🏁</div>
+          <div class="callout-body"><strong>That completes the set.</strong> Redesigned process, migrated system, measurable SLAs, and a client team that uses it all. Take the assessment next to check how much has stuck.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TAB 6: ASSESSMENT                                            -->
+    <!-- ============================================================ -->
+        <section class="panel" id="t6" data-toc='[
+      ["s6-1","Take the assessment"],["s6-2","Exam rules &amp; security"]
+    ]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Self-check</span></div>
+        <div class="panel-eyebrow">Module 06</div>
+        <h1 class="panel-title">Assessment</h1>
+        <p class="panel-subtitle">Test yourself on process, technology, SLAs and change management. Multiple-choice questions, timed like a real screening test. Difficulty ranges from quick checks to genuinely tricky judgement calls.</p>
+      </div>
+<div class="section" id="s6-1"><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div><div class="assess-intro-text">A timed, exam-style mock test. Some questions are quick concept checks; others describe a realistic situation and ask what you would do.</div>
+<ul class="assess-intro-list"><li><strong>Multiple-choice questions</strong> with a mix of concept and scenario items</li><li>Difficulty from <strong>Simple</strong> to <strong>Hard</strong></li><li>Covers process, technology, SLAs and change management</li></ul>
+<button class="assess-start-btn" id="assessStartBtn">▶ Start Assessment</button></div>
+<div id="scoreBoard" class="score-board" style="display:none"></div></div>
+<div class="section" id="s6-2"><h2><span class="sec-emoji">🔒</span> Exam Rules &amp; Security</h2>
+<ul><li>The test runs in <strong>fullscreen</strong> with a countdown timer; it auto-submits when time is up.</li><li><strong>No tab or window switching</strong> and no exiting fullscreen. After <strong>3 warnings</strong> the test auto-submits.</li><li><strong>Screenshots, copy, cut, print and right-click are disabled</strong>; refreshing or closing the page asks for confirmation.</li><li>Navigate freely, <b>mark questions for review</b>, then submit. Results and explanations appear only after submission.</li><li>Answers are graded on the LMS server when available, so they are never present in the page.</li></ul></div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+/* =========================================================
+   Tabs, dynamic TOC, scroll-spy, progress pill
+   ========================================================= */
+(function(){
+  const tabs   = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel');
+  const tocEl  = document.getElementById('toc');
+  const total  = tabs.length;
+  const progressText = document.getElementById('progressText');
+
+  function buildToc(panel){
+    const data = JSON.parse(panel.getAttribute('data-toc') || '[]');
+    tocEl.innerHTML = data.map(([id,label]) =>
+      `<li><a href="#${id}" data-target="${id}">${label}</a></li>`
+    ).join('');
+    const first = tocEl.querySelector('a');
+    if(first) first.classList.add('active');
+  }
+
+  function activate(idx){
+    tabs.forEach((t,i)=>t.classList.toggle('active', i===idx));
+    panels.forEach((p,i)=>p.classList.toggle('active', i===idx));
+    buildToc(panels[idx]);
+    progressText.textContent = 'Tab ' + (idx+1) + ' of ' + total;
+    window.scrollTo({top:0});
+  }
+
+  tabs.forEach((t,i)=> t.addEventListener('click', ()=> activate(i)));
+
+  document.addEventListener('click', (e)=>{
+    const a = e.target.closest('.toc-list a');
+    if(!a) return;
+    e.preventDefault();
+    const el = document.getElementById(a.getAttribute('data-target'));
+    if(el){
+      tocEl.querySelectorAll('a').forEach(x=> x.classList.toggle('active', x===a));
+      lockUntil = Date.now()+900;
+      window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 130, behavior:'smooth'});
+    }
+  });
+
+  let ticking = false;
+  let lockUntil = 0;
+  function spy(){
+    const activePanel = document.querySelector('.panel.active');
+    if(!activePanel) return;
+    const sections = activePanel.querySelectorAll('.section');
+    let current = null;
+    if(Date.now() < lockUntil){ ticking = false; return; }
+    sections.forEach(sec=>{ if(sec.getBoundingClientRect().top - 180 < 0) current = sec.id; });
+    if(sections.length && (window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 4){ current = sections[sections.length-1].id; }
+    if(current){
+      tocEl.querySelectorAll('a').forEach(a=> a.classList.toggle('active', a.dataset.target === current));
+    }
+    ticking = false;
+  }
+  window.addEventListener('scroll', ()=>{
+    if(!ticking){ requestAnimationFrame(spy); ticking = true; }
+  }, {passive:true});
+
+  window.resetProgress = function(){ activate(0); };
+  activate(0);
+})();
+</script>
+<script>
+(function(){
+  /* =====================================================================
+     RPO Implementation Manager -- full-screen, timed mock exam (MNC style).
+     Questions come from the LMS server (answers never in the page). If the server is unreachable, a built-in practice bank is used.
+     Grading: all answers submitted at the end (server-side).
+     ===================================================================== */
+  const API_Q='/activities/quiz/rpo-implementation-manager/questions/';   // LMS endpoint: returns questions WITHOUT answers
+  const API_S='/activities/quiz/rpo-implementation-manager/submit/';      // LMS endpoint: grades answers server-side
+  const EXAM_SECONDS=50*60;                 // 50 minutes
+  const inIframe = window.self!==window.top;
+
+  /* ---- built-in practice bank (used only when the LMS endpoint is unavailable) ---- */
+  const BANK=[
+  ["What is the Implementation Manager's main responsibility?","Leading the transition from signed contract to a stable, running RPO service",["Running the client relationship long term", "Sourcing candidates for the first requisitions", "Negotiating the contract price"],"The role covers the transition project, from signature through go-live to hand-over. Ongoing relationship ownership sits with the Account Director.","Simple"],
+  ["Why is \"lift and shift\" a risky approach when moving a client to a new ATS?","It carries every inefficiency of the old process into the new system",["The new system cannot import old data", "It always costs more than redesigning", "Clients never agree to it"],"If the old process was slow or over-controlled, a new system will not fix it. Design the process first, then configure the system.","Medium"],
+  ["When mapping the as-is process, the best sources of information are:","The people who do the work, plus real requisitions walked from start to finish",["The written policy documents only", "The managers who describe the process", "The vendor's default workflow"],"Written policy and real practice often differ. Talk to the people doing the work and trace real cases.","Simple"],
+  ["In a RACI table, how many people or roles should be Accountable for each step?","Exactly one",["None", "At least two", "Everyone involved"],"Exactly one Accountable owner per step keeps responsibility clear. Several owners usually means nobody owns it.","Medium"],
+  ["Which best describes the difference between an ATS and a CRM in recruitment?","An ATS manages the active hiring process; a CRM nurtures talent pools before roles exist",["An ATS is for clients; a CRM is for providers", "They are the same tool with different names", "A CRM only stores invoices"],"ATS tracks applications through to offer and hire. Candidate CRM builds relationships with prospects ahead of need.","Hard"],
+  ["Why run trial data loads before the real migration?","To find mapping and quality problems and reconcile results while it is still safe to fix them",["To train recruiters", "To reduce licence costs", "To meet a contractual requirement in every case"],"Trial loads expose errors in mapping and data quality before they affect live users.","Medium"],
+  ["Which of the following should be settled before any candidate data is moved?","Data protection, consent and retention rules with the client's legal and privacy teams",["The colour scheme of the career site", "The date of the first QBR", "The recruiters' job titles"],"Candidate data is personal data. Confirm what may be moved, stored and retained before it leaves the old system.","Simple"],
+  ["Why should a rollback plan exist before cutover?","So there is an agreed trigger and method for returning to the old system if cutover fails",["To delay the go-live date", "Because the vendor requires it", "To avoid doing user acceptance testing"],"A written rollback plan lets the team act quickly and calmly if serious problems appear.","Hard"],
+  ["Which element is essential in a precise SLA definition?","The exact start event and stop event the clock uses",["A marketing description of the service", "The recruiter's name", "A colour-coded status"],"Without exact start and stop events, the same SLA can produce different numbers, and that leads to disputes.","Medium"],
+  ["A client takes two weeks to give interview feedback. How should this be reflected in the \"time to hire\" SLA?","Use pause rules agreed in advance, recorded in the system, for client-caused delay",["Count it against the provider", "Ignore it entirely", "Remove the SLA from the contract"],"Agree beforehand which client delays pause the clock, and make sure the system can record them.","Simple"],
+  ["What is the best way to confirm an SLA report is correct before go-live?","Calculate the measures by hand on a sample of real requisitions and compare with the report",["Trust the vendor's standard report", "Wait for the first month of live data", "Ask recruiters to estimate"],"Hand calculation on sample records proves the report logic matches the specification, including edge cases.","Hard"],
+  ["Which approach is most likely to build adoption among the client's recruiters and coordinators?","Role-based, hands-on training close to go-live, with super users and quick-reference guides",["One generic demo, delivered months before go-live", "An email announcing the new system", "Training only for managers"],"People adopt what they can practise in their own context, with support nearby when they start using it.","Medium"],
+  ["What is the aim of a project charter?", "To define goals, scope, roles and success measures at the start", ["To close the project", "To list candidates", "To set salaries"], "A charter aligns everyone from day one.", "Simple"],
+  ["What is a critical path?", "The longest sequence of dependent tasks that sets the minimum project duration", ["The shortest path", "A risk list", "A budget"], "Delays on it delay the whole project.", "Medium"],
+  ["What does a go-live readiness checklist confirm?", "That people, process, data and systems are ready for launch", ["The party budget", "The logo", "The salary list"], "Readiness reviews reduce launch risk.", "Simple"],
+  ["What is a cutover?", "The moment of switching from the old process or system to the new one", ["A contract", "A survey", "A report"], "Cutover needs a detailed plan.", "Simple"],
+  ["What is a hypercare period?", "A time of extra support right after go-live", ["A holiday", "A contract end", "A salary review"], "Hypercare stabilises the new service.", "Simple"],
+  ["Why hold a user acceptance test (UAT) before go-live?", "To confirm the solution works for real users", ["To avoid training", "To delay the project", "To reduce data"], "UAT catches issues before launch.", "Simple"],
+  ["What is a data mapping document?", "A guide showing how fields in the old system map to the new one", ["A map of offices", "A salary table", "A guide to the ATS colour"], "Mapping prevents data loss and errors.", "Medium"],
+  ["Why cleanse data before migration?", "To avoid moving duplicates and errors into the new system", ["To lengthen the project", "To make more data", "To remove the need for tests"], "Clean data supports reliable reporting.", "Medium"],
+  ["What is a RAID log?", "A log of Risks, Assumptions, Issues and Dependencies", ["A pest control list", "A salary log", "A candidate log"], "RAID logs keep project risks visible.", "Medium"],
+  ["A key risk has a high probability and high impact. What should you do?", "Assign an owner and plan mitigation immediately", ["Wait", "Ignore", "Remove it from the log"], "High-priority risks need active management.", "Medium"],
+  ["What is the purpose of a stakeholder communication plan?", "To ensure the right people hear the right messages at the right time", ["To avoid updates", "To list staff", "To set fees"], "Communication prevents surprises.", "Simple"],
+  ["What is a RACI 'Accountable' role?", "The one person who owns the outcome and signs off", ["Everyone involved", "A consultant", "The least informed"], "There should be exactly one.", "Medium"],
+  ["What does 'as-is' process mean?", "The current way of working before changes", ["The future design", "A cancelled process", "An outdated report"], "As-is mapping shows what to improve.", "Simple"],
+  ["What does 'to-be' process mean?", "The planned future way of working", ["The old process", "A cancelled project", "A budget"], "The to-be design shows the target.", "Simple"],
+  ["What is a gap analysis?", "Comparing the current state with the target to find what must change", ["A salary check", "A hiring plan", "A holiday plan"], "It drives the implementation plan.", "Medium"],
+  ["Why train users before go-live, not after?", "So they can use the new process confidently from day one", ["To avoid questions", "To save money", "To avoid reports"], "Late training causes errors and frustration.", "Simple"],
+  ["What is a change champion?", "A user who supports and promotes the change in their team", ["A sponsor only", "A competitor", "An auditor"], "Champions boost adoption.", "Medium"],
+  ["What should a rollback plan include?", "Triggers, steps, owners and timing for restoring the previous state", ["Only a wish", "A salary plan", "A hiring list"], "Rollback must be tested and agreed.", "Medium"],
+  ["What is a service level agreement baseline during transition?", "The initial performance measured before improvements", ["The final target", "A salary", "A budget"], "Baselines provide a fair starting point.", "Hard"],
+  ["Why agree a ramp-up period for SLAs in a new contract?", "Teams need time to stabilise and improve before full targets apply", ["To avoid SLAs forever", "To raise prices", "To avoid reporting"], "Fair ramp-ups reflect reality.", "Hard"],
+  ["What data protection step is key during migration?", "Use secure transfer, access control and only move necessary data", ["Email files", "Use personal drives", "Share logins"], "Security is vital during moves.", "Medium"],
+  ["What is a pilot site in a multi-country rollout?", "One location launched first to learn before others", ["The biggest office only", "A final site", "A test of salaries"], "Pilots reduce risk.", "Medium"],
+  ["What is a 'lessons learned' review for?", "Capturing what worked and what to improve for future projects", ["Blaming people", "Closing the contract", "Setting fees"], "Lessons improve future delivery.", "Simple"],
+  ["What is the main risk of an unclear project scope?", "Scope creep, delays and disputes", ["Faster delivery", "Lower cost always", "Better quality"], "Clear scope protects timeline and cost.", "Simple"],
+  ["What is a milestone?", "A significant point or achievement in a project plan", ["A distance marker", "A salary", "A candidate"], "Milestones track progress.", "Simple"],
+  ["What is a dependency in a project plan?", "A task that cannot start or finish until another does", ["A staff member", "A client", "A budget"], "Dependencies determine sequencing.", "Medium"],
+  ["What does 'parallel run' mean?", "Running the old and new systems together for a time to compare results", ["Running two projects", "Running a marathon", "Running ads"], "It reduces risk during switch.", "Hard"],
+  ["What is the best way to manage scope changes?", "Use a formal change request with impact assessment and approval", ["Accept all", "Ignore all", "Decide verbally only"], "Controlled changes keep projects on track.", "Medium"],
+  ["What is a project sponsor's main role?", "Providing direction, resources and removing blockers", ["Doing all the work", "Writing code", "Ordering lunch"], "Sponsors enable the project.", "Simple"],
+  ["How should you report project status?", "Honestly, with red/amber/green, causes and actions", ["Only green", "Only in meetings", "Without data"], "Honest status builds trust.", "Simple"],
+  ["What is a workaround for a missing system feature at go-live?", "A temporary manual or alternative method until a fix is ready", ["A permanent solution", "A new contract", "A salary"], "Workarounds must be documented and owned.", "Medium"],
+  ["What is an integration in an ATS project?", "A connection between the ATS and another system such as HRIS or job boards", ["A staff meeting", "A merger", "An invoice"], "Integrations must be tested.", "Medium"],
+  ["Why test integrations with realistic data?", "To find mapping and format problems before launch", ["To lengthen testing", "To avoid users", "To reduce risk to zero"], "Realistic tests reveal real issues.", "Medium"],
+  ["What does 'transition' to BAU mean?", "Moving from project mode to business-as-usual operations", ["Closing the company", "A new hire", "A salary change"], "Handover to operations needs a plan.", "Simple"],
+  ["What is a service handover document for?", "Giving operations the information they need to run the service", ["Hiring staff", "Setting salaries", "Advertising roles"], "Good handover prevents gaps.", "Medium"],
+  ["What measure shows user adoption of a new ATS?", "Share of recruiters using it for all candidate actions", ["Number of colours", "Number of offices", "Number of meetings"], "Adoption data shows real use.", "Medium"],
+  ["What is the main risk of going live without a trained support team?", "Slow issue resolution and poor user experience", ["Faster adoption", "Lower cost", "No risk"], "Support readiness is key.", "Medium"],
+  ["What is a project baseline plan?", "The approved plan for scope, time and cost used to measure progress", ["A candidate list", "A salary scale", "A job ad"], "Baselines let you track variance.", "Medium"]
+  ];
+  function shuf(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  function localPick(){
+    return shuf(BANK).slice(0,50).map((b,n)=>{
+      const opts=shuf([b[1]].concat(b[2]));
+      return {id:'L'+n+'_'+BANK.indexOf(b),q:b[0],options:opts,answer:opts.indexOf(b[1]),explanation:b[3],difficulty:b[4],code:b[5]||''};
+    });
+  }
+  function gradeLocal(payload){
+    const results={};let score=0;
+    items.forEach(it=>{const ok=payload.answers[it.id]===it.answer;if(ok)score++;results[it.id]={correct:ok,answer:it.answer,explanation:it.explanation};});
+    return {score:score,results:results};
+  }
+
+
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+  let usingLocal=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash h2{font-size:25px;font-weight:800;margin-bottom:8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin-bottom:12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:ecpop .18s ease}
+  @keyframes ecpop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}}
+  .exam-alert{position:fixed;inset:0;z-index:100003;background:#1c2845;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;color:#fff;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-alert h2{font-size:36px;font-weight:800;margin:0 0 22px;display:flex;align-items:center;gap:14px;color:#fff}
+  .exam-alert p{font-size:17px;margin:0 0 20px;color:#eef2fb;max-width:640px}
+  .exam-alert .wn{font-size:17px;margin-bottom:18px}
+  .exam-alert .exam-btn{padding:16px 26px;font-size:16px;border-radius:12px;background:#0e1830;color:#fff;border:1px solid rgba(255,255,255,.08)}
+  
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+
+  function examConfirm(title,msg,okLabel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">
+        <button class="exam-btn nav" data-a="0">Cancel</button>
+        <button class="exam-btn primary" data-a="1">${okLabel||'Submit'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  /* ---- score history (localStorage, shared across the exam tab + guide) ---- */
+  const LS_KEY='rpoImExamScores';
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores();
+    a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: no tab-switch (3 strikes -> auto-submit), deter screenshots ---- */
+  let warns=0, lastWarn=0, proctorOn=false;
+  function examWarn(title,msg,wn,btn,onClose){
+    injectCss();
+    const d=document.createElement('div'); d.className='exam-alert';
+    d.innerHTML='<h2><span>&#9888;&#65039;</span><span>'+title+'</span></h2><p>'+msg+'</p>'+(wn?'<div class="wn">'+wn+'</div>':'')+'<button class="exam-btn primary" data-a="1">'+(btn||'OK')+'</button>';
+    document.body.appendChild(d);
+    d.querySelector('[data-a]').addEventListener('click',()=>{
+      d.remove();
+      if(examOn && !document.fullscreenElement && document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().catch(()=>{}); }
+      if(onClose)onClose();
+    });
+  }
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function countWarn(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<800)return; lastWarn=now;
+    warns++;
+    if(warns>=3){ examWarn('Assessment submitted','You left the assessment 3 times. It has been auto-submitted.','Warning 3 of 3','View results'); submitExam(true); }
+    else {
+      const fs=(kind==='fs');
+      examWarn(fs?'Fullscreen exited':'Window left', fs?'The assessment must remain in fullscreen mode.':'Switching tabs or windows is not allowed during the assessment.','Warning '+warns+' of 3','Return to assessment');
+    }
+  }
+  function fsHandler(){ if(examOn && !document.fullscreenElement){ countWarn('fs'); } }
+  function visHandler(){ if(document.hidden){ showCover(); countWarn('tab'); } else { hideCover(); } }
+  function blurHandler(){ showCover(); countWarn('tab'); }
+  function focusHandler(){ hideCover(); }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function keyGuard(e){
+    const k=(e.key||'').toLowerCase();
+    if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; }
+    if(k==='printscreen'){ e.preventDefault(); }
+  }
+  function printGuard(e){
+    if((e.key||'')==='PrintScreen'){ try{navigator.clipboard.writeText('');}catch(_){}
+      examWarn('Not allowed','Screenshots are not permitted during the test.'); }
+  }
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    window.addEventListener('blur',blurHandler);
+    window.addEventListener('focus',focusHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('cut',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keyup',printGuard,true);
+  }
+  function stopProctor(){
+    proctorOn=false;
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    window.removeEventListener('blur',blurHandler);
+    window.removeEventListener('focus',focusHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('cut',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keyup',printGuard,true);
+    hideCover();
+  }
+
+  function startEntry(){
+    if(inIframe){ window.open(location.pathname+'?mode=exam','_blank'); return; }
+    showSplash();
+  }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; RPO Implementation Manager &mdash; Assessment</h2>
+      <p>A timed, exam-style assessment modelled on real screening tests.</p>
+      <ul>
+        <li><b>Multiple-choice questions</b> from Simple to Hard, across all four topics</li>
+        <li><b>50-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Results and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> &mdash; stay in fullscreen the whole time</li>
+        <li><b>No tab / window switching</b> and <b>no exiting fullscreen</b></li>
+        <li><b>3 warnings</b> (tab-switch or fullscreen-exit) &rarr; the test <b>auto-submits</b></li>
+        <li><b>Screenshots, copy and right-click are disabled</b></li>
+      </ul>
+      <button class="exam-btn primary" id="examBegin" style="width:100%;padding:14px">Start Assessment &rarr;</button>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      if(document.documentElement.requestFullscreen){document.documentElement.requestFullscreen().catch(()=>{});}
+      sp.remove(); enterExam();
+    });
+  }
+
+  async function enterExam(){
+    injectCss();
+    let ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Loading your test&hellip;</div>';
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    try{
+      const res=await fetch(API_Q,{headers:{'Accept':'application/json'}});
+      if(!res.ok) throw new Error('bad');
+      const data=await res.json(); items=data.questions||[];
+    }catch(e){ items=[]; }
+    usingLocal=false;
+    if(!items.length){ items=localPick(); usingLocal=true; }
+    if(!items.length){ ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center">Could not load the test. Close and try again.</div>'; return; }
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">RPO Implementation Manager &mdash; Assessment</div><div class="et-sub">${items.length} questions &middot; one attempt</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Assessment</button>
+        </div>
+      </div>`;
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}${it.difficulty?`<span class="diff">${it.difficulty}</span>`:''}</div>
+      ${it.code?`<pre><code>${it.code}</code></pre>`:''}
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>el.addEventListener('click',()=>{
+      answers[id]=+el.dataset.i;
+      pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel'));
+      el.classList.add('sel'); refreshPalette();
+    }));
+    const prev=document.getElementById('examPrev'), next=document.getElementById('examNext');
+    if(prev)prev.addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    if(next)next.addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();refreshPalette();});
+    refreshPalette();
+  }
+
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examConfirm('Submit assessment?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit assessment');
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    const payload={answers:{}};
+    items.forEach(it=>{ payload.answers[it.id] = (it.id in answers)?answers[it.id]:-1; });
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Grading your test&hellip;</div>';
+    let data;
+    if(usingLocal){ data=gradeLocal(payload); } else try{
+      const res=await fetch(API_S,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      data=await res.json();
+    }catch(e){ ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center">Could not grade the test. Please try again.</div>'; return; }
+    showResults(data);
+  }
+
+  function showResults(data){
+    const results=data.results||{}, total=items.length, score=data.score||0;
+    saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below and try again.';
+    if(pct>=85)msg='Outstanding &mdash; strong command of the whole role.';
+    else if(pct>=65)msg='Solid pass. A little more practice on the tricky ones and you are set.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the topics you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const r=results[it.id]||{}; const you=answers[it.id];
+      const attempted=(you!=null);
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      if(!attempted){
+        // Not attempted: reveal nothing (answer stays protected)
+        inner+='<div class="ra">Your answer: <i>Not answered</i></div>';
+        return '<div class="r no">'+inner+'</div>';
+      }
+      const youTxt=String.fromCharCode(65+you)+'. '+it.options[you];
+      const cor=(r.answer!=null&&r.answer>=0)?(String.fromCharCode(65+r.answer)+'. '+it.options[r.answer]):'';
+      inner+='<div class="ra '+(r.correct?'cor':'wrong')+'">Your answer: '+youTxt+'</div>'
+        +(r.correct?'':'<div class="ra cor">Correct: '+cor+'</div>')
+        +(r.explanation?'<div class="rx">'+r.explanation+'</div>':'');
+      return '<div class="r '+(r.correct?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; RPO Implementation Manager Assessment</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another test</button></div>
+          <div class="exam-rmsg" id="examRedirect" style="margin-top:8px;color:#94a3b8"></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    let left=30;
+    const rd=document.getElementById('examRedirect');
+    const setTxt=()=>{ if(rd)rd.textContent='Returning to the assessment page in '+left+'s…'; };
+    setTxt();
+    const rt=setInterval(()=>{ left--; setTxt(); if(left<=0){ clearInterval(rt); goBack(); } },1000);
+    function goBack(){
+      if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); }
+      if(window.opener){ try{ window.close(); }catch(_){} }
+      location.href=location.pathname;   // fallback: reload guide (assessment) page
+    }
+    document.getElementById('examRetry').addEventListener('click',()=>{ clearInterval(rt); document.getElementById('examOverlay').remove(); enterExam(); });
+    document.getElementById('examClose').addEventListener('click',()=>{ clearInterval(rt); goBack(); });
+  }
+
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',startEntry);
+  window.__mockExamStart=startEntry;
+  renderScoreboard();
+  window.addEventListener('storage',e=>{ if(e.key===LS_KEY)renderScoreboard(); });
+  if(new URLSearchParams(location.search).get('mode')==='exam'){ showSplash(); }
+})();
+</script>
+<style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-shot-guard">
+/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    function onKeyDown(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    }
+    function onKeyUp(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    }
+    function hook(w){try{if(w.__cbShot)return;w.__cbShot=1;w.addEventListener('keydown',onKeyDown,true);w.addEventListener('keyup',onKeyUp,true);}catch(_){}}
+    hook(window);
+    [].forEach.call(document.querySelectorAll('iframe'),function(f){hook(f.contentWindow);f.addEventListener('load',function(){hook(f.contentWindow);});});
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){setTimeout(function(){var a=document.activeElement;if(a&&a.tagName==='IFRAME'&&document.hasFocus&&!document.hidden)return;show('The assessment is hidden while another window is active.',0);},0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&](assess=1|mode=exam)(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body>
+</html>

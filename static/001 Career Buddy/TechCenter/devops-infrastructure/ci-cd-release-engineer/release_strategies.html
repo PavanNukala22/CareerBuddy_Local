@@ -1,0 +1,708 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Release Strategies — Feature flags, progressive delivery, rollback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--soft:#f7f6f3;--block:#f1f1ef;--ink:#37352f;--ink2:#787774;--mute:#9b9a97;--line:#e9e9e7;--line2:#d3d3d0;
+--accent:#14213D;--asoft:#eef1f7;--green:#0f7b0f;--gsoft:#ddedea;--orange:#d9730d;--osoft:#fadec9;--red:#e03e3e;--rsoft:#ffe2dd;--ysoft:#fdecc8;--psoft:#f5e0e9;
+--sh:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);--sh2:0 4px 14px rgba(15,15,15,.08);--r:10px}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{font-family:'Noto Sans',-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:12px 32px;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand-mark{width:34px;height:34px;display:grid;place-items:center;background:linear-gradient(135deg,#14213D,#3b5bdb);border-radius:9px;color:#fff;font-family:'Noto Sans Mono',monospace;font-weight:700;font-size:13px}
+.brand-sub{color:var(--ink2);font-weight:400;font-size:13px;margin-left:4px}
+.pill-prog{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:var(--block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500;color:var(--ink2)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--gsoft)}
+.btn{padding:6px 12px;background:#fff;border:1px solid var(--line2);border-radius:6px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--soft)}
+.hr{display:flex;align-items:center;gap:10px}
+.tabbar{display:flex;gap:2px;padding:6px 24px;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--line)}.tabbar::-webkit-scrollbar{display:none}
+.tab{padding:9px 16px;background:transparent;border:none;border-radius:8px;font-family:inherit;font-size:13.5px;font-weight:500;color:#4a5568;cursor:pointer;white-space:nowrap;display:flex;gap:7px;transition:background .15s,color .15s}
+.tab .n{font-family:'Noto Sans Mono',monospace;font-size:11px;color:var(--mute);font-weight:600}
+.tab:hover{background:#eef1f7;color:#14213D}.tab.active{background:#14213D;color:#fff;font-weight:700}.tab.active .n{color:#FCA311}
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr);max-width:1400px;margin:0 auto}
+@media(max-width:960px){.layout{grid-template-columns:1fr}.toc{display:none}}
+.toc{position:sticky;top:104px;align-self:start;height:calc(100vh - 116px);overflow-y:auto;padding:32px 16px 32px 32px;border-right:1px solid var(--line)}
+.toc-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:600;margin:0 0 12px 8px}
+.toc ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:2px}
+.toc a{display:block;padding:6px 10px;font-size:13px;color:var(--ink2);text-decoration:none;border-radius:4px;line-height:1.4}
+.toc a:hover{background:var(--soft);color:var(--ink)}
+.toc a.active{color:#fff;background:#16233f;font-weight:600;border-radius:12px;padding:9px 14px}
+.main{padding:48px 56px 80px;min-width:0}@media(max-width:720px){.main{padding:32px 20px 60px}}
+.panel{display:none}.panel.active{display:block;animation:fi .35s ease}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
+.title{font-size:38px;line-height:1.15;font-weight:700;letter-spacing:-.02em;margin:0 0 14px}
+.subtitle{font-size:17px;color:var(--ink2);margin:0 0 8px;max-width:700px}
+.section{margin-top:48px;scroll-margin-top:130px}
+.section h2{font-size:26px;font-weight:700;letter-spacing:-.01em;margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.section h3{font-size:18px;font-weight:600;margin:26px 0 8px}
+.section p{margin:10px 0;color:#3a3833}.section ul,.section ol{margin:10px 0;padding-left:22px}.section li{margin:5px 0}
+code{font-family:'Noto Sans Mono',monospace;font-size:.86em;background:#f6f5f4;border:1px solid var(--line);padding:1px 6px;border-radius:4px;color:#c2410c}
+pre{font-family:'Noto Sans Mono',monospace;background:#2b2a28;color:#e6e6e3;padding:20px 20px 16px;border-radius:var(--r);overflow-x:auto;font-size:13px;line-height:1.6;margin:14px 0;position:relative;box-shadow:var(--sh)}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.lang{position:absolute;top:6px;right:12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9b9a97;font-weight:600}
+.callout{display:grid;grid-template-columns:32px 1fr;gap:12px;background:var(--block);border-radius:var(--r);padding:14px 16px;margin:16px 0;border:1px solid var(--line);font-size:14.5px}
+.callout .ic{width:28px;height:28px;display:grid;place-items:center;background:#fff;border-radius:6px;border:1px solid var(--line)}
+.callout.tip{background:var(--asoft);border-color:#c9d3ea}.callout.warn{background:var(--osoft);border-color:#f5cc9c}.callout.success{background:var(--gsoft);border-color:#bdd9d2}.callout.note{background:var(--ysoft);border-color:#f0d889}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px;transition:.2s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
+.card .ci{width:36px;height:36px;display:grid;place-items:center;border-radius:8px;font-size:18px;margin-bottom:10px}
+.card b{display:block;font-size:15px;margin-bottom:4px}.card span{font-size:13px;color:var(--ink2);line-height:1.5;display:block}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;border:1px solid var(--line)}
+.tw{overflow-x:auto}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--soft);font-weight:600;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2)}
+tr:last-child td{border-bottom:none}
+.lv{font-family:'Noto Sans Mono',monospace;font-size:11px;font-weight:600;padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase}
+.lv.b{background:var(--gsoft);color:#0a5f0a}.lv.i{background:var(--asoft);color:#1d4ed8}.lv.e{background:var(--psoft);color:#8c1a63}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;background:linear-gradient(180deg,#fafaf8,#f4f3ef);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin:18px 0}
+.flow .st{background:#fff;border:1px solid var(--line2);border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;box-shadow:var(--sh)}
+.flow .st small{display:block;font-weight:400;color:var(--ink2);font-size:11px}
+.flow .st.hl{background:var(--accent);color:#fff;border-color:var(--accent)}.flow .st.hl small{color:#cdd5e5}
+.flow .ar{color:var(--mute);font-weight:700}
+.cap{font-size:12px;color:var(--ink2);font-style:italic;margin:-8px 0 14px}
+.mcq{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin:16px 0;box-shadow:var(--sh)}
+.mcq-q{font-weight:600;margin-bottom:10px}.mcq-q i{font-style:normal;font-family:'Noto Sans Mono',monospace;color:#3b5bdb;margin-right:8px}
+.opt{display:block;width:100%;text-align:left;padding:10px 14px;margin:6px 0;border:1px solid var(--line);border-radius:8px;cursor:pointer;font:inherit;font-size:14px;background:var(--soft)}
+.opt:hover{border-color:var(--accent);background:var(--asoft)}
+.mcq.done .opt{pointer-events:none;opacity:.75}.mcq.done .opt.ok{background:var(--gsoft);border-color:var(--green);opacity:1;font-weight:600}
+.mcq.done .opt.no{background:var(--rsoft);border-color:var(--red);opacity:1}
+.fb{display:none;margin-top:10px;padding:10px 14px;border-radius:8px;font-size:13.5px;background:var(--block)}.mcq.done .fb{display:block}
+.score{display:flex;align-items:center;gap:14px;background:var(--block);border:1px solid var(--line);border-radius:var(--r);padding:14px 18px;margin:18px 0}
+.bar{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+</style><style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head><body>
+<header class="header"><div class="header-top"><div class="brand"><div class="brand-mark">RS</div><span>Release Strategies<span class="brand-sub"> · Feature flags, progressive delivery, rollback</span></span></div>
+<div class="hr"><span class="pill-prog"><span class="dot"></span><span id="pt"></span></span><button class="btn" onclick="resetProgress()">↺ Reset</button></div></div>
+<nav class="tabbar"><button class="tab active"><span class="n">01</span> Fundamentals</button><button class="tab"><span class="n">02</span> Feature Flags</button><button class="tab"><span class="n">03</span> Progressive Delivery</button><button class="tab"><span class="n">04</span> Automated Rollback</button><button class="tab"><span class="n">05</span> Artifact Promotion</button><button class="tab"><span class="n">06</span> Practice</button></nav></header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul id="toc"></ul></aside><main class="main"><section class="panel active" data-toc='[["s1-1", "Deploy \u2260 Release"], ["s1-2", "Deployment strategy types"], ["s1-3", "Choosing"]]'><div class="eyebrow">Module 01 · Foundations</div><h1 class="title">Release Strategy Fundamentals</h1><p class="subtitle">Separate deploying code from releasing features, then pick the right rollout pattern.</p><div class="section" id="s1-1"><h2><span>🧭</span> Deploy ≠ Release</h2><span class="lv b">Basic</span><p><strong>Deploy</strong> = put new code on servers. <strong>Release</strong> = expose it to users. Decoupling them (with feature flags and progressive rollout) is the root of low-risk delivery.</p>
+<div class="flow"><div class="st">Deploy<small>code is live, dark</small></div><span class="ar">→</span><div class="st hl">Enable for 1%<small>flag / canary</small></div><span class="ar">→</span><div class="st">Observe<small>metrics, errors</small></div><span class="ar">→</span><div class="st">Ramp 10→50→100%</div><span class="ar">→</span><div class="st">Release<small>everyone</small></div></div><div class="cap">Progressive delivery in one picture.</div></div><div class="section" id="s1-2"><h2><span>🗂️</span> Deployment strategy types</h2><div class="tw"><table><tr><th>Strategy</th><th>How it works</th><th>Risk</th><th>Rollback speed</th><th>Best for</th></tr><tr><td>Recreate</td><td>Stop old, start new</td><td>High (downtime)</td><td>Slow</td><td>Dev/batch jobs</td></tr><tr><td>Rolling</td><td>Replace pods gradually</td><td>Medium</td><td>Medium</td><td>Stateless services</td></tr><tr><td>Blue-Green</td><td>Two full envs, switch traffic</td><td>Low</td><td>Instant (flip back)</td><td>Critical apps, need 2× capacity</td></tr><tr><td>Canary</td><td>Small % of traffic to new version</td><td>Low</td><td>Fast</td><td>User-facing services</td></tr><tr><td>A/B test</td><td>Segments see variants to measure impact</td><td>Low</td><td>Fast (flag)</td><td>Product experiments</td></tr><tr><td>Shadow</td><td>Mirror traffic to new, ignore response</td><td>Very low</td><td>n/a</td><td>Validating rewrites</td></tr></table></div></div><div class="section" id="s1-3"><h2><span>🧠</span> Choosing</h2><div class="callout tip"><div class="ic">💡</div><div><b>Decision shortcut:</b> need zero downtime and instant undo → blue-green. Need real-user evidence at low blast radius → canary. Need to test business hypotheses → feature flag + A/B. Cost-constrained → rolling.</div></div></div></section><section class="panel" data-toc='[["s2-1", "What are feature flags?"], ["s2-2", "Targeting & progressive rollout"], ["s2-3", "Automating flag management"]]'><div class="eyebrow">Module 02 · Control</div><h1 class="title">Feature Flags & LaunchDarkly</h1><p class="subtitle">Turn features on and off at runtime without redeploying.</p><div class="section" id="s2-1"><h2><span>🚩</span> What are feature flags?</h2><span class="lv b">Basic</span>
+<div class="cards"><div class="card"><div class="ci" style="background:#eef1f7;color:#1d4ed8">🚀</div><b>Release flag</b><span>Hide unfinished work; short-lived.</span></div><div class="card"><div class="ci" style="background:#ddedea;color:#0a5f0a">🧪</div><b>Experiment flag</b><span>Serve variants to measure impact.</span></div><div class="card"><div class="ci" style="background:#f5e0e9;color:#8c1a63">🛑</div><b>Ops / kill switch</b><span>Disable a risky or failing path instantly.</span></div><div class="card"><div class="ci" style="background:#fadec9;color:#a85a08">🔑</div><b>Permission flag</b><span>Entitlements per plan or customer; long-lived.</span></div></div>
+<p>Basic usage in code (LaunchDarkly Node SDK):</p>
+<pre><span class="lang">javascript</span><code>const ld = require(&#x27;@launchdarkly/node-server-sdk&#x27;);
+const client = ld.init(process.env.LD_SDK_KEY);
+await client.waitForInitialization({ timeout: 5 });
+const ctx = { kind: &#x27;user&#x27;, key: user.id, plan: user.plan, country: user.country };
+const on = await client.variation(&#x27;new-checkout&#x27;, ctx, false);  // false = safe default
+if (on) renderNewCheckout(); else renderOldCheckout();</code></pre></div><div class="section" id="s2-2"><h2><span>🎛️</span> Targeting & progressive rollout</h2><span class="lv i">Intermediate</span><ul><li><b>Targeting rules:</b> internal staff → beta customers → percentage rollout.</li><li><b>Contexts</b> can be users, orgs, devices; attributes drive rules.</li><li><b>Guarded releases:</b> auto-pause or roll back when error rate/latency regress.</li><li><b>Approvals &amp; scheduled changes</b> protect production environments.</li></ul>
+<div class="flow"><div class="st">Staff only</div><span class="ar">→</span><div class="st">Beta 5%</div><span class="ar">→</span><div class="st">25%</div><span class="ar">→</span><div class="st hl">50% + guardrail</div><span class="ar">→</span><div class="st">100%</div><span class="ar">→</span><div class="st">Remove flag</div></div></div><div class="section" id="s2-3"><h2><span>🤖</span> Automating flag management</h2><span class="lv e">Expert</span><p>Treat flags as code: create, enforce naming, and clean up via the REST API or Terraform in the pipeline.</p>
+<pre><span class="lang">bash</span><code># Turn a flag ON for 25% in production from CI after canary passes
+curl -s -X PATCH &quot;https://app.launchdarkly.com/api/v2/flags/my-proj/new-checkout&quot; \
+  -H &quot;Authorization: $LD_API_TOKEN&quot; -H &quot;Content-Type: application/json; domain-model=launchdarkly.semanticpatch&quot; \
+  -d &#x27;{&quot;environmentKey&quot;:&quot;production&quot;,&quot;instructions&quot;:[{&quot;kind&quot;:&quot;updateFallthroughWithRollout&quot;,&quot;rolloutWeights&quot;:{&quot;on&quot;:25000,&quot;off&quot;:75000}}]}&#x27;</code></pre><pre><span class="lang">hcl</span><code>resource &quot;launchdarkly_feature_flag&quot; &quot;new_checkout&quot; {
+  project_key = &quot;my-proj&quot;
+  key         = &quot;new-checkout&quot;
+  name        = &quot;New checkout&quot;
+  variation_type = &quot;boolean&quot;
+  temporary   = true            # must be cleaned up
+  tags        = [&quot;team-payments&quot;, &quot;release&quot;]
+}</code></pre><div class="callout warn"><div class="ic">⚠️</div><div><b>Flag debt:</b> every temporary flag needs an owner and expiry. Use code references + stale-flag reports, and delete the flag <em>and</em> dead branch once at 100%.</div></div></div></section><section class="panel" data-toc='[["s3-1", "Canary with Argo Rollouts"], ["s3-2", "Automated analysis"], ["s3-3", "Ring-based & regional rollout"]]'><div class="eyebrow">Module 03 · Rollout</div><h1 class="title">Progressive Delivery</h1><p class="subtitle">Ship to a few, watch the data, then expand: canary, blue-green and rings.</p><div class="section" id="s3-1"><h2><span>🐤</span> Canary with Argo Rollouts</h2><span class="lv i">Intermediate</span><p>Argo Rollouts replaces <code>Deployment</code> with a <code>Rollout</code> that steps traffic and runs automated analysis.</p>
+<pre><span class="lang">yaml</span><code>apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata: { name: payments }
+spec:
+  replicas: 10
+  strategy:
+    canary:
+      steps:
+        - setWeight: 10
+        - pause: { duration: 5m }
+        - analysis: { templates: [ { templateName: success-rate } ] }
+        - setWeight: 50
+        - pause: { duration: 10m }
+        - setWeight: 100</code></pre></div><div class="section" id="s3-2"><h2><span>📊</span> Automated analysis</h2><span class="lv e">Expert</span><pre><span class="lang">yaml</span><code>apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata: { name: success-rate }
+spec:
+  metrics:
+    - name: success-rate
+      interval: 1m
+      failureLimit: 2                       # 2 bad samples = abort + rollback
+      successCondition: result[0] &gt;= 0.99
+      provider:
+        prometheus:
+          address: http://prometheus:9090
+          query: sum(rate(http_requests_total{app=&quot;payments&quot;,code!~&quot;5..&quot;}[2m])) / sum(rate(http_requests_total{app=&quot;payments&quot;}[2m]))</code></pre><p>Tools in this space: <b>Argo Rollouts</b>, <b>Flagger</b>, <b>Harness CV</b>, <b>Spinnaker</b>, service meshes (Istio/Linkerd) for traffic splitting.</p></div><div class="section" id="s3-3"><h2><span>💍</span> Ring-based & regional rollout</h2><span class="lv e">Expert</span>
+<div class="flow"><div class="st">Ring 0<small>internal</small></div><span class="ar">→</span><div class="st">Ring 1<small>1 region, 5%</small></div><span class="ar">→</span><div class="st">Ring 2<small>beta customers</small></div><span class="ar">→</span><div class="st hl">Ring 3<small>GA, region by region</small></div></div><div class="cap">Each ring has a bake time and automatic health gate.</div>
+<ul><li><b>Blast radius</b> grows only after SLOs hold during the bake time.</li><li>Avoid releases on Fridays or during peak load unless fully automated and flag-protected.</li></ul></div></section><section class="panel" data-toc='[["s4-1", "Triggers & mechanisms"], ["s4-2", "Pipeline example"], ["s4-3", "Database changes: the hard part"]]'><div class="eyebrow">Module 04 · Safety</div><h1 class="title">Automated Rollback Mechanisms</h1><p class="subtitle">Detect failure fast and recover without a war room.</p><div class="section" id="s4-1"><h2><span>🚨</span> Triggers & mechanisms</h2><div class="tw"><table><tr><th>Trigger</th><th>Typical signal</th><th>Mechanism</th></tr><tr><td>Failed health check</td><td>Readiness/liveness probe</td><td>Kubernetes stops rollout; <code>rollout undo</code></td></tr><tr><td>SLO breach</td><td>5xx rate, p99 latency (Prometheus/Datadog)</td><td>Argo/Flagger aborts canary</td></tr><tr><td>Business metric drop</td><td>Conversion, checkout success</td><td>Flag guardrail turns feature off</td></tr><tr><td>Failed smoke test</td><td>Post-deploy test job red</td><td>Pipeline runs rollback stage</td></tr><tr><td>Manual</td><td>On-call decision</td><td>One-click redeploy of previous artifact</td></tr></table></div><div class="callout success"><div class="ic">✅</div><div><b>Fastest rollback = flag off</b> (seconds). Next = traffic switch (blue-green). Slowest = redeploy previous build.</div></div></div><div class="section" id="s4-2"><h2><span>🔙</span> Pipeline example</h2><span class="lv i">Intermediate</span><pre><span class="lang">bash</span><code>helm upgrade --install payments ./chart --set image.tag=&quot;$TAG&quot; --atomic --timeout 5m   # auto-rollback on failure
+./smoke.sh https://payments.example.com || {
+  echo &quot;Smoke failed -&gt; rollback&quot;; helm rollback payments 0 --wait; exit 1; }
+# Kubernetes native:
+kubectl rollout status deploy/payments --timeout=180s || kubectl rollout undo deploy/payments</code></pre></div><div class="section" id="s4-3"><h2><span>🗄️</span> Database changes: the hard part</h2><span class="lv e">Expert</span><p>Code rolls back; data does not. Use the <b>expand → migrate → contract</b> pattern so old and new versions both work against the schema.</p>
+<div class="flow"><div class="st">Expand<small>add nullable column</small></div><span class="ar">→</span><div class="st">Deploy v2<small>writes both</small></div><span class="ar">→</span><div class="st">Backfill</div><span class="ar">→</span><div class="st">Switch reads</div><span class="ar">→</span><div class="st hl">Contract<small>drop old column later</small></div></div>
+<ul><li>Never ship destructive migrations in the same release as the code change.</li><li>Keep releases <b>backward compatible</b> for at least one version.</li><li>Rehearse rollback in staging; track MTTR.</li></ul></div></section><section class="panel" data-toc='[["s5-1", "Build once, promote many"], ["s5-2", "Promotion in practice"], ["s5-3", "Gates & expert controls"]]'><div class="eyebrow">Module 05 · Governance</div><h1 class="title">Artifact Promotion</h1><p class="subtitle">Build once, promote the same immutable artifact through environments.</p><div class="section" id="s5-1"><h2><span>📦</span> Build once, promote many</h2><span class="lv b">Basic</span><p>Never rebuild per environment. Rebuilding can change dependencies or behaviour, so what you tested is no longer what you ship. Instead <strong>promote</strong> the same artifact (identified by digest) as it passes gates.</p>
+<div class="flow"><div class="st">Build<small>once</small></div><span class="ar">→</span><div class="st">dev repo<small>snapshot</small></div><span class="ar">→</span><div class="st hl">Promote<small>tests pass</small></div><span class="ar">→</span><div class="st">staging repo</div><span class="ar">→</span><div class="st">Promote<small>approval + scans</small></div><span class="ar">→</span><div class="st">prod repo<small>release</small></div></div><div class="cap">Promotion moves or copies the identical bits between repositories/tags.</div></div><div class="section" id="s5-2"><h2><span>🏷️</span> Promotion in practice</h2><span class="lv i">Intermediate</span><pre><span class="lang">bash</span><code># Container: retag by digest, never rebuild
+DIGEST=$(crane digest registry/app:build-742)
+crane tag registry/app@$DIGEST staging
+# after staging gates
+crane tag registry/app@$DIGEST prod
+# JFrog Artifactory: promote build between repos
+jf rt build-promote my-build 742 --status=Released --target-repo=release-local --copy=true</code></pre></div><div class="section" id="s5-3"><h2><span>🚧</span> Gates & expert controls</h2><div class="tw"><table><tr><th>Gate</th><th>Check</th></tr><tr><td>Quality</td><td>Tests, coverage, static analysis</td></tr><tr><td>Security</td><td>Vulnerability scan, license, SBOM present</td></tr><tr><td>Provenance</td><td>Signature verified (cosign), SLSA attestation</td></tr><tr><td>Compliance</td><td>Change ticket approved, peer review, OPA policy</td></tr><tr><td>Runtime</td><td>Canary / verification green in previous env</td></tr></table></div><div class="callout tip"><div class="ic">💡</div><div>Deploy by <b>digest</b> (<code>image@sha256:…</code>) in production manifests; tags are mutable, digests are not.</div></div></div></section><section class="panel" data-toc='[["s6-1", "Quiz"]]'><div class="eyebrow">Module 06 · Assessment</div><h1 class="title">Final Assessment</h1><p class="subtitle">Timed, proctored final assessment for this module.</p><div class="section" id="s6-1"><h2><span>📝</span> Quiz</h2><p>This module ends with a <b>timed, proctored assessment</b>. Questions and options are shuffled, answers and explanations appear only after you submit.</p><ul class="assess-rules"><li>Runs in <b>fullscreen</b> &mdash; leaving it, switching tabs or windows gives a warning; <b>3 warnings auto-submit</b></li><li>Copy, paste, right-click, select, print and developer shortcuts are disabled</li><li>Refreshing or closing the page abandons the attempt</li></ul><button class="btn assess-start" id="assessStartBtn" style="background:#14213D;color:#fff;border-color:#14213D;padding:12px 22px;font-weight:700">Start Final Assessment &rarr;</button><div id="scoreBoard"></div></div></section></main></div>
+<script>
+(function(){
+let manual=null;const tabs=[...document.querySelectorAll('.tab')],panels=[...document.querySelectorAll('.panel')],toc=document.getElementById('toc'),pt=document.getElementById('pt');
+function act(i){tabs.forEach((t,j)=>t.classList.toggle('active',i===j));panels.forEach((p,j)=>p.classList.toggle('active',i===j));
+const d=JSON.parse(panels[i].dataset.toc||'[]');toc.innerHTML=d.map(([id,l])=>'<li><a href="#'+id+'" data-t="'+id+'">'+l+'</a></li>').join('');
+manual=null;const f=toc.querySelector('a');if(f)f.classList.add('active');pt.textContent='Tab '+(i+1)+' of '+tabs.length;window.scrollTo(0,0)}
+tabs.forEach((t,i)=>t.onclick=()=>act(i));
+document.addEventListener('click',e=>{const a=e.target.closest('.toc a');if(!a)return;e.preventDefault();const el=document.getElementById(a.dataset.t);manual=a.dataset.t;toc.querySelectorAll('a').forEach(x=>x.classList.toggle('active',x===a));if(el)window.scrollTo({top:el.getBoundingClientRect().top+scrollY-120,behavior:'smooth'})});
+addEventListener('scroll',()=>{if(manual)return;const p=document.querySelector('.panel.active');if(!p)return;let c=null;const ss=[...p.querySelectorAll('.section')];ss.forEach(s=>{if(s.getBoundingClientRect().top-170<0)c=s.id});if(ss.length&&innerHeight+scrollY>=document.documentElement.scrollHeight-4)c=ss[ss.length-1].id;
+if(c)toc.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.t===c))},{passive:true});
+['wheel','touchstart','keydown','pointerdown'].forEach(ev=>window.addEventListener(ev,e=>{if(e.target&&e.target.closest&&e.target.closest('.toc a'))return;manual=null},{passive:true}));
+window.resetProgress=()=>act(0);
+act(0)})();
+
+/* =====================================================================
+   Final assessment — proctored, timed, full-screen (graded in-browser)
+   Anti-malpractice model copied from the Royal HRMS assessment:
+   fullscreen, tab/window-switch strikes (3 -> auto-submit), copy / right-click
+   blocked, shuffled questions, answers revealed only after submit.
+   ===================================================================== */
+(function(){
+  const C = {title:"Release Strategies", slug:"release_strategies"};
+  const RAW = [{"q": "Which strategy gives instant rollback by flipping traffic?", "o": ["Recreate", "Rolling", "Blue-Green", "Shadow"], "a": "MjpyZWxlYXNlX3N0cmF0ZWdpZXM6MA==", "e": "Blue-green keeps the old environment running so traffic can switch back immediately."}, {"q": "A flag used to instantly disable a failing code path is a…", "o": ["Release flag", "Kill switch", "Experiment flag", "Permission flag"], "a": "MTpyZWxlYXNlX3N0cmF0ZWdpZXM6MQ==", "e": "Ops flags / kill switches provide emergency control."}, {"q": "In Argo Rollouts, what aborts a bad canary automatically?", "o": ["Manual pause", "AnalysisTemplate failure", "Helm hook", "Git revert"], "a": "MTpyZWxlYXNlX3N0cmF0ZWdpZXM6Mg==", "e": "Failed analysis metrics abort and roll back."}, {"q": "Safest DB change for rollback-friendly releases?", "o": ["Drop column in same release", "Expand → migrate → contract", "Manual SQL in prod", "Rename table directly"], "a": "MTpyZWxlYXNlX3N0cmF0ZWdpZXM6Mw==", "e": "Backward-compatible phases keep old and new code working."}, {"q": "Best identifier for promoted container images?", "o": ["latest tag", "Branch name", "Immutable digest", "Date"], "a": "MjpyZWxlYXNlX3N0cmF0ZWdpZXM6NA==", "e": "Digests cannot be re-pointed, guaranteeing identical bits."}, {"q": "What is the difference between deploy and release?", "o": ["They are the same", "Release happens before deploy", "Deploy puts code on servers; release exposes the feature to users", "Deploy is only for databases"], "a": "MjpyZWxlYXNlX3N0cmF0ZWdpZXM6NQ==", "e": "Decoupling them with flags is the root of low-risk delivery."}, {"q": "Which strategy gives instant rollback but needs double capacity?", "o": ["Recreate", "Blue-green", "Rolling", "Shadow"], "a": "MTpyZWxlYXNlX3N0cmF0ZWdpZXM6Ng==", "e": "You switch traffic back to the old environment, which stays running."}, {"q": "When is canary the best choice?", "o": ["A batch job where downtime is fine", "Real-user evidence is needed with low blast radius", "Validating a rewrite with no user exposure", "Cost-constrained environments only"], "a": "MTpyZWxlYXNlX3N0cmF0ZWdpZXM6Nw==", "e": "A small percentage of traffic reaches the new version first."}, {"q": "What does shadow deployment do?", "o": ["Mirrors traffic to the new version and ignores its responses", "Serves new version to all users", "Shuts down the old version", "Switches DNS"], "a": "MDpyZWxlYXNlX3N0cmF0ZWdpZXM6OA==", "e": "It validates rewrites with very low risk."}, {"q": "What is a kill switch (ops flag)?", "o": ["A flag that deletes the database", "A flag to instantly disable a risky or failing code path", "A permanent entitlement flag", "An A/B experiment variant"], "a": "MTpyZWxlYXNlX3N0cmF0ZWdpZXM6OQ==", "e": "Ops flags give a seconds-level recovery."}, {"q": "What should happen to a temporary release flag at 100% rollout?", "o": ["Keep it forever", "Delete the flag and the dead code branch", "Rename it", "Disable it for staff"], "a": "MTpyZWxlYXNlX3N0cmF0ZWdpZXM6MTA=", "e": "Unremoved flags become flag debt."}, {"q": "In variation('new-checkout', ctx, false), what is false?", "o": ["The rollout percentage", "The user key", "The environment name", "The safe default returned if the flag cannot be evaluated"], "a": "MzpyZWxlYXNlX3N0cmF0ZWdpZXM6MTE=", "e": "Choose a default that keeps users on the known-good path."}, {"q": "What does failureLimit: 2 in an Argo AnalysisTemplate mean?", "o": ["Two replicas will be created", "Analysis runs twice", "Two failed measurements abort the rollout and trigger rollback", "Two teams must approve"], "a": "MjpyZWxlYXNlX3N0cmF0ZWdpZXM6MTI=", "e": "It tolerates a little noise but stops on repeated bad samples."}, {"q": "What is bake time in ring-based rollout?", "o": ["A wait during which SLOs must hold before expanding to the next ring", "Time to compile the image", "Time to approve a PR", "Time to replicate a registry"], "a": "MDpyZWxlYXNlX3N0cmF0ZWdpZXM6MTM=", "e": "Blast radius grows only after health is proven."}, {"q": "Which is generally the fastest rollback?", "o": ["Turning the feature flag off", "Redeploying the previous build", "Restoring a database backup", "Rebuilding from source"], "a": "MDpyZWxlYXNlX3N0cmF0ZWdpZXM6MTQ=", "e": "Flag off takes seconds; traffic switch is next; redeploy is slowest."}, {"q": "What does helm upgrade --atomic do?", "o": ["Skips hooks", "Automatically rolls back if the upgrade fails", "Upgrades without waiting", "Deletes the release"], "a": "MTpyZWxlYXNlX3N0cmF0ZWdpZXM6MTU=", "e": "Combined with --timeout it protects against half-finished upgrades."}, {"q": "Why use expand, migrate, contract for database changes?", "o": ["It makes migrations faster", "It avoids backups", "So old and new code versions both work with the schema, making rollback safe", "It removes the need for tests"], "a": "MjpyZWxlYXNlX3N0cmF0ZWdpZXM6MTY=", "e": "Code can roll back but data cannot, so destructive changes come last."}, {"q": "What does build once, promote many mean?", "o": ["Rebuild per environment with different flags", "Build only in production", "Copy source to each environment", "Promote the same immutable artifact between environments rather than rebuilding"], "a": "MzpyZWxlYXNlX3N0cmF0ZWdpZXM6MTc=", "e": "What you tested is exactly what you ship."}, {"q": "Why should production manifests deploy by digest?", "o": ["Digests are shorter", "Digests are required by Docker Hub", "Tags are mutable, digests are immutable content hashes", "Tags cannot be pulled"], "a": "MjpyZWxlYXNlX3N0cmF0ZWdpZXM6MTg=", "e": "image@sha256:... guarantees the exact bits."}, {"q": "Which strategy replaces pods gradually and suits cost-constrained stateless services?", "o": ["Blue-green", "Rolling", "Recreate", "Shadow"], "a": "MTpyZWxlYXNlX3N0cmF0ZWdpZXM6MTk=", "e": "Rolling needs no duplicate environment but rollback is slower than blue-green."}];
+  const dec = s => { try{ return parseInt(atob(s).split(':')[0],10); }catch(e){ return -1; } };
+  const BANK = RAW.map((q,i)=>({id:'q'+i, q:q.q, options:q.o, ans:q.a, exp:q.e}));
+  delete window.__BANK; 
+  const EXAM_SECONDS = 1500;
+  const MAX_WARN = 3;
+  const LS_KEY = 'cicd_scores_' + C.slug;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-right{display:flex;align-items:center;gap:12px}
+  .exam-strikes{font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);padding:6px 10px;border-radius:8px}
+  .exam-strikes.hot{background:#e53e3e}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif;overflow:auto}
+  .exam-splash .xcard{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash h2{font-size:24px;font-weight:800;margin:0 0 8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9;padding:0}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-fswarn{position:fixed;inset:0;z-index:100003;background:rgba(15,23,42,.92);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#fff;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fswarn .fw-box{max-width:520px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .exam-fswarn h3{font-size:30px;font-weight:800;margin:0;display:flex;align-items:center;gap:12px;color:#fff}
+  .exam-fswarn p{margin:0;font-size:16px;color:#e2e8f0;line-height:1.5}
+  .exam-fswarn .fw-count{font-size:16px;font-weight:600;color:#fff}
+  .exam-fswarn .fw-btn{margin-top:6px;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:15px 26px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+  .exam-fswarn .fw-btn:hover{background:#000}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  .exam-sb{display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:14px}
+  .exam-sb .best{flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:16px 22px;text-align:center}
+  .exam-sb .best .l{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311}
+  .exam-sb .best .v{font-size:32px;font-weight:800;line-height:1.1;margin-top:4px}
+  .exam-sb .best .v span{font-size:17px;color:#cdd5e5}
+  .exam-sb .hist{flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px 18px}
+  .exam-sb .hist .l{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px}
+  .exam-sb .hist div.row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px}
+  .assess-start{margin-top:14px}
+  .assess-rules{margin:10px 0 0 18px;font-size:14px;line-height:1.8;color:var(--ink2)}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}.exam-q-pane{padding:20px}}
+  @media print{.exam-overlay,.exam-splash,.exam-cover{display:none!important}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){t=Math.max(t,0);const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+  function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function examDialog(title,msg,okLabel,cancel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">${cancel?'<button class="exam-btn nav" data-a="0">Cancel</button>':''}<button class="exam-btn primary" data-a="1">${okLabel||'OK'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d && cancel){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total,warnCount,auto){
+    const a=loadScores(); a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now(),warns:warnCount,auto:!!auto});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.innerHTML=''; return; }
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`<div class="exam-sb">
+      <div class="best"><div class="l">Top score</div><div class="v">${best.score}<span>/${best.total}</span></div><div style="font-size:12px;color:#cdd5e5">${best.pct}%</div></div>
+      <div class="hist"><div class="l">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+      ${last5.map(x=>`<div class="row"><span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%${x.warns?' &middot; '+x.warns+' warning'+(x.warns>1?'s':''):''}${x.auto?' &middot; auto-submitted':''}</span></span><span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}</div></div>`;
+  }
+
+  /* ---- proctoring: tab-switch / window-blur / fullscreen-exit strikes (3 -> auto-submit) ---- */
+  let warns=0, lastWarn=0, proctorOn=false, fsWanted=false;
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function updStrikes(){ const s=document.getElementById('examStrikes'); if(s){ s.textContent='Warnings '+warns+'/'+MAX_WARN; s.classList.toggle('hot',warns>0); } }
+  function hideFsWarn(){ const w=document.getElementById('examFsWarn'); if(w)w.remove(); }
+  function showFsWarn(n){
+    injectCss(); hideFsWarn();
+    const w=document.createElement('div'); w.className='exam-fswarn'; w.id='examFsWarn';
+    w.innerHTML='<div class="fw-box"><h3><span>&#9888;&#65039;</span> Fullscreen exited</h3>'+
+      '<p>The assessment must remain in fullscreen mode.</p>'+
+      '<div class="fw-count">Warning '+n+' of '+MAX_WARN+'</div>'+
+      '<button class="fw-btn" id="examFsReturn">Return to assessment</button></div>';
+    document.body.appendChild(w);
+    const btn=document.getElementById('examFsReturn');
+    btn.addEventListener('click',()=>{
+      const el=document.documentElement;
+      const done=()=>{ fsWanted=true; hideFsWarn(); hideCover(); };
+      if(el.requestFullscreen){ el.requestFullscreen().then(done).catch(()=>{}); } else { done(); }
+    });
+    try{btn.focus();}catch(e){}
+  }
+  function countWarn(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<1500)return; lastWarn=now;
+    warns++; updStrikes();
+    if(warns>=MAX_WARN){ hideFsWarn(); examDialog('Test submitted','You left the test '+MAX_WARN+' times. It has been auto-submitted.'); submitExam(true); }
+    else if(kind==='fs'){ showFsWarn(warns); }
+    else { examDialog('Warning '+warns+' of '+MAX_WARN,'Switching tabs or leaving the window is not allowed. After '+MAX_WARN+' warnings the test is auto-submitted.'); }
+  }
+  function fsHandler(){
+    if(!examOn)return;
+    if(document.fullscreenElement){ hideFsWarn(); hideCover(); return; }
+    if(fsWanted){ countWarn('fs'); }
+  }
+  function visHandler(){ if(document.hidden){ showCover(); countWarn(); } else { hideCover(); } }
+  function blurHandler(){ if(examOn && !document.hidden){ showCover(); countWarn(); } }
+  function focusHandler(){ if(!document.hidden && (document.fullscreenElement||!fsWanted)) hideCover(); }
+  function blockEvt(e){ e.preventDefault(); e.stopPropagation(); return false; }
+  function keyGuard(e){
+    const k=(e.key||'').toLowerCase(), mod=e.ctrlKey||e.metaKey;
+    const bad = (mod && ['c','x','v','a','s','p','u','f','g'].includes(k))
+             || (mod && e.shiftKey && ['i','j','c','k'].includes(k))
+             || k==='f12' || k==='printscreen' || k==='f5' || (mod && k==='r');
+    if(bad){ e.preventDefault(); e.stopPropagation(); if(k==='printscreen'){ try{navigator.clipboard.writeText('');}catch(_){} } return false; }
+  }
+  const EVTS=['contextmenu','copy','cut','paste','selectstart','dragstart','drop'];
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true; updStrikes();
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    window.addEventListener('blur',blurHandler);
+    window.addEventListener('focus',focusHandler);
+    EVTS.forEach(n=>document.addEventListener(n,blockEvt,true));
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keyup',keyGuard,true);
+  }
+  function stopProctor(){
+    proctorOn=false; hideFsWarn();
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    window.removeEventListener('blur',blurHandler);
+    window.removeEventListener('focus',focusHandler);
+    EVTS.forEach(n=>document.removeEventListener(n,blockEvt,true));
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keyup',keyGuard,true);
+    hideCover();
+  }
+
+  function showSplash(){
+    injectCss();
+    if(document.getElementById('examSplash'))return;
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="xcard">
+      <h2>&#127919; ${C.title} &mdash; Final Assessment</h2>
+      <p>A timed, proctored assessment on this module.</p>
+      <ul>
+        <li><b>${BANK.length} questions</b>, questions and options shuffled every attempt</li>
+        <li><b>${Math.round(EXAM_SECONDS/60)}-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Correct answers and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> where your browser allows it</li>
+        <li><b>No tab / window switching</b> and <b>no exiting fullscreen (Esc)</b> &mdash; ${MAX_WARN} warnings and the test <b>auto-submits</b></li>
+        <li>Copy, paste, right-click, select, print and developer shortcuts are disabled during the test</li>
+        <li>Refreshing or closing the page abandons the attempt</li>
+      </ul>
+      <div style="display:flex;gap:10px"><button class="exam-btn nav" id="examCancel" style="flex:0 0 auto">Cancel</button>
+      <button class="exam-btn primary" id="examBegin" style="flex:1;padding:14px">Start Test &rarr;</button></div>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examCancel').addEventListener('click',()=>sp.remove());
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      fsWanted=false;
+      if(document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().then(()=>{fsWanted=true;}).catch(()=>{}); }
+      sp.remove(); enterExam();
+    });
+  }
+
+  function enterExam(){
+    injectCss();
+    // shuffle questions AND options; keep track of the correct option after shuffling
+    items = shuffle(BANK).map(b=>{
+      const correct = b.options[dec(b.ans)];
+      const opts = shuffle(b.options);
+      return {id:b.id, q:b.q, options:opts, answer:opts.indexOf(correct), exp:b.exp};
+    });
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    const ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">${C.title} &mdash; Final Assessment</div><div class="et-sub">${items.length} questions &middot; one sitting &middot; good luck</div></div>
+        <div class="exam-right"><div class="exam-strikes" id="examStrikes">Warnings 0/${MAX_WARN}</div><div class="exam-timer" id="examTimer">${fmt(remaining)}</div></div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(remaining); if(remaining<=60)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}</div>
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}" tabindex="0"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>{
+      const pick=()=>{ answers[id]=+el.dataset.i; pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); refreshPalette(); };
+      el.addEventListener('click',pick);
+      el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();} });
+    });
+    document.getElementById('examPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    document.getElementById('examNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();});
+    refreshPalette();
+    pane.scrollTop=0;
+  }
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examDialog('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test', true);
+      if(!ok)return;
+    }
+    if(!examOn)return;
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    const usedWarns=warns;
+    stopProctor();
+    let score=0; items.forEach(it=>{ if(answers[it.id]===it.answer) score++; });
+    showResults(score,usedWarns,auto);
+  }
+  function showResults(score,usedWarns,auto){
+    const total=items.length; saveScore(score,total,usedWarns,auto);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below, revisit the module and try again.';
+    if(pct>=85)msg='Outstanding &mdash; you are operating at an expert level.';
+    else if(pct>=65)msg='Solid pass. Review the questions you missed and you are interview-ready.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the sections you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const you=answers[it.id], attempted=(you!=null), ok=attempted&&you===it.answer;
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      inner+= attempted ? '<div class="ra '+(ok?'cor':'wrong')+'">Your answer: '+String.fromCharCode(65+you)+'. '+it.options[you]+'</div>' : '<div class="ra wrong">Your answer: <i>Not answered</i></div>';
+      if(!ok) inner+='<div class="ra cor">Correct: '+String.fromCharCode(65+it.answer)+'. '+it.options[it.answer]+'</div>';
+      if(it.exp) inner+='<div class="rx">'+it.exp+'</div>';
+      return '<div class="r '+(ok?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; ${C.title}</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1;flex:1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          ${auto&&usedWarns>=MAX_WARN?'<div class="exam-rmsg" style="color:#c53030;font-weight:700">Auto-submitted after '+MAX_WARN+' warnings.</div>':''}
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another attempt</button></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    document.getElementById('examRetry').addEventListener('click',()=>{ closeExam(); showSplash(); });
+    document.getElementById('examClose').addEventListener('click',closeExam);
+  }
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',showSplash);
+  renderScoreboard();
+})();
+</script><script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+<style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body></html>

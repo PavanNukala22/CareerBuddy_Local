@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reliability Frameworks — A Visual Course for SREs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff; --bg-soft:#f7f6f3; --bg-block:#f1f1ef;
+  --ink:#37352f; --ink-soft:#787774; --ink-mute:#9b9a97;
+  --line:#e9e9e7; --line-strong:#d3d3d0;
+  --accent:#14213D; --accent-soft:#eef1f7;
+  --green:#0f7b0f; --green-soft:#ddedea;
+  --orange:#d9730d; --orange-soft:#fadec9;
+  --red:#e03e3e; --red-soft:#ffe2dd;
+  --purple:#22345f; --purple-soft:#eef1f7;
+  --yellow:#dfab01; --yellow-soft:#fdecc8;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body,button,input,textarea,select,table,th,td,h1,h2,h3,h4,p,li,div,span,a,strong,em,small{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
+body{background:var(--bg);color:var(--ink);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+code,pre,pre *,code *{font-family:'Noto Sans Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+
+/* Header */
+.header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand-mark{width:34px;height:34px;display:grid;place-items:center;background:linear-gradient(135deg,#14213D 0%,#2f6fdb 100%);border-radius:8px;color:#fff;font-weight:800;font-size:13px;box-shadow:var(--shadow-sm)}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500;color:var(--ink-soft)}
+.progress-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-soft);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--bg-soft)}
+.tabbar{display:flex;gap:2px;padding:6px 24px;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--line);background:#fff}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{padding:9px 15px;background:transparent;border:none;border-radius:8px;font-size:13.5px;font-weight:500;color:#4a5568;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.tab:hover{background:var(--accent-soft);color:var(--accent)}
+.tab.active{background:var(--accent);color:#fff;font-weight:700}
+
+/* Layout */
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr)}
+@media (max-width:960px){.layout{grid-template-columns:1fr}.toc{display:none}}
+.toc{position:sticky;top:112px;align-self:start;height:calc(100vh - 124px);overflow-y:auto;padding:30px 16px 30px 28px;border-right:1px solid var(--line);scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);font-weight:700;margin-bottom:12px;padding-left:8px}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{display:block;padding:5px 10px;font-size:13px;color:var(--ink-soft);text-decoration:none;border-radius:4px;line-height:1.4}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{color:#fff;background:#16233f;font-weight:600;border-radius:12px;padding:9px 14px}
+.main{padding:44px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:28px 18px 60px}.header-top{padding:12px 16px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel-header{margin-bottom:34px}
+.panel-eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);margin:0 0 8px}
+.panel-title{font-size:38px;line-height:1.15;font-weight:700;letter-spacing:-.02em;margin:0 0 14px}
+.panel-subtitle{font-size:17px;color:var(--ink-soft);margin:0;max-width:760px;line-height:1.6}
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.level-tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.inter{background:#e3ecfb;color:#1d4f9f}
+.level-tag.adv{background:#f5e0e9;color:#8c1a63}
+
+.section{margin-top:46px;scroll-margin-top:140px}
+.section h2{font-size:27px;font-weight:700;letter-spacing:-.01em;margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.section h2 .sec-emoji{font-size:23px}
+.section h3{font-size:18px;font-weight:700;margin:26px 0 8px}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:5px 0}
+.lvl{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.03em;text-transform:uppercase}
+.lvl.b{background:var(--green-soft);color:#0a5f0a}
+.lvl.i{background:#e3ecfb;color:#1d4f9f}
+.lvl.e{background:#f5e0e9;color:#8c1a63}
+
+code{font-size:.87em;background:#f6f5f4;border:1px solid var(--line);padding:1px 6px;border-radius:4px;color:#c2410c}
+pre{background:#1f2430;color:#e6e6e3;padding:18px 20px;border-radius:var(--radius);overflow-x:auto;font-size:13px;line-height:1.65;margin:14px 0;box-shadow:var(--shadow-sm);position:relative}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{position:absolute;top:8px;right:12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9aa3b5;font-weight:700}
+.c{color:#7f8ba3;font-style:italic}
+
+.callout{display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start;background:var(--bg-block);border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout-icon{width:28px;height:28px;display:grid;place-items:center;background:#fff;border-radius:6px;font-size:16px;border:1px solid var(--line)}
+.callout-body{font-size:14.5px;line-height:1.6}
+.callout.tip{background:var(--accent-soft);border-color:#c7d2ea}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.card-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:8px;font-size:18px;margin-bottom:10px}
+.card-title{font-weight:700;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.55}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;border:1px solid var(--line)}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--bg-soft);font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+.table-wrap{overflow-x:auto}
+
+.diagram{background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin:18px 0;text-align:center}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{font-size:12px;color:var(--ink-soft);margin-top:10px;font-style:italic}
+
+.badge{display:inline-block;padding:2px 8px;font-size:11px;font-weight:700;border-radius:4px}
+.badge.blue{background:var(--accent-soft);color:#1d4f9f}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.red{background:var(--red-soft);color:#a82e2e}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:760px){.compare{grid-template-columns:1fr}}
+.compare-col{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.compare-col h4{margin:0 0 8px;font-size:15px;font-weight:700}
+.compare-col p{font-size:13.5px;margin:6px 0}
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{padding:4px 10px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500}
+
+/* stepper (flow list) */
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}
+.flow .st{background:var(--accent);color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600}
+.flow .ar{color:var(--ink-mute);font-weight:700}
+
+/* quiz */
+.quiz-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px 28px;box-shadow:var(--shadow-sm);margin-top:18px}
+.quiz-bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin:10px 0 20px}
+.quiz-bar>div{height:100%;width:0;background:var(--accent);transition:width .3s}
+.qmeta{font-size:12px;font-weight:700;color:var(--ink-soft);letter-spacing:.05em;text-transform:uppercase}
+.qtext{font-size:17px;font-weight:600;margin:6px 0 14px}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;gap:12px;align-items:center;padding:11px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg-soft);cursor:pointer;font-size:14.5px}
+.opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt .k{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0}
+.opt.correct{background:var(--green-soft);border-color:var(--green);font-weight:600}
+.opt.wrong{background:var(--red-soft);border-color:var(--red);font-weight:600}
+.opts.done .opt{pointer-events:none}
+.qexp{margin-top:14px;padding:12px 14px;border-radius:8px;background:var(--accent-soft);font-size:14px;display:none}
+.qbtn{margin-top:16px;background:var(--accent);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
+.qscore{font-size:44px;font-weight:800;text-align:center;margin:14px 0 4px}
+
+/* ===== Assessment start card (Royal HRMS format) ===== */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header"><div class="header-top"><div class="brand"><div class="brand-mark">RF</div><span>Reliability Frameworks<span class="brand-sub"> · SRE course</span></span></div>
+<div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 6</span></span><button class="btn" onclick="resetProgress()">↺ Reset</button></div></div>
+<nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1">Fundamentals</button><button class="tab" data-tab="t2">SLIs</button><button class="tab" data-tab="t3">SLOs & SLAs</button><button class="tab" data-tab="t4">Error Budgets</button><button class="tab" data-tab="t5">Expert Practices</button><button class="tab" data-tab="t6">Assessment</button></nav></header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside><main class="main">
+<section class="panel" id="t1" data-toc='[["s1-1", "What is reliability?"], ["s1-2", "SLI vs SLO vs SLA"], ["s1-3", "What does \"nines\" really mean?"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span></div><p class="panel-eyebrow">Module 01 · Foundations</p><h1 class="panel-title">Reliability Fundamentals</h1><p class="panel-subtitle">Reliability is the feature users notice most when it is missing. SLIs, SLOs, SLAs and error budgets turn "is the service good enough?" from an opinion into a number.</p></div><div class="section" id="s1-1"><h2><span class="sec-emoji">🛡️</span> What is reliability? <span class="lvl b">Basic</span></h2><p><strong>Reliability</strong> is the probability that a service does what users expect, when they expect it. Site Reliability Engineering (SRE) treats it as a measurable product feature, not a vague goal.</p><div class="callout tip"><div class="callout-icon">🚗</div><div class="callout-body"><strong>Analogy:</strong> a car that starts 99 days out of 100 sounds great, until you realise that is 3–4 failed mornings a year. Reliability is always defined from the <em>user's</em> point of view.</div></div><div class="compare"><div class="compare-col" style="background:var(--red-soft);border-color:#f5b8b0"><h4>❌ Without measurement</h4><p>• "The site feels slow"</p><p>• Dev and Ops argue about priorities</p><p>• Outages treated as shameful</p><p>• Either too risky or over-engineered</p></div><div class="compare-col" style="background:var(--green-soft);border-color:#bdd9d2"><h4>✅ With SLIs / SLOs</h4><p>• "p99 latency was 420 ms vs 300 ms target"</p><p>• One shared number to decide with</p><p>• Failure is budgeted and expected</p><p>• Balance of speed vs stability</p></div></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">🔤</span> SLI vs SLO vs SLA <span class="lvl b">Basic</span></h2><p>Three terms, three jobs. Learn them as a chain: you <strong>measure</strong> (SLI), <strong>aim</strong> (SLO), then <strong>promise</strong> (SLA).</p><div class="table-wrap"><table><tr><th>Term</th><th>Full name</th><th>Meaning</th><th>Example</th><th>Who cares</th></tr><tr><td><strong>SLI</strong></td><td>Service Level Indicator</td><td>A measured number about service health</td><td>% of requests answered in &lt; 300 ms</td><td>Engineers</td></tr><tr><td><strong>SLO</strong></td><td>Service Level Objective</td><td>Internal target for an SLI over a time window</td><td>99.9% of requests &lt; 300 ms over 30 days</td><td>Eng + Product</td></tr><tr><td><strong>SLA</strong></td><td>Service Level Agreement</td><td>Contract with customers, with penalties</td><td>99.5% uptime or 10% credit</td><td>Business / Legal</td></tr></table></div><div class="flow"><span class="st">SLI (measure)</span><span class="ar">→</span><span class="st">SLO (target)</span><span class="ar">→</span><span class="st">SLA (contract)</span></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Always set the <strong>SLO stricter than the SLA</strong>. If SLA = 99.5%, run SLO = 99.9% so you get warned before you owe money.</div></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">⏱️</span> What does "nines" really mean? <span class="lvl b">Basic</span></h2><p>Availability targets are quoted in "nines". Each extra nine is roughly 10× harder and costlier.</p><div class="table-wrap"><table><tr><th>Availability</th><th>Downtime / 30 days</th><th>Downtime / year</th><th>Typical for</th></tr><tr><td>99%</td><td>7.2 hours</td><td>3.65 days</td><td>Internal tools</td></tr><tr><td>99.9% (three nines)</td><td>43.2 min</td><td>8.76 hours</td><td>Most SaaS APIs</td></tr><tr><td>99.95%</td><td>21.6 min</td><td>4.38 hours</td><td>Payments, B2B</td></tr><tr><td>99.99% (four nines)</td><td>4.3 min</td><td>52.6 min</td><td>Core infra, DNS</td></tr><tr><td>99.999%</td><td>26 sec</td><td>5.3 min</td><td>Telecom, rarely worth it</td></tr></table></div><pre><span class="pre-lang">python</span><code>def allowed_downtime_minutes(slo, days=30):
+    return (1 - slo) * days * 24 * 60
+
+print(allowed_downtime_minutes(0.999))   # 43.2 minutes</code></pre></div></section><section class="panel" id="t2" data-toc='[["s2-1", "The golden formula"], ["s2-2", "Types of SLIs"], ["s2-3", "Where to measure"], ["s2-4", "Critical User Journeys (CUJ)"], ["s2-5", "Expert: percentiles &amp;amp; histograms"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span></div><p class="panel-eyebrow">Module 02 · Measure</p><h1 class="panel-title">Service Level Indicators</h1><p class="panel-subtitle">An SLI is a ratio: <em>good events ÷ valid events</em>. Pick indicators that reflect what the user feels, not what the server finds convenient to count.</p></div><div class="section" id="s2-1"><h2><span class="sec-emoji">📏</span> The golden formula <span class="lvl b">Basic</span></h2><p><code>SLI = good events / valid events × 100%</code>. It always lands between 0% and 100%, which makes SLIs easy to compare and alert on.</p><div class="callout tip"><div class="callout-icon">🍕</div><div class="callout-body"><strong>Example:</strong> a pizza shop gets 1,000 orders; 970 arrive hot and within 30 min. SLI = 970/1000 = <strong>97%</strong>.</div></div><pre><span class="pre-lang">promql</span><code># Availability SLI: share of non-5xx requests, last 5m
+sum(rate(http_requests_total{job="api",code!~"5.."}[5m]))
+/
+sum(rate(http_requests_total{job="api"}[5m]))</code></pre></div><div class="section" id="s2-2"><h2><span class="sec-emoji">🧩</span> Types of SLIs <span class="lvl b">Basic</span></h2><p>Choose the type by <strong>service shape</strong>:</p><div class="table-wrap"><table><tr><th>Type</th><th>Question it answers</th><th>Good for</th><th>Example SLI</th></tr><tr><td>Availability</td><td>Did it respond successfully?</td><td>APIs, web apps</td><td>Non-5xx / all requests</td></tr><tr><td>Latency</td><td>Was it fast enough?</td><td>Interactive requests</td><td>Requests under 300 ms / all</td></tr><tr><td>Throughput</td><td>Can it keep up?</td><td>Pipelines, batch</td><td>Jobs processed per minute</td></tr><tr><td>Correctness</td><td>Was the answer right?</td><td>Data, search, billing</td><td>Records with valid checksum / all</td></tr><tr><td>Freshness</td><td>How stale is the data?</td><td>Caches, dashboards</td><td>Rows updated in &lt; 5 min / all</td></tr><tr><td>Durability</td><td>Is data still there?</td><td>Storage, backups</td><td>Objects readable after 1 yr</td></tr><tr><td>Coverage</td><td>Did we process everything?</td><td>ETL, indexing</td><td>Docs indexed / docs received</td></tr></table></div></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🔬</span> Where to measure <span class="lvl i">Intermediate</span></h2><p>Closer to the user is more truthful but noisier.</p><div class="table-wrap"><table><tr><th>Vantage point</th><th>Pros</th><th>Cons</th></tr><tr><td>Application metrics</td><td>Easy, rich labels</td><td>Misses crashes before the app counts</td></tr><tr><td>Load balancer / ingress</td><td>Sees all traffic, includes errors</td><td>No business meaning</td></tr><tr><td>Synthetic probes</td><td>Catches full-path outages</td><td>Low sample size</td></tr><tr><td>Real User Monitoring</td><td>True user experience</td><td>Client noise, privacy</td></tr></table></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Never use <strong>CPU, memory or pod restarts</strong> as an SLI. They are causes (use for debugging), not user-visible symptoms.</div></div></div><div class="section" id="s2-4"><h2><span class="sec-emoji">🧠</span> Critical User Journeys (CUJ) <span class="lvl i">Intermediate</span></h2><p>Start with 2–4 journeys, not every endpoint. Example for an e-commerce site:</p><div class="table-wrap"><table><tr><th>Journey</th><th>SLI</th><th>Target</th></tr><tr><td>Browse catalog</td><td>Latency: GET /products &lt; 400 ms</td><td>99%</td></tr><tr><td>Checkout</td><td>Availability: POST /checkout success</td><td>99.95%</td></tr><tr><td>Order email</td><td>Freshness: sent within 2 min</td><td>99%</td></tr></table></div><div class="pill-row"><span class="pill">Percentiles over averages</span><span class="pill">Exclude health checks</span><span class="pill">Count retries carefully</span><span class="pill">Use histograms</span></div></div><div class="section" id="s2-5"><h2><span class="sec-emoji">🎯</span> Expert: percentiles &amp; histograms <span class="lvl e">Expert</span></h2><p>Averages hide pain: 99 requests at 100 ms and 1 at 10 s average ~200 ms yet one user waited ten seconds. Use <strong>threshold-based SLIs</strong> built on histogram buckets.</p><pre><span class="pre-lang">promql</span><code># Latency SLI: share of requests faster than 300 ms
+sum(rate(http_request_duration_seconds_bucket{le="0.3"}[5m]))
+/
+sum(rate(http_request_duration_seconds_count[5m]))</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Bucket boundaries must include your threshold (0.3 here), otherwise you cannot compute the SLI exactly. Plan buckets <em>before</em> shipping the metric.</div></div></div></section><section class="panel" id="t3" data-toc='[["s3-1", "Writing a good SLO"], ["s3-2", "Window types"], ["s3-3", "SLA essentials"], ["s3-4", "Expert: composite SLOs"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 03 · Target & Promise</p><h1 class="panel-title">SLOs and SLAs</h1><p class="panel-subtitle">An SLO is the reliability target your team signs up for. An SLA is the legal wrapper. Done well, SLOs end arguments; done badly, they become a vanity metric.</p></div><div class="section" id="s3-1"><h2><span class="sec-emoji">🎯</span> Writing a good SLO <span class="lvl b">Basic</span></h2><p>Formula: <strong>SLI + target + window</strong>.</p><pre><span class="pre-lang">text</span><code>"99.9% of checkout requests succeed over a rolling 30 days"
+  SLI    = successful checkout requests / all checkout requests
+  Target = 99.9%
+  Window = rolling 30 days</code></pre><div class="compare"><div class="compare-col" style="background:var(--red-soft);border-color:#f5b8b0"><h4>❌ Bad SLOs</h4><p>• "The site is always up" (100%)</p><p>• No window, no SLI</p><p>• Based on CPU usage</p><p>• Set by guess, never reviewed</p></div><div class="compare-col" style="background:var(--green-soft);border-color:#bdd9d2"><h4>✅ Good SLOs</h4><p>• Achievable and below 100%</p><p>• Clear ratio and window</p><p>• User-visible symptom</p><p>• Reviewed quarterly with product</p></div></div></div><div class="section" id="s3-2"><h2><span class="sec-emoji">🪟</span> Window types <span class="lvl i">Intermediate</span></h2><p>Rolling windows are smoother; calendar windows match business reporting.</p><div class="table-wrap"><table><tr><th>Window</th><th>Behaviour</th><th>Use when</th></tr><tr><td>Rolling 28/30 days</td><td>Old failures age out gradually</td><td>Engineering decisions, alerting</td></tr><tr><td>Calendar month</td><td>Resets on the 1st</td><td>SLA reports, billing</td></tr><tr><td>Per-quarter</td><td>Long, forgiving</td><td>Strategic reviews</td></tr></table></div></div><div class="section" id="s3-3"><h2><span class="sec-emoji">📜</span> SLA essentials <span class="lvl i">Intermediate</span></h2><p>An SLA lists <em>what is measured, how, exclusions and the remedy</em>.</p><div class="table-wrap"><table><tr><th>Item</th><th>Example</th></tr><tr><td>Metric</td><td>Monthly uptime of the public API</td></tr><tr><td>Target</td><td>99.5%</td></tr><tr><td>Exclusions</td><td>Scheduled maintenance, customer-caused outages, force majeure</td></tr><tr><td>Remedy</td><td>&lt; 99.5% → 10% credit; &lt; 99.0% → 25% credit</td></tr></table></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Real-world SLAs: AWS S3 offers 99.9% with credits; Google Cloud and Azure follow similar tiered credits.</div></div></div><div class="section" id="s3-4"><h2><span class="sec-emoji">🔗</span> Expert: composite SLOs <span class="lvl e">Expert</span></h2><p>If your service needs three dependencies in series, availabilities multiply:</p><pre><span class="pre-lang">python</span><code>deps = [0.999, 0.999, 0.999]       # DB, cache, auth
+combined = 1
+for d in deps: combined *= d
+print(round(combined*100, 3))      # 99.7  -&gt; you cannot promise 99.9%</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Fixes: make dependencies <em>soft</em> (fallbacks, caches), add redundancy (parallel multiplies the failure rates instead), or negotiate tighter SLOs with the dependency owner.</div></div></div></section><section class="panel" id="t4" data-toc='[["s4-1", "What is an error budget?"], ["s4-2", "Error budget policy"], ["s4-3", "Burn rate"], ["s4-4", "Expert: multi-window multi-burn alerts"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 04 · Spend</p><h1 class="panel-title">Error Budgets</h1><p class="panel-subtitle">The error budget is the amount of unreliability you are <em>allowed</em>. It converts reliability into currency that product and engineering can spend together.</p></div><div class="section" id="s4-1"><h2><span class="sec-emoji">💰</span> What is an error budget? <span class="lvl b">Basic</span></h2><p><code>Error budget = 100% − SLO</code>. A 99.9% SLO over 30 days leaves 0.1% — about <strong>43 minutes</strong> of failure, or 1 in 1,000 bad requests.</p><div class="callout tip"><div class="callout-icon">🏦</div><div class="callout-body"><strong>Analogy:</strong> a monthly bank balance. Risky deploys, experiments and outages all <em>spend</em> it. Quiet weeks let it recover. Empty balance = stop spending.</div></div><pre><span class="pre-lang">python</span><code>slo, total, bad = 0.999, 10_000_000, 4_200
+budget   = (1 - slo) * total       # 10,000 allowed bad requests
+consumed = bad / budget            # 0.42  -&gt; 42% used
+print(f"{consumed:.0%} of budget used, {1-consumed:.0%} left")</code></pre></div><div class="section" id="s4-2"><h2><span class="sec-emoji">📋</span> Error budget policy <span class="lvl i">Intermediate</span></h2><p>A written policy decides <em>what happens</em> at each level, agreed by product, engineering and leadership <strong>before</strong> an incident.</p><div class="table-wrap"><table><tr><th>Budget remaining</th><th>Action</th></tr><tr><td>&gt; 50%</td><td>Ship freely, run experiments, chaos tests</td></tr><tr><td>25–50%</td><td>Extra review for risky changes, prioritise reliability bugs</td></tr><tr><td>0–25%</td><td>Only low-risk changes, pause feature launches</td></tr><tr><td>Exhausted</td><td>Feature freeze; team works only on reliability until recovered</td></tr></table></div><div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Result: nobody argues "is it stable enough to ship?". The number answers it.</div></div></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🔥</span> Burn rate <span class="lvl i">Intermediate</span></h2><p><strong>Burn rate</strong> = how fast you consume budget relative to the plan. Burn rate 1 = exactly exhausted at the window end; 14.4 = gone in ~2 days.</p><pre><span class="pre-lang">promql</span><code># burn rate = error ratio / allowed error ratio
+(1 - (sum(rate(http_requests_total{code!~"5.."}[1h]))
+      / sum(rate(http_requests_total[1h]))))
+/ (1 - 0.999)</code></pre></div><div class="section" id="s4-4"><h2><span class="sec-emoji">🚨</span> Expert: multi-window multi-burn alerts <span class="lvl e">Expert</span></h2><p>Alert on <em>budget consumption speed</em>, not raw error spikes. Google SRE Workbook recommends pairing a long and a short window to cut noise.</p><div class="table-wrap"><table><tr><th>Severity</th><th>Burn rate</th><th>Long window</th><th>Short window</th><th>Budget spent</th></tr><tr><td>Page</td><td>14.4</td><td>1 h</td><td>5 min</td><td>2%</td></tr><tr><td>Page</td><td>6</td><td>6 h</td><td>30 min</td><td>5%</td></tr><tr><td>Ticket</td><td>1</td><td>3 days</td><td>6 h</td><td>10%</td></tr></table></div><pre><span class="pre-lang">yaml</span><code>- alert: ErrorBudgetFastBurn
+  expr: slo:burnrate1h &gt; 14.4 and slo:burnrate5m &gt; 14.4
+  labels: {severity: page}
+  annotations: {summary: "Burning 2% of monthly budget per hour"}</code></pre></div></section><section class="panel" id="t5" data-toc='[["s5-1", "SLO as code"], ["s5-2", "The SLO review loop"], ["s5-3", "Common pitfalls"]]'><div class="panel-header"><div class="level-row"><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 05 · Operate at scale</p><h1 class="panel-title">Expert Practices</h1><p class="panel-subtitle">Make SLOs part of how the organisation works: defined as code, reviewed regularly and wired into planning.</p></div><div class="section" id="s5-1"><h2><span class="sec-emoji">🧾</span> SLO as code <span class="lvl e">Expert</span></h2><p>Store SLOs in Git (OpenSLO, Sloth, Pyrra) so alerts and dashboards are generated, reviewed and versioned.</p><pre><span class="pre-lang">yaml</span><code># sloth.yml
+version: "prometheus/v1"
+service: "checkout"
+slos:
+  - name: "requests-availability"
+    objective: 99.9
+    sli:
+      events:
+        error_query: sum(rate(http_requests_total{code=~"5.."}[{{.window}}]))
+        total_query: sum(rate(http_requests_total[{{.window}}]))
+    alerting: {name: CheckoutAvailability}</code></pre></div><div class="section" id="s5-2"><h2><span class="sec-emoji">🔁</span> The SLO review loop <span class="lvl e">Expert</span></h2><p></p><div class="flow"><span class="st">Measure</span><span class="ar">→</span><span class="st">Review monthly</span><span class="ar">→</span><span class="st">Adjust SLO</span><span class="ar">→</span><span class="st">Plan reliability work</span><span class="ar">→</span><span class="st">Measure</span></div><ul><li>Too many nines unused? <strong>Tighten</strong> or ship faster.</li><li>Budget always empty? <strong>Loosen</strong> or invest in reliability.</li><li>Users unhappy though SLO green? <strong>Wrong SLI</strong>; revisit journeys.</li></ul></div><div class="section" id="s5-3"><h2><span class="sec-emoji">⚠️</span> Common pitfalls <span class="lvl e">Expert</span></h2><ul><li>Targeting 100% (impossible, kills velocity)</li><li>Too many SLOs (aim for 3–5 per service)</li><li>Averages instead of percentiles</li><li>SLO set without product buy-in</li><li>Alerting on causes (CPU) instead of burn rate</li></ul></div></section><section class="panel" id="t6" data-toc='[["t6-1","Take the Assessment"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 06</p><h1 class="panel-title">Final Assessment</h1><p class="panel-subtitle">50 multiple-choice questions spanning every module of this course — from fundamentals to expert-level scenarios. Timed, full-screen and proctored.</p></div><div class="section" id="t6-1"><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div><div class="assess-intro-text">A timed, exam-style final assessment for the SRE Reliability Frameworks track. Questions cover every module — from foundations to expert-level scenarios — and are shuffled on every attempt.</div><ul class="assess-intro-list"><li><strong>50 Multiple-Choice questions</strong> — concept checks plus scenario-based judgement calls</li><li>Difficulty ranges from <strong>Basic</strong> to <strong>Expert</strong></li><li>60-minute timer, question palette, mark-for-review, full explanations after you submit</li><li>Fullscreen proctoring: 3 tab-switch / fullscreen-exit warnings auto-submit the test; copy and right-click are disabled</li><li>Your attempts and top score are saved in this browser</li></ul><button class="assess-start-btn" id="assessStartBtn" type="button">▶ Start Assessment</button></div><div id="scoreBoard" class="score-board" style="display:none"></div></div></section>
+</main></div>
+<script>
+/* ---------- Tabs, TOC, scroll spy ---------- */
+(function(){
+  const tabs=document.querySelectorAll('.tab'), panels=document.querySelectorAll('.panel');
+  const tocEl=document.getElementById('toc'), total=tabs.length, pt=document.getElementById('progressText');
+  function buildToc(panel){
+    const data=JSON.parse(panel.getAttribute('data-toc')||'[]');
+    tocEl.innerHTML=data.map(([id,l])=>`<li><a href="#${id}" data-target="${id}">${l}</a></li>`).join('');
+    const f=tocEl.querySelector('a'); if(f)f.classList.add('active');
+  }
+  let manual=null;
+  function activate(i){
+    tabs.forEach((t,k)=>t.classList.toggle('active',k===i));
+    panels.forEach((p,k)=>p.classList.toggle('active',k===i));
+    manual=null; buildToc(panels[i]); pt.textContent=`Tab ${i+1} of ${total}`;
+    window.scrollTo({top:0,behavior:'instant'});
+    tabs[i].scrollIntoView({inline:'center',block:'nearest'});
+  }
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('.toc-list a'); if(!a)return; e.preventDefault();
+    const el=document.getElementById(a.dataset.target);
+    manual=a.dataset.target; tocEl.querySelectorAll('a').forEach(x=>x.classList.toggle('active',x===a));
+    if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});
+  });
+  let tick=false;
+  function spy(){
+    if(manual){tick=false;return;}
+    const p=document.querySelector('.panel.active'); if(!p){tick=false;return;}
+    let cur=null; const secs=[...p.querySelectorAll('.section')];
+    secs.forEach(s=>{ if(s.getBoundingClientRect().top-180<0)cur=s.id; });
+    if(secs.length && window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-4) cur=secs[secs.length-1].id;
+    if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));
+    tick=false;
+  }
+  window.addEventListener('scroll',()=>{ if(!tick){requestAnimationFrame(spy);tick=true;} },{passive:true});
+  ['wheel','touchstart','keydown','pointerdown'].forEach(ev=>window.addEventListener(ev,e=>{if(e.target&&e.target.closest&&e.target.closest('.toc-list a'))return;manual=null},{passive:true}));
+  window.resetProgress=()=>activate(0);
+  activate(0);
+})();
+
+
+window.COURSE = {"slug": "sre-reliability-frameworks", "title": "SRE Reliability Frameworks", "assess": [{"q": "In SRE, reliability is best defined as…", "options": ["The number of servers running", "The probability that a service does what users expect, when they expect it", "The absence of any alerts", "How quickly engineers ship features"], "answer": 1, "exp": "Reliability is a measurable product feature defined from the user's point of view."}, {"q": "Which relationship between SLI, SLO and SLA is correct?", "options": ["The SLA is stricter than the SLO", "The SLI is the financial penalty", "The SLI is measured, the SLO is the internal target, the SLA is the customer contract", "All three mean the same thing"], "answer": 2, "exp": "Measure (SLI), aim (SLO), then promise (SLA)."}, {"q": "Why should the SLO be stricter than the SLA?", "options": ["It is cheaper to run", "You get warned before you owe customers money", "Customers can see the SLO", "Law requires it"], "answer": 1, "exp": "With an SLA of 99.5%, run an SLO of 99.9%."}, {"q": "A 99.9% SLO over 30 days allows roughly how much downtime?", "options": ["About 43 minutes", "About 4.3 minutes", "About 7 hours", "About 3 days"], "answer": 0, "exp": "0.1% of 43,200 minutes is 43.2 minutes."}, {"q": "How much downtime does 99.99% allow per 30 days?", "options": ["About 43 minutes", "About 4.3 minutes", "About 26 seconds", "About 7.2 hours"], "answer": 1, "exp": "0.01% of 43,200 minutes is 4.32 minutes."}, {"q": "An SLA promises 99.5% monthly uptime (30 days). Maximum allowed downtime is…", "options": ["About 21.6 minutes", "About 43 minutes", "About 3.6 hours", "About 7.2 hours"], "answer": 2, "exp": "0.5% of 43,200 minutes is 216 minutes, or 3.6 hours."}, {"q": "Roughly how does the cost and difficulty change with each additional 'nine' of availability?", "options": ["About the same", "About 10% cheaper", "About 10× harder and costlier", "Doubles exactly"], "answer": 2, "exp": "Each extra nine shrinks the allowed failure by a factor of ten."}, {"q": "An SLI is calculated as…", "options": ["Good events divided by valid events, as a percentage", "Total errors divided by total CPUs", "Revenue divided by requests", "Average latency in milliseconds"], "answer": 0, "exp": "That keeps SLIs between 0% and 100%, so they are easy to compare and alert on."}, {"q": "1,000 orders were placed and 970 arrived hot and within 30 minutes. The SLI is…", "options": ["97%", "30%", "9.7%", "103%"], "answer": 0, "exp": "970 good ÷ 1000 valid = 0.97."}, {"q": "Which is a good SLI?", "options": ["CPU utilisation", "Pod restart count", "Free disk space", "The share of requests served in under 300 ms"], "answer": 3, "exp": "Good SLIs describe what the user experiences."}, {"q": "Why should CPU not be used as an SLI?", "options": ["CPU cannot be measured", "CPU is always 100%", "CPU is a cause to investigate, not a user-visible symptom", "CPU is too precise"], "answer": 2, "exp": "Use causes for debugging and symptoms for SLIs."}, {"q": "Which SLI type best fits an ETL job that must process every incoming document?", "options": ["Latency", "Availability", "Durability", "Coverage"], "answer": 3, "exp": "Coverage asks whether everything received was processed."}, {"q": "'Rows updated in under 5 minutes divided by all rows' is which SLI type?", "options": ["Throughput", "Correctness", "Freshness", "Availability"], "answer": 2, "exp": "Freshness measures how stale data is."}, {"q": "Which SLI type should a billing system emphasise?", "options": ["Coverage of log lines", "Page-load animation speed", "Correctness — was the answer right?", "Number of dashboards"], "answer": 2, "exp": "Wrong invoices are worse than slow ones."}, {"q": "Which vantage point misses crashes that happen before the app counts a request?", "options": ["Load balancer or ingress metrics", "Application metrics", "Synthetic probes", "Real User Monitoring"], "answer": 1, "exp": "Measuring closer to the user is more truthful but noisier."}, {"q": "Which is a strength of synthetic probes?", "options": ["They show every user's exact experience", "They have a huge sample size", "They catch full-path outages even when no real user is active", "They require no maintenance"], "answer": 2, "exp": "Their weakness is a low sample size."}, {"q": "What are Critical User Journeys (CUJs) used for?", "options": ["Listing every API endpoint", "Planning on-call rosters", "Tracking CPU usage", "Choosing 2–4 important journeys to define SLIs for, instead of every endpoint"], "answer": 3, "exp": "Examples: browse catalogue, checkout, order email."}, {"q": "Which traffic should usually be excluded from SLI counts?", "options": ["Real user checkouts", "Slow requests", "Failed requests", "Health-check requests"], "answer": 3, "exp": "Health checks are not real user experience."}, {"q": "99 requests take 100 ms and 1 takes 10 s. Why is the average (~200 ms) misleading?", "options": ["The average is always correct", "It hides the one user who waited ten seconds; percentiles reveal tail pain", "Percentiles cannot be computed", "The slow request must be a bug in monitoring"], "answer": 1, "exp": "Use percentiles or threshold-based SLIs built on histograms."}, {"q": "To compute 'share of requests under 300 ms' exactly from a Prometheus histogram, you need…", "options": ["A bucket boundary exactly at 0.3 seconds", "A counter named latency_total", "A gauge for average latency", "A summary with no quantiles"], "answer": 0, "exp": "Plan bucket boundaries before shipping the metric."}, {"q": "Which is a well-formed SLO?", "options": ["99.9% of checkout requests succeed over a rolling 30 days", "The site is always up", "CPU stays below 70%", "We try hard to be fast"], "answer": 0, "exp": "A good SLO is SLI + target + window."}, {"q": "Why is an SLO of 100% a mistake?", "options": ["It is cheaper to run", "Users prefer 99%", "Prometheus cannot compute it", "It is impossible to sustain and leaves no room for change"], "answer": 3, "exp": "100% means every deploy is a violation, which kills velocity."}, {"q": "Which window suits SLA reports and billing?", "options": ["Rolling 30 days", "Calendar month", "Rolling 28 days", "Per hour"], "answer": 1, "exp": "Calendar windows reset on the 1st and match business reporting."}, {"q": "Which window is smoother and better for engineering decisions and alerting?", "options": ["Calendar month", "Rolling 28 or 30 days", "Per quarter only", "A single day"], "answer": 1, "exp": "Old failures age out gradually in a rolling window."}, {"q": "What does an SLA typically contain?", "options": ["Internal burn-rate alert thresholds", "The on-call roster", "Source code", "Metric, target, exclusions and remedy such as service credits"], "answer": 3, "exp": "Exclusions include scheduled maintenance and customer-caused outages."}, {"q": "A service depends in series on a DB, a cache and an auth service, each 99.9%. Combined availability is about…", "options": ["99.9%", "99.97%", "100%", "99.7%"], "answer": 3, "exp": "0.999 × 0.999 × 0.999 ≈ 0.997, so you cannot promise 99.9%."}, {"q": "Two redundant replicas, each 99% available, in parallel (either one suffices) give about…", "options": ["98%", "99.99%", "99%", "99.9%"], "answer": 1, "exp": "The failure probability multiplies: 0.01 × 0.01 = 0.0001."}, {"q": "Which approach improves composite availability?", "options": ["Add more serial dependencies", "Set the SLO to 100%", "Remove monitoring", "Make dependencies soft with fallbacks or caches, or add redundancy"], "answer": 3, "exp": "Alternatively negotiate tighter SLOs with the dependency owner."}, {"q": "The error budget equals…", "options": ["100% minus the SLO", "The SLO plus 1%", "The SLA times 2", "The number of engineers"], "answer": 0, "exp": "A 99.9% SLO leaves a 0.1% budget."}, {"q": "An SLO is 99.95% over 20 million requests. How many failed requests are allowed?", "options": ["1,000", "10,000", "50,000", "100,000"], "answer": 1, "exp": "0.05% of 20,000,000 = 10,000."}, {"q": "SLO 99.9%, 10 million requests, 4,200 failed. How much budget is consumed?", "options": ["4.2%", "42%", "58%", "0.42%"], "answer": 1, "exp": "The budget is 10,000, and 4,200 ÷ 10,000 = 42%."}, {"q": "What should happen when the error budget is exhausted?", "options": ["Ignore it", "Raise the SLO to 100%", "Delete the alerts", "Freeze risky feature work and focus on reliability until it recovers"], "answer": 3, "exp": "The policy makes 'is it stable enough to ship?' a number, not an argument."}, {"q": "With more than 50% of the budget left, the sample policy says to…", "options": ["Ship freely and run experiments, including chaos tests", "Freeze all features", "Allow only low-risk changes", "Escalate to leadership immediately"], "answer": 0, "exp": "Budget remaining is currency to spend on risk."}, {"q": "When should the error-budget policy be agreed?", "options": ["During the outage", "After the postmortem, by SRE alone", "In advance, by product, engineering and leadership together", "It should never be written down"], "answer": 2, "exp": "Agreement before an incident avoids blame and debate later."}, {"q": "With 20% of the budget left and a risky launch planned, the sample policy suggests…", "options": ["Only low-risk changes and pausing the risky feature launch", "Ship as planned", "Raise the SLO to hide the problem", "Delete the SLO"], "answer": 0, "exp": "The 0–25% band calls for pausing feature launches."}, {"q": "A burn rate of 1 means…", "options": ["The budget will be exactly exhausted at the end of the window", "There are no errors", "The budget is gone in one hour", "The SLO is already violated"], "answer": 0, "exp": "Burn rate is the speed of consumption relative to plan."}, {"q": "Burn rate is calculated as…", "options": ["Total errors divided by total CPUs", "The SLO multiplied by traffic", "Latency divided by throughput", "Observed error ratio divided by the allowed error ratio (1 − SLO)"], "answer": 3, "exp": "It normalises errors against the budget."}, {"q": "SLO 99.9% and the current error ratio is 0.6%. The burn rate is…", "options": ["6", "0.6", "60", "1"], "answer": 0, "exp": "0.6% ÷ 0.1% = 6."}, {"q": "At a burn rate of 14.4 over a 30-day window, the budget is gone in about…", "options": ["2 days", "30 days", "14 hours", "1 hour"], "answer": 0, "exp": "30 days ÷ 14.4 ≈ 2.1 days."}, {"q": "Why pair a long window with a short window in burn-rate alerts?", "options": ["It doubles the number of alerts", "It saves memory", "Prometheus requires it", "The long window shows sustained burn and the short one confirms it is still happening, reducing noise"], "answer": 3, "exp": "Multi-window, multi-burn alerts come from the Google SRE Workbook."}, {"q": "A 14.4 burn rate confirmed over 1 h and 5 min windows should…", "options": ["Create a low-priority ticket", "Be ignored", "Go into a weekly digest", "Page someone immediately"], "answer": 3, "exp": "It spends about 2% of the monthly budget per hour."}, {"q": "Which is a common SLO pitfall?", "options": ["Reviewing SLOs quarterly with product", "Alerting on causes such as CPU instead of on burn rate", "Using percentiles", "Keeping 3–5 SLOs per service"], "answer": 1, "exp": "Alert on user-visible budget consumption, not raw causes."}, {"q": "What is the benefit of defining SLOs as code?", "options": ["It removes the need for SLIs", "It guarantees compliance", "Alerts and dashboards are generated, reviewed and versioned in Git", "It stops outages"], "answer": 2, "exp": "Tools include OpenSLO, Sloth and Pyrra."}, {"q": "Which of these are SLO-as-code tools?", "options": ["Terraform and Ansible", "Sloth and Pyrra", "Jenkins and Bamboo", "Wireshark and tcpdump"], "answer": 1, "exp": "OpenSLO is a specification; Sloth and Pyrra generate rules from it."}, {"q": "The error budget is always exhausted. What should the SLO review conclude?", "options": ["Delete the SLO", "Ship faster", "Invest in reliability work, or loosen the SLO if it was unrealistic", "Set the target to 100%"], "answer": 2, "exp": "The review loop adjusts either the work or the target."}, {"q": "The error budget is rarely spent. What does the SLO review loop suggest?", "options": ["Freeze deployments", "Take more risk: ship faster or run more experiments", "Loosen alerts", "Remove the SLO"], "answer": 1, "exp": "Unused budget means reliability is over-invested relative to need."}, {"q": "Users are unhappy although the SLO dashboard is green. The most likely issue is…", "options": ["Users are wrong", "Customers always exaggerate outages", "The wrong SLI — revisit the user journeys", "Prometheus is broken"], "answer": 2, "exp": "SLIs must reflect real user pain."}, {"q": "Roughly how many SLOs should a service have?", "options": ["3–5", "1,000", "None", "One per metric exposed"], "answer": 0, "exp": "Too many SLOs dilute focus."}, {"q": "The SLA is 99.5% monthly uptime. Which internal SLO is most sensible?", "options": ["99.5%", "99.0%", "99.9%", "98%"], "answer": 2, "exp": "A stricter SLO gives early warning before the SLA is breached."}, {"q": "Dashboards show a healthy 200 ms average latency but users complain of slowness. What should you do?", "options": ["Switch to percentiles (p95/p99) or threshold SLIs built on histograms", "Ignore the complaints", "Raise the average threshold", "Remove the dashboard"], "answer": 0, "exp": "Averages hide tail latency."}]};
+
+/* =====================================================================
+   Final assessment — full-screen, timed mock exam (graded in-browser)
+   ===================================================================== */
+(function(){
+  const C = window.COURSE;
+  const BANK = C.assess.map((q,i)=>Object.assign({id:'q'+i}, q));
+  const EXAM_SECONDS = 60*60;
+  const LS_KEY = 'sre_scores_' + C.slug;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash .card:hover{transform:none}
+  .exam-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9;padding:0}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-fswarn{position:fixed;inset:0;z-index:100003;background:rgba(15,23,42,.92);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#fff;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fswarn .fw-box{max-width:520px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .exam-fswarn h3{font-size:30px;font-weight:800;margin:0;display:flex;align-items:center;gap:12px;color:#fff}
+  .exam-fswarn p{margin:0;font-size:16px;color:#e2e8f0;line-height:1.5}
+  .exam-fswarn .fw-count{font-size:16px;font-weight:600;color:#fff}
+  .exam-fswarn .fw-btn{margin-top:6px;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:15px 26px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+  .exam-fswarn .fw-btn:hover{background:#000}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}.exam-q-pane{padding:20px}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+  function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function examDialog(title,msg,okLabel,cancel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">${cancel?'<button class="exam-btn nav" data-a="0">Cancel</button>':''}<button class="exam-btn primary" data-a="1">${okLabel||'OK'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d && cancel){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores(); a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: tab-switch / fullscreen-exit warnings (3 strikes -> auto-submit) ---- */
+  let warns=0, lastWarn=0, proctorOn=false;
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function hideFsWarn(){ const w=document.getElementById('examFsWarn'); if(w)w.remove(); }
+  function showFsWarn(n){
+    injectCss(); hideFsWarn();
+    const w=document.createElement('div'); w.className='exam-fswarn'; w.id='examFsWarn';
+    w.innerHTML='<div class="fw-box"><h3><span>&#9888;&#65039;</span> Fullscreen exited</h3>'+
+      '<p>The assessment must remain in fullscreen mode.</p>'+
+      '<div class="fw-count">Warning '+n+' of 3</div>'+
+      '<button class="fw-btn" id="examFsReturn">Return to assessment</button></div>';
+    document.body.appendChild(w);
+    const btn=document.getElementById('examFsReturn');
+    btn.addEventListener('click',()=>{
+      const el=document.documentElement;
+      const done=()=>{ fsWanted=true; hideFsWarn(); };
+      if(el.requestFullscreen){ el.requestFullscreen().then(done).catch(()=>{}); } else { done(); }
+    });
+    try{btn.focus();}catch(e){}
+  }
+  function countWarn(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<1500)return; lastWarn=now;
+    warns++;
+    if(warns>=3){ hideFsWarn(); examDialog('Test submitted','You left the test 3 times. It has been auto-submitted.'); submitExam(true); }
+    else if(kind==='fs'){ showFsWarn(warns); }
+    else { examDialog('Warning '+warns+' of 3','Switching tabs or leaving the window is not allowed. After 3 warnings the test is auto-submitted.'); }
+  }
+  function fsHandler(){
+    if(!examOn)return;
+    if(document.fullscreenElement){ hideFsWarn(); return; }
+    if(fsWanted){ countWarn('fs'); }
+  }
+  function visHandler(){ if(document.hidden){ showCover(); countWarn(); } else { hideCover(); } }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function keyGuard(e){ const k=(e.key||'').toLowerCase(); if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; } }
+  let fsWanted=false;
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+  }
+  function stopProctor(){
+    proctorOn=false; hideFsWarn();
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    hideCover();
+  }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; ${C.title} &mdash; Final Assessment</h2>
+      <p>A timed, exam-style assessment modelled on real SRE interview screens.</p>
+      <ul>
+        <li><b>${BANK.length} questions</b>, shuffled every attempt</li>
+        <li><b>60-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Correct answers and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> where your browser allows it</li>
+        <li><b>No tab / window switching</b> and <b>no exiting fullscreen (Esc)</b> &mdash; 3 warnings and the test <b>auto-submits</b></li>
+        <li>Copy and right-click are disabled during the test</li>
+      </ul>
+      <div style="display:flex;gap:10px"><button class="exam-btn nav" id="examCancel" style="flex:0 0 auto">Cancel</button>
+      <button class="exam-btn primary" id="examBegin" style="flex:1;padding:14px">Start Test &rarr;</button></div>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examCancel').addEventListener('click',()=>sp.remove());
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      fsWanted=false;
+      if(document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().then(()=>{fsWanted=true;}).catch(()=>{}); }
+      sp.remove(); enterExam();
+    });
+  }
+
+  function enterExam(){
+    injectCss();
+    items = shuffle(BANK);
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    const ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">${C.title} &mdash; Final Assessment</div><div class="et-sub">${items.length} questions &middot; one attempt &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}</div>
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}" tabindex="0"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>{
+      const pick=()=>{ answers[id]=+el.dataset.i; pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); refreshPalette(); };
+      el.addEventListener('click',pick);
+      el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();} });
+    });
+    document.getElementById('examPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    document.getElementById('examNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();});
+    refreshPalette();
+    pane.scrollTop=0;
+  }
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examDialog('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test', true);
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    let score=0; items.forEach(it=>{ if(answers[it.id]===it.answer) score++; });
+    showResults(score);
+  }
+  function showResults(score){
+    const total=items.length; saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below, revisit the modules and try again.';
+    if(pct>=85)msg='Outstanding &mdash; you are operating at an expert level for this role.';
+    else if(pct>=65)msg='Solid pass. Review the questions you missed and you are interview-ready.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the modules you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const you=answers[it.id], attempted=(you!=null), ok=attempted&&you===it.answer;
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      inner+= attempted ? '<div class="ra '+(ok?'cor':'wrong')+'">Your answer: '+String.fromCharCode(65+you)+'. '+it.options[you]+'</div>' : '<div class="ra wrong">Your answer: <i>Not answered</i></div>';
+      if(!ok) inner+='<div class="ra cor">Correct: '+String.fromCharCode(65+it.answer)+'. '+it.options[it.answer]+'</div>';
+      if(it.exp) inner+='<div class="rx">'+it.exp+'</div>';
+      return '<div class="r '+(ok?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; ${C.title}</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another attempt</button></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    document.getElementById('examRetry').addEventListener('click',()=>{ closeExam(); showSplash(); });
+    document.getElementById('examClose').addEventListener('click',closeExam);
+  }
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',showSplash);
+  renderScoreboard();
+})();
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+<style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body>
+</html>

@@ -1,0 +1,2102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bug Reproduction & Documentation — Technical Support Engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============= Notion-inspired theme ============= */
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#3a86ff 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans';font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'JetBrains Mono',monospace;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans';font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'JetBrains Mono',monospace;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'JetBrains Mono',monospace;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'JetBrains Mono',monospace;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'JetBrains Mono',monospace;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'JetBrains Mono',monospace;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+</style>
+<!-- ── Global theme overlay (DESIGN-CBuddy.md) ── -->
+<link rel="stylesheet" href="/theme-cbuddy.css">
+<style>
+/* CareerBuddy: sticky sidebar visible scrollbar */
+.toc,.sidebar,.sidenav{scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc::-webkit-scrollbar,.sidebar::-webkit-scrollbar,.sidenav::-webkit-scrollbar{width:9px;height:9px}
+.toc::-webkit-scrollbar-thumb,.sidebar::-webkit-scrollbar-thumb,.sidenav::-webkit-scrollbar-thumb{background:#cbd2e0;border-radius:8px}
+.toc::-webkit-scrollbar-thumb:hover,.sidebar::-webkit-scrollbar-thumb:hover,.sidenav::-webkit-scrollbar-thumb:hover{background:#9aa4b8}
+.toc::-webkit-scrollbar-track,.sidebar::-webkit-scrollbar-track,.sidenav::-webkit-scrollbar-track{background:transparent}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@100..900&display=swap">
+<style>
+/* -- Unify typography: Noto Sans everywhere (CareerBuddy) -- */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,dl,dt,dd,td,th,div,section,article,header,footer,nav,aside,main,label,button,input,select,textarea,blockquote,figcaption,small,strong,b,em,i{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif !important}
+.material-symbols-outlined,.material-icons{font-family:'Material Symbols Outlined','Material Icons' !important}
+code,pre,kbd,samp,tt,.mono,[class*="mono"],[class*="Mono"],[class*="code"],[class*="Code"],[class*="tok"],[class*="hljs"]{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+
+<style>
+/* Practice + quick-check additions (same visual language as the reference) */
+.practice-label{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:#0a5f0a;background:var(--green-soft);padding:3px 9px;border-radius:5px;margin-bottom:6px}
+.saq-scenario{font-size:14px;color:var(--ink-soft);margin:0 0 10px;line-height:1.55}
+.mcq-reset{margin-top:6px}
+.steps{counter-reset:st;list-style:none;padding-left:0 !important}
+.steps>li{counter-increment:st;position:relative;padding-left:40px;margin:12px 0 !important}
+.steps>li::before{content:counter(st);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;
+  background:#14213D;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}
+.script{background:var(--bg-soft);border-left:3px solid #14213D;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:14.5px}
+.script.bad{border-left-color:var(--red)}
+.script.good{border-left-color:var(--green)}
+.script b{display:block;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:2px}
+</style>
+
+<style>
+/* Visible, thin navbar scrollbar */
+.tabbar{overflow-x:auto !important;scrollbar-width:thin !important;scrollbar-color:#000000 #e2e8f0 !important;padding-bottom:4px}
+.tabbar::-webkit-scrollbar{display:block !important;height:8px}
+.tabbar::-webkit-scrollbar-track{background:#e2e8f0;border-radius:8px}
+.tabbar::-webkit-scrollbar-thumb{background:#000000;border-radius:8px}
+.tabbar::-webkit-scrollbar-thumb:hover{background:#333333}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<!-- ============= STICKY HEADER ============= -->
+<header class="header">
+  <div class="header-top">
+    <div class="brand">
+      <div class="brand-mark">BUG</div>
+      <span>Bug Reproduction &amp; Documentation<span class="brand-sub"> · Technical Support Engineer</span></span>
+    </div>
+    <div class="header-actions">
+      <span class="progress-pill" id="progressPill">
+        <span class="progress-dot"></span>
+        <span id="progressText">Tab 1 of 10</span>
+      </span>
+      <button class="btn" onclick="resetProgress()" title="Reset to first tab">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9"/><path d="M2 4v3.5h3.5"/></svg>
+        Reset
+      </button>
+    </div>
+  </div>
+  <nav class="tabbar" role="tablist" id="tabbar">
+        <button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Bug Fundamentals</button>
+    <button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> Reproducing Bugs</button>
+    <button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> Minimal Test Cases</button>
+    <button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> Writing Bug Reports</button>
+    <button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> Severity & Triage</button>
+    <button class="tab" data-tab="t6" role="tab"><span class="tab-num">06</span> Jira</button>
+    <button class="tab" data-tab="t7" role="tab"><span class="tab-num">07</span> GitHub Issues</button>
+    <button class="tab" data-tab="t8" role="tab"><span class="tab-num">08</span> Closing the Loop</button>
+    <button class="tab" data-tab="t9" role="tab"><span class="tab-num">09</span> Interview Prep</button>
+    <button class="tab" data-tab="t10" role="tab"><span class="tab-num">10</span> Assessment</button>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="toc">
+    <div class="toc-title">On this page</div>
+    <ul class="toc-list" id="toc"></ul>
+  </aside>
+  <main class="main">
+
+    <section class="panel active" id="t1" data-toc='[["s1-1", "What Is a Bug?"], ["s1-2", "Bug or Not a Bug?"], ["s1-3", "The Bug Lifecycle"], ["s1-4", "Incident vs Problem vs Bug"], ["s1-5", "Why the TSE Report Matters"], ["s1-6", "Common Mistakes"], ["s1-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Fresher</span></div>
+        <div class="panel-eyebrow">Module 01 · Foundations</div>
+        <h1 class="panel-title">What a Bug Is and the TSE's Role</h1>
+        <p class="panel-subtitle">Not every customer problem is a bug. Learn to tell bugs from configuration issues, feature requests and known issues, the bug lifecycle, and why the TSE's report is so important to engineering.</p>
+      </div>
+<div class="section" id="s1-1">
+<h2><span class="sec-emoji">🐞</span> What Is a Bug?</h2>
+<p>A <strong>bug</strong> (or <strong>defect</strong>) is when software behaves differently from how it was designed, documented or reasonably expected to behave. Bugs can be functional (wrong result), visual (broken layout), performance (too slow), security, or data-related.</p><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d6bbf">❌</div><div class="card-title">Functional</div><div class="card-desc">Export creates an empty file.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🎨</div><div class="card-title">UI</div><div class="card-desc">Save button hidden on small screens.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#73508c">🐢</div><div class="card-title">Performance</div><div class="card-desc">Report takes 60 s for large accounts.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🔐</div><div class="card-title">Security</div><div class="card-desc">User can see another account's data.</div></div><div class="card"><div class="card-icon" style="background:var(--yellow-soft);color:#8a6a00">🗄️</div><div class="card-title">Data</div><div class="card-desc">Totals don't match records.</div></div></div>
+
+</div>
+<div class="section" id="s1-2">
+<h2><span class="sec-emoji">🤔</span> Bug or Not a Bug?</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>It's probably…</th><th>When…</th><th>What you do</th></tr></thead><tbody><tr><td>User error / how-to</td><td>Product works as documented</td><td>Explain + KB link</td></tr><tr><td>Configuration</td><td>Settings, permissions, plan limits explain it</td><td>Fix config / guide admin</td></tr><tr><td>Environment</td><td>Only their browser/network/device</td><td>Cache, extensions, network checks</td></tr><tr><td>Feature request</td><td>Product never claimed to do it</td><td>Log as feedback/feature request</td></tr><tr><td>Known issue</td><td>Already in the tracker</td><td>Link ticket to existing bug</td></tr><tr><td><strong>Bug</strong></td><td>Contradicts design/docs and you can reproduce it</td><td>Minimal repro → bug report</td></tr></tbody></table></div>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Before filing, search the tracker for the error message or feature name. Linking to an existing bug raises its priority and avoids duplicates.</div></div>
+
+</div>
+<div class="section" id="s1-3">
+<h2><span class="sec-emoji">🔄</span> The Bug Lifecycle</h2>
+<div class="diagram"><svg viewBox="0 0 740 200" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ba" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs>
+<g font-family="Noto Sans" font-size="11" text-anchor="middle">
+<rect x="5" y="40" width="90" height="46" rx="8" fill="#f1f1ef" stroke="#d3d3d0"/><text x="50" y="60" font-weight="700" fill="#37352f">Customer</text><text x="50" y="76" fill="#787774">ticket</text>
+<rect x="110" y="40" width="90" height="46" rx="8" fill="#eef1f7" stroke="#bcdcf5"/><text x="155" y="60" font-weight="700" fill="#14213D">Reproduce</text><text x="155" y="76" fill="#14213D">TSE</text>
+<rect x="215" y="40" width="90" height="46" rx="8" fill="#14213D"/><text x="260" y="60" font-weight="700" fill="#fff">Report</text><text x="260" y="76" fill="#cdd5e5">New / Open</text>
+<rect x="320" y="40" width="90" height="46" rx="8" fill="#22345f"/><text x="365" y="60" font-weight="700" fill="#fff">Triaged</text><text x="365" y="76" fill="#cdd5e5">sev + priority</text>
+<rect x="425" y="40" width="90" height="46" rx="8" fill="#fdecc8" stroke="#f0d889"/><text x="470" y="60" font-weight="700" fill="#8a6a00">In Progress</text><text x="470" y="76" fill="#8a6a00">engineer</text>
+<rect x="530" y="40" width="90" height="46" rx="8" fill="#fadec9" stroke="#f5cc9c"/><text x="575" y="60" font-weight="700" fill="#a85a08">In Review</text><text x="575" y="76" fill="#a85a08">PR + QA</text>
+<rect x="635" y="40" width="100" height="46" rx="8" fill="#ddedea" stroke="#bdd9d2"/><text x="685" y="60" font-weight="700" fill="#0a5f0a">Done</text><text x="685" y="76" fill="#0a5f0a">released</text>
+<line x1="95" y1="63" x2="109" y2="63" stroke="#37352f" marker-end="url(#ba)"/><line x1="200" y1="63" x2="214" y2="63" stroke="#37352f" marker-end="url(#ba)"/>
+<line x1="305" y1="63" x2="319" y2="63" stroke="#37352f" marker-end="url(#ba)"/><line x1="410" y1="63" x2="424" y2="63" stroke="#37352f" marker-end="url(#ba)"/>
+<line x1="515" y1="63" x2="529" y2="63" stroke="#37352f" marker-end="url(#ba)"/><line x1="620" y1="63" x2="634" y2="63" stroke="#37352f" marker-end="url(#ba)"/>
+<path d="M365 88 C365 140 260 140 260 90" fill="none" stroke="#e03e3e" stroke-dasharray="4 3" marker-end="url(#ba)"/><text x="312" y="150" fill="#a01c1c">Needs info / can't reproduce</text>
+<path d="M685 88 C685 170 50 170 50 90" fill="none" stroke="#0f7b0f" stroke-dasharray="4 3" marker-end="url(#ba)"/><text x="370" y="186" fill="#0a5f0a">TSE verifies the fix and updates every linked customer</text>
+</g></svg><div class="diagram-caption">Figure 1.1 · From customer ticket to verified fix</div></div>
+<div style="overflow-x:auto"><table><thead><tr><th>Status (typical)</th><th>Meaning</th></tr></thead><tbody><tr><td>New / Open</td><td>Reported, not yet reviewed</td></tr><tr><td>Needs info</td><td>Engineering needs more details</td></tr><tr><td>Triaged / To Do</td><td>Severity and priority set; in backlog</td></tr><tr><td>In Progress</td><td>Engineer working on it</td></tr><tr><td>In Review / QA</td><td>Fix in code review and testing</td></tr><tr><td>Done / Resolved</td><td>Fix released (or closed as won't fix / duplicate / cannot reproduce)</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s1-4">
+<h2><span class="sec-emoji">⚖️</span> Incident vs Problem vs Bug</h2>
+<div style="overflow-x:auto"><table><thead><tr><th></th><th>Incident</th><th>Problem</th><th>Bug</th></tr></thead><tbody><tr><td>Meaning</td><td>A disruption happening now</td><td>The underlying cause of one or more incidents</td><td>A defect in the code</td></tr><tr><td>Example</td><td>Checkout failing for everyone 14:00–14:40</td><td>Database connection pool too small</td><td>Connection not released on error path</td></tr><tr><td>Goal</td><td>Restore service fast</td><td>Find root cause</td><td>Fix the code</td></tr><tr><td>Owner</td><td>Incident commander / on-call</td><td>Problem manager / engineering</td><td>Engineering team</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s1-5">
+<h2><span class="sec-emoji">📣</span> Why the TSE Report Matters</h2>
+<ul><li>Engineers can't fix what they can't see; a clear repro saves hours.</li><li>Accurate impact (how many customers, revenue) drives correct priority.</li><li>Good reports build trust: engineers act faster on reports from TSEs who are always precise.</li><li>You are the customer's voice inside the company.</li></ul>
+<div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Bad report: "Exports are broken." Good report: "CSV export returns a header-only file for date ranges over 90 days (3/3 attempts, Chrome & API); 14 customers affected; request IDs attached."</div></div>
+
+</div>
+<div class="section" id="s1-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Filing a bug for a configuration issue</td><td>Wastes engineering time; erodes trust</td><td>Rule out config/user error first</td></tr><tr><td>Duplicate bug reports</td><td>Splits information and priority</td><td>Search first; link to existing</td></tr><tr><td>Reporting without reproducing</td><td>"Cannot reproduce" bounce-back</td><td>Reproduce or explain why you couldn't</td></tr><tr><td>Forgetting to link customer tickets</td><td>Customers never hear about the fix</td><td>Link every affected ticket</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s1-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Classify each: (a) "Can I export to PDF?" (feature doesn't exist) (b) Member can't see Billing (admin-only by design) (c) Export empty for ranges > 90 days, reproducible.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">(a) Feature request. (b) Not a bug; permissions working as designed (explain/admin can change role). (c) Bug: reproducible and contradicts expected behaviour → minimal repro and bug report.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Explain incident vs bug using a checkout outage example.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">The incident is checkout failing for all users from 14:00 to 14:40, which the team restores (e.g., by rolling back). The bug is the code defect that caused it (e.g., a null value not handled in the new payment code), fixed permanently in a later release.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Behaviour matches documentation but the customer dislikes it. This is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> A bug</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> A feature request</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> An outage</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> A data breach</li></ul><div class="mcq-feedback" data-expl="Working as designed."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>Before filing a new bug you should…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Email the CTO</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Search for an existing report</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Close the ticket</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Wait a week</li></ul><div class="mcq-feedback" data-expl="Avoid duplicates."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>"Needs info" status means…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Fixed</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Engineering needs more details</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Released</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Won't fix</li></ul><div class="mcq-feedback" data-expl="Back to the reporter."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t2" data-toc='[["s2-1", "Why Reproduction Matters"], ["s2-2", "Matching the Environment"], ["s2-3", "Reproduction Steps"], ["s2-4", "Reproducible vs Intermittent"], ["s2-5", "Tools That Help"], ["s2-6", "Common Mistakes"], ["s2-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 02 · Reproduction</div>
+        <h1 class="panel-title">Reproducing Bugs Reliably</h1>
+        <p class="panel-subtitle">A bug you can reproduce is a bug that can be fixed. Learn to match the customer's environment, follow and record steps, measure consistency, and tackle intermittent bugs.</p>
+      </div>
+<div class="section" id="s2-1">
+<h2><span class="sec-emoji">🎯</span> Why Reproduction Matters</h2>
+<div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d6bbf">✅</div><div class="card-title">Confirms it's real</div><div class="card-desc">Rules out misunderstandings.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🧪</div><div class="card-title">Enables testing</div><div class="card-desc">Engineers can verify the fix.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#73508c">🔍</div><div class="card-title">Reveals the trigger</div><div class="card-desc">Which input, role or browser matters.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">⏱️</div><div class="card-title">Saves time</div><div class="card-desc">No back-and-forth "can you send more details?"</div></div></div>
+
+</div>
+<div class="section" id="s2-2">
+<h2><span class="sec-emoji">🧭</span> Matching the Environment</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Factor</th><th>Examples</th></tr></thead><tbody><tr><td>Product version</td><td>Web app release, mobile app v4.2.1, API version, SDK version</td></tr><tr><td>Platform</td><td>Browser + version, OS, device model</td></tr><tr><td>Account setup</td><td>Plan, feature flags, region, integrations enabled</td></tr><tr><td>User role</td><td>Admin vs member vs read-only</td></tr><tr><td>Data</td><td>Large volumes, special characters, specific records</td></tr><tr><td>Network</td><td>VPN, proxy, slow connection</td></tr><tr><td>Time</td><td>Timezone, date boundaries, scheduled jobs</td></tr></tbody></table></div>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Use a test account configured like the customer's (same plan, flags, role). Feature flags are a common reason "it works for me".</div></div>
+
+</div>
+<div class="section" id="s2-3">
+<h2><span class="sec-emoji">👣</span> Reproduction Steps</h2>
+<ol class="steps"><li>Start from a clean state (fresh login, incognito, new test record).</li><li>Follow the customer's steps exactly; note each action and result.</li><li>Repeat 3 times to measure consistency (e.g., 3/3, 1/5).</li><li>Capture evidence: screenshot, recording, console errors, request IDs.</li><li>Vary one factor at a time (browser, role, data) to find the trigger.</li></ol>
+<pre><span class="pre-lang">reproduction log</span><code>Env: Prod, Chrome 129 / Win 11, test acct (Pro plan, Admin), flag new_export=on
+1. Reports → Export → Range: 01 Jun – 30 Sep (122 days) → Download CSV
+   Result: file with headers only   (3/3)
+2. Same, Range: 01 Jul – 30 Sep (92 days)  → headers only (3/3)
+3. Same, Range: 01 Aug – 30 Sep (61 days)  → 412 rows ✓ (3/3)
+4. Firefox 131, 122 days → headers only (2/2)   → not browser-specific
+5. API GET /v1/reports/export?days=122 → 200, empty body → backend issue</code></pre>
+
+</div>
+<div class="section" id="s2-4">
+<h2><span class="sec-emoji">🎲</span> Reproducible vs Intermittent</h2>
+<div style="overflow-x:auto"><table><thead><tr><th></th><th>Reproducible</th><th>Intermittent</th></tr></thead><tbody><tr><td>Definition</td><td>Happens every time with the same steps</td><td>Happens sometimes</td></tr><tr><td>Typical causes</td><td>Logic errors, validation, permissions</td><td>Race conditions, load, one bad server, caching, timeouts, network</td></tr><tr><td>Approach</td><td>Minimise steps and data</td><td>Collect many examples with timestamps/request IDs; look for common factors</td></tr><tr><td>Report includes</td><td>Exact steps</td><td>Frequency, times, IDs, patterns (host, region, time of day)</td></tr></tbody></table></div>
+<div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">For intermittent bugs, frequency matters: "fails 1 in 20 attempts, all failures on host auth-3" is actionable even without a perfect repro.</div></div>
+
+</div>
+<div class="section" id="s2-5">
+<h2><span class="sec-emoji">🧰</span> Tools That Help</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Tool</th><th>Use</th></tr></thead><tbody><tr><td>Browser DevTools</td><td>Console errors, network requests, device mode</td></tr><tr><td>Screen recorder (Loom, OBS, Snipping Tool)</td><td>Show exact steps and timing</td></tr><tr><td>Postman / cURL</td><td>Reproduce at the API level</td></tr><tr><td>Log platform</td><td>Errors and request IDs for failures</td></tr><tr><td>SQL (read-only)</td><td>Check stored data state</td></tr><tr><td>Device clouds (BrowserStack etc.)</td><td>Other browsers/devices you don't own</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s2-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Testing as Admin when customer is Member</td><td>Can't reproduce permission bugs</td><td>Match role</td></tr><tr><td>Trying once</td><td>Can't tell consistency</td><td>Repeat and record ratio</td></tr><tr><td>Not checking feature flags</td><td>"Works for me"</td><td>Match flags/plan</td></tr><tr><td>Reproducing on a customer's live account without permission</td><td>Privacy/policy breach</td><td>Test account or approved access</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s2-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>You can't reproduce a customer's "Save fails" issue. List five things you would compare or ask for.</span></div><p class="saq-scenario">Scenario: "It works for me".</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Their role/permissions; plan and feature flags; browser/version and extensions; the exact data they enter (length, special characters); a screen recording plus time and request ID, so you can find the failed request in logs.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Login fails "sometimes" for one company. What information do you collect to report it?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Frequency (e.g., 1 in 10), timestamps and request IDs of failures and successes, users affected, browsers/devices, network/VPN, SSO provider, and log grouping by host/region to find a common factor.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>An intermittent bug report should include…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Only "it fails sometimes"</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Frequency, timestamps, request IDs and common factors</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Customer complaints only</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Nothing</li></ul><div class="mcq-feedback" data-expl="Patterns make it actionable."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>Why repeat reproduction steps several times?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Fun</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> To measure consistency</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> To delete data</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Required by Jira</li></ul><div class="mcq-feedback" data-expl="Consistency ratio."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>A frequent "works for me" cause is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Monitor size</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Different feature flags or role</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Typing speed</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Time of lunch</li></ul><div class="mcq-feedback" data-expl="Environment mismatch."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t3" data-toc='[["s3-1", "What \"Minimal\" Means"], ["s3-2", "Reduction Techniques"], ["s3-3", "UI Example"], ["s3-4", "API & Code Examples"], ["s3-5", "Finding Regressions"], ["s3-6", "Common Mistakes"], ["s3-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 03 · Minimal Repro</div>
+        <h1 class="panel-title">Creating Minimal, Reproducible Test Cases</h1>
+        <p class="panel-subtitle">Shrink a complex customer scenario to the smallest set of steps, data or code that still shows the bug. This is the single most valuable thing a TSE gives engineering.</p>
+      </div>
+<div class="section" id="s3-1">
+<h2><span class="sec-emoji">✂️</span> What "Minimal" Means</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Quality</th><th>Meaning</th></tr></thead><tbody><tr><td>Minimal</td><td>Nothing unnecessary: fewest steps, smallest data, simplest code</td></tr><tr><td>Complete</td><td>Everything needed to trigger the bug is included</td></tr><tr><td>Reproducible</td><td>Anyone can run it and see the bug</td></tr><tr><td>Isolated</td><td>No customer secrets or unrelated systems required</td></tr></tbody></table></div>
+<div class="compare"><div class="compare-col"><h4>❌ Not minimal</h4><p style="font-size:13.5px;margin:0">"Customer's 400-line Python integration fails sometimes when syncing their CRM."</p></div><div class="compare-col"><h4>✅ Minimal</h4><p style="font-size:13.5px;margin:0">"PATCH /v2/contacts/{id} with phone '+91 98480 12345' returns 500 every time; same request with '919848012345' returns 200."</p></div></div>
+
+</div>
+<div class="section" id="s3-2">
+<h2><span class="sec-emoji">🔪</span> Reduction Techniques</h2>
+<ol class="steps"><li><strong>Remove steps</strong> one at a time; keep any whose removal makes the bug disappear.</li><li><strong>Shrink data</strong>: fewer rows, shorter strings, smaller files. Find the threshold (e.g., fails above 90 days).</li><li><strong>Bisect inputs</strong>: split the data in half, test each half, repeat until you find the offending record or character.</li><li><strong>Strip code</strong>: replace the customer's app with a 5-line script or a cURL command.</li><li><strong>Use defaults</strong>: fresh account, default settings, unless a setting is the trigger.</li></ol>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Bisecting a 10,000-row import file takes only about 14 halvings to find a single bad row, much faster than checking rows one by one.</div></div>
+
+</div>
+<div class="section" id="s3-3">
+<h2><span class="sec-emoji">🖱️</span> UI Example</h2>
+<pre><span class="pre-lang">before → after</span><code>BEFORE (customer description, 11 steps):
+  Log in, open dashboard, change theme, open Projects, filter by owner,
+  open &quot;Q3 Plan &amp; Budget&quot;, rename, add 3 tasks, upload logo, Save, error.
+
+AFTER (minimal, 3 steps):
+  1. Projects → New project
+  2. Name: &quot;A &amp; B&quot;
+  3. Create → &quot;Something went wrong&quot; (400 on POST /v1/projects)
+  Control: Name &quot;A and B&quot; → works</code></pre>
+
+</div>
+<div class="section" id="s3-4">
+<h2><span class="sec-emoji">💻</span> API & Code Examples</h2>
+<pre><span class="pre-lang">minimal cURL repro</span><code>curl -X PATCH https://sandbox.api.example.com/v2/contacts/con_77 \
+  -H &quot;Authorization: Bearer $TEST_KEY&quot; -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;phone&quot;:&quot;+91 98480 12345&quot;}&#x27;
+# → 500, request_id req_a91f
+
+curl ... -d &#x27;{&quot;phone&quot;:&quot;919848012345&quot;}&#x27;
+# → 200</code></pre>
+<pre><span class="pre-lang">minimal Python repro (replacing a 400-line integration)</span><code>import requests
+r = requests.patch(
+    &#x27;https://sandbox.api.example.com/v2/contacts/con_77&#x27;,
+    headers={&#x27;Authorization&#x27;: &#x27;Bearer TEST_KEY&#x27;},
+    json={&#x27;phone&#x27;: &#x27;+91 98480 12345&#x27;},
+)
+print(r.status_code, r.text)   # 500 Internal Server Error</code></pre>
+
+</div>
+<div class="section" id="s3-5">
+<h2><span class="sec-emoji">⏪</span> Finding Regressions</h2>
+<p>A <strong>regression</strong> is something that used to work and broke after a change. Narrowing <em>when</em> it broke helps engineering find the change.</p><ul><li>Ask: when did it last work? Check release notes/deploy times around then.</li><li>Compare behaviour on older app/SDK versions if available.</li><li>Engineers can use <code>git bisect</code> to find the exact commit between a good and a bad version.</li></ul>
+<pre><span class="pre-lang">git bisect (engineering)</span><code>git bisect start
+git bisect bad              # current version has the bug
+git bisect good v4.1.0      # this release worked
+# Git checks out a middle commit → test → mark good/bad → repeat
+git bisect reset</code></pre>
+
+</div>
+<div class="section" id="s3-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Attaching the customer's whole codebase</td><td>Nobody can run it</td><td>Reduce to a cURL/5-line script</td></tr><tr><td>Including customer secrets/data</td><td>Security and privacy risk</td><td>Use test accounts and dummy data</td></tr><tr><td>Removing the trigger while minimising</td><td>Repro no longer fails</td><td>Re-test after each removal</td></tr><tr><td>No control case</td><td>Hard to see what matters</td><td>Show failing + working variant</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s3-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>A 5,000-row CSV import fails with "Import failed" and no detail. How do you build a minimal repro?</span></div><p class="saq-scenario">Scenario: Customer import ticket.</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Bisect the file: import the first 2,500 rows and the last 2,500 separately; keep halving the failing half until you find the smallest failing set (often one row). Inspect it (special characters, bad date, empty required field), then create a 2-row CSV (header + bad row) plus a working control row for the report.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Rewrite this as a minimal repro statement: "The customer's dashboard breaks when they use our app with lots of widgets and filters and stuff."</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Example: "Dashboard fails to load (blank, console TypeError) when a dashboard contains a Pie chart widget with a date filter of 'Last 365 days'. 3 steps: create dashboard → add Pie chart → set filter Last 365 days. Control: 'Last 90 days' loads fine."</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>A minimal repro should…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Include everything the customer did</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Contain only what's needed to trigger the bug</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Avoid steps</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Use the customer's password</li></ul><div class="mcq-feedback" data-expl="Smallest failing case."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>Bisecting input data means…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Deleting it</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Repeatedly splitting it in half to find the failing part</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Sorting it</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Encrypting it</li></ul><div class="mcq-feedback" data-expl="Binary search."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>A regression is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> A new feature</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Something that worked before and broke after a change</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> A duplicate bug</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> A UI tweak</li></ul><div class="mcq-feedback" data-expl="Previously working."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t4" data-toc='[["s4-1", "Anatomy of a Bug Report"], ["s4-2", "Titles That Work"], ["s4-3", "Steps, Expected & Actual"], ["s4-4", "Impact & Workaround"], ["s4-5", "Full Template & Example"], ["s4-6", "Common Mistakes"], ["s4-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 04 · Documentation</div>
+        <h1 class="panel-title">Writing Detailed Bug Reports</h1>
+        <p class="panel-subtitle">The anatomy of a bug report engineers love: precise title, environment, steps, expected vs actual, evidence, impact and workaround, with templates and good vs bad examples.</p>
+      </div>
+<div class="section" id="s4-1">
+<h2><span class="sec-emoji">🧱</span> Anatomy of a Bug Report</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Section</th><th>Purpose</th></tr></thead><tbody><tr><td>Title</td><td>One-line summary engineers can scan and search</td></tr><tr><td>Environment</td><td>Where it happens (prod/sandbox, version, browser/OS, region, plan, flags)</td></tr><tr><td>Steps to reproduce</td><td>Numbered, minimal steps</td></tr><tr><td>Expected result</td><td>What should happen</td></tr><tr><td>Actual result</td><td>What happens, with exact error text</td></tr><tr><td>Frequency</td><td>Always / 3 of 5 / intermittent</td></tr><tr><td>Evidence</td><td>Screenshots, recordings, logs, request IDs, HAR, queries</td></tr><tr><td>Impact</td><td>Customers affected, revenue, severity</td></tr><tr><td>Workaround</td><td>Any way customers can continue</td></tr><tr><td>Linked tickets</td><td>Every affected customer ticket</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s4-2">
+<h2><span class="sec-emoji">🏷️</span> Titles That Work</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Weak title</th><th>Strong title</th></tr></thead><tbody><tr><td>Export broken!!!</td><td>[Reports] CSV export returns header-only file for ranges > 90 days</td></tr><tr><td>Bug in app</td><td>[Projects] 400 error when project name contains "&"</td></tr><tr><td>Customer angry about login</td><td>[Auth] SAML login fails with clock-skew error for IdP time drift > 5 min</td></tr><tr><td>API issue</td><td>[Contacts API v2] PATCH returns 500 when phone contains "+"</td></tr></tbody></table></div>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Pattern: <strong>[Area] What fails + under which condition</strong>. Avoid emotions and customer names in titles.</div></div>
+
+</div>
+<div class="section" id="s4-3">
+<h2><span class="sec-emoji">👣</span> Steps, Expected & Actual</h2>
+<ul><li>Number every step; one action per step; use exact UI labels and endpoints.</li><li>Start from a known state ("Logged in as Admin on a Pro-plan test account").</li><li><strong>Expected</strong>: based on docs or design, not opinion.</li><li><strong>Actual</strong>: exact error text, status code, what the user sees.</li></ul>
+<div class="compare"><div class="compare-col"><h4>✅ Expected</h4><p style="font-size:13.5px;margin:0">CSV downloads with all 1,284 orders in the selected range.</p></div><div class="compare-col"><h4>❌ Actual</h4><p style="font-size:13.5px;margin:0">CSV contains only the header row; no error shown. API returns 200 with empty body (request_id req_19c2).</p></div></div>
+
+</div>
+<div class="section" id="s4-4">
+<h2><span class="sec-emoji">📈</span> Impact & Workaround</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Impact detail</th><th>Example</th></tr></thead><tbody><tr><td>Customers affected</td><td>14 accounts (3 Enterprise); tickets linked</td></tr><tr><td>Business impact</td><td>Month-end reporting blocked; renewal for Acme due 31 Oct</td></tr><tr><td>Since when</td><td>Since release 4.12 on 2 Oct</td></tr><tr><td>Workaround</td><td>Export in 60-day chunks</td></tr></tbody></table></div>
+<div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Impact drives priority. A precise count of affected customers (from logs or SQL) is often what moves a bug up the queue.</div></div>
+
+</div>
+<div class="section" id="s4-5">
+<h2><span class="sec-emoji">📝</span> Full Template & Example</h2>
+<pre><span class="pre-lang">bug report</span><code>Title: [Reports] CSV export returns header-only file for ranges &gt; 90 days
+
+Environment: Production · Web 4.12.0 · Chrome 129 &amp; Firefox 131 · API v1
+             Pro plan · flag new_export=on · region IN
+
+Steps to reproduce:
+  1. Log in as Admin (test acct tse-test-07)
+  2. Reports → Export → Range 01 Jun – 30 Sep 2026 (122 days)
+  3. Click Download CSV
+
+Expected: CSV with 1,284 rows
+Actual:   CSV with header row only; API GET /v1/reports/export?days=122
+          returns 200 with empty body (req_19c2, 05 Oct 09:41 UTC)
+Frequency: 5/5 for ranges &gt; 90 days; ranges ≤ 90 days work
+
+Evidence: screen recording, request IDs, Datadog link, SQL count of rows (1,284)
+Impact:   14 customers (3 Enterprise) since 4.12 release on 02 Oct; month-end
+          reports blocked. Linked Zendesk tickets: #48121, #48160, #48202 …
+Workaround: export in ≤ 90-day chunks
+Severity: S2 (major feature broken, workaround exists)</code></pre>
+
+</div>
+<div class="section" id="s4-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Vague title</td><td>Hard to triage and search</td><td>[Area] what fails + condition</td></tr><tr><td>Steps missing the starting state</td><td>Engineer can't reproduce</td><td>State role, plan, flags, data</td></tr><tr><td>"Doesn't work" as actual result</td><td>No detail</td><td>Exact error, code, request ID</td></tr><tr><td>Pasting customer PII</td><td>Privacy breach</td><td>Use account IDs; redact</td></tr><tr><td>No impact numbers</td><td>Wrong priority</td><td>Count affected customers</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s4-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Write a title, steps, expected and actual for: inviting a teammate whose email has a "+" (e.g., ravi+test@zen.io) shows "Invalid email".</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Title: "[Team] Invite rejects valid emails containing '+' with 'Invalid email'". Steps: 1) Settings → Team → Invite member. 2) Enter ravi+test@zen.io. 3) Click Send invite. Expected: invite sent (plus addressing is valid per RFC 5322). Actual: inline error "Invalid email"; POST /v1/invites returns 422 param=email. Control: ravi@zen.io works.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Improve this report: "Customer says payments fail. Please fix ASAP!!"</span></div><p class="saq-scenario">Scenario: Reviewing a teammate's bug report.</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Add area + condition in the title (e.g., "[Checkout] UPI payments fail with error PAY_031 since 14:00 UTC"), environment, minimal steps, expected vs actual with error codes and request IDs, frequency, scope (number of customers/transactions from logs), evidence links, workaround, and linked tickets; remove emotional language.</div></div>
+<div class="mcq" data-answer="2"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Which is the best bug title?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> "Bug!!!"</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> "Export broken"</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> "[Reports] CSV export empty for ranges > 90 days"</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> "Customer angry"</li></ul><div class="mcq-feedback" data-expl="Area + failure + condition."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>The "Actual result" should contain…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Your opinion</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Exact error text/status and what the user sees</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> The customer's name</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> A fix suggestion only</li></ul><div class="mcq-feedback" data-expl="Precise observation."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>Impact information mainly helps…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Formatting</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Set the correct priority</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Choose a font</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Close faster</li></ul><div class="mcq-feedback" data-expl="Prioritisation."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t5" data-toc='[["s5-1", "Severity Levels"], ["s5-2", "Priority Levels"], ["s5-3", "Severity vs Priority"], ["s5-4", "Triage Process"], ["s5-5", "Labels & Components"], ["s5-6", "Common Mistakes"], ["s5-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 05 · Prioritisation</div>
+        <h1 class="panel-title">Severity, Priority & Bug Triage</h1>
+        <p class="panel-subtitle">How bugs are ranked and scheduled: severity levels, priority levels, how triage meetings work, and how TSEs influence prioritisation with evidence.</p>
+      </div>
+<div class="section" id="s5-1">
+<h2><span class="sec-emoji">🎚️</span> Severity Levels</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Severity</th><th>Definition</th><th>Example</th></tr></thead><tbody><tr><td>S1 · Critical</td><td>Outage, data loss/corruption, security breach; no workaround</td><td>All customers can't log in; data exposed</td></tr><tr><td>S2 · Major</td><td>Major feature broken for many/key customers; no easy workaround</td><td>Payments fail for UPI</td></tr><tr><td>S3 · Moderate</td><td>Feature impaired; workaround exists</td><td>Export fails > 90 days; chunking works</td></tr><tr><td>S4 · Minor</td><td>Cosmetic or low-impact</td><td>Typo; misaligned icon</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s5-2">
+<h2><span class="sec-emoji">🗓️</span> Priority Levels</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Priority</th><th>Meaning</th></tr></thead><tbody><tr><td>P0 / Highest</td><td>Drop everything; fix now (hotfix)</td></tr><tr><td>P1 / High</td><td>Next sprint or sooner</td></tr><tr><td>P2 / Medium</td><td>Planned in upcoming work</td></tr><tr><td>P3 / Low</td><td>Backlog; fix when convenient</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s5-3">
+<h2><span class="sec-emoji">⚖️</span> Severity vs Priority</h2>
+<div style="overflow-x:auto"><table><thead><tr><th></th><th>Severity</th><th>Priority</th></tr></thead><tbody><tr><td>Question</td><td>How bad is it?</td><td>How soon do we fix it?</td></tr><tr><td>Set by</td><td>Reporter/QA/TSE (technical impact)</td><td>Product/engineering leads (business decision)</td></tr><tr><td>Changes with</td><td>Technical facts</td><td>Customers affected, revenue, deadlines, strategy</td></tr></tbody></table></div>
+<div style="overflow-x:auto"><table><thead><tr><th>Example</th><th>Severity</th><th>Priority</th></tr></thead><tbody><tr><td>Rare crash in an admin page used by 2 customers</td><td>High</td><td>Low–Medium</td></tr><tr><td>Wrong logo on the login page before a big launch</td><td>Low</td><td>High</td></tr><tr><td>Data exposure to other accounts</td><td>Critical</td><td>Highest</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s5-4">
+<h2><span class="sec-emoji">🧑‍⚖️</span> Triage Process</h2>
+<ol class="steps"><li>New bugs are reviewed regularly (daily/weekly triage).</li><li>Check completeness: can it be reproduced? Enough evidence?</li><li>Confirm or adjust severity; set priority and owner team/component.</li><li>Mark duplicates, link related issues, close invalid ones with explanation.</li><li>Schedule: hotfix, next sprint, or backlog.</li></ol>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">TSEs often join triage to represent customers. Bring numbers: affected customers, ARR at risk, ticket count, deadlines.</div></div>
+
+</div>
+<div class="section" id="s5-5">
+<h2><span class="sec-emoji">🏷️</span> Labels & Components</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Field</th><th>Example</th><th>Why</th></tr></thead><tbody><tr><td>Component</td><td>Reports, Auth, Billing</td><td>Routes to the right team</td></tr><tr><td>Labels</td><td>customer-reported, regression, enterprise, needs-repro</td><td>Filtering and reporting</td></tr><tr><td>Affects version</td><td>4.12.0</td><td>Shows when it started</td></tr><tr><td>Fix version</td><td>4.12.2</td><td>Tells support when to expect the fix</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s5-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Marking everything S1/urgent</td><td>Real emergencies get lost</td><td>Use definitions honestly</td></tr><tr><td>Inflating severity because a customer is angry</td><td>Misleads triage</td><td>Severity = technical impact</td></tr><tr><td>No component set</td><td>Bug sits unassigned</td><td>Pick the right component</td></tr><tr><td>Not updating impact as more tickets arrive</td><td>Priority stays low</td><td>Add linked tickets and counts</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s5-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Assign severity: (a) Users in one org can see another org's invoices (b) Dark-mode text slightly low contrast (c) Bulk import fails above 10,000 rows; smaller files work.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">(a) S1 Critical (data exposure/security). (b) S4 Minor (cosmetic; accessibility may raise priority). (c) S3 Moderate (workaround: split files), possibly S2 if key customers depend on it.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>A bug is S3 but 40 enterprise customers have hit it this week. How do you get it prioritised?</span></div><p class="saq-scenario">Scenario: Weekly triage meeting.</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Link all 40 tickets, quantify impact (customers, ARR/renewals at risk, ticket volume, time spent), describe the workaround's cost, and raise it in triage or with the product manager with this evidence; severity may stay S3 but priority should rise.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Severity describes…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> How soon to fix</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> How bad the impact is</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Who reported it</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> The sprint</li></ul><div class="mcq-feedback" data-expl="Impact."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>Who usually decides priority?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Customer</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Product/engineering leads</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Any agent</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> The bug tracker</li></ul><div class="mcq-feedback" data-expl="Business decision."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="3"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>Data exposed to another account is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> S4</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> S3</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> S2</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> S1</li></ul><div class="mcq-feedback" data-expl="Critical security."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t6" data-toc='[["s6-1", "Jira at a Glance"], ["s6-2", "Creating a Bug Issue"], ["s6-3", "Workflows & Statuses"], ["s6-4", "Linking, Labels & Components"], ["s6-5", "Searching with JQL"], ["s6-6", "Common Mistakes"], ["s6-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 06 · Tool 1</div>
+        <h1 class="panel-title">Logging & Tracking Bugs in Jira</h1>
+        <p class="panel-subtitle">Jira (by Atlassian) is the most common bug tracker in companies. Learn issue types and fields, workflows, linking help-desk tickets, labels and components, and searching with JQL.</p>
+      </div>
+<div class="section" id="s6-1">
+<h2><span class="sec-emoji">🟦</span> Jira at a Glance</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Term</th><th>Meaning</th></tr></thead><tbody><tr><td>Project</td><td>A team's space, with a key like SUP or ENG (issues become ENG-1423)</td></tr><tr><td>Issue</td><td>One work item: Bug, Task, Story, Epic, Sub-task</td></tr><tr><td>Board</td><td>Scrum or Kanban view of issues by status</td></tr><tr><td>Sprint</td><td>Time-boxed iteration (often 2 weeks) in Scrum teams</td></tr><tr><td>Backlog</td><td>Prioritised list of work not yet started</td></tr><tr><td>Jira Service Management</td><td>Atlassian's help-desk product; can link support requests to engineering issues</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s6-2">
+<h2><span class="sec-emoji">📝</span> Creating a Bug Issue</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Field</th><th>What to enter</th></tr></thead><tbody><tr><td>Project</td><td>Engineering team that owns the area (ask if unsure)</td></tr><tr><td>Issue type</td><td>Bug</td></tr><tr><td>Summary</td><td>The bug title: [Area] what fails + condition</td></tr><tr><td>Description</td><td>Full report: environment, steps, expected, actual, evidence, impact, workaround</td></tr><tr><td>Priority</td><td>Highest / High / Medium / Low / Lowest (per team rules)</td></tr><tr><td>Severity (custom field)</td><td>S1–S4 if your team uses it</td></tr><tr><td>Component / Labels</td><td>e.g., Reports; labels: customer-reported, regression</td></tr><tr><td>Affects version</td><td>Release where the bug exists</td></tr><tr><td>Attachments</td><td>Screenshots, recordings, HAR (secure), sample files</td></tr><tr><td>Linked issues</td><td>Duplicates, related bugs, help-desk tickets</td></tr></tbody></table></div>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Jira descriptions support formatting: headings, numbered lists, code blocks (<code>{code}</code> or ``` in the new editor) and tables. Use code blocks for cURL commands and log lines.</div></div>
+
+</div>
+<div class="section" id="s6-3">
+<h2><span class="sec-emoji">🔄</span> Workflows & Statuses</h2>
+<div class="diagram"><svg viewBox="0 0 720 150" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ja" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs>
+<g font-family="Noto Sans" font-size="12" text-anchor="middle">
+<rect x="10" y="45" width="120" height="50" rx="10" fill="#f1f1ef" stroke="#d3d3d0"/><text x="70" y="75" fill="#37352f" font-weight="700">To Do</text>
+<rect x="155" y="45" width="120" height="50" rx="10" fill="#eef1f7" stroke="#bcdcf5"/><text x="215" y="75" fill="#14213D" font-weight="700">In Progress</text>
+<rect x="300" y="45" width="120" height="50" rx="10" fill="#22345f"/><text x="360" y="75" fill="#fff" font-weight="700">In Review</text>
+<rect x="445" y="45" width="120" height="50" rx="10" fill="#fdecc8" stroke="#f0d889"/><text x="505" y="75" fill="#8a6a00" font-weight="700">QA / Verify</text>
+<rect x="590" y="45" width="120" height="50" rx="10" fill="#0f7b0f"/><text x="650" y="75" fill="#fff" font-weight="700">Done</text>
+<line x1="132" y1="70" x2="153" y2="70" stroke="#37352f" marker-end="url(#ja)"/><line x1="277" y1="70" x2="298" y2="70" stroke="#37352f" marker-end="url(#ja)"/>
+<line x1="422" y1="70" x2="443" y2="70" stroke="#37352f" marker-end="url(#ja)"/><line x1="567" y1="70" x2="588" y2="70" stroke="#37352f" marker-end="url(#ja)"/>
+<text x="360" y="130" fill="#787774" font-size="11" font-style="italic">A typical Jira bug workflow. Every company customises status names, so learn your team's board.</text>
+</g></svg><div class="diagram-caption">Figure 6.1 · Example Jira workflow</div></div>
+<div style="overflow-x:auto"><table><thead><tr><th>Resolution</th><th>Meaning</th></tr></thead><tbody><tr><td>Fixed / Done</td><td>Fix released</td></tr><tr><td>Duplicate</td><td>Same as another issue (linked)</td></tr><tr><td>Cannot Reproduce</td><td>Engineers couldn't reproduce with the information given</td></tr><tr><td>Won't Fix / Won't Do</td><td>Accepted behaviour or not worth fixing</td></tr><tr><td>Works as Designed</td><td>Behaviour is intended</td></tr></tbody></table></div>
+<div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">"Cannot Reproduce" isn't the end: if customers still report it, add new evidence (request IDs, patterns) and ask to reopen.</div></div>
+
+</div>
+<div class="section" id="s6-4">
+<h2><span class="sec-emoji">🔗</span> Linking, Labels & Components</h2>
+<ul><li><strong>Link help-desk tickets</strong>: Zendesk, Freshdesk, Intercom and Salesforce have Jira integrations, so agents can create or link a Jira issue from the ticket and see its status.</li><li><strong>Issue links</strong>: "is duplicated by", "relates to", "blocks", "is caused by".</li><li><strong>Components</strong>: product areas (Reports, Billing, API), often auto-assigning a team lead.</li><li><strong>Labels</strong>: free tags like <code>customer-reported</code>, <code>regression</code>, <code>enterprise</code>.</li><li><strong>Watchers</strong>: watch the issue to get notified of updates, then update customers.</li></ul>
+<div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Linking every affected customer ticket shows impact (10 linked tickets vs 1) and makes sure everyone gets notified when the fix ships.</div></div>
+
+</div>
+<div class="section" id="s6-5">
+<h2><span class="sec-emoji">🔍</span> Searching with JQL</h2>
+<p><strong>JQL (Jira Query Language)</strong> finds issues precisely, e.g., before filing, to check for duplicates.</p><pre><span class="pre-lang">JQL</span><code>project = ENG AND issuetype = Bug AND status != Done ORDER BY created DESC
+
+text ~ &quot;export csv&quot; AND issuetype = Bug AND created &gt;= -30d
+
+labels = customer-reported AND priority in (Highest, High) AND resolution = Unresolved
+
+component = Reports AND fixVersion = &quot;2026.10.10&quot;
+
+reporter = currentUser() AND status changed to Done after -7d</code></pre>
+<div style="overflow-x:auto"><table><thead><tr><th>JQL piece</th><th>Meaning</th></tr></thead><tbody><tr><td>=, !=, in, not in</td><td>Comparisons</td></tr><tr><td>~</td><td>Text contains</td></tr><tr><td>-30d</td><td>Relative date (last 30 days)</td></tr><tr><td>resolution = Unresolved</td><td>Still open</td></tr><tr><td>ORDER BY</td><td>Sort</td></tr><tr><td>currentUser()</td><td>You</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s6-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Wrong project/component</td><td>Bug sits unnoticed in the wrong backlog</td><td>Check ownership; ask in team channel</td></tr><tr><td>Not searching for duplicates</td><td>Split discussion and impact</td><td>JQL text search first</td></tr><tr><td>Setting Highest priority for everything</td><td>Priority loses meaning; ignored</td><td>Follow team definitions</td></tr><tr><td>Not watching the issue</td><td>Customers not updated on fix</td><td>Watch and link tickets</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s6-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Write a JQL query to find unresolved bugs mentioning "invoice" created in the last 14 days.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><code>issuetype = Bug AND resolution = Unresolved AND text ~ "invoice" AND created &gt;= -14d ORDER BY created DESC</code></div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Engineering closed your bug as "Cannot Reproduce", but two more customers reported it today. What do you do?</span></div><p class="saq-scenario">Scenario: Recurring customer issue.</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Add the new tickets and evidence (request IDs, timestamps, environment, any pattern such as account size or browser), try to produce a minimal reproduction, comment with the new information and ask to reopen; link all tickets so impact is visible.</div></div>
+<div class="mcq" data-answer="2"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Which Jira issue type should you use for a defect?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Story</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Epic</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Bug</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Sub-task</li></ul><div class="mcq-feedback" data-expl="Bug."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>In JQL, "~" means…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Equals</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Text contains</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Not equal</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Greater than</li></ul><div class="mcq-feedback" data-expl="Text search."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>Linking customer tickets to a Jira bug mainly helps…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Decorate the issue</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Show impact and notify customers when fixed</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Close tickets automatically always</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Hide the bug</li></ul><div class="mcq-feedback" data-expl="Impact + follow-up."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t7" data-toc='[["s7-1", "GitHub Issues at a Glance"], ["s7-2", "Issue Templates"], ["s7-3", "Markdown for Bug Reports"], ["s7-4", "Labels, Milestones & Projects"], ["s7-5", "Linking PRs & Jira vs GitHub"], ["s7-6", "Common Mistakes"], ["s7-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 07 · Tool 2</div>
+        <h1 class="panel-title">Logging Bugs in GitHub Issues</h1>
+        <p class="panel-subtitle">Many open-source projects, developer tools and startups track bugs in GitHub Issues. Learn issue templates, Markdown formatting, labels, milestones, linking pull requests, and how GitHub compares with Jira.</p>
+      </div>
+<div class="section" id="s7-1">
+<h2><span class="sec-emoji">🐙</span> GitHub Issues at a Glance</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Feature</th><th>Use</th></tr></thead><tbody><tr><td>Issues</td><td>Bugs, feature requests and tasks, numbered #123 per repository</td></tr><tr><td>Labels</td><td>bug, regression, needs-repro, priority:high</td></tr><tr><td>Assignees</td><td>Who is working on it</td></tr><tr><td>Milestones</td><td>Target release, e.g., v2.4.0</td></tr><tr><td>Projects</td><td>Boards/tables across issues and PRs</td></tr><tr><td>Discussions</td><td>Q&amp;A that isn't a confirmed bug</td></tr></tbody></table></div>
+<div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Public repositories make issues visible to everyone. Never post customer data, secrets or internal details in public issues.</div></div>
+
+</div>
+<div class="section" id="s7-2">
+<h2><span class="sec-emoji">📋</span> Issue Templates</h2>
+<p>Repositories define templates in <code>.github/ISSUE_TEMPLATE/</code> so every bug report has the same structure.</p><pre><span class="pre-lang">.github/ISSUE_TEMPLATE/bug_report.md</span><code>---
+name: Bug report
+about: Report something that isn&#x27;t working
+labels: bug, needs-triage
+---
+
+**Describe the bug**
+A clear, concise description.
+
+**To reproduce**
+1. Go to &#x27;...&#x27;
+2. Click on &#x27;...&#x27;
+3. See error
+
+**Expected behaviour**
+
+**Actual behaviour**
+
+**Environment**
+- Version:
+- OS / Browser:
+- SDK &amp; version:
+
+**Logs / screenshots**
+
+**Additional context**</code></pre>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">GitHub also supports YAML <strong>issue forms</strong> with required fields and dropdowns, which help prevent incomplete reports.</div></div>
+
+</div>
+<div class="section" id="s7-3">
+<h2><span class="sec-emoji">✍️</span> Markdown for Bug Reports</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Markdown</th><th>Result</th></tr></thead><tbody><tr><td><code>## Steps</code></td><td>Heading</td></tr><tr><td><code>1. Click Export</code></td><td>Numbered list</td></tr><tr><td><code>**Expected**</code></td><td>Bold</td></tr><tr><td><code>`/v1/orders`</code></td><td>Inline code</td></tr><tr><td><code>```bash … ```</code></td><td>Code block with highlighting</td></tr><tr><td><code>- [ ] verify fix</code></td><td>Task checkbox</td></tr><tr><td><code>&lt;details&gt;…&lt;/details&gt;</code></td><td>Collapsible long logs</td></tr><tr><td><code>#123</code> / <code>@username</code></td><td>Link issue / mention person</td></tr></tbody></table></div>
+<pre><span class="pre-lang">markdown example</span><code>## Steps to reproduce
+1. Install `examplepay-python==2.3.1`
+2. Run:
+```python
+client.contacts.update(&quot;con_77&quot;, phone=&quot;+91 98480 12345&quot;)
+```
+**Expected:** contact updated
+**Actual:** `ServerError: 500` (request id `req_a91f`)
+
+Works with phone `919848012345`.</code></pre>
+
+</div>
+<div class="section" id="s7-4">
+<h2><span class="sec-emoji">🏷️</span> Labels, Milestones & Projects</h2>
+<ul><li>Common labels: <code>bug</code>, <code>regression</code>, <code>needs-repro</code>, <code>good first issue</code>, <code>priority:high</code>, <code>area:api</code>.</li><li><strong>Milestones</strong> group issues for a release; progress shows % closed.</li><li><strong>GitHub Projects</strong> provide boards and tables with custom fields (status, priority, team).</li></ul>
+
+</div>
+<div class="section" id="s7-5">
+<h2><span class="sec-emoji">🔗</span> Linking PRs & Jira vs GitHub</h2>
+<p>Writing <code>Fixes #123</code> (or Closes/Resolves) in a pull request description links it and <strong>automatically closes the issue</strong> when the PR is merged into the default branch.</p><div style="overflow-x:auto"><table><thead><tr><th></th><th>Jira</th><th>GitHub Issues</th></tr></thead><tbody><tr><td>Best for</td><td>Company-wide tracking, complex workflows</td><td>Code-centric teams, open source, developer tools</td></tr><tr><td>Workflows</td><td>Highly customisable statuses and fields</td><td>Simple: open/closed + labels/projects</td></tr><tr><td>Query language</td><td>JQL</td><td>Search qualifiers (is:open label:bug)</td></tr><tr><td>Code linking</td><td>Integrations (GitHub, Bitbucket)</td><td>Native: PRs, commits, "Fixes #123"</td></tr><tr><td>Help-desk integrations</td><td>Very common (Zendesk, Freshdesk…)</td><td>Available but less common</td></tr></tbody></table></div>
+<pre><span class="pre-lang">GitHub search</span><code>is:issue is:open label:bug &quot;export csv&quot;
+is:issue label:regression created:&gt;2026-09-01
+is:issue is:closed linked:pr</code></pre>
+
+</div>
+<div class="section" id="s7-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Customer data in public issues</td><td>Privacy breach</td><td>Anonymise; use private repos/issues</td></tr><tr><td>Ignoring the template</td><td>Missing info; slower triage</td><td>Fill every section</td></tr><tr><td>Huge logs pasted inline</td><td>Unreadable issue</td><td>Use &lt;details&gt; or attach files</td></tr><tr><td>Not linking duplicates</td><td>Fragmented reports</td><td>Comment "Duplicate of #123" and close</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s7-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Write a GitHub issue title and the "To reproduce" section (Markdown) for an SDK bug: Python SDK 2.3.1 raises KeyError "id" when listing invoices with zero results.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Title: "[python-sdk] KeyError: 'id' when list_invoices returns no results (v2.3.1)". To reproduce: <code>1. pip install examplepay-python==2.3.1</code> <code>2. client.invoices.list(customer="cus_empty")</code> (a customer with no invoices) <code>3. See KeyError: 'id'</code>. Expected: empty list.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Your fix PR should close issue #482 automatically. What do you write in the PR description?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><code>Fixes #482</code> (or "Closes #482" / "Resolves #482"); it closes when the PR merges into the default branch.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Where do GitHub issue templates live?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> /docs</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> .github/ISSUE_TEMPLATE/</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> /templates</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> README.md</li></ul><div class="mcq-feedback" data-expl=".github/ISSUE_TEMPLATE/."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>"Fixes #123" in a PR…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Deletes the issue</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Closes the issue when the PR is merged</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Assigns a reviewer</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Adds a label</li></ul><div class="mcq-feedback" data-expl="Auto-close on merge."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>Which is safest for customer-specific details?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Public GitHub issue</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Private tracker / internal Jira</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Public discussion</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Commit message</li></ul><div class="mcq-feedback" data-expl="Protect data."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t8" data-toc='[["s8-1", "End-to-End Bug Workflow"], ["s8-2", "Working with Engineers"], ["s8-3", "Verifying the Fix"], ["s8-4", "Updating Customers"], ["s8-5", "Known Issues, KB & RCAs"], ["s8-6", "Common Mistakes"], ["s8-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Advanced</span></div>
+        <div class="panel-eyebrow">Module 08 · Real-World Workflow</div>
+        <h1 class="panel-title">Collaboration, Verification & Closing the Loop</h1>
+        <p class="panel-subtitle">Filing the bug is half the job. Learn the end-to-end workflow, how to work with engineers, verify fixes, update every affected customer, and turn bugs into knowledge.</p>
+      </div>
+<div class="section" id="s8-1">
+<h2><span class="sec-emoji">🔁</span> End-to-End Bug Workflow</h2>
+<p><strong>Ticket → Confirm it's a bug → Reproduce → Minimise → Search duplicates → File (Jira/GitHub) → Link tickets → Tell customer next steps → Track → Verify fix → Notify all customers → Update KB</strong></p><ol class="steps"><li>Confirm and reproduce; rule out config/user error.</li><li>Build a minimal test case and collect evidence.</li><li>Search for an existing bug; link if found, otherwise file a new one.</li><li>Link all customer tickets; set ticket status (often On-hold).</li><li>Tell the customer: it's confirmed, it's with engineering, workaround, next update time.</li><li>Watch the issue; answer engineers' questions quickly.</li><li>When fixed: verify, then notify every linked customer and close tickets.</li></ol>
+
+</div>
+<div class="section" id="s8-2">
+<h2><span class="sec-emoji">🤝</span> Working with Engineers</h2>
+<ul><li>Use the agreed channel (Jira comments, escalation queue), not random DMs.</li><li>Respond fast to "need more info"; you hold the customer context.</li><li>Share facts, not pressure. Quantified impact gets priority faster than "urgent!!!".</li><li>Offer to join a short call or screen-share for complex reproductions.</li><li>Thank engineers when fixes ship. Good relationships speed up future escalations.</li></ul>
+
+</div>
+<div class="section" id="s8-3">
+<h2><span class="sec-emoji">✅</span> Verifying the Fix</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Check</th><th>How</th></tr></thead><tbody><tr><td>Original scenario</td><td>Run your minimal test case again on the fixed version</td></tr><tr><td>Customer scenario</td><td>Re-test with the customer's conditions (role, data, browser)</td></tr><tr><td>Edge cases</td><td>Variants near the boundary (90/91 days; 1 vs 3 emails)</td></tr><tr><td>No new breakage</td><td>Quick check of related features (basic regression)</td></tr><tr><td>Release reached production</td><td>Confirm the fix version is actually deployed</td></tr></tbody></table></div>
+<div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">"Fixed in code" isn't "fixed for customers". Confirm the release is live in production (and on mobile, that users have the new app version).</div></div>
+
+</div>
+<div class="section" id="s8-4">
+<h2><span class="sec-emoji">📣</span> Updating Customers</h2>
+<div class="script good"><b>When filing</b>Thanks for the details. I've confirmed this is a bug and passed it to our engineering team with your examples. Until it's fixed, exporting in 60-day ranges works. I'll update you by Friday, or sooner if we have news.</div>
+<div class="script good"><b>When fixed</b>Good news: the fix for the CSV export issue you reported is now live. I've tested a 120-day export successfully. Could you try again and let me know it works for you? Thanks for your patience and the detailed report.</div>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Use the linked-ticket list to notify <strong>every</strong> affected customer, including those who reported it weeks ago.</div></div>
+
+</div>
+<div class="section" id="s8-5">
+<h2><span class="sec-emoji">📚</span> Known Issues, KB & RCAs</h2>
+<ul><li>While a bug is open, a <strong>known-issue macro</strong> or KB note keeps agent answers consistent.</li><li>After the fix, retire or update the macro/article.</li><li>For serious bugs or incidents, engineering writes an <strong>RCA (Root Cause Analysis)</strong> / post-mortem; support contributes the customer-impact timeline.</li><li>Look for patterns: repeated bug areas can be raised in product feedback meetings.</li></ul>
+
+</div>
+<div class="section" id="s8-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Filing and forgetting</td><td>Customers never hear back</td><td>Watch issue; set reminders</td></tr><tr><td>Telling customers a fix date engineering didn't confirm</td><td>Broken promises</td><td>Promise update dates</td></tr><tr><td>Closing tickets before verifying</td><td>Reopens and frustration</td><td>Verify in production first</td></tr><tr><td>Notifying only the latest reporter</td><td>Others left waiting</td><td>Use linked tickets</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s8-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Write the message to customers when a bug you filed is confirmed but has no fix date yet.</span></div><p class="saq-scenario">Scenario: Invoice PDFs blank when company name contains "&".</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">"I've confirmed the blank invoice PDFs are caused by a bug when the company name contains "&", and our engineering team is working on it with your examples. Until it's fixed, temporarily writing "and" instead of "&" in Settings → Company lets you generate invoices normally. I'll update you by Thursday 5 pm IST, even if the fix isn't out yet."</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Engineering marked your bug "Done". List what you do before closing customer tickets.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Confirm the fix release is in production (and app versions for mobile); re-run the minimal test case and the customer scenario; check a couple of edge cases; notify all linked customers asking them to confirm; update/retire the known-issue macro and KB; close tickets after confirmation (or per policy).</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>After filing a bug, the customer ticket usually goes to…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Closed</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> On-hold (waiting on engineering)</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Deleted</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Pending forever</li></ul><div class="mcq-feedback" data-expl="Waiting on third party."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>"Fixed in code" may not mean fixed for customers because…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Code is wrong</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> The release may not be deployed yet</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Jira is slow</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Customers don't care</li></ul><div class="mcq-feedback" data-expl="Check production."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>An RCA is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> A ticket type</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Root Cause Analysis of what went wrong and how to prevent it</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> A Jira field</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> A test tool</li></ul><div class="mcq-feedback" data-expl="Post-mortem."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t9" data-toc='[["s9-1", "Concept Questions"], ["s9-2", "Comparison Cheat Sheet"], ["s9-3", "Common Mistakes & Fixes"], ["s9-4", "Scenario Questions"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 09 · Interviews</div>
+        <h1 class="panel-title">Interview Preparation: Bug Reproduction & Documentation</h1>
+        <p class="panel-subtitle">Interview questions about reproducing bugs, minimal test cases, bug reports, severity/priority and Jira/GitHub, with model answers, comparisons, common mistakes and scenarios.</p>
+      </div>
+<div class="section" id="s9-1">
+<h2><span class="sec-emoji">🎤</span> Concept Questions</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Question</th><th>Model answer</th></tr></thead><tbody><tr><td>What makes a good bug report?</td><td>Clear title, environment, minimal numbered steps, expected vs actual, frequency, evidence (screenshots, logs, request IDs), impact and workaround.</td></tr><tr><td>How do you reproduce a customer's bug?</td><td>Match their environment (version, browser, role, plan, data), follow precise steps, repeat to confirm, capture evidence, then minimise.</td></tr><tr><td>What is a minimal reproducible example?</td><td>The smallest set of steps/data that still triggers the bug reliably, ideally with a working variant.</td></tr><tr><td>Severity vs priority?</td><td>Severity is technical impact; priority is how soon to fix based on business factors.</td></tr><tr><td>How do you handle intermittent bugs?</td><td>Collect timestamps and request IDs for failures and successes, find patterns (host, data, time), try to trigger with loops/throttling, file with evidence.</td></tr><tr><td>How do you avoid duplicate bugs?</td><td>Search the tracker (JQL/GitHub search) by error text and area; link to existing issues.</td></tr><tr><td>What happens after a bug is fixed?</td><td>Verify in production, notify all linked customers, update KB/macros, close tickets.</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s9-2">
+<h2><span class="sec-emoji">📋</span> Comparison Cheat Sheet</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Pair</th><th>Key difference</th></tr></thead><tbody><tr><td>Bug vs Feature request</td><td>Contradicts design vs never promised</td></tr><tr><td>Severity vs Priority</td><td>How bad vs how soon</td></tr><tr><td>Reproducible vs Intermittent</td><td>Every time vs sometimes (needs patterns)</td></tr><tr><td>Jira vs GitHub Issues</td><td>Configurable company tracker vs code-centric issues</td></tr><tr><td>JQL vs GitHub search</td><td>Jira query language vs qualifiers like is:open label:bug</td></tr><tr><td>Cannot Reproduce vs Won't Fix</td><td>Not enough info vs intended/not worth fixing</td></tr><tr><td>Regression vs New bug</td><td>Used to work vs never worked</td></tr><tr><td>Expected vs Actual</td><td>Per design/docs vs what really happens</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s9-3">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes & Fixes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Vague titles ("Export broken")</td><td>Hard to triage/search</td><td>[Area] what + condition</td></tr><tr><td>No expected result</td><td>Engineers can't judge</td><td>State expected per docs</td></tr><tr><td>Testing with different role/data</td><td>False "can't reproduce"</td><td>Match environment</td></tr><tr><td>Customer PII in reports</td><td>Privacy breach</td><td>Anonymise</td></tr><tr><td>Everything marked Highest</td><td>Priority ignored</td><td>Follow definitions</td></tr><tr><td>Not updating customers after the fix</td><td>Customers left waiting</td><td>Notify all linked tickets</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s9-4">
+<h2><span class="sec-emoji">🧩</span> Scenario Questions</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>"A customer reports a bug you can't reproduce. What do you do?"</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Compare environments (role, plan, data, browser, version, network); ask for a screen recording, exact timestamps and request IDs; check logs for their failures; look for patterns; if still not reproducible, file with all evidence and frequency, labelled needs-repro, and keep monitoring.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>"Walk me through a bug report you wrote."</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Example: "[Reports] CSV export only headers when range &gt; 90 days": environment, 3 steps, expected ~4,200 rows vs actual header only, logs showing range_limit_exceeded, 7 linked tickets including 2 Enterprise, workaround of 60-day chunks; it was fixed in the next release and I verified and notified all customers.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P3.</span><span>"How would you prioritise two bugs: a typo on the login page and a rare data-loss bug?"</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Data loss is higher severity (S1/S2) and normally higher priority; the typo is low severity but could become high priority before a launch. I'd report both with impact and let product/engineering set priority, flagging the data-loss bug urgently.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Which is the best bug title?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> "Bug!!!"</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> "[Billing] GST applied twice on GST-inclusive invoices since 30 Sep"</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> "Customer angry"</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> "Pls fix"</li></ul><div class="mcq-feedback" data-expl="Area + what + condition."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>"Fixes #45" in a GitHub PR will…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Delete #45</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Close issue #45 when merged</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Assign #45</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Label #45</li></ul><div class="mcq-feedback" data-expl="Auto-close."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t10" data-toc='[["s10-1","Take the Assessment"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">→ Intermediate</span></div>
+        <p class="panel-eyebrow">Module 10</p>
+        <h1 class="panel-title">Assessment</h1>
+        <p class="panel-subtitle">Test yourself on everything covered in this course — 50 scenario-based multiple-choice questions, all different (no repeats), shown in a random order each attempt.</p>
+      </div>
+      <div class="section" id="s10-1">
+        <div class="assess-start-card">
+          <div class="assess-intro-title">Test what you've learned</div>
+          <div class="assess-intro-text">A timed, exam-style mock test. Most questions describe a real support situation and ask what you would do, which tool or metric applies, or what went wrong.</div>
+          <ul class="assess-intro-list">
+            <li><strong>50 multiple-choice questions</strong> &mdash; all different, no repeats, in random order</li>
+            <li><strong>50-minute</strong> timer (1 minute per question), with mark-for-review and a question palette</li>
+            <li>Covers every module, from Bug Fundamentals through Interview Prep</li>
+            <li>Answers and explanations are shown after you submit</li>
+          </ul>
+          <button class="assess-start-btn" id="assessStartBtn">▶ Start Assessment</button>
+        </div>
+      </div>
+      <div class="assess-modal-overlay" id="assessModal">
+        <div class="assess-modal-box">
+          <div class="assess-sticky-header">
+            <div class="assess-modal-head">
+              <div class="assess-modal-title">Assessment</div>
+              <button class="assess-modal-close" id="assessModalClose">✕</button>
+            </div>
+            <div class="quiz-progress" id="assessProgressWrap" style="display:none">
+              <span class="quiz-score" id="assessProgressLabel">Question 1</span>
+              <div class="quiz-bar-track"><div class="quiz-bar-fill" id="assessProgressFill" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div id="assessStage"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+/* =========================================================
+   Tab switching, dynamic TOC, scroll-spy, progress pill
+   ========================================================= */
+(function(){
+  const tabs   = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel');
+  const tocEl  = document.getElementById('toc');
+  const total  = tabs.length;
+  const progressText = document.getElementById('progressText');
+
+  function buildToc(panel){
+    const data = JSON.parse(panel.getAttribute('data-toc') || '[]');
+    tocEl.innerHTML = data.map(([id,label]) =>
+      `<li><a href="#${id}" data-target="${id}">${label}</a></li>`
+    ).join('');
+    // first link active by default
+    const first = tocEl.querySelector('a');
+    if(first) first.classList.add('active');
+  }
+
+  function activate(idx){
+    tabs.forEach((t,i)=>t.classList.toggle('active', i===idx));
+    panels.forEach((p,i)=>p.classList.toggle('active', i===idx));
+    buildToc(panels[idx]);
+    progressText.textContent = `Tab ${idx+1} of ${total}`;
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+
+  tabs.forEach((t,i)=>{
+    t.addEventListener('click', ()=> activate(i));
+  });
+
+  // Smooth scroll inside the active tab
+  document.addEventListener('click', (e)=>{
+    const a = e.target.closest('.toc-list a');
+    if(!a) return;
+    e.preventDefault();
+    const id = a.getAttribute('data-target');
+    const el = document.getElementById(id);
+    if(el){
+      window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 130, behavior:'smooth'});
+    }
+  });
+
+  // Scroll spy — highlight the nearest visible section
+  let ticking = false;
+  function spy(){
+    const activePanel = document.querySelector('.panel.active');
+    if(!activePanel) return;
+    const sections = activePanel.querySelectorAll('.section');
+    const trigger  = 180; // px from top
+    let current = null;
+    sections.forEach(sec=>{
+      const rect = sec.getBoundingClientRect();
+      if(rect.top - trigger < 0) current = sec.id;
+    });
+    if(current){
+      tocEl.querySelectorAll('a').forEach(a=>{
+        a.classList.toggle('active', a.dataset.target === current);
+      });
+    }
+    ticking = false;
+  }
+  window.addEventListener('scroll', ()=>{
+    if(!ticking){ requestAnimationFrame(spy); ticking = true; }
+  }, {passive:true});
+
+  // Reset
+  window.resetProgress = function(){ activate(0); };
+
+  // Init
+  activate(0);
+})();
+
+/* =========================================================
+   Assessment modal — legacy modal (unused)
+   ========================================================= */
+(function(){
+  const assessItems = [];
+  const mcqTotal = assessItems.length;
+
+  let idx=0, score=0, answered=false;
+
+  function openAssess(){document.getElementById('assessModal').classList.add('open');showIntroStage()}
+  function closeAssess(){document.getElementById('assessModal').classList.remove('open')}
+
+  function showIntroStage(){
+    idx=0; score=0; answered=false;
+    renderItem();
+  }
+
+  function renderItem(){
+    answered=false;
+    const item=assessItems[idx];
+    const stage=document.getElementById('assessStage');
+    const pct=Math.round((idx/assessItems.length)*100);
+    document.getElementById('assessProgressWrap').style.display='flex';
+    document.getElementById('assessProgressLabel').textContent=`Question ${idx+1} / ${assessItems.length}`;
+    document.getElementById('assessProgressFill').style.width=pct+'%';
+    let inner=`
+      <div class="assess-q-wrap">
+        <div class="assess-q">${item.q}</div>
+        ${item.code?`<pre><code>${item.code}</code></pre>`:''}
+        <div id="assessBody"></div>
+        <div id="assessFeedback"></div>
+      </div>`;
+    stage.innerHTML=inner;
+    const body=document.getElementById('assessBody');
+    body.innerHTML=`<ul class="mcq-opts" id="assessOpts">${item.options.map((o,i)=>`<li class="mcq-opt" data-i="${i}"><span class="opt-letter">${String.fromCharCode(65+i)}</span> ${o}</li>`).join('')}</ul>`;
+    body.querySelectorAll('.mcq-opt').forEach(opt=>opt.addEventListener('click',()=>answerMCQ(opt,item)));
+  }
+
+  function showNextButton(){
+    const fb=document.getElementById('assessFeedback');
+    const btn=document.createElement('button');
+    btn.className='assess-next-btn';
+    btn.textContent = idx<assessItems.length-1 ? 'Next Question →' : 'See Results →';
+    btn.addEventListener('click',()=>{
+      if(idx<assessItems.length-1){idx++;renderItem()}else{showResults()}
+    });
+    fb.appendChild(btn);
+  }
+
+  function answerMCQ(optEl,item){
+    if(answered)return;
+    answered=true;
+    const chosen=parseInt(optEl.getAttribute('data-i'),10);
+    const correct=chosen===item.answer;
+    if(correct)score++;
+    document.querySelectorAll('#assessOpts .mcq-opt').forEach(opt=>{opt.style.pointerEvents='none'});
+    const fb=document.getElementById('assessFeedback');
+    if(correct){
+      optEl.classList.add('correct');
+      fb.innerHTML=`<div class="assess-fb-banner ok"><span>✅</span> Correct!</div>`;
+    }else{
+      optEl.classList.add('incorrect');
+      fb.innerHTML=`<div class="assess-fb-answer ok"><span>✅</span> ${item.options[item.answer]}</div>`;
+    }
+    showNextButton();
+  }
+
+  function showResults(){
+    const stage=document.getElementById('assessStage');
+    const pct=Math.round((score/mcqTotal)*100);
+    document.getElementById('assessProgressLabel').textContent='Completed';
+    document.getElementById('assessProgressFill').style.width='100%';
+    let msg='Keep practicing — revisit the tabs above and try again.';
+    if(pct>=85)msg='Outstanding! You have a strong command of this role.';
+    else if(pct>=65)msg="Great job! A little more practice with the harder questions and you'll be set.";
+    stage.innerHTML=`
+      <div class="assess-q-wrap">
+        <div class="assess-result-score">${score} / ${mcqTotal}</div>
+        <div class="assess-result-msg">${pct}% correct — ${msg}</div>
+        <button class="assess-retry-btn" id="assessRetryBtn">↻ Try Again</button>
+      </div>`;
+    document.getElementById('assessRetryBtn').addEventListener('click',showIntroStage);
+  }
+
+  document.getElementById('__disabledAssess')?.addEventListener('click',openAssess);
+  document.getElementById('assessModalClose').addEventListener('click',closeAssess);
+  document.getElementById('assessModal').addEventListener('click',e=>{if(e.target.id==='assessModal')closeAssess()});
+})();
+</script>
+
+<div id="scoreBoard" class="score-board" style="display:none;max-width:820px;margin:18px auto;padding:0 16px"></div>
+
+
+<script>
+/* Inline quick checks + practice model answers */
+document.addEventListener('click',function(e){
+  const opt=e.target.closest('.mcq .mcq-opt');
+  if(opt){
+    const box=opt.closest('.mcq'); if(box.classList.contains('answered'))return;
+    const ans=+box.dataset.answer, i=+opt.dataset.i;
+    box.classList.add('answered');
+    box.querySelectorAll('.mcq-opt').forEach(o=>{ if(+o.dataset.i===ans)o.classList.add('correct'); });
+    if(i!==ans)opt.classList.add('incorrect');
+    const fb=box.querySelector('.mcq-feedback');
+    fb.classList.add(i===ans?'ok':'bad');
+    fb.innerHTML=(i===ans?'✅ Correct. ':'❌ Not quite. ')+fb.dataset.expl;
+    return;
+  }
+  const rs=e.target.closest('.mcq-reset');
+  if(rs){
+    const box=rs.closest('.mcq'); box.classList.remove('answered');
+    box.querySelectorAll('.mcq-opt').forEach(o=>o.classList.remove('correct','incorrect'));
+    const fb=box.querySelector('.mcq-feedback'); fb.classList.remove('ok','bad'); fb.innerHTML='';
+    return;
+  }
+  const tg=e.target.closest('.saq-toggle');
+  if(tg){
+    const m=tg.closest('.saq').querySelector('.saq-model');
+    m.classList.toggle('show');
+    tg.textContent=m.classList.contains('show')?'Hide model answer':'Show model answer';
+  }
+});
+</script>
+<script>
+(function(){
+  /* =====================================================================
+     Bug Reproduction &amp; Documentation -- full-screen, timed mock exam (MNC style).
+     All 50 questions of the bank, shuffled, none repeated.
+     Grading: all answers submitted at the end (server-side).
+     ===================================================================== */
+  const BANK=[{"id": "q1", "q": "A bug is…", "options": ["A feature request", "Behaviour that contradicts design/docs", "A how-to question", "A billing query"], "answer": 1, "explanation": "Defect.", "difficulty": "Easy"}, {"id": "q2", "q": "\"The app doesn't have dark mode\" is a…", "options": ["Bug", "Feature request", "Incident", "Regression"], "answer": 1, "explanation": "Never promised.", "difficulty": "Easy"}, {"id": "q3", "q": "User can't see an admin-only menu as a Member. This is…", "options": ["Bug", "Permission/config, not a bug", "Outage", "Regression"], "answer": 1, "explanation": "By design.", "difficulty": "Easy"}, {"id": "q4", "q": "Before filing a bug, first…", "options": ["Email engineering", "Reproduce and search for duplicates", "Close the ticket", "Set Highest priority"], "answer": 1, "explanation": "Confirm + dedupe.", "difficulty": "Easy"}, {"id": "q5", "q": "\"Works for me\" is often caused by…", "options": ["Luck", "Different role, plan or data", "Faster laptop", "Jira"], "answer": 1, "explanation": "Environment mismatch.", "difficulty": "Medium"}, {"id": "q6", "q": "Environment details include…", "options": ["Favourite colour", "Version, browser/OS, role/plan, data, flags", "Ticket ID only", "Agent name"], "answer": 1, "explanation": "Full context.", "difficulty": "Easy"}, {"id": "q7", "q": "Repeat reproduction to…", "options": ["Waste time", "Check consistency/frequency", "Annoy QA", "Change data"], "answer": 1, "explanation": "Consistency.", "difficulty": "Easy"}, {"id": "q8", "q": "Real customer data in reports should be…", "options": ["Included", "Anonymised", "Bolded", "Public"], "answer": 1, "explanation": "Privacy.", "difficulty": "Easy"}, {"id": "q9", "q": "A minimal reproducible example is…", "options": ["Full customer setup", "Smallest scenario still triggering the bug", "Video only", "Customer's words"], "answer": 1, "explanation": "Minimal.", "difficulty": "Easy"}, {"id": "q10", "q": "Halving a big file to find a bad row is…", "options": ["Load test", "Binary search", "Encryption", "Regression"], "answer": 1, "explanation": "Repeated halving.", "difficulty": "Medium"}, {"id": "q11", "q": "Why include a working variant?", "options": ["Decoration", "Shows the pass/fail boundary", "Required", "Length"], "answer": 1, "explanation": "Pinpoints trigger.", "difficulty": "Easy"}, {"id": "q12", "q": "Errors cluster on one host. Suggests…", "options": ["User error", "Server-specific issue", "Global DNS", "Feature request"], "answer": 1, "explanation": "Host outlier.", "difficulty": "Medium"}, {"id": "q13", "q": "A regression is…", "options": ["New feature", "Bug in something that used to work", "Duplicate", "Test"], "answer": 1, "explanation": "Previously worked.", "difficulty": "Easy"}, {"id": "q14", "q": "For intermittent bugs collect…", "options": ["Only failures", "Failures and successes with timestamps/IDs", "Nothing", "Screenshots only"], "answer": 1, "explanation": "Compare.", "difficulty": "Medium"}, {"id": "q15", "q": "Best bug title format?", "options": ["\"Bug!!!\"", "[Area] what fails + condition", "Customer name", "Ticket ID"], "answer": 1, "explanation": "Specific.", "difficulty": "Easy"}, {"id": "q16", "q": "Expected result should come from…", "options": ["Customer wishes", "Docs/design intent", "Engineer guesses", "Random"], "answer": 1, "explanation": "Docs.", "difficulty": "Medium"}, {"id": "q17", "q": "What helps PMs prioritise most?", "options": ["Emotion", "Quantified impact", "Long text", "Caps lock"], "answer": 1, "explanation": "Impact.", "difficulty": "Easy"}, {"id": "q18", "q": "Two unrelated bugs found together should be…", "options": ["One report", "Separate reports (linked if related)", "Ignored", "Merged"], "answer": 1, "explanation": "One per report.", "difficulty": "Easy"}, {"id": "q19", "q": "Frequency field \"3/10\" means…", "options": ["Severity 3", "Fails 3 of 10 attempts", "Priority 10", "Version 3.10"], "answer": 1, "explanation": "Reproduction rate.", "difficulty": "Easy"}, {"id": "q20", "q": "Severity measures…", "options": ["How soon to fix", "How bad the technical impact is", "Customer mood", "Ticket age"], "answer": 1, "explanation": "Impact.", "difficulty": "Easy"}, {"id": "q21", "q": "Priority measures…", "options": ["How bad", "How soon to fix", "Code size", "Team size"], "answer": 1, "explanation": "Urgency/business.", "difficulty": "Easy"}, {"id": "q22", "q": "Data exposed to another account is…", "options": ["S4", "S3", "S2", "S1"], "answer": 3, "explanation": "Critical.", "difficulty": "Easy"}, {"id": "q23", "q": "Typo on login page before a big launch:", "options": ["High severity, low priority", "Low severity, possibly high priority", "Critical", "Ignore"], "answer": 1, "explanation": "Business timing.", "difficulty": "Medium"}, {"id": "q24", "q": "Triage includes…", "options": ["Writing code", "Checking completeness, severity, priority, owner, duplicates", "Deploying", "Customer refunds"], "answer": 1, "explanation": "Triage tasks.", "difficulty": "Easy"}, {"id": "q25", "q": "Jira issue type for defects?", "options": ["Story", "Bug", "Epic", "Task"], "answer": 1, "explanation": "Bug.", "difficulty": "Easy"}, {"id": "q26", "q": "Jira project key example?", "options": ["#123", "ENG-1423", "v2.4", "bug_report.md"], "answer": 1, "explanation": "KEY-number.", "difficulty": "Easy"}, {"id": "q27", "q": "JQL \"~\" means…", "options": ["Equals", "Contains text", "Not", "Order"], "answer": 1, "explanation": "Text search.", "difficulty": "Easy"}, {"id": "q28", "q": "JQL for unresolved bugs:", "options": ["status = open", "resolution = Unresolved AND issuetype = Bug", "bugs = true", "is:open"], "answer": 1, "explanation": "Resolution field.", "difficulty": "Medium"}, {"id": "q29", "q": "\"-30d\" in JQL means…", "options": ["30 days in the future", "Within the last 30 days (relative)", "30 bugs", "Version 30"], "answer": 1, "explanation": "Relative date.", "difficulty": "Medium"}, {"id": "q30", "q": "Resolution \"Cannot Reproduce\" means…", "options": ["Fixed", "Engineers couldn't reproduce with given info", "Duplicate", "Won't fix"], "answer": 1, "explanation": "Need more evidence.", "difficulty": "Easy"}, {"id": "q31", "q": "Linking customer tickets to the bug helps…", "options": ["Nothing", "Show impact and notify customers on fix", "Hide it", "Auto-delete"], "answer": 1, "explanation": "Impact + follow-up.", "difficulty": "Easy"}, {"id": "q32", "q": "Jira components are…", "options": ["Product areas that route to owners", "Attachments", "Sprints", "Users"], "answer": 0, "explanation": "Areas.", "difficulty": "Medium"}, {"id": "q33", "q": "GitHub issue templates live in…", "options": ["/docs", ".github/ISSUE_TEMPLATE/", "README", "/src"], "answer": 1, "explanation": "Template folder.", "difficulty": "Easy"}, {"id": "q34", "q": "\"Fixes #123\" in a PR…", "options": ["Deletes #123", "Closes #123 on merge", "Assigns #123", "Labels #123"], "answer": 1, "explanation": "Auto-close.", "difficulty": "Easy"}, {"id": "q35", "q": "GitHub search for open bugs:", "options": ["status=open", "is:issue is:open label:bug", "resolution=Unresolved", "open bugs"], "answer": 1, "explanation": "Qualifiers.", "difficulty": "Medium"}, {"id": "q36", "q": "Long logs in a GitHub issue should go in…", "options": ["Title", "&lt;details&gt; collapsible or attachment", "Labels", "Milestone"], "answer": 1, "explanation": "Readable.", "difficulty": "Medium"}, {"id": "q37", "q": "Customer details in a public GitHub issue are…", "options": ["Fine", "A privacy risk", "Required", "Helpful"], "answer": 1, "explanation": "Never post.", "difficulty": "Easy"}, {"id": "q38", "q": "Jira vs GitHub Issues:", "options": ["Identical", "Configurable company workflows vs code-centric simplicity", "GitHub has JQL", "Jira can't link code"], "answer": 1, "explanation": "Different strengths.", "difficulty": "Medium"}, {"id": "q39", "q": "After filing, the customer ticket is often…", "options": ["Closed", "On-hold", "Deleted", "Merged"], "answer": 1, "explanation": "Waiting on engineering.", "difficulty": "Easy"}, {"id": "q40", "q": "Tell customers a fix date only if…", "options": ["You guess", "Engineering confirmed it", "Always", "Never update"], "answer": 1, "explanation": "Promise updates instead.", "difficulty": "Medium"}, {"id": "q41", "q": "\"Done\" in Jira, but before closing tickets…", "options": ["Close immediately", "Verify the release is live and re-test", "Delete the bug", "Ignore"], "answer": 1, "explanation": "Verify.", "difficulty": "Medium"}, {"id": "q42", "q": "When a fix ships, notify…", "options": ["Only the latest reporter", "All linked customers", "Nobody", "Only VIPs"], "answer": 1, "explanation": "Everyone affected.", "difficulty": "Easy"}, {"id": "q43", "q": "Known-issue macros should be…", "options": ["Kept forever", "Retired/updated after the fix", "Hidden", "Public"], "answer": 1, "explanation": "Avoid outdated info.", "difficulty": "Easy"}, {"id": "q44", "q": "RCA stands for…", "options": ["Request Change Approval", "Root Cause Analysis", "Rapid Customer Action", "Release Candidate A"], "answer": 1, "explanation": "Post-mortem.", "difficulty": "Easy"}, {"id": "q45", "q": "Engineers ask \"need more info\". You should…", "options": ["Ignore", "Respond quickly with details", "Close the ticket", "Escalate to CEO"], "answer": 1, "explanation": "You hold the context.", "difficulty": "Easy"}, {"id": "q46", "q": "Best evidence bundle includes…", "options": ["Opinions", "Steps, expected/actual, request IDs, logs, recording", "Only a screenshot", "Customer email only"], "answer": 1, "explanation": "Complete evidence.", "difficulty": "Easy"}, {"q": "Good reproduction steps are…", "options": ["Vague", "Numbered and exact", "Omitted", "Only a screenshot"], "answer": 1, "explanation": "Anyone should be able to follow them.", "difficulty": "Easy", "id": "q47"}, {"q": "What best shows actual vs expected behaviour visually?", "options": ["A screenshot or screen recording", "Nothing", "The customer's password", "Only a title"], "answer": 0, "explanation": "Visual evidence speeds triage.", "difficulty": "Easy", "id": "q48"}, {"q": "Severity 'Critical' typically means…", "options": ["Cosmetic issue", "System down or data loss with no workaround", "A typo", "A feature request"], "answer": 1, "explanation": "Critical = major impact.", "difficulty": "Easy", "id": "q49"}, {"q": "Before escalating, confirm the bug is…", "options": ["Duplicate-checked and reproducible", "Already fixed", "Closed", "Unassigned"], "answer": 0, "explanation": "Search for duplicates and reproduce first.", "difficulty": "Easy", "id": "q50"}];
+  const EXAM_N=50;
+  function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  const EXAM_SECONDS=50*60; /* 1 minute per question */
+  const inIframe = window.self!==window.top;
+
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash h2{font-size:25px;font-weight:800;margin-bottom:8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin-bottom:12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:ecpop .18s ease}
+  @keyframes ecpop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+
+  .exam-fsprompt{position:fixed;inset:0;z-index:100003;background:rgba(11,21,38,.96);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fsprompt .box{background:#fff;color:#161c27;border-radius:16px;max-width:480px;width:100%;padding:30px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+  .exam-fsprompt h3{font-size:21px;font-weight:800;margin:0 0 10px;color:#c53030}
+  .exam-fsprompt p{font-size:14px;color:#4a5568;line-height:1.6;margin:0 0 20px}
+  .exam-warn{position:fixed;inset:0;z-index:100003;background:rgba(24,38,68,.94);display:flex;align-items:center;justify-content:center;padding:24px;color:#fff;text-align:center;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;animation:ewfade .15s ease}
+  @keyframes ewfade{from{opacity:0}to{opacity:1}}
+  .exam-warn .wbox{max-width:680px;width:100%}
+  .exam-warn h2{font-size:34px;font-weight:800;margin:0 0 24px;display:flex;align-items:center;justify-content:center;gap:12px;line-height:1.2}
+  .exam-warn h2 .wi{font-size:30px}
+  .exam-warn p{font-size:17px;line-height:1.5;margin:0 0 20px;color:#fff}
+  .exam-warn .wcount{font-size:17px;margin:0 0 22px;color:#fff}
+  .exam-warn .wbtn{background:#0f1a30;color:#fff;border:none;border-radius:10px;padding:16px 25px;font-weight:700;font-size:17px;cursor:pointer;font-family:inherit}
+  .exam-warn .wbtn:hover{background:#0a1224}
+  @media(max-width:520px){.exam-warn h2{font-size:26px}.exam-warn p,.exam-warn .wcount,.exam-warn .wbtn{font-size:15px}}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+
+  function examConfirm(title,msg,okLabel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">
+        <button class="exam-btn nav" data-a="0">Cancel</button>
+        <button class="exam-btn primary" data-a="1">${okLabel||'Submit'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  /* ---- score history (localStorage, shared across the exam tab + guide) ---- */
+  const LS_KEY='bugScores';
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores();
+    a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: exactly 3 violation warnings (tab switch, fullscreen exit, screenshot attempt); 3 strikes -> auto-submit ---- */
+  let warns=0, lastWarn=0, lastType='', proctorOn=false;
+  const MAX_WARN=3;
+  const VIOL={
+    tab:{title:'Tab switch detected',msg:'You left the assessment window. Please stay on this page until you submit.'},
+    fs:{title:'Fullscreen exited',msg:'The assessment must remain in fullscreen mode.'},
+    shot:{title:'Screenshot attempt detected',msg:'Screenshots are not permitted during the assessment.'}
+  };
+  function examWarn(title,msg,count){
+    injectCss();
+    const old=document.getElementById('examWarnBox'); if(old)old.remove();
+    const d=document.createElement('div'); d.className='exam-warn'; d.id='examWarnBox';
+    d.innerHTML='<div class="wbox"><h2><span class="wi">&#9888;&#65039;</span><span>'+title+'</span></h2><p>'+msg+'</p>'+(count?'<div class="wcount">Warning '+count+' of '+MAX_WARN+'</div>':'')+'<button class="wbtn" data-a="1">OK</button></div>';
+    document.body.appendChild(d);
+    d.addEventListener('click',e=>{ if(e.target.closest('[data-a]'))d.remove(); });
+  }
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function removeFsPrompt(){ const p=document.getElementById('examFsPrompt'); if(p)p.remove(); }
+  function removeViolPop(){ const p=document.getElementById('examViolPop'); if(p)p.remove(); }
+  function goFullscreen(){
+    try{ const re=document.documentElement.requestFullscreen?document.documentElement.requestFullscreen():Promise.resolve(); return Promise.resolve(re).catch(()=>{}); }
+    catch(_){ return Promise.resolve(); }
+  }
+  /* One popup at a time. kind = tab | fs | shot. n = strike number (null = no strike, e.g. entering fullscreen at start). */
+  function showViolation(kind,n){
+    if(!examOn)return;
+    injectCss(); hideCover(); removeViolPop(); removeFsPrompt();
+    const v=VIOL[kind]; const needFs=!document.fullscreenElement;
+    const d=document.createElement('div'); d.className='exam-warn'; d.id=(kind==='fs'||needFs)?'examFsPrompt':'examViolPop';
+    d.innerHTML='<div class="wbox"><h2><span class="wi">&#9888;&#65039;</span><span>'+v.title+'</span></h2><p>'+v.msg+'</p>'+(n?'<div class="wcount">Warning '+n+' of '+MAX_WARN+'</div>':'')+'<button class="wbtn" id="examContinue">Return to assessment</button></div>';
+    document.body.appendChild(d);
+    document.getElementById('examContinue').addEventListener('click',()=>{
+      const go=document.fullscreenElement?Promise.resolve():goFullscreen();
+      go.then(()=>{ d.remove(); hideCover(); renderQ(); });
+    });
+  }
+  function violation(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now();
+    /* same incident (e.g. tab switch firing blur + visibilitychange together) counts once */
+    const fresh = now-lastWarn >= (kind===lastType?1500:800);
+    if(!fresh){ if(!document.fullscreenElement && !document.getElementById('examFsPrompt')) showViolation(kind,Math.min(warns,MAX_WARN)); return; }
+    lastWarn=now; lastType=kind; warns++;
+    if(warns>=MAX_WARN){
+      removeFsPrompt(); removeViolPop(); hideCover();
+      examWarn('Assessment submitted','Warning limit reached ('+VIOL[kind].title.toLowerCase()+'). The assessment has been auto-submitted.',MAX_WARN);
+      submitExam(true); return;
+    }
+    showViolation(kind,warns);
+  }
+  function fsHandler(){ if(examOn && !document.fullscreenElement){ violation('fs'); } }
+  function visHandler(){ if(document.hidden){ showCover(); violation('tab'); } else { hideCover(); } }
+  function blurHandler(){ if(!examOn)return; showCover(); violation('tab'); }
+  function focusHandler(){ hideCover(); }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function shotWarn(){ try{navigator.clipboard.writeText('');}catch(_){} violation('shot'); }
+  function keyGuard(e){
+    const k=(e.key||'').toLowerCase(), c=e.code||'';
+    if(k==='printscreen'||(e.metaKey&&e.shiftKey&&k==='s')||(e.metaKey&&e.shiftKey&&['Digit3','Digit4','Digit5'].includes(c))){ e.preventDefault(); shotWarn(); return false; }
+    if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; }
+  }
+  function printGuard(e){ if((e.key||'')==='PrintScreen'){ shotWarn(); } }
+  function startProctor(){
+    warns=0; lastWarn=0; lastType=''; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    window.addEventListener('blur',blurHandler);
+    window.addEventListener('focus',focusHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('cut',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keyup',printGuard,true);
+    /* if fullscreen could not be entered at start, ask for it (no strike) */
+    setTimeout(()=>{ if(examOn && proctorOn && !document.fullscreenElement) showViolation('fs',null); },700);
+  }
+  function stopProctor(){
+    proctorOn=false;
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    window.removeEventListener('blur',blurHandler);
+    window.removeEventListener('focus',focusHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('cut',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keyup',printGuard,true);
+    hideCover(); removeViolPop();
+  }
+
+  function startEntry(){
+    if(inIframe){ window.open(location.pathname+'?mode=exam','_blank'); return; }
+    showSplash();
+  }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; Bug Reproduction &amp; Documentation &mdash; Mock Test</h2>
+      <p>A timed, exam-style assessment modelled on real technical screening tests.</p>
+      <ul>
+        <li><b>50 questions</b> to attempt</li>
+        <li><b>50-minute</b> timer (1 min per question) &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Results and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> &mdash; stay in fullscreen the whole time</li>
+        <li>Exactly <b>3 things trigger a warning</b>: (1) <b>switching tab / window</b>, (2) <b>exiting fullscreen (Esc)</b>, (3) <b>attempting a screenshot</b> (PrintScreen / Win+Shift+S / Cmd+Shift+3-5)</li>
+        <li>Each warning shows a popup with a <b>Return to assessment</b> button that resumes where you left off &mdash; the timer keeps running</li>
+        <li><b>3 warnings in total</b> &rarr; the assessment <b>auto-submits</b>. Copy and right-click are also disabled</li>
+      </ul>
+      <button class="exam-btn primary" id="examBegin" style="width:100%;padding:14px">Start Test &rarr;</button>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      if(document.documentElement.requestFullscreen){document.documentElement.requestFullscreen().catch(()=>{});}
+      sp.remove(); enterExam();
+    });
+  }
+
+  async function enterExam(){
+    injectCss();
+    let ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Loading your test&hellip;</div>';
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    items=shuffle(BANK).slice(0,EXAM_N).map(b=>({id:b.id,q:b.q,code:b.code,options:b.options,difficulty:b.difficulty}));
+    if(!items.length){ ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center">Could not load the test. Close and try again.</div>'; return; }
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">Bug Reproduction &amp; Documentation &mdash; Mock Test</div><div class="et-sub">50 questions &middot; one attempt &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}${it.difficulty?`<span class="diff">${it.difficulty}</span>`:''}</div>
+      ${it.code?`<pre><code>${it.code}</code></pre>`:''}
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>el.addEventListener('click',()=>{
+      answers[id]=+el.dataset.i;
+      pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel'));
+      el.classList.add('sel'); refreshPalette();
+    }));
+    const prev=document.getElementById('examPrev'), next=document.getElementById('examNext');
+    if(prev)prev.addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    if(next)next.addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();refreshPalette();});
+    refreshPalette();
+  }
+
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examConfirm('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test');
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId); removeFsPrompt();
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    const payload={answers:{}};
+    items.forEach(it=>{ payload.answers[it.id] = (it.id in answers)?answers[it.id]:-1; });
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Grading your test&hellip;</div>';
+    const byId={}; BANK.forEach(b=>byId[b.id]=b);
+    let sc=0; const results={};
+    items.forEach(it=>{ const b=byId[it.id], you=payload.answers[it.id];
+      const ok=(you===b.answer); if(ok)sc++;
+      results[it.id]={correct:ok,answer:b.answer,explanation:b.explanation}; });
+    showResults({score:sc,results:results});
+  }
+
+  function showResults(data){
+    const results=data.results||{}, total=items.length, score=data.score||0;
+    saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below and try again.';
+    if(pct>=85)msg='Outstanding &mdash; strong command of reproducing bugs and writing reports in Jira/GitHub.';
+    else if(pct>=65)msg='Solid pass. A little more practice on the tricky ones and you are set.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the topics you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const r=results[it.id]||{}; const you=answers[it.id];
+      const attempted=(you!=null);
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      if(!attempted){
+        // Not attempted: reveal nothing (answer stays protected)
+        inner+='<div class="ra">Your answer: <i>Not answered</i></div>';
+        return '<div class="r no">'+inner+'</div>';
+      }
+      const youTxt=String.fromCharCode(65+you)+'. '+it.options[you];
+      const cor=(r.answer!=null&&r.answer>=0)?(String.fromCharCode(65+r.answer)+'. '+it.options[r.answer]):'';
+      inner+='<div class="ra '+(r.correct?'cor':'wrong')+'">Your answer: '+youTxt+'</div>'
+        +(r.correct?'':'<div class="ra cor">Correct: '+cor+'</div>')
+        +(r.explanation?'<div class="rx">'+r.explanation+'</div>':'');
+      return '<div class="r '+(r.correct?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; Bug Reproduction &amp; Documentation Mock Test</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another test</button></div>
+          <div class="exam-rmsg" id="examRedirect" style="margin-top:8px;color:#94a3b8"></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    let left=30;
+    const rd=document.getElementById('examRedirect');
+    const setTxt=()=>{ if(rd)rd.textContent='Returning to the assessment page in '+left+'s…'; };
+    setTxt();
+    const rt=setInterval(()=>{ left--; setTxt(); if(left<=0){ clearInterval(rt); goBack(); } },1000);
+    function goBack(){
+      if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); }
+      if(window.opener){ try{ window.close(); }catch(_){} }
+      location.href=location.pathname;   // fallback: reload guide (assessment) page
+    }
+    document.getElementById('examRetry').addEventListener('click',()=>{ clearInterval(rt); document.getElementById('examOverlay').remove(); enterExam(); });
+    document.getElementById('examClose').addEventListener('click',()=>{ clearInterval(rt); goBack(); });
+  }
+
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',startEntry);
+  window.__mockExamStart=startEntry;
+  renderScoreboard();
+  window.addEventListener('storage',e=>{ if(e.key===LS_KEY)renderScoreboard(); });
+  if(new URLSearchParams(location.search).get('mode')==='exam'){ showSplash(); }
+})();
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+<style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body>
+</html>

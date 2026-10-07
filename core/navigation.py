@@ -115,6 +115,7 @@ ALLOWED_SECTIONS = {
     "depth-english",
     "depth-aptitude",
     "depth-tech",
+    "depth-nonit",
     "section-depth",
     "section-certifications",
     "section-sitemap",

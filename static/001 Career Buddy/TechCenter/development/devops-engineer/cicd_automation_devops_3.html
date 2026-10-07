@@ -1,0 +1,2348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CI/CD Automation — A Visual Course for DevOps Engineers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff; --bg-soft:#f7f6f3; --bg-block:#f1f1ef;
+  --ink:#37352f; --ink-soft:#787774; --ink-mute:#9b9a97;
+  --line:#e9e9e7; --line-strong:#d3d3d0;
+  --accent:#14213D; --accent-soft:#eef1f7;
+  --green:#0f7b0f; --green-soft:#ddedea;
+  --orange:#d9730d; --orange-soft:#fadec9;
+  --red:#e03e3e; --red-soft:#ffe2dd;
+  --purple:#22345f; --purple-soft:#eef1f7;
+  --yellow:#dfab01; --yellow-soft:#fdecc8;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body,button,input,textarea,select,table,th,td,h1,h2,h3,h4,p,li,div,span,a,strong,em,small{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
+body{background:var(--bg);color:var(--ink);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+code,pre,pre *,code *{font-family:'Noto Sans Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+
+/* Header */
+.header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand-mark{width:34px;height:34px;display:grid;place-items:center;background:linear-gradient(135deg,#14213D 0%,#2f6fdb 100%);border-radius:8px;color:#fff;font-weight:800;font-size:13px;box-shadow:var(--shadow-sm)}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500;color:var(--ink-soft)}
+.progress-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-soft);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--bg-soft)}
+.tabbar{display:flex;gap:2px;padding:6px 24px;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--line);background:#fff}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{padding:9px 15px;background:transparent;border:none;border-radius:8px;font-size:13.5px;font-weight:500;color:#4a5568;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.tab:hover{background:var(--accent-soft);color:var(--accent)}
+.tab.active{background:var(--accent);color:#fff;font-weight:700}
+
+/* Layout */
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr)}
+@media (max-width:960px){.layout{grid-template-columns:1fr}.toc{display:none}}
+.toc{position:sticky;top:112px;align-self:start;height:calc(100vh - 124px);overflow-y:auto;padding:30px 16px 30px 28px;border-right:1px solid var(--line);}
+.toc-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);font-weight:700;margin-bottom:12px;padding-left:8px}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{display:block;padding:5px 10px;font-size:13px;color:var(--ink-soft);text-decoration:none;border-radius:4px;line-height:1.4}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{color:#fff;background:#16233f;font-weight:600;border-radius:12px;padding:9px 14px}
+.main{padding:44px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:28px 18px 60px}.header-top{padding:12px 16px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel-header{margin-bottom:34px}
+.panel-eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);margin:0 0 8px}
+.panel-title{font-size:38px;line-height:1.15;font-weight:700;letter-spacing:-.02em;margin:0 0 14px}
+.panel-subtitle{font-size:17px;color:var(--ink-soft);margin:0;max-width:760px;line-height:1.6}
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.level-tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.inter{background:#e3ecfb;color:#1d4f9f}
+.level-tag.adv{background:#f5e0e9;color:#8c1a63}
+
+.section{margin-top:46px;scroll-margin-top:140px}
+.section h2{font-size:27px;font-weight:700;letter-spacing:-.01em;margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.section h2 .sec-emoji{font-size:23px}
+.section h3{font-size:18px;font-weight:700;margin:26px 0 8px}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:5px 0}
+.lvl{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.03em;text-transform:uppercase}
+.lvl.b{background:var(--green-soft);color:#0a5f0a}
+.lvl.i{background:#e3ecfb;color:#1d4f9f}
+.lvl.e{background:#f5e0e9;color:#8c1a63}
+
+code{font-size:.87em;background:#f6f5f4;border:1px solid var(--line);padding:1px 6px;border-radius:4px;color:#c2410c}
+pre{background:#1f2430;color:#e6e6e3;padding:18px 20px;border-radius:var(--radius);overflow-x:auto;font-size:13px;line-height:1.65;margin:14px 0;box-shadow:var(--shadow-sm);position:relative}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{position:absolute;top:8px;right:12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9aa3b5;font-weight:700}
+.c{color:#7f8ba3;font-style:italic}
+
+.callout{display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start;background:var(--bg-block);border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout-icon{width:28px;height:28px;display:grid;place-items:center;background:#fff;border-radius:6px;font-size:16px;border:1px solid var(--line)}
+.callout-body{font-size:14.5px;line-height:1.6}
+.callout.tip{background:var(--accent-soft);border-color:#c7d2ea}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.card-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:8px;font-size:18px;margin-bottom:10px}
+.card-title{font-weight:700;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.55}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;border:1px solid var(--line)}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--bg-soft);font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+.table-wrap{overflow-x:auto}
+
+.diagram{background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin:18px 0;text-align:center}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{font-size:12px;color:var(--ink-soft);margin-top:10px;font-style:italic}
+
+.badge{display:inline-block;padding:2px 8px;font-size:11px;font-weight:700;border-radius:4px}
+.badge.blue{background:var(--accent-soft);color:#1d4f9f}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.red{background:var(--red-soft);color:#a82e2e}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:760px){.compare{grid-template-columns:1fr}}
+.compare-col{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.compare-col h4{margin:0 0 8px;font-size:15px;font-weight:700}
+.compare-col p{font-size:13.5px;margin:6px 0}
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{padding:4px 10px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500}
+
+/* stepper (flow list) */
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}
+.flow .st{background:var(--accent);color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600}
+.flow .ar{color:var(--ink-mute);font-weight:700}
+
+/* quiz */
+.quiz-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px 28px;box-shadow:var(--shadow-sm);margin-top:18px}
+.quiz-bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin:10px 0 20px}
+.quiz-bar>div{height:100%;width:0;background:var(--accent);transition:width .3s}
+.qmeta{font-size:12px;font-weight:700;color:var(--ink-soft);letter-spacing:.05em;text-transform:uppercase}
+.qtext{font-size:17px;font-weight:600;margin:6px 0 14px}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;gap:12px;align-items:center;padding:11px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg-soft);cursor:pointer;font-size:14.5px}
+.opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt .k{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0}
+.opt.correct{background:var(--green-soft);border-color:var(--green);font-weight:600}
+.opt.wrong{background:var(--red-soft);border-color:var(--red);font-weight:600}
+.opts.done .opt{pointer-events:none}
+.qexp{margin-top:14px;padding:12px 14px;border-radius:8px;background:var(--accent-soft);font-size:14px;display:none}
+.qbtn{margin-top:16px;background:var(--accent);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
+.qscore{font-size:44px;font-weight:800;text-align:center;margin:14px 0 4px}
+
+/* ===== Secure assessment (AMCAT-style) ===== */
+.qz-hidden{display:none !important}
+.qz-btn{background:var(--accent);color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:14.5px;font-weight:700;cursor:pointer;font-family:inherit}
+.qz-btn:hover{filter:brightness(1.15)}
+.qz-btn.sec{background:var(--bg-soft);color:var(--ink);border:1px solid var(--line-strong)}
+.qz-btn:disabled{opacity:.5;cursor:not-allowed}
+.qz-center{text-align:center}
+.qz-list{list-style:none;padding:0;margin:14px 0}
+.qz-list li{display:flex;justify-content:space-between;padding:11px 14px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--bg-soft);font-size:14px}
+.qz-list li span{color:var(--ink-soft)}
+.qz-blk{margin:0 0 16px}
+.qz-blk h3{margin:0 0 6px;font-size:15px;color:var(--accent)}
+.qz-blk ul{margin:0;padding-left:20px;color:var(--ink-soft);font-size:14px;line-height:1.7}
+.qz-danger{background:var(--red-soft);border:1px solid #f5c2c2;border-radius:10px;padding:12px 14px;font-size:13.5px;color:#a12626;margin-bottom:16px}
+.qz-note{background:var(--yellow-soft);border:1px solid #f3d9a0;border-radius:10px;padding:12px 14px;font-size:13.5px;color:#7a5c00;margin-bottom:16px}
+.qz-agree{display:flex;gap:10px;align-items:flex-start;padding:14px;border:1px dashed var(--line-strong);border-radius:10px;background:var(--bg-soft);margin-bottom:18px}
+.qz-agree input{margin-top:4px;width:16px;height:16px;accent-color:var(--accent);flex-shrink:0}
+.qz-agree label{font-size:14px;cursor:pointer}
+#qzOverlay{position:fixed;inset:0;z-index:100000;background:var(--bg-soft);overflow-y:auto}
+#qzOverlay .qz-in{max-width:780px;margin:0 auto;padding:20px 16px 60px}
+.qz-exit-row{display:flex;justify-content:flex-end;margin-bottom:10px}
+.qz-exit{background:#fff;color:var(--ink-soft);border:1px solid var(--line-strong);border-radius:8px;padding:8px 14px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit}
+.qz-exit:hover{background:var(--red-soft);color:var(--red);border-color:var(--red)}
+.qz-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.qz-name{font-weight:800;font-size:17px;color:var(--accent)}
+.qz-timer{background:#0b1526;color:#fff;padding:8px 14px;border-radius:8px;font-weight:700;font-variant-numeric:tabular-nums;min-width:78px;text-align:center}
+.qz-timer.warn{background:var(--red);animation:qzp 1s infinite}
+@keyframes qzp{50%{opacity:.6}}
+.qz-bar{height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:18px}
+.qz-bar>div{height:100%;background:var(--accent);width:0;transition:width .2s}
+.qz-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px;box-shadow:var(--shadow-sm)}
+.qz-qn{font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.qz-qt{font-size:17px;font-weight:600;margin-bottom:14px;line-height:1.5}
+.qz-opts{display:flex;flex-direction:column;gap:9px}
+.qz-opt{display:flex;gap:12px;align-items:center;padding:11px 14px;border:1px solid var(--line);border-radius:9px;background:#fff;cursor:pointer;font-size:14.5px}
+.qz-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.qz-opt.sel{border-color:var(--accent);background:var(--yellow-soft);font-weight:600}
+.qz-opt .k{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0}
+.qz-jump{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0}
+.qz-jump span{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:12px;border:1px solid var(--line-strong);cursor:pointer;background:var(--bg-soft)}
+.qz-jump span.ans{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.qz-jump span.cur{outline:2px solid var(--accent)}
+.qz-nav{display:flex;justify-content:space-between;gap:10px;margin-top:20px}
+.qz-nav .r{display:flex;gap:8px}
+.qz-valid{display:none;background:var(--red-soft);color:var(--red);border:1px solid #f5c2c2;border-radius:8px;padding:10px 14px;font-size:13.5px;font-weight:700;margin-top:14px;text-align:center}
+.qz-valid.show{display:block}
+.qz-modal{position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;padding:20px}
+.qz-modal .bd{position:absolute;inset:0;background:rgba(11,21,38,.72)}
+.qz-modal .bx{position:relative;background:#fff;border-radius:14px;padding:30px 26px;max-width:420px;width:100%;text-align:center;box-shadow:var(--shadow-md)}
+.qz-modal h3{margin:8px 0 10px;font-size:17px;line-height:1.4}
+.qz-modal p{margin:0 0 14px;color:var(--ink-soft);font-size:14px}
+.qz-modal .cnt{font-size:13px;font-weight:700;color:var(--ink-soft);margin-bottom:16px}
+.qz-score{font-size:44px;font-weight:800;text-align:center;margin:10px 0 2px}
+.qz-rev{width:100%;border-collapse:collapse;margin-top:12px;font-size:13.5px}
+.qz-rev th,.qz-rev td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.qz-rev th{font-size:12px;color:var(--ink-soft)}
+.qz-tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11.5px;font-weight:700}
+.qz-tag.c{background:var(--green-soft);color:var(--green)}
+.qz-tag.w{background:var(--red-soft);color:var(--red)}
+.qz-tag.s{background:var(--yellow-soft);color:#7a5c00}
+.qz-exp{font-size:12.5px;color:var(--ink-soft);margin-top:4px}
+body.qz-nosel, body.qz-nosel *{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+
+/* ===== Nav sync: matches dpm_portfolio_strategy.html (navbar, tab pills, scrollbars) ===== */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+.header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:600;font-size:18px;letter-spacing:-.01em}
+.brand-mark{width:32px;height:32px;display:grid;place-items:center;border-radius:8px;color:#fff;font-weight:700;font-size:14px;box-shadow:var(--shadow-sm)}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500;color:var(--ink-soft)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer;transition:all .15s ease;font-family:inherit}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+.tabbar{display:flex;padding:0 24px !important;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--line)}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{position:relative;padding:11px 16px;background:transparent;border:none;border-bottom:2px solid transparent;font-family:inherit;font-size:13.5px;font-weight:500;color:var(--ink-soft);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .15s ease,border-color .15s ease}
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:0}
+@media (max-width:960px){.layout{grid-template-columns:1fr}.toc{display:none}}
+.toc{position:sticky;top:118px;align-self:start;height:calc(100vh - 130px);overflow-y:auto;padding:32px 16px 32px 32px;border-right:1px solid var(--line);scrollbar-width:auto;scrollbar-color:auto}
+.toc-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);font-weight:600;margin-bottom:12px;padding-left:8px}
+.toc-list a{display:block;padding:5px 10px;font-size:13px;color:var(--ink-soft);text-decoration:none;border-radius:4px;border-left:2px solid transparent;line-height:1.4;transition:all .15s ease}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{color:#fff;background:#16233f;border-left-color:transparent;font-weight:600;border-radius:12px;padding:10px 14px}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{background:#14213D !important;color:#fff !important;border-radius:8px !important;border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+:focus-visible{outline:2px solid #FCA311;outline-offset:2px}
+</style>
+<style id="cb-assess-intro-css">
+.cb-assess-intro{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg,12px);padding:28px 30px;box-shadow:var(--shadow-sm,0 1px 3px rgba(0,0,0,.06));margin-top:18px}
+.cb-assess-intro h3{margin:0 0 8px;font-size:20px;font-weight:600}
+.cb-assess-intro p{margin:6px 0;color:var(--ink-soft);font-size:14px}
+.cb-assess-intro ul{margin:12px 0 18px 18px;color:var(--ink-soft);font-size:13.5px;line-height:1.8}
+.cb-start{border:0;background:var(--accent,#14213d);color:#fff;border-radius:9px;padding:12px 20px;font:700 14px 'Noto Sans',system-ui,sans-serif;cursor:pointer}
+.cb-start:hover{opacity:.9}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-top">
+    <div class="brand">
+      <div class="brand-mark">CI</div>
+      <span>CI/CD Automation<span class="brand-sub"> · DevOps Infrastructure course</span></span>
+    </div>
+    <div class="header-actions">
+      <span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 8</span></span>
+      <button class="btn" onclick="resetProgress()" title="Reset course progress" type="button">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9"/><path d="M2 4v3.5h3.5"/></svg>
+        Reset
+      </button>
+    </div>
+  </div>
+  <nav class="tabbar" role="tablist" id="tabbar">
+    <button type="button" class="tab active" data-tab="t1">Fundamentals</button>
+    <button type="button" class="tab" data-tab="t2">Types &amp; Methods</button>
+    <button type="button" class="tab" data-tab="t3">Jenkins</button>
+    <button type="button" class="tab" data-tab="t4">GitLab CI</button>
+    <button type="button" class="tab" data-tab="t5">GitHub Actions</button>
+    <button type="button" class="tab" data-tab="t6">ArgoCD &amp; GitOps</button>
+    <button type="button" class="tab" data-tab="t7">Expert Practices</button>
+    <button type="button" class="tab" data-tab="t8">Assessment</button>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="toc">
+    <div class="toc-title">On this page</div>
+    <ul class="toc-list" id="toc"></ul>
+  </aside>
+
+  <main class="main">
+
+<!-- ================= TAB 1 ================= -->
+<section class="panel active" id="t1" data-toc='[
+  ["s1-1","What is CI/CD?"],
+  ["s1-2","Why it exists"],
+  ["s1-3","CI vs Delivery vs Deployment"],
+  ["s1-4","Anatomy of a pipeline"],
+  ["s1-5","Key vocabulary"],
+  ["s1-6","Measuring success (DORA)"]
+]'>
+  <div class="panel-header">
+    <div class="level-row"><span class="level-tag basic">Basic</span></div>
+    <p class="panel-eyebrow">Module 01 · Foundations</p>
+    <h1 class="panel-title">CI/CD Fundamentals</h1>
+    <p class="panel-subtitle">Before touching Jenkins, GitLab, GitHub Actions or ArgoCD, understand the idea they all implement: turning "code pushed to Git" into "software running safely in production" with no manual steps in between.</p>
+  </div>
+
+  <div class="section" id="s1-1">
+    <h2><span class="sec-emoji">🔁</span> What is CI/CD?</h2>
+    <p><strong>CI/CD</strong> stands for <strong>Continuous Integration</strong> and <strong>Continuous Delivery / Continuous Deployment</strong>. It is a set of practices — plus the automation that enforces them — that moves every code change through <em>build → test → release → deploy</em> automatically and repeatedly.</p>
+    <div class="callout tip">
+      <div class="callout-icon">🏭</div>
+      <div class="callout-body"><strong>Analogy:</strong> think of a car factory assembly line. Without one, each car is hand-built by a person who may forget a bolt. With an assembly line, every car passes the same stations (weld, paint, inspect, test-drive) in the same order, and a defect is caught at the station where it occurs, not by the customer. A CI/CD pipeline is the assembly line for software.</div>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="card-icon" style="background:var(--accent-soft)">🔗</div><div class="card-title">Continuous Integration</div><div class="card-desc">Developers merge small changes to a shared branch many times a day; each merge is automatically built and tested.</div></div>
+      <div class="card"><div class="card-icon" style="background:var(--green-soft)">📦</div><div class="card-title">Continuous Delivery</div><div class="card-desc">Every passing change is packaged and kept <em>ready</em> to release at the push of a button.</div></div>
+      <div class="card"><div class="card-icon" style="background:var(--orange-soft)">🚀</div><div class="card-title">Continuous Deployment</div><div class="card-desc">Every passing change is released to production <em>automatically</em>, with no human approval.</div></div>
+    </div>
+  </div>
+
+  <div class="section" id="s1-2">
+    <h2><span class="sec-emoji">😰</span> Why it exists</h2>
+    <p>Before CI/CD, teams worked in long-lived branches and released every few months. Merging was painful ("integration hell"), testing was manual, and deployments were scary weekend events.</p>
+    <div class="compare">
+      <div class="compare-col" style="background:var(--red-soft);border-color:#f5b8b0">
+        <h4>❌ Without CI/CD</h4>
+        <p>• Big-bang merges, frequent conflicts</p>
+        <p>• "Works on my machine" bugs</p>
+        <p>• Manual, error-prone releases</p>
+        <p>• Releases every weeks or months</p>
+        <p>• Fear of deploying; slow rollback</p>
+      </div>
+      <div class="compare-col" style="background:var(--green-soft);border-color:#bdd9d2">
+        <h4>✅ With CI/CD</h4>
+        <p>• Small changes merged daily</p>
+        <p>• Same automated build every time</p>
+        <p>• Tests gate every change</p>
+        <p>• Releases many times a day if needed</p>
+        <p>• Boring, repeatable, reversible deploys</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" id="s1-3">
+    <h2><span class="sec-emoji">⚖️</span> CI vs Continuous Delivery vs Continuous Deployment</h2>
+    <p>The three terms are often blurred together. They are really three increasing levels of automation:</p>
+    <div class="diagram">
+      <svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs>
+        <g font-family="Noto Sans" font-size="13" font-weight="600">
+          <rect x="20" y="40" width="110" height="46" rx="8" fill="#dceaf7" stroke="#2383e2"/><text x="75" y="68" text-anchor="middle" fill="#1d4f9f">Commit</text>
+          <rect x="160" y="40" width="110" height="46" rx="8" fill="#dceaf7" stroke="#2383e2"/><text x="215" y="68" text-anchor="middle" fill="#1d4f9f">Build</text>
+          <rect x="300" y="40" width="110" height="46" rx="8" fill="#dceaf7" stroke="#2383e2"/><text x="355" y="68" text-anchor="middle" fill="#1d4f9f">Test</text>
+          <rect x="440" y="40" width="130" height="46" rx="8" fill="#ddedea" stroke="#0f7b0f"/><text x="505" y="68" text-anchor="middle" fill="#0a5f0a">Release artifact</text>
+          <rect x="600" y="40" width="140" height="46" rx="8" fill="#fadec9" stroke="#d9730d"/><text x="670" y="68" text-anchor="middle" fill="#a85a08">Production</text>
+        </g>
+        <g stroke="#37352f" stroke-width="2" marker-end="url(#a1)"><line x1="132" y1="63" x2="158" y2="63"/><line x1="272" y1="63" x2="298" y2="63"/><line x1="412" y1="63" x2="438" y2="63"/><line x1="572" y1="63" x2="598" y2="63"/></g>
+        <!-- brackets -->
+        <g font-family="Noto Sans" font-size="12" font-weight="700">
+          <line x1="20" y1="110" x2="410" y2="110" stroke="#2383e2" stroke-width="3"/><text x="215" y="130" text-anchor="middle" fill="#1d4f9f">CONTINUOUS INTEGRATION</text>
+          <line x1="20" y1="150" x2="570" y2="150" stroke="#0f7b0f" stroke-width="3"/><text x="295" y="170" text-anchor="middle" fill="#0a5f0a">CONTINUOUS DELIVERY  (manual approval → production)</text>
+          <line x1="20" y1="190" x2="740" y2="190" stroke="#d9730d" stroke-width="3"/><text x="380" y="210" text-anchor="middle" fill="#a85a08">CONTINUOUS DEPLOYMENT  (fully automatic, no approval)</text>
+        </g>
+      </svg>
+      <div class="diagram-caption">Figure 1.1 · How far the automation extends</div>
+    </div>
+    <table>
+      <thead><tr><th>Practice</th><th>Automates up to</th><th>Human step?</th><th>Typical user</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Continuous Integration</strong></td><td>Build + automated tests</td><td>Review &amp; merge</td><td>Every team</td></tr>
+        <tr><td><strong>Continuous Delivery</strong></td><td>Release-ready artifact, deployed to staging</td><td>Approval click for production</td><td>Regulated industries, banks, enterprise</td></tr>
+        <tr><td><strong>Continuous Deployment</strong></td><td>Production release</td><td>None — tests are the gatekeeper</td><td>SaaS, web products with strong test coverage</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section" id="s1-4">
+    <h2><span class="sec-emoji">🧬</span> Anatomy of a pipeline</h2>
+    <p>A <strong>pipeline</strong> is an automated workflow made of ordered <strong>stages</strong>, each containing one or more <strong>jobs</strong>. If any stage fails, the pipeline stops and the team is told immediately.</p>
+    <div class="flow">
+      <span class="st">1 · Source</span><span class="ar">→</span><span class="st">2 · Build</span><span class="ar">→</span><span class="st">3 · Test</span><span class="ar">→</span><span class="st">4 · Scan</span><span class="ar">→</span><span class="st">5 · Package</span><span class="ar">→</span><span class="st">6 · Deploy</span><span class="ar">→</span><span class="st">7 · Verify</span>
+    </div>
+    <table>
+      <thead><tr><th>Stage</th><th>What happens</th><th>Example tools</th></tr></thead>
+      <tbody>
+        <tr><td>Source</td><td>A push, pull request or tag triggers the pipeline</td><td>Git, GitHub, GitLab webhooks</td></tr>
+        <tr><td>Build</td><td>Compile code, resolve dependencies</td><td>Maven, Gradle, npm, pip, Go</td></tr>
+        <tr><td>Test</td><td>Unit, integration, end-to-end tests</td><td>JUnit, pytest, Jest, Cypress</td></tr>
+        <tr><td>Scan</td><td>Static analysis, dependency &amp; secret scanning</td><td>SonarQube, Trivy, Snyk, Gitleaks</td></tr>
+        <tr><td>Package</td><td>Create an immutable artifact or container image</td><td>Docker, Helm, JAR, Nexus, ECR</td></tr>
+        <tr><td>Deploy</td><td>Roll the artifact to an environment</td><td>kubectl, Helm, Terraform, ArgoCD</td></tr>
+        <tr><td>Verify</td><td>Smoke tests, monitoring, auto-rollback</td><td>Prometheus, Grafana, k6</td></tr>
+      </tbody>
+    </table>
+    <div class="callout note">
+      <div class="callout-icon">📌</div>
+      <div class="callout-body"><strong>Golden rule — build once, deploy many.</strong> The same artifact (e.g. one Docker image tagged with the commit SHA) should travel through dev → staging → prod. Never rebuild per environment, or you are no longer testing what you ship.</div>
+    </div>
+  </div>
+
+  <div class="section" id="s1-5">
+    <h2><span class="sec-emoji">📖</span> Key vocabulary</h2>
+    <table>
+      <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Pipeline</strong></td><td>The full automated workflow from commit to deployment</td></tr>
+        <tr><td><strong>Stage / Job / Step</strong></td><td>Stage = phase; job = unit of work; step = single command inside a job</td></tr>
+        <tr><td><strong>Trigger</strong></td><td>Event that starts a pipeline: push, pull request, tag, schedule, manual, API</td></tr>
+        <tr><td><strong>Runner / Agent / Node</strong></td><td>The machine or container that actually executes jobs</td></tr>
+        <tr><td><strong>Artifact</strong></td><td>Output of a job: binary, image, test report — passed to later stages</td></tr>
+        <tr><td><strong>Pipeline as Code</strong></td><td>Pipeline definition stored in the repo (<code>Jenkinsfile</code>, <code>.gitlab-ci.yml</code>, workflow YAML)</td></tr>
+        <tr><td><strong>Environment</strong></td><td>Target such as dev, staging, production</td></tr>
+        <tr><td><strong>Quality gate</strong></td><td>A rule that must pass (coverage ≥ 80%, no critical CVEs) before proceeding</td></tr>
+        <tr><td><strong>Rollback</strong></td><td>Returning to the previous known-good version</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section" id="s1-6">
+    <h2><span class="sec-emoji">📊</span> Measuring success — the DORA metrics</h2>
+    <p>The industry standard for measuring delivery performance comes from the DORA research programme. Four numbers tell you whether your CI/CD is actually working:</p>
+    <div class="cards">
+      <div class="card"><div class="card-title">Deployment Frequency</div><div class="card-desc">How often you release to production. Elite teams: on demand, multiple per day.</div></div>
+      <div class="card"><div class="card-title">Lead Time for Changes</div><div class="card-desc">Time from commit to running in production.</div></div>
+      <div class="card"><div class="card-title">Change Failure Rate</div><div class="card-desc">Percentage of deployments causing an incident or rollback.</div></div>
+      <div class="card"><div class="card-title">Time to Restore</div><div class="card-desc">How fast you recover when something breaks.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TAB 2 ================= -->
+<section class="panel" id="t2" data-toc='[
+  ["s2-1","Types of CI/CD methods"],
+  ["s2-2","Push vs Pull (GitOps)"],
+  ["s2-3","Hosting models"],
+  ["s2-4","Pipeline definition styles"],
+  ["s2-5","Branching strategies"],
+  ["s2-6","Deployment strategies"],
+  ["s2-7","The four tools at a glance"]
+]'>
+  <div class="panel-header">
+    <div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">→ Intermediate</span></div>
+    <p class="panel-eyebrow">Module 02 · Landscape</p>
+    <h1 class="panel-title">Types &amp; Methods of CI/CD</h1>
+    <p class="panel-subtitle">CI/CD can be classified along several independent axes. Knowing these axes tells you <em>why</em> Jenkins, GitLab CI, GitHub Actions and ArgoCD feel so different even though they all "run pipelines".</p>
+  </div>
+
+  <div class="section" id="s2-1">
+    <h2><span class="sec-emoji">🗺️</span> Types of CI/CD methods</h2>
+    <p>There is no single "type" of CI/CD. Instead, every setup is a combination of choices on these five axes — each covered in the sections below:</p>
+    <table>
+      <thead><tr><th>Axis</th><th>Options</th></tr></thead>
+      <tbody>
+        <tr><td>1 · How code reaches the environment</td><td>Push-based (CI server pushes) · Pull-based / GitOps (cluster pulls)</td></tr>
+        <tr><td>2 · Where the tool runs</td><td>Self-hosted · SaaS/managed · Hybrid</td></tr>
+        <tr><td>3 · How pipelines are defined</td><td>UI-configured · Scripted code · Declarative YAML/DSL</td></tr>
+        <tr><td>4 · How code is branched &amp; merged</td><td>Trunk-based · GitHub Flow · GitFlow</td></tr>
+        <tr><td>5 · How releases roll out</td><td>Recreate · Rolling · Blue-green · Canary · Feature flags</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section" id="s2-2">
+    <h2><span class="sec-emoji">🔀</span> Push-based vs Pull-based (GitOps)</h2>
+    <div class="compare">
+      <div class="compare-col">
+        <h4>⬆️ Push-based CI/CD</h4>
+        <p>The CI server finishes the build and then <strong>pushes</strong> the change into the environment using credentials (<code>kubectl apply</code>, <code>ssh</code>, <code>helm upgrade</code>).</p>
+        <p><strong>Tools:</strong> Jenkins, GitLab CI, GitHub Actions</p>
+        <p><strong>Trade-off:</strong> simple and flexible, but the CI system holds powerful production credentials, and the cluster can drift from Git unnoticed.</p>
+      </div>
+      <div class="compare-col">
+        <h4>⬇️ Pull-based CI/CD (GitOps)</h4>
+        <p>An agent <strong>inside</strong> the cluster watches a Git repo and <strong>pulls</strong> changes, continuously reconciling live state to match Git.</p>
+        <p><strong>Tools:</strong> ArgoCD, Flux</p>
+        <p><strong>Trade-off:</strong> no outside credentials, automatic drift correction, full audit trail in Git — but mainly suited to declarative targets like Kubernetes.</p>
+      </div>
+    </div>
+    <div class="diagram">
+      <svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs>
+        <g font-family="Noto Sans" font-size="12" font-weight="600">
+          <text x="190" y="22" text-anchor="middle" font-size="14" font-weight="700">PUSH model</text>
+          <rect x="20" y="50" width="100" height="44" rx="8" fill="#dceaf7" stroke="#2383e2"/><text x="70" y="77" text-anchor="middle" fill="#1d4f9f">Git repo</text>
+          <rect x="150" y="50" width="100" height="44" rx="8" fill="#37352f"/><text x="200" y="77" text-anchor="middle" fill="#ffd43b">CI server</text>
+          <rect x="280" y="50" width="100" height="44" rx="8" fill="#ddedea" stroke="#0f7b0f"/><text x="330" y="77" text-anchor="middle" fill="#0a5f0a">Cluster</text>
+          <line x1="122" y1="72" x2="148" y2="72" stroke="#37352f" stroke-width="2" marker-end="url(#a2)"/>
+          <line x1="252" y1="72" x2="278" y2="72" stroke="#e03e3e" stroke-width="2.5" marker-end="url(#a2)"/>
+          <text x="265" y="115" text-anchor="middle" fill="#e03e3e" font-size="11">CI holds prod credentials</text>
+          <text x="570" y="22" text-anchor="middle" font-size="14" font-weight="700">PULL model (GitOps)</text>
+          <rect x="420" y="50" width="100" height="44" rx="8" fill="#dceaf7" stroke="#2383e2"/><text x="470" y="77" text-anchor="middle" fill="#1d4f9f">Git repo</text>
+          <rect x="560" y="50" width="180" height="120" rx="10" fill="#ddedea" stroke="#0f7b0f"/><text x="650" y="72" text-anchor="middle" fill="#0a5f0a">Cluster</text>
+          <rect x="580" y="90" width="140" height="36" rx="8" fill="#37352f"/><text x="650" y="113" text-anchor="middle" fill="#ffd43b">ArgoCD agent</text>
+          <line x1="580" y1="108" x2="524" y2="80" stroke="#0f7b0f" stroke-width="2.5" marker-end="url(#a2)"/>
+          <text x="545" y="150" text-anchor="middle" fill="#0a5f0a" font-size="11">agent pulls &amp; reconciles</text>
+        </g>
+        <text x="380" y="230" text-anchor="middle" font-family="Noto Sans" font-size="12" font-style="italic" fill="#787774">Push: pipeline reaches in. Pull: cluster reaches out.</text>
+      </svg>
+      <div class="diagram-caption">Figure 2.1 · Direction of the deployment arrow</div>
+    </div>
+  </div>
+
+  <div class="section" id="s2-3">
+    <h2><span class="sec-emoji">🏠</span> Hosting models</h2>
+    <table>
+      <thead><tr><th>Model</th><th>Description</th><th>Examples</th><th>Best for</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Self-hosted</strong></td><td>You install, patch and scale the server and agents yourself</td><td>Jenkins, self-managed GitLab, ArgoCD</td><td>Full control, air-gapped or compliance-heavy environments</td></tr>
+        <tr><td><strong>SaaS / managed</strong></td><td>Vendor runs the control plane and hosted runners</td><td>GitHub Actions, GitLab.com</td><td>Fast start, low ops effort</td></tr>
+        <tr><td><strong>Hybrid</strong></td><td>SaaS control plane + your own runners in your network</td><td>GitHub self-hosted runners, GitLab runners</td><td>Cloud convenience with private network access</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section" id="s2-4">
+    <h2><span class="sec-emoji">📝</span> Pipeline definition styles</h2>
+    <div class="cards">
+      <div class="card"><div class="card-icon" style="background:var(--red-soft)">🖱️</div><div class="card-title">UI-configured</div><div class="card-desc">Click through a web form (Jenkins Freestyle). Fast to try, impossible to review or version. Avoid for real projects.</div></div>
+      <div class="card"><div class="card-icon" style="background:var(--orange-soft)">🧑‍💻</div><div class="card-title">Scripted (imperative)</div><div class="card-desc">Full programming language (Jenkins Scripted, Groovy). Maximum power, maximum complexity.</div></div>
+      <div class="card"><div class="card-icon" style="background:var(--green-soft)">📄</div><div class="card-title">Declarative (as code)</div><div class="card-desc">Structured YAML/DSL describing <em>what</em> you want (Jenkins Declarative, GitLab CI, GitHub Actions). The modern default.</div></div>
+    </div>
+    <div class="callout success">
+      <div class="callout-icon">✅</div>
+      <div class="callout-body"><strong>Pipeline as Code</strong> means the pipeline lives in the same repo as the app: it is versioned, code-reviewed, branch-aware and recoverable. Every tool in this course supports it.</div>
+    </div>
+  </div>
+
+  <div class="section" id="s2-5">
+    <h2><span class="sec-emoji">🌿</span> Branching strategies</h2>
+    <table>
+      <thead><tr><th>Strategy</th><th>How it works</th><th>CI/CD fit</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Trunk-based</strong></td><td>Everyone merges small changes to <code>main</code> daily; short-lived branches; feature flags hide unfinished work</td><td>Best for continuous deployment</td></tr>
+        <tr><td><strong>GitHub Flow</strong></td><td>Branch from <code>main</code> → pull request → CI checks → merge → deploy</td><td>Very common, simple, great for web apps</td></tr>
+        <tr><td><strong>GitFlow</strong></td><td>Long-lived <code>develop</code>, <code>release/*</code>, <code>hotfix/*</code> branches</td><td>Suits scheduled, versioned releases; slower feedback</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section" id="s2-6">
+    <h2><span class="sec-emoji">🚦</span> Deployment strategies</h2>
+    <p>This is the "CD" side: <em>how</em> do you swap the old version for the new one? Each strategy trades speed, cost and risk differently.</p>
+    <table>
+      <thead><tr><th>Strategy</th><th>How it works</th><th>Pros</th><th>Cons</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Recreate</strong></td><td>Stop old, start new</td><td>Simplest</td><td>Downtime</td></tr>
+        <tr><td><strong>Rolling</strong></td><td>Replace instances gradually, a few at a time</td><td>No downtime, cheap</td><td>Two versions live briefly; slower rollback</td></tr>
+        <tr><td><strong>Blue-Green</strong></td><td>Run full new stack (green) beside old (blue); flip traffic at once</td><td>Instant switch &amp; rollback</td><td>Doubles infrastructure cost</td></tr>
+        <tr><td><strong>Canary</strong></td><td>Send 1% → 10% → 50% → 100% of traffic to new version while watching metrics</td><td>Lowest blast radius</td><td>Needs good metrics &amp; traffic routing</td></tr>
+        <tr><td><strong>Feature flags</strong></td><td>Ship code dark; turn features on per user/percentage at runtime</td><td>Decouples deploy from release</td><td>Flag debt must be cleaned up</td></tr>
+      </tbody>
+    </table>
+    <div class="diagram">
+      <svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs>
+        <g font-family="Noto Sans" font-size="12" font-weight="600">
+          <text x="190" y="22" text-anchor="middle" font-size="14" font-weight="700">Blue-Green</text>
+          <rect x="20" y="80" width="80" height="40" rx="8" fill="#37352f"/><text x="60" y="105" text-anchor="middle" fill="#fff">Router</text>
+          <rect x="170" y="40" width="130" height="50" rx="8" fill="#dceaf7" stroke="#2383e2"/><text x="235" y="63" text-anchor="middle" fill="#1d4f9f">BLUE v1</text><text x="235" y="80" text-anchor="middle" fill="#1d4f9f" font-size="10">live today</text>
+          <rect x="170" y="120" width="130" height="50" rx="8" fill="#ddedea" stroke="#0f7b0f"/><text x="235" y="143" text-anchor="middle" fill="#0a5f0a">GREEN v2</text><text x="235" y="160" text-anchor="middle" fill="#0a5f0a" font-size="10">tested, idle</text>
+          <line x1="102" y1="95" x2="168" y2="68" stroke="#37352f" stroke-width="2" marker-end="url(#a3)"/>
+          <line x1="102" y1="108" x2="168" y2="140" stroke="#0f7b0f" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#a3)"/>
+          <text x="190" y="195" text-anchor="middle" fill="#787774" font-size="11" font-weight="500">flip router → instant cut-over</text>
+          <text x="570" y="22" text-anchor="middle" font-size="14" font-weight="700">Canary</text>
+          <rect x="420" y="80" width="80" height="40" rx="8" fill="#37352f"/><text x="460" y="105" text-anchor="middle" fill="#fff">Router</text>
+          <rect x="570" y="40" width="150" height="50" rx="8" fill="#dceaf7" stroke="#2383e2"/><text x="645" y="63" text-anchor="middle" fill="#1d4f9f">Stable v1</text><text x="645" y="80" text-anchor="middle" fill="#1d4f9f" font-size="10">90% traffic</text>
+          <rect x="570" y="120" width="150" height="50" rx="8" fill="#fadec9" stroke="#d9730d"/><text x="645" y="143" text-anchor="middle" fill="#a85a08">Canary v2</text><text x="645" y="160" text-anchor="middle" fill="#a85a08" font-size="10">10% traffic · watch metrics</text>
+          <line x1="502" y1="95" x2="568" y2="68" stroke="#37352f" stroke-width="3" marker-end="url(#a3)"/>
+          <line x1="502" y1="108" x2="568" y2="140" stroke="#d9730d" stroke-width="1.5" marker-end="url(#a3)"/>
+          <text x="570" y="195" text-anchor="middle" fill="#787774" font-size="11" font-weight="500">grow 10% → 50% → 100% if healthy</text>
+        </g>
+      </svg>
+      <div class="diagram-caption">Figure 2.2 · Two common zero-downtime strategies</div>
+    </div>
+  </div>
+
+  <div class="section" id="s2-7">
+    <h2><span class="sec-emoji">🧭</span> The four tools at a glance</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th></th><th>Jenkins</th><th>GitLab CI</th><th>GitHub Actions</th><th>ArgoCD</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Primary role</strong></td><td>General automation server</td><td>CI/CD built into GitLab</td><td>CI/CD built into GitHub</td><td>GitOps continuous <em>delivery</em></td></tr>
+        <tr><td><strong>Model</strong></td><td>Push</td><td>Push</td><td>Push</td><td>Pull</td></tr>
+        <tr><td><strong>Hosting</strong></td><td>Self-hosted</td><td>SaaS or self-managed</td><td>SaaS (+ self-hosted runners)</td><td>Self-hosted in cluster</td></tr>
+        <tr><td><strong>Config file</strong></td><td><code>Jenkinsfile</code> (Groovy)</td><td><code>.gitlab-ci.yml</code></td><td><code>.github/workflows/*.yml</code></td><td>Kubernetes <code>Application</code> YAML</td></tr>
+        <tr><td><strong>Extensibility</strong></td><td>1,800+ plugins</td><td>Templates, components</td><td>Marketplace actions</td><td>Helm, Kustomize, plugins</td></tr>
+        <tr><td><strong>Strength</strong></td><td>Ultimate flexibility</td><td>All-in-one DevSecOps platform</td><td>Tight GitHub integration</td><td>Drift detection, audit, rollback</td></tr>
+      </tbody>
+    </table></div>
+    <div class="callout tip">
+      <div class="callout-icon">💡</div>
+      <div class="callout-body"><strong>They are not mutually exclusive.</strong> A very common modern setup is: <strong>GitHub Actions / GitLab CI / Jenkins</strong> for the <em>CI</em> half (build, test, push image) and <strong>ArgoCD</strong> for the <em>CD</em> half (deploy to Kubernetes). You'll build exactly this in Module 06.</div>
+    </div>
+  </div>
+</section>
+<!-- ================= TAB 3: JENKINS ================= -->
+<section class="panel" id="t3" data-toc='[
+  ["s3-1","What is Jenkins?"],
+  ["s3-2","Architecture"],
+  ["s3-3","Install &amp; first job"],
+  ["s3-4","Declarative Jenkinsfile"],
+  ["s3-5","Env, credentials &amp; parameters"],
+  ["s3-6","Triggers &amp; webhooks"],
+  ["s3-7","Parallel, when &amp; docker agents"],
+  ["s3-8","Shared libraries"],
+  ["s3-9","Scripted pipelines"],
+  ["s3-10","Kubernetes agents"],
+  ["s3-11","JCasC &amp; scaling"],
+  ["s3-12","Security &amp; pitfalls"]
+]'>
+  <div class="panel-header">
+    <div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div>
+    <p class="panel-eyebrow">Module 03 · Jenkins</p>
+    <h1 class="panel-title">Jenkins — the Automation Server</h1>
+    <p class="panel-subtitle">The oldest and most flexible CI/CD tool. Self-hosted, plugin-driven and able to automate almost anything. This module goes from your first job to production-grade, Kubernetes-scaled pipelines.</p>
+  </div>
+
+  <div class="section" id="s3-1">
+    <h2><span class="sec-emoji">🤵</span> What is Jenkins? <span class="lvl b">Basic</span></h2>
+    <p><strong>Jenkins</strong> is an open-source automation server written in Java. It watches your repositories, runs build/test/deploy jobs on worker machines, and reports the result. Its power comes from <strong>1,800+ plugins</strong> (Git, Docker, Kubernetes, Slack, SonarQube, cloud providers…).</p>
+    <div class="callout tip">
+      <div class="callout-icon">🧑‍🍳</div>
+      <div class="callout-body"><strong>Analogy:</strong> Jenkins is a head chef (controller) who reads the order ticket (<code>Jenkinsfile</code>) and hands tasks to line cooks (agents). The chef doesn't cook everything personally — they coordinate, so many orders can be prepared at once.</div>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="card-title">👍 Strengths</div><div class="card-desc">Total flexibility, huge plugin ecosystem, runs anywhere (on-prem, air-gapped), free.</div></div>
+      <div class="card"><div class="card-title">👎 Weaknesses</div><div class="card-desc">You operate it: upgrades, plugin compatibility, security, scaling. Groovy has a learning curve.</div></div>
+    </div>
+  </div>
+
+  <div class="section" id="s3-2">
+    <h2><span class="sec-emoji">🏗️</span> Architecture <span class="lvl b">Basic</span></h2>
+    <div class="diagram">
+      <svg viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="j1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs>
+        <g font-family="Noto Sans" font-size="12" font-weight="600">
+          <rect x="20" y="105" width="110" height="50" rx="8" fill="#dceaf7" stroke="#2383e2"/><text x="75" y="128" text-anchor="middle" fill="#1d4f9f">Git repo</text><text x="75" y="144" text-anchor="middle" fill="#1d4f9f" font-size="10">webhook</text>
+          <rect x="190" y="70" width="190" height="120" rx="12" fill="#37352f"/>
+          <text x="285" y="97" text-anchor="middle" fill="#ffd43b" font-size="14">CONTROLLER</text>
+          <text x="285" y="120" text-anchor="middle" fill="#e6e6e3" font-size="11" font-weight="500">UI · scheduling · plugins</text>
+          <text x="285" y="138" text-anchor="middle" fill="#e6e6e3" font-size="11" font-weight="500">job config · credentials</text>
+          <text x="285" y="156" text-anchor="middle" fill="#e6e6e3" font-size="11" font-weight="500">build history</text>
+          <rect x="470" y="30" width="130" height="46" rx="8" fill="#ddedea" stroke="#0f7b0f"/><text x="535" y="52" text-anchor="middle" fill="#0a5f0a">Agent: Linux</text><text x="535" y="67" text-anchor="middle" fill="#0a5f0a" font-size="10">maven · node</text>
+          <rect x="470" y="105" width="130" height="46" rx="8" fill="#ddedea" stroke="#0f7b0f"/><text x="535" y="127" text-anchor="middle" fill="#0a5f0a">Agent: Windows</text><text x="535" y="142" text-anchor="middle" fill="#0a5f0a" font-size="10">.NET builds</text>
+          <rect x="470" y="180" width="130" height="46" rx="8" fill="#fdecc8" stroke="#dfab01"/><text x="535" y="202" text-anchor="middle" fill="#a07a00">K8s pod agent</text><text x="535" y="217" text-anchor="middle" fill="#a07a00" font-size="10">ephemeral</text>
+          <rect x="640" y="105" width="100" height="46" rx="8" fill="#fadec9" stroke="#d9730d"/><text x="690" y="132" text-anchor="middle" fill="#a85a08">Deploy target</text>
+          <g stroke="#37352f" stroke-width="2" marker-end="url(#j1)"><line x1="132" y1="130" x2="188" y2="130"/><line x1="382" y1="110" x2="468" y2="55"/><line x1="382" y1="130" x2="468" y2="128"/><line x1="382" y1="150" x2="468" y2="203"/><line x1="602" y1="128" x2="638" y2="128"/></g>
+        </g>
+        <text x="380" y="256" text-anchor="middle" font-family="Noto Sans" font-size="12" font-style="italic" fill="#787774">Controller schedules; agents execute. Keep builds OFF the controller.</text>
+      </svg>
+      <div class="diagram-caption">Figure 3.1 · Jenkins controller–agent architecture</div>
+    </div>
+    <ul>
+      <li><strong>Controller</strong> — the brain: web UI, job scheduling, plugin host, stores config and history.</li>
+      <li><strong>Agent</strong> — a machine/VM/container that runs the steps. Connected via SSH or JNLP/WebSocket.</li>
+      <li><strong>Executor</strong> — one build slot on an agent. An agent with 4 executors runs 4 jobs at once.</li>
+      <li><strong>Workspace</strong> — the checked-out working directory for a build on an agent.</li>
+    </ul>
+  </div>
+
+  <div class="section" id="s3-3">
+    <h2><span class="sec-emoji">⚙️</span> Install &amp; first job <span class="lvl b">Basic</span></h2>
+    <p>The fastest way to try Jenkins is Docker (requires Docker installed):</p>
+<pre><span class="pre-lang">bash</span><code>docker run -d --name jenkins \
+  -p 8080:8080 -p 50000:50000 \
+  -v jenkins_home:/var/jenkins_home \
+  jenkins/jenkins:lts
+
+# get the first-login admin password
+docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword</code></pre>
+    <ol>
+      <li>Open <code>http://localhost:8080</code>, paste the password, choose <strong>Install suggested plugins</strong>.</li>
+      <li>Create an admin user.</li>
+      <li><strong>New Item → Freestyle project</strong>, add a Git repo URL and an <em>Execute shell</em> build step such as <code>echo "Hello CI"</code>. Click <strong>Build Now</strong>.</li>
+    </ol>
+    <div class="callout warn">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body">Freestyle jobs are configured through the UI, so they can't be code-reviewed or versioned. Use them only to learn; real work uses a <strong>Jenkinsfile</strong> (next section).</div>
+    </div>
+  </div>
+
+  <div class="section" id="s3-4">
+    <h2><span class="sec-emoji">📄</span> Declarative Jenkinsfile <span class="lvl b">Basic</span></h2>
+    <p>A <code>Jenkinsfile</code> in the repo root defines the pipeline. The <strong>Declarative</strong> syntax is the recommended starting point — it is structured and validated.</p>
+<pre><span class="pre-lang">Jenkinsfile</span><code>pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps { checkout scm }
+        }
+        stage('Build') {
+            steps { sh 'npm ci &amp;&amp; npm run build' }
+        }
+        stage('Test') {
+            steps { sh 'npm test' }
+            post {
+                always { junit 'reports/junit.xml' }   <span class="c">// publish test results</span>
+            }
+        }
+        stage('Package') {
+            steps { sh 'docker build -t myapp:${GIT_COMMIT} .' }
+        }
+    }
+
+    post {
+        success { echo 'Pipeline succeeded 🎉' }
+        failure { echo 'Pipeline failed ❌' }
+    }
+}</code></pre>
+    <table>
+      <thead><tr><th>Block</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>pipeline</code></td><td>Required top-level wrapper</td></tr>
+        <tr><td><code>agent</code></td><td>Where to run (<code>any</code>, a label, a Docker image, a K8s pod)</td></tr>
+        <tr><td><code>stages / stage / steps</code></td><td>Phases and the commands inside them</td></tr>
+        <tr><td><code>post</code></td><td>Actions after completion: <code>always</code>, <code>success</code>, <code>failure</code>, <code>unstable</code>, <code>cleanup</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section" id="s3-5">
+    <h2><span class="sec-emoji">🔑</span> Environment, credentials &amp; parameters <span class="lvl i">Intermediate</span></h2>
+<pre><span class="pre-lang">Jenkinsfile</span><code>pipeline {
+    agent any
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+        disableConcurrentBuilds()
+    }
+    parameters {
+        choice(name: 'ENV', choices: ['dev', 'staging', 'prod'], description: 'Target')
+        booleanParam(name: 'RUN_E2E', defaultValue: false)
+    }
+    environment {
+        REGISTRY = 'registry.example.com/team'
+        IMAGE    = "${REGISTRY}/myapp:${env.BUILD_NUMBER}"
+        <span class="c">// bound from Jenkins Credentials store — never hard-code secrets</span>
+        DOCKER_CREDS = credentials('dockerhub-creds')
+    }
+    stages {
+        stage('Push image') {
+            steps {
+                sh 'echo $DOCKER_CREDS_PSW | docker login -u $DOCKER_CREDS_USR --password-stdin'
+                sh 'docker build -t $IMAGE . &amp;&amp; docker push $IMAGE'
+            }
+        }
+        stage('Deploy') {
+            when { expression { params.ENV != 'prod' } }
+            steps { sh "helm upgrade --install myapp ./chart --set image.tag=${env.BUILD_NUMBER} -n ${params.ENV}" }
+        }
+        stage('Approve prod') {
+            when { expression { params.ENV == 'prod' } }
+            steps { input message: 'Deploy to production?', ok: 'Deploy' }
+        }
+    }
+}</code></pre>
+    <div class="callout note">
+      <div class="callout-icon">🔐</div>
+      <div class="callout-body"><code>credentials('id')</code> reads a secret from <em>Manage Jenkins → Credentials</em>. Jenkins automatically masks the value in console logs. The <code>input</code> step is how Jenkins implements the manual approval of <em>Continuous Delivery</em>.</div>
+    </div>
+  </div>
+
+  <div class="section" id="s3-6">
+    <h2><span class="sec-emoji">🔔</span> Triggers &amp; webhooks <span class="lvl i">Intermediate</span></h2>
+    <table>
+      <thead><tr><th>Trigger</th><th>Syntax</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Webhook (recommended)</td><td>GitHub/GitLab plugin; add webhook → <code>/github-webhook/</code></td><td>Instant, no polling load</td></tr>
+        <tr><td>Poll SCM</td><td><code>triggers { pollSCM('H/5 * * * *') }</code></td><td>Fallback when webhooks can't reach Jenkins</td></tr>
+        <tr><td>Cron</td><td><code>triggers { cron('H 2 * * *') }</code></td><td>Nightly builds; <code>H</code> spreads load</td></tr>
+        <tr><td>Upstream job</td><td><code>triggers { upstream(upstreamProjects: 'build-lib') }</code></td><td>Chain pipelines</td></tr>
+      </tbody>
+    </table>
+    <p>For repositories with many branches and pull requests use a <strong>Multibranch Pipeline</strong>: Jenkins scans the repo and automatically creates a pipeline for every branch/PR that contains a <code>Jenkinsfile</code>, and removes it when the branch is deleted.</p>
+  </div>
+
+  <div class="section" id="s3-7">
+    <h2><span class="sec-emoji">⚡</span> Parallel stages, <code>when</code> &amp; Docker agents <span class="lvl i">Intermediate</span></h2>
+<pre><span class="pre-lang">Jenkinsfile</span><code>pipeline {
+    agent none                       <span class="c">// each stage picks its own agent</span>
+    stages {
+        stage('Build') {
+            agent { docker { image 'maven:3.9-eclipse-temurin-21' } }   <span class="c">// clean, reproducible toolchain</span>
+            steps { sh 'mvn -B -DskipTests package' }
+        }
+        stage('Quality') {
+            parallel {                <span class="c">// run simultaneously, cut wall-clock time</span>
+                stage('Unit tests') {
+                    agent { docker { image 'maven:3.9-eclipse-temurin-21' } }
+                    steps { sh 'mvn -B test' }
+                }
+                stage('Lint') {
+                    agent { docker { image 'node:20' } }
+                    steps { sh 'npx eslint .' }
+                }
+                stage('SAST') {
+                    agent any
+                    steps { sh 'trivy fs --exit-code 1 --severity HIGH,CRITICAL .' }
+                }
+            }
+        }
+        stage('Deploy main only') {
+            when { branch 'main' }
+            agent any
+            steps { sh './deploy.sh' }
+        }
+    }
+}</code></pre>
+    <div class="callout tip">
+      <div class="callout-icon">💡</div>
+      <div class="callout-body"><strong>Why Docker agents?</strong> The build tools live in the image, so every build starts from the same clean environment — no more "the agent has the wrong Java version".</div>
+    </div>
+  </div>
+
+  <div class="section" id="s3-8">
+    <h2><span class="sec-emoji">📚</span> Shared libraries <span class="lvl e">Expert</span></h2>
+    <p>When 50 repos copy the same 80 lines of pipeline, one change means 50 pull requests. A <strong>Shared Library</strong> is a separate Git repo of reusable Groovy code that every Jenkinsfile can import.</p>
+<pre><span class="pre-lang">shared-lib repo: vars/standardPipeline.groovy</span><code>def call(Map cfg = [:]) {
+    pipeline {
+        agent any
+        stages {
+            stage('Build') { steps { sh cfg.buildCmd ?: 'make build' } }
+            stage('Test')  { steps { sh cfg.testCmd  ?: 'make test'  } }
+            stage('Image') {
+                steps { sh "docker build -t ${cfg.image}:${env.GIT_COMMIT} ." }
+            }
+        }
+    }
+}</code></pre>
+<pre><span class="pre-lang">application repo: Jenkinsfile</span><code>@Library('company-pipelines@v2') _      <span class="c">// pinned to a tag</span>
+
+standardPipeline(
+    image:    'registry.example.com/shop/api',
+    buildCmd: 'mvn -B package',
+    testCmd:  'mvn -B verify'
+)</code></pre>
+    <p>The application's Jenkinsfile shrinks to five lines, and a security fix to the template rolls out to every team by bumping one version tag. Register the library under <em>Manage Jenkins → System → Global Pipeline Libraries</em>.</p>
+  </div>
+
+  <div class="section" id="s3-9">
+    <h2><span class="sec-emoji">🧑‍💻</span> Scripted pipelines <span class="lvl e">Expert</span></h2>
+    <p>The older <strong>Scripted</strong> syntax is plain Groovy: loops, try/catch, functions. Use it when Declarative is too restrictive, e.g. generating stages dynamically.</p>
+<pre><span class="pre-lang">Jenkinsfile (scripted)</span><code>node('linux') {
+    def services = ['auth', 'orders', 'payments']
+    try {
+        stage('Checkout') { checkout scm }
+
+        <span class="c">// dynamic parallel stages built from a list</span>
+        def branches = [:]
+        services.each { svc -&gt;
+            branches[svc] = {
+                stage("Build ${svc}") { sh "make -C services/${svc} build" }
+            }
+        }
+        parallel branches
+
+        retry(3) { stage('Deploy') { sh './deploy.sh' } }
+    } catch (err) {
+        currentBuild.result = 'FAILURE'
+        slackSend color: 'danger', message: "Build failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+        throw err
+    } finally {
+        cleanWs()
+    }
+}</code></pre>
+    <div class="compare">
+      <div class="compare-col"><h4>Declarative</h4><p>Strict structure, easier to read and validate, built-in <code>post</code>, <code>when</code>, <code>options</code>. <strong>Prefer by default.</strong></p></div>
+      <div class="compare-col"><h4>Scripted</h4><p>Full Groovy freedom, but easy to write unmaintainable code. Use sparingly, or hide it inside a shared library.</p></div>
+    </div>
+  </div>
+
+  <div class="section" id="s3-10">
+    <h2><span class="sec-emoji">☸️</span> Kubernetes agents <span class="lvl e">Expert</span></h2>
+    <p>With the <strong>Kubernetes plugin</strong>, Jenkins creates a fresh pod per build and deletes it afterwards. You get elastic scaling, perfect isolation and no idle agents.</p>
+<pre><span class="pre-lang">Jenkinsfile</span><code>pipeline {
+    agent {
+        kubernetes {
+            yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: maven
+    image: maven:3.9-eclipse-temurin-21
+    command: ["sleep"]
+    args: ["infinity"]
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    command: ["sleep"]
+    args: ["infinity"]
+'''
+        }
+    }
+    stages {
+        stage('Build') { steps { container('maven')  { sh 'mvn -B package' } } }
+        stage('Image') { steps { container('kaniko') { sh '/kaniko/executor --context . --destination registry/app:${BUILD_NUMBER}' } } }
+    }
+}</code></pre>
+    <p><strong>Kaniko</strong> builds images without needing a privileged Docker daemon — safer inside a cluster.</p>
+  </div>
+
+  <div class="section" id="s3-11">
+    <h2><span class="sec-emoji">🛠️</span> Jenkins Configuration as Code &amp; scaling <span class="lvl e">Expert</span></h2>
+    <p>Clicking through settings makes a Jenkins server a fragile "snowflake". <strong>JCasC</strong> (Configuration as Code) describes the whole controller in YAML so it can be rebuilt from Git.</p>
+<pre><span class="pre-lang">jenkins.yaml</span><code>jenkins:
+  systemMessage: "Managed by JCasC — do not edit in the UI"
+  numExecutors: 0                  <span class="c"># controller runs NO builds</span>
+  securityRealm:
+    ldap: { configurations: [{ server: ldap.example.com, rootDN: "dc=example,dc=com" }] }
+  authorizationStrategy:
+    roleBased:
+      roles:
+        global:
+          - { name: admin, permissions: [Overall/Administer], entries: [{ group: devops }] }
+          - { name: dev,   permissions: [Overall/Read, Job/Build], entries: [{ group: developers }] }
+unclassified:
+  location: { url: https://jenkins.example.com/ }</code></pre>
+    <h3>Scaling &amp; reliability checklist</h3>
+    <ul>
+      <li>Set <strong>controller executors to 0</strong>; build only on agents.</li>
+      <li>Use <strong>ephemeral agents</strong> (Kubernetes pods, EC2 spot) instead of long-lived VMs.</li>
+      <li>Keep <code>JENKINS_HOME</code> on persistent, <strong>backed-up</strong> storage; test restores.</li>
+      <li>Pin and test plugin upgrades in a staging Jenkins first.</li>
+      <li>Add <code>buildDiscarder</code> to avoid disk exhaustion; export metrics with the Prometheus plugin.</li>
+    </ul>
+  </div>
+
+  <div class="section" id="s3-12">
+    <h2><span class="sec-emoji">🛡️</span> Security &amp; common pitfalls <span class="lvl e">Expert</span></h2>
+    <table>
+      <thead><tr><th>Pitfall</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td>Secrets hard-coded in Jenkinsfile</td><td>Credentials store, or Vault / cloud secret manager plugin</td></tr>
+        <tr><td>Running builds on the controller</td><td>Executors = 0; use agents</td></tr>
+        <tr><td>Everyone is admin</td><td>Role-based access + SSO (LDAP/OIDC)</td></tr>
+        <tr><td>Unreviewed pipeline changes from PRs</td><td>Trust only maintainers' Jenkinsfile on PR builds; use Script Security sandbox</td></tr>
+        <tr><td>Outdated Jenkins/plugins (frequent CVEs)</td><td>Track LTS releases and the security advisories; update on a schedule</td></tr>
+        <tr><td>Using <code>sh "...${userInput}"</code></td><td>Never interpolate untrusted values into shell; pass them as environment variables</td></tr>
+        <tr><td>Flaky snowflake agents</td><td>Immutable, ephemeral agents built from images</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= TAB 4: GITLAB CI ================= -->
+<section class="panel" id="t4" data-toc='[
+  ["s4-1","What is GitLab CI/CD?"],
+  ["s4-2","Your first pipeline"],
+  ["s4-3","Runners &amp; executors"],
+  ["s4-4","Variables &amp; secrets"],
+  ["s4-5","Artifacts &amp; cache"],
+  ["s4-6","rules, needs &amp; DAG"],
+  ["s4-7","Environments &amp; deployment"],
+  ["s4-8","Includes &amp; templates"],
+  ["s4-9","Parent-child &amp; matrix"],
+  ["s4-10","Security &amp; OIDC"],
+  ["s4-11","Full real-world example"]
+]'>
+  <div class="panel-header">
+    <div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div>
+    <p class="panel-eyebrow">Module 04 · GitLab CI/CD</p>
+    <h1 class="panel-title">GitLab CI/CD</h1>
+    <p class="panel-subtitle">CI/CD built directly into the GitLab platform: one tool for repos, merge requests, pipelines, container registry and security scanning. Pipelines are defined in a single YAML file.</p>
+  </div>
+
+  <div class="section" id="s4-1">
+    <h2><span class="sec-emoji">🦊</span> What is GitLab CI/CD? <span class="lvl b">Basic</span></h2>
+    <p>Add a file named <code>.gitlab-ci.yml</code> to the root of any GitLab project and GitLab automatically runs it on every push. No separate server to install on GitLab.com — you just need <strong>runners</strong> (shared ones are provided, or bring your own).</p>
+    <div class="diagram">
+      <svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="g1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs>
+        <g font-family="Noto Sans" font-size="12" font-weight="600">
+          <text x="380" y="22" text-anchor="middle" font-size="14" font-weight="700">Pipeline = stages run in order; jobs in a stage run in parallel</text>
+          <rect x="20" y="45" width="150" height="140" rx="10" fill="#dceaf7" stroke="#2383e2"/><text x="95" y="66" text-anchor="middle" fill="#1d4f9f" font-weight="700">STAGE: build</text>
+          <rect x="35" y="80" width="120" height="34" rx="6" fill="#fff" stroke="#2383e2"/><text x="95" y="102" text-anchor="middle" fill="#1d4f9f">compile</text>
+          <rect x="210" y="45" width="150" height="140" rx="10" fill="#ddedea" stroke="#0f7b0f"/><text x="285" y="66" text-anchor="middle" fill="#0a5f0a" font-weight="700">STAGE: test</text>
+          <rect x="225" y="80" width="120" height="34" rx="6" fill="#fff" stroke="#0f7b0f"/><text x="285" y="102" text-anchor="middle" fill="#0a5f0a">unit</text>
+          <rect x="225" y="124" width="120" height="34" rx="6" fill="#fff" stroke="#0f7b0f"/><text x="285" y="146" text-anchor="middle" fill="#0a5f0a">lint</text>
+          <rect x="400" y="45" width="150" height="140" rx="10" fill="#fdecc8" stroke="#dfab01"/><text x="475" y="66" text-anchor="middle" fill="#a07a00" font-weight="700">STAGE: package</text>
+          <rect x="415" y="80" width="120" height="34" rx="6" fill="#fff" stroke="#dfab01"/><text x="475" y="102" text-anchor="middle" fill="#a07a00">docker-image</text>
+          <rect x="590" y="45" width="150" height="140" rx="10" fill="#fadec9" stroke="#d9730d"/><text x="665" y="66" text-anchor="middle" fill="#a85a08" font-weight="700">STAGE: deploy</text>
+          <rect x="605" y="80" width="120" height="34" rx="6" fill="#fff" stroke="#d9730d"/><text x="665" y="102" text-anchor="middle" fill="#a85a08">staging</text>
+          <rect x="605" y="124" width="120" height="34" rx="6" fill="#fff" stroke="#d9730d" stroke-dasharray="4 3"/><text x="665" y="146" text-anchor="middle" fill="#a85a08">prod (manual)</text>
+          <g stroke="#37352f" stroke-width="2" marker-end="url(#g1)"><line x1="172" y1="115" x2="208" y2="115"/><line x1="362" y1="115" x2="398" y2="115"/><line x1="552" y1="115" x2="588" y2="115"/></g>
+        </g>
+      </svg>
+      <div class="diagram-caption">Figure 4.1 · GitLab pipeline structure</div>
+    </div>
+  </div>
+
+  <div class="section" id="s4-2">
+    <h2><span class="sec-emoji">🚀</span> Your first pipeline <span class="lvl b">Basic</span></h2>
+<pre><span class="pre-lang">.gitlab-ci.yml</span><code>stages:
+  - build
+  - test
+  - deploy
+
+build-job:
+  stage: build
+  image: node:20            <span class="c"># job runs inside this Docker image</span>
+  script:
+    - npm ci
+    - npm run build
+
+unit-tests:
+  stage: test
+  image: node:20
+  script:
+    - npm ci
+    - npm test
+
+deploy-staging:
+  stage: deploy
+  script:
+    - echo "Deploying to staging..."
+  environment: staging</code></pre>
+    <table>
+      <thead><tr><th>Keyword</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>stages</code></td><td>Ordered list of phases</td></tr>
+        <tr><td><code>stage</code></td><td>Which phase a job belongs to</td></tr>
+        <tr><td><code>image</code></td><td>Docker image the job runs in</td></tr>
+        <tr><td><code>script</code></td><td>Shell commands (required in every job)</td></tr>
+        <tr><td><code>before_script / after_script</code></td><td>Setup / cleanup commands</td></tr>
+        <tr><td><code>environment</code></td><td>Links the job to a deployment target and records deploy history</td></tr>
+      </tbody>
+    </table>
+    <div class="callout tip">
+      <div class="callout-icon">✅</div>
+      <div class="callout-body">Use <strong>CI/CD → Editor → Validate</strong> in the GitLab UI, or <code>glab ci lint</code>, to check your YAML before committing.</div>
+    </div>
+  </div>
+
+  <div class="section" id="s4-3">
+    <h2><span class="sec-emoji">🏃</span> Runners &amp; executors <span class="lvl b">Basic</span></h2>
+    <p>A <strong>GitLab Runner</strong> is the program that picks up jobs and runs them. Each runner has an <strong>executor</strong> that decides how a job is isolated.</p>
+    <table>
+      <thead><tr><th>Executor</th><th>Isolation</th><th>Use when</th></tr></thead>
+      <tbody>
+        <tr><td><code>docker</code></td><td>New container per job</td><td>Default, most common</td></tr>
+        <tr><td><code>kubernetes</code></td><td>New pod per job</td><td>Elastic scaling on a cluster</td></tr>
+        <tr><td><code>shell</code></td><td>None — runs on host</td><td>Quick setups; avoid for shared use</td></tr>
+        <tr><td><code>docker-autoscaler</code></td><td>Cloud VMs scaled on demand</td><td>Large fleets, cost control</td></tr>
+      </tbody>
+    </table>
+<pre><span class="pre-lang">bash</span><code>gitlab-runner register \
+  --url https://gitlab.example.com \
+  --token $RUNNER_TOKEN \
+  --executor docker \
+  --docker-image alpine:latest</code></pre>
+    <p>Use <strong>tags</strong> to route a job to the right runner: <code>tags: [gpu]</code> or <code>tags: [linux, prod-network]</code>.</p>
+  </div>
+
+  <div class="section" id="s4-4">
+    <h2><span class="sec-emoji">🔑</span> Variables &amp; secrets <span class="lvl i">Intermediate</span></h2>
+<pre><span class="pre-lang">.gitlab-ci.yml</span><code>variables:
+  APP_NAME: shop-api
+  DOCKER_TLS_CERTDIR: "/certs"
+
+build-image:
+  stage: build
+  image: docker:27
+  services: [docker:27-dind]          <span class="c"># Docker-in-Docker sidecar</span>
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA</code></pre>
+    <ul>
+      <li><strong>Predefined variables</strong> such as <code>CI_COMMIT_SHA</code>, <code>CI_COMMIT_BRANCH</code>, <code>CI_REGISTRY_IMAGE</code>, <code>CI_PIPELINE_ID</code> are provided automatically.</li>
+      <li><strong>Custom secrets</strong> live in <em>Settings → CI/CD → Variables</em>. Tick <strong>Masked</strong> (hidden in logs) and <strong>Protected</strong> (only available on protected branches/tags like <code>main</code>).</li>
+      <li>Variables can be scoped to a specific <strong>environment</strong> (e.g. a different <code>DB_URL</code> for staging and production).</li>
+    </ul>
+  </div>
+
+  <div class="section" id="s4-5">
+    <h2><span class="sec-emoji">📦</span> Artifacts &amp; cache <span class="lvl i">Intermediate</span></h2>
+    <div class="compare">
+      <div class="compare-col"><h4>📦 Artifacts</h4><p>Files a job <strong>produces</strong> and passes to <em>later jobs</em> and to the UI (binaries, reports). Stored on GitLab for a set time.</p></div>
+      <div class="compare-col"><h4>⚡ Cache</h4><p>Files that <strong>speed up</strong> jobs by being reused between runs (<code>node_modules</code>, <code>.m2</code>). Best-effort — a job must still work without it.</p></div>
+    </div>
+<pre><span class="pre-lang">.gitlab-ci.yml</span><code>build:
+  stage: build
+  image: node:20
+  cache:
+    key:
+      files: [package-lock.json]        <span class="c"># new cache only when lockfile changes</span>
+    paths: [.npm/]
+  script:
+    - npm ci --cache .npm --prefer-offline
+    - npm run build
+  artifacts:
+    paths: [dist/]
+    expire_in: 1 week
+
+test:
+  stage: test
+  image: node:20
+  script: [npm test]
+  artifacts:
+    when: always
+    reports:
+      junit: reports/junit.xml          <span class="c"># shows test results in the merge request</span></code></pre>
+  </div>
+
+  <div class="section" id="s4-6">
+    <h2><span class="sec-emoji">🧭</span> <code>rules</code>, <code>needs</code> &amp; the DAG <span class="lvl i">Intermediate</span></h2>
+    <p><code>rules</code> decide <em>whether</em> a job runs. <code>needs</code> lets a job start as soon as its dependencies finish, ignoring stage order — creating a faster <strong>DAG</strong> (directed acyclic graph).</p>
+<pre><span class="pre-lang">.gitlab-ci.yml</span><code>workflow:
+  rules:                                  <span class="c"># avoid duplicate pipelines for push + MR</span>
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+unit:
+  stage: test
+  script: [make unit]
+  needs: [build]                          <span class="c"># start right after build, don't wait for the whole stage</span>
+
+docs-only-check:
+  stage: test
+  script: [make lint-docs]
+  rules:
+    - changes: ["docs/**/*"]              <span class="c"># run only when docs change</span>
+
+deploy-prod:
+  stage: deploy
+  script: [./deploy.sh prod]
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/    <span class="c"># only on release tags</span>
+      when: manual                                  <span class="c"># Continuous DELIVERY approval click</span></code></pre>
+  </div>
+
+  <div class="section" id="s4-7">
+    <h2><span class="sec-emoji">🌍</span> Environments &amp; deployment <span class="lvl i">Intermediate</span></h2>
+<pre><span class="pre-lang">.gitlab-ci.yml</span><code>deploy-review:
+  stage: deploy
+  script: [./deploy-review.sh $CI_COMMIT_REF_SLUG]
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG       <span class="c"># a throw-away "review app" per merge request</span>
+    url: https://$CI_COMMIT_REF_SLUG.review.example.com
+    on_stop: stop-review
+  rules: [{ if: $CI_MERGE_REQUEST_IID }]
+
+stop-review:
+  stage: deploy
+  script: [./destroy-review.sh $CI_COMMIT_REF_SLUG]
+  environment: { name: review/$CI_COMMIT_REF_SLUG, action: stop }
+  when: manual
+
+deploy-production:
+  stage: deploy
+  script:
+    - helm upgrade --install shop ./chart --set image.tag=$CI_COMMIT_SHORT_SHA
+  environment: { name: production, url: https://shop.example.com }
+  resource_group: production              <span class="c"># only one deploy at a time</span>
+  when: manual</code></pre>
+    <p>GitLab's <strong>Environments</strong> page then shows what version is live where, who deployed it, and offers one-click <strong>Rollback</strong> to a previous deployment. <strong>Protected environments</strong> restrict who can approve production.</p>
+  </div>
+
+  <div class="section" id="s4-8">
+    <h2><span class="sec-emoji">🧩</span> Includes &amp; templates <span class="lvl e">Expert</span></h2>
+    <p>Avoid copy-pasting pipeline YAML across projects: <code>include</code> pulls in shared configuration from other files, projects, or GitLab's built-in templates.</p>
+<pre><span class="pre-lang">.gitlab-ci.yml</span><code>include:
+  - template: Security/SAST.gitlab-ci.yml                  <span class="c"># GitLab-provided</span>
+  - template: Security/Secret-Detection.gitlab-ci.yml
+  - project: platform/ci-templates                         <span class="c"># your company's shared repo</span>
+    ref: v3.2.0
+    file: /templates/docker-build.yml
+
+.deploy-base:                                              <span class="c"># hidden job = reusable template</span>
+  image: bitnami/kubectl
+  before_script: [kubectl config use-context $KUBE_CONTEXT]
+
+deploy-staging:
+  extends: .deploy-base                                    <span class="c"># inherit, then override</span>
+  stage: deploy
+  script: [kubectl apply -f k8s/ -n staging]</code></pre>
+    <p>The newer <strong>CI/CD Components</strong> and the <strong>CI/CD Catalog</strong> take this further: versioned, parameterised pipeline building blocks you reference like <code>component: gitlab.example.com/org/comp/build@1.0</code>.</p>
+  </div>
+
+  <div class="section" id="s4-9">
+    <h2><span class="sec-emoji">🌳</span> Parent-child pipelines &amp; matrix builds <span class="lvl e">Expert</span></h2>
+<pre><span class="pre-lang">.gitlab-ci.yml</span><code>trigger-services:                          <span class="c"># monorepo: only build what changed</span>
+  stage: build
+  trigger:
+    include: services/auth/.gitlab-ci.yml
+    strategy: depend                       <span class="c"># parent waits for child result</span>
+  rules:
+    - changes: ["services/auth/**/*"]
+
+test-matrix:                               <span class="c"># 3 × 2 = 6 parallel jobs from one definition</span>
+  stage: test
+  image: python:$PY
+  parallel:
+    matrix:
+      - PY: ["3.10", "3.11", "3.12"]
+        DB: ["postgres", "mysql"]
+  script: [pytest --db $DB]</code></pre>
+  </div>
+
+  <div class="section" id="s4-10">
+    <h2><span class="sec-emoji">🛡️</span> Security, OIDC &amp; best practice <span class="lvl e">Expert</span></h2>
+    <ul>
+      <li><strong>Built-in scanning:</strong> include SAST, Dependency Scanning, Container Scanning, Secret Detection and DAST templates; findings appear in the merge request.</li>
+      <li><strong>OIDC instead of stored cloud keys:</strong> a job requests a short-lived ID token; the cloud trusts GitLab's identity.</li>
+      <li><strong>Protected branches/variables:</strong> production secrets exist only in pipelines running on protected refs.</li>
+      <li><strong>Merge request pipelines + approvals:</strong> require green pipeline and code-owner approval before merge.</li>
+    </ul>
+<pre><span class="pre-lang">.gitlab-ci.yml</span><code>deploy-aws:
+  stage: deploy
+  image: amazon/aws-cli
+  id_tokens:
+    AWS_TOKEN:
+      aud: https://gitlab.example.com
+  script:
+    - &gt;
+      export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s"
+      $(aws sts assume-role-with-web-identity
+      --role-arn $AWS_ROLE_ARN --role-session-name gitlab-$CI_PIPELINE_ID
+      --web-identity-token $AWS_TOKEN --duration-seconds 900
+      --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text))
+    - aws s3 sync dist/ s3://my-site-bucket/</code></pre>
+    <div class="callout success">
+      <div class="callout-icon">🏁</div>
+      <div class="callout-body">No long-lived AWS keys are stored anywhere: the credentials expire in 15 minutes and can only be obtained by this project's pipeline.</div>
+    </div>
+  </div>
+
+  <div class="section" id="s4-11">
+    <h2><span class="sec-emoji">🧪</span> Full real-world example <span class="lvl e">Expert</span></h2>
+    <p>A complete pipeline combining the ideas above: build and push an image, scan it, deploy to staging automatically and to production manually.</p>
+<pre><span class="pre-lang">.gitlab-ci.yml</span><code>stages: [build, test, scan, deploy]
+
+variables:
+  IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+build-image:
+  stage: build
+  image: docker:27
+  services: [docker:27-dind]
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+    - docker build --cache-from $CI_REGISTRY_IMAGE:latest -t $IMAGE -t $CI_REGISTRY_IMAGE:latest .
+    - docker push --all-tags $CI_REGISTRY_IMAGE
+
+unit-tests:
+  stage: test
+  image: python:3.12
+  cache: { key: { files: [requirements.txt] }, paths: [.cache/pip] }
+  script:
+    - pip install -r requirements.txt --cache-dir .cache/pip
+    - pytest --cov --junitxml=report.xml
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts: { when: always, reports: { junit: report.xml } }
+
+image-scan:
+  stage: scan
+  image: { name: aquasec/trivy, entrypoint: [""] }
+  script: [trivy image --exit-code 1 --severity CRITICAL $IMAGE]
+  needs: [build-image]
+
+deploy-staging:
+  stage: deploy
+  image: bitnami/kubectl
+  script: [kubectl set image deployment/shop shop=$IMAGE -n staging]
+  environment: { name: staging }
+  rules: [{ if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH }]
+
+deploy-production:
+  stage: deploy
+  image: bitnami/kubectl
+  script: [kubectl set image deployment/shop shop=$IMAGE -n production]
+  environment: { name: production }
+  resource_group: production
+  when: manual
+  rules: [{ if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH }]</code></pre>
+  </div>
+</section>
+<!-- ================= TAB 5: GITHUB ACTIONS ================= -->
+<section class="panel" id="t5" data-toc='[
+  ["s5-1","What is GitHub Actions?"],
+  ["s5-2","Core concepts"],
+  ["s5-3","Your first workflow"],
+  ["s5-4","Events &amp; triggers"],
+  ["s5-5","Matrix, cache &amp; artifacts"],
+  ["s5-6","Secrets, variables &amp; environments"],
+  ["s5-7","Docker build &amp; push"],
+  ["s5-8","Reusable workflows"],
+  ["s5-9","Composite actions"],
+  ["s5-10","OIDC cloud auth"],
+  ["s5-11","Self-hosted runners"],
+  ["s5-12","Security hardening"]
+]'>
+  <div class="panel-header">
+    <div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div>
+    <p class="panel-eyebrow">Module 05 · GitHub Actions</p>
+    <h1 class="panel-title">GitHub Actions</h1>
+    <p class="panel-subtitle">Event-driven automation built into GitHub. Any repo event — push, pull request, release, issue, schedule — can start a workflow made from reusable community actions.</p>
+  </div>
+
+  <div class="section" id="s5-1">
+    <h2><span class="sec-emoji">🐙</span> What is GitHub Actions? <span class="lvl b">Basic</span></h2>
+    <p>GitHub Actions lets you automate workflows directly in your repository. Workflows are YAML files under <code>.github/workflows/</code>. GitHub provides hosted Linux, Windows and macOS runners, so there is nothing to install to get started.</p>
+    <div class="callout tip">
+      <div class="callout-icon">🔌</div>
+      <div class="callout-body"><strong>Analogy:</strong> Actions is like a smart-home automation app. A <em>trigger</em> ("someone opens the door" = a push) starts a <em>routine</em> (workflow) made of steps, many of which are ready-made <em>apps</em> from a marketplace (actions) rather than code you write yourself.</div>
+    </div>
+  </div>
+
+  <div class="section" id="s5-2">
+    <h2><span class="sec-emoji">🧱</span> Core concepts <span class="lvl b">Basic</span></h2>
+    <div class="diagram">
+      <svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg">
+        <g font-family="Noto Sans" font-size="12" font-weight="600">
+          <rect x="20" y="20" width="720" height="215" rx="12" fill="#f7f6f3" stroke="#d3d3d0"/>
+          <text x="40" y="44" fill="#37352f" font-weight="700">WORKFLOW  (.github/workflows/ci.yml)  — triggered by an EVENT (push, pull_request…)</text>
+          <rect x="45" y="60" width="320" height="155" rx="10" fill="#dceaf7" stroke="#2383e2"/>
+          <text x="60" y="82" fill="#1d4f9f" font-weight="700">JOB: build  · runs-on: ubuntu-latest (runner)</text>
+          <rect x="60" y="95" width="290" height="30" rx="6" fill="#fff" stroke="#2383e2"/><text x="75" y="115" fill="#1d4f9f" font-weight="500">step · uses: actions/checkout@v4</text>
+          <rect x="60" y="132" width="290" height="30" rx="6" fill="#fff" stroke="#2383e2"/><text x="75" y="152" fill="#1d4f9f" font-weight="500">step · uses: actions/setup-node@v4</text>
+          <rect x="60" y="169" width="290" height="30" rx="6" fill="#fff" stroke="#2383e2"/><text x="75" y="189" fill="#1d4f9f" font-weight="500">step · run: npm ci &amp;&amp; npm test</text>
+          <rect x="395" y="60" width="320" height="155" rx="10" fill="#ddedea" stroke="#0f7b0f"/>
+          <text x="410" y="82" fill="#0a5f0a" font-weight="700">JOB: deploy · needs: build</text>
+          <rect x="410" y="95" width="290" height="30" rx="6" fill="#fff" stroke="#0f7b0f"/><text x="425" y="115" fill="#0a5f0a" font-weight="500">step · uses: aws-actions/configure-aws-credentials</text>
+          <rect x="410" y="132" width="290" height="30" rx="6" fill="#fff" stroke="#0f7b0f"/><text x="425" y="152" fill="#0a5f0a" font-weight="500">step · run: ./deploy.sh</text>
+          <text x="555" y="195" text-anchor="middle" fill="#0a5f0a" font-weight="500" font-size="11">runs on its own fresh runner</text>
+        </g>
+      </svg>
+      <div class="diagram-caption">Figure 5.1 · Workflow → jobs → steps</div>
+    </div>
+    <table>
+      <thead><tr><th>Concept</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Workflow</strong></td><td>A YAML automation file; a repo can have many</td></tr>
+        <tr><td><strong>Event</strong></td><td>What triggers it: <code>push</code>, <code>pull_request</code>, <code>schedule</code>, <code>workflow_dispatch</code>…</td></tr>
+        <tr><td><strong>Job</strong></td><td>Group of steps on one runner; jobs run in parallel unless <code>needs</code> orders them</td></tr>
+        <tr><td><strong>Step</strong></td><td>One command (<code>run</code>) or one reusable action (<code>uses</code>)</td></tr>
+        <tr><td><strong>Action</strong></td><td>Packaged reusable step from the Marketplace or your own repo</td></tr>
+        <tr><td><strong>Runner</strong></td><td>The VM/container that executes a job (GitHub-hosted or self-hosted)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section" id="s5-3">
+    <h2><span class="sec-emoji">🚀</span> Your first workflow <span class="lvl b">Basic</span></h2>
+<pre><span class="pre-lang">.github/workflows/ci.yml</span><code>name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4          <span class="c"># get the code</span>
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm                       <span class="c"># built-in dependency cache</span>
+      - run: npm ci
+      - run: npm test
+      - run: npm run build</code></pre>
+    <p>Commit this file, push, and open the repo's <strong>Actions</strong> tab: you will see the run, per-step logs, and a green check or red cross on the commit and pull request.</p>
+  </div>
+
+  <div class="section" id="s5-4">
+    <h2><span class="sec-emoji">🔔</span> Events &amp; triggers <span class="lvl b">Basic</span></h2>
+<pre><span class="pre-lang">YAML</span><code>on:
+  push:
+    branches: [main, 'release/**']
+    paths: ['src/**', 'package.json']        <span class="c"># only when these files change</span>
+  pull_request:
+    types: [opened, synchronize]
+  schedule:
+    - cron: '0 2 * * 1-5'                    <span class="c"># 02:00 UTC weekdays</span>
+  workflow_dispatch:                          <span class="c"># manual "Run workflow" button</span>
+    inputs:
+      environment:
+        type: choice
+        options: [staging, production]
+  release:
+    types: [published]</code></pre>
+  </div>
+
+  <div class="section" id="s5-5">
+    <h2><span class="sec-emoji">🧮</span> Matrix, cache &amp; artifacts <span class="lvl i">Intermediate</span></h2>
+<pre><span class="pre-lang">.github/workflows/test.yml</span><code>jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false                       <span class="c"># let other combos finish if one fails</span>
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.10', '3.11', '3.12']     <span class="c"># 2 × 3 = 6 parallel jobs</span>
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: pytest --junitxml=report.xml
+      - uses: actions/upload-artifact@v4     <span class="c"># save output for download or later jobs</span>
+        if: always()
+        with:
+          name: test-report-${{ matrix.os }}-${{ matrix.python }}
+          path: report.xml
+
+  deploy:
+    needs: test                              <span class="c"># waits for ALL matrix jobs</span>
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploying..."</code></pre>
+    <p>Useful expressions: <code>${{ github.sha }}</code>, <code>${{ github.ref_name }}</code>, <code>${{ github.actor }}</code>, <code>${{ runner.os }}</code>, and functions like <code>hashFiles('**/package-lock.json')</code> for cache keys.</p>
+  </div>
+
+  <div class="section" id="s5-6">
+    <h2><span class="sec-emoji">🔑</span> Secrets, variables &amp; environments <span class="lvl i">Intermediate</span></h2>
+    <ul>
+      <li><strong>Secrets</strong> — encrypted values (<em>Settings → Secrets and variables → Actions</em>), read as <code>${{ secrets.NAME }}</code> and masked in logs.</li>
+      <li><strong>Variables</strong> — non-secret configuration, read as <code>${{ vars.NAME }}</code>.</li>
+      <li><strong>Environments</strong> — named targets (<code>staging</code>, <code>production</code>) with their own secrets, <strong>required reviewers</strong>, wait timers and branch restrictions.</li>
+    </ul>
+<pre><span class="pre-lang">YAML</span><code>jobs:
+  deploy-prod:
+    runs-on: ubuntu-latest
+    environment:
+      name: production                       <span class="c"># pauses until a required reviewer approves</span>
+      url: https://shop.example.com
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./deploy.sh
+        env:
+          API_TOKEN: ${{ secrets.PROD_API_TOKEN }}   <span class="c"># env-scoped secret</span></code></pre>
+    <div class="callout warn">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body">Secrets are <strong>not</strong> passed to workflows triggered by pull requests from forks. This is deliberate protection — don't try to bypass it with <code>pull_request_target</code> unless you fully understand the risk.</div>
+    </div>
+  </div>
+
+  <div class="section" id="s5-7">
+    <h2><span class="sec-emoji">🐳</span> Build &amp; push a Docker image <span class="lvl i">Intermediate</span></h2>
+<pre><span class="pre-lang">.github/workflows/docker.yml</span><code>name: Docker
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+
+permissions:
+  contents: read
+  packages: write                            <span class="c"># allow pushing to GHCR</span>
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}     <span class="c"># auto-provided</span>
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=sha
+            type=semver,pattern={{version}}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max               <span class="c"># reuse layers between runs</span></code></pre>
+  </div>
+
+  <div class="section" id="s5-8">
+    <h2><span class="sec-emoji">♻️</span> Reusable workflows <span class="lvl e">Expert</span></h2>
+    <p>A whole workflow can be called like a function from other workflows — ideal for a company-wide "standard build".</p>
+<pre><span class="pre-lang">org/.github repo: .github/workflows/node-ci.yml</span><code>on:
+  workflow_call:
+    inputs:
+      node-version: { type: string, default: '20' }
+    secrets:
+      NPM_TOKEN: { required: false }
+    outputs:
+      version: { value: ${{ jobs.build.outputs.version }} }
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: ${{ inputs.node-version }}, cache: npm }
+      - run: npm ci &amp;&amp; npm test
+      - id: v
+        run: echo "version=$(node -p "require('./package.json').version")" &gt;&gt; $GITHUB_OUTPUT</code></pre>
+<pre><span class="pre-lang">any repo: .github/workflows/ci.yml</span><code>jobs:
+  call-ci:
+    uses: my-org/.github/.github/workflows/node-ci.yml@v2    <span class="c"># pinned version</span>
+    with: { node-version: '22' }
+    secrets: inherit</code></pre>
+  </div>
+
+  <div class="section" id="s5-9">
+    <h2><span class="sec-emoji">🧩</span> Composite actions <span class="lvl e">Expert</span></h2>
+    <p>A <strong>composite action</strong> bundles several <em>steps</em> into one reusable step (a reusable workflow bundles whole <em>jobs</em>).</p>
+<pre><span class="pre-lang">.github/actions/setup-app/action.yml</span><code>name: Setup app
+description: Checkout, install and cache dependencies
+inputs:
+  node-version: { default: '20' }
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with: { node-version: ${{ inputs.node-version }}, cache: npm }
+    - run: npm ci
+      shell: bash</code></pre>
+<pre><span class="pre-lang">workflow</span><code>steps:
+  - uses: actions/checkout@v4
+  - uses: ./.github/actions/setup-app       <span class="c"># local composite action</span>
+    with: { node-version: '22' }</code></pre>
+    <p>Beyond composite, you can write <strong>JavaScript</strong> or <strong>Docker container</strong> actions for logic that needs a real programming language.</p>
+  </div>
+
+  <div class="section" id="s5-10">
+    <h2><span class="sec-emoji">🪪</span> OIDC cloud authentication <span class="lvl e">Expert</span></h2>
+    <p>Storing long-lived cloud keys as secrets is risky. With <strong>OpenID Connect</strong>, each job gets a short-lived identity token that your cloud (AWS, Azure, GCP) exchanges for temporary credentials.</p>
+<pre><span class="pre-lang">YAML</span><code>permissions:
+  id-token: write                            <span class="c"># allow requesting the OIDC token</span>
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/gha-deploy
+          aws-region: ap-south-1
+      - run: aws s3 sync ./dist s3://my-site-bucket</code></pre>
+    <p>On the AWS side, the IAM role's trust policy restricts the assumable identity to a specific repository and branch (for example <code>repo:my-org/shop:ref:refs/heads/main</code>), so a fork or another repo can never use it.</p>
+  </div>
+
+  <div class="section" id="s5-11">
+    <h2><span class="sec-emoji">🏃</span> Self-hosted runners <span class="lvl e">Expert</span></h2>
+    <p>Use your own machines when you need private network access, special hardware (GPU), more CPU/RAM, or lower cost at high volume.</p>
+<pre><span class="pre-lang">YAML</span><code>jobs:
+  build:
+    runs-on: [self-hosted, linux, x64, gpu]   <span class="c"># labels choose the runner</span></code></pre>
+    <ul>
+      <li>Prefer <strong>ephemeral</strong> runners (one job, then destroyed). On Kubernetes use <strong>Actions Runner Controller (ARC)</strong> to auto-scale runner pods.</li>
+      <li>Never attach self-hosted runners to <em>public</em> repositories — a malicious pull request could run code on your network.</li>
+      <li>Keep runner images patched; isolate them from production networks.</li>
+    </ul>
+  </div>
+
+  <div class="section" id="s5-12">
+    <h2><span class="sec-emoji">🛡️</span> Security hardening <span class="lvl e">Expert</span></h2>
+    <table>
+      <thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
+      <tbody>
+        <tr><td>Compromised third-party action</td><td>Pin actions to a full commit SHA (<code>uses: org/action@a1b2c3…</code>), not a mutable tag; use Dependabot to update</td></tr>
+        <tr><td>Over-powered <code>GITHUB_TOKEN</code></td><td>Set <code>permissions: contents: read</code> at the top; grant extra scopes per job only</td></tr>
+        <tr><td>Script injection via PR title/branch name</td><td>Never put <code>${{ github.event.pull_request.title }}</code> directly in <code>run:</code>; pass through <code>env:</code> first</td></tr>
+        <tr><td>Long-lived cloud secrets</td><td>Use OIDC (above)</td></tr>
+        <tr><td>Unreviewed production deploys</td><td>Environments with required reviewers; branch protection rules</td></tr>
+        <tr><td>Concurrent deploy races</td><td>Use <code>concurrency:</code> groups</td></tr>
+      </tbody>
+    </table>
+<pre><span class="pre-lang">YAML</span><code>permissions: read-all                         <span class="c"># default-deny at workflow level</span>
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true                    <span class="c"># cancel older runs of the same branch</span>
+
+jobs:
+  safe:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          TITLE: ${{ github.event.pull_request.title }}   <span class="c"># injected as data, not code</span>
+        run: echo "PR title is $TITLE"</code></pre>
+  </div>
+</section>
+
+<!-- ================= TAB 6: ARGOCD ================= -->
+<section class="panel" id="t6" data-toc='[
+  ["s6-1","What is GitOps?"],
+  ["s6-2","What is ArgoCD?"],
+  ["s6-3","Architecture"],
+  ["s6-4","Install &amp; first app"],
+  ["s6-5","The Application manifest"],
+  ["s6-6","Helm &amp; Kustomize"],
+  ["s6-7","Sync policies &amp; health"],
+  ["s6-8","App-of-apps &amp; ApplicationSet"],
+  ["s6-9","Sync waves &amp; hooks"],
+  ["s6-10","Progressive delivery"],
+  ["s6-11","RBAC, SSO &amp; secrets"],
+  ["s6-12","End-to-end CI + ArgoCD"]
+]'>
+  <div class="panel-header">
+    <div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div>
+    <p class="panel-eyebrow">Module 06 · ArgoCD</p>
+    <h1 class="panel-title">ArgoCD &amp; GitOps</h1>
+    <p class="panel-subtitle">ArgoCD is not a build tool — it is the <em>delivery</em> half. It keeps Kubernetes clusters in sync with what is declared in Git, continuously, from inside the cluster.</p>
+  </div>
+
+  <div class="section" id="s6-1">
+    <h2><span class="sec-emoji">🌱</span> What is GitOps? <span class="lvl b">Basic</span></h2>
+    <p><strong>GitOps</strong> means Git is the <em>single source of truth</em> for the desired state of your infrastructure and applications. To change production, you change a Git repo (via a pull request) — never run commands against the cluster by hand.</p>
+    <div class="cards">
+      <div class="card"><div class="card-title">1 · Declarative</div><div class="card-desc">The whole system is described as manifests (YAML), not step-by-step scripts.</div></div>
+      <div class="card"><div class="card-title">2 · Versioned &amp; immutable</div><div class="card-desc">Desired state lives in Git: full history, review, instant revert.</div></div>
+      <div class="card"><div class="card-title">3 · Pulled automatically</div><div class="card-desc">An agent fetches approved state; humans don't push to the cluster.</div></div>
+      <div class="card"><div class="card-title">4 · Continuously reconciled</div><div class="card-desc">The agent detects drift and corrects it back to Git's version.</div></div>
+    </div>
+    <div class="callout tip">
+      <div class="callout-icon">🌡️</div>
+      <div class="callout-body"><strong>Analogy:</strong> a thermostat. You set the desired temperature (Git). The thermostat constantly compares it to the actual room temperature (cluster) and turns the heating on or off to close the gap. ArgoCD is the thermostat for your cluster.</div>
+    </div>
+  </div>
+
+  <div class="section" id="s6-2">
+    <h2><span class="sec-emoji">🐙</span> What is ArgoCD? <span class="lvl b">Basic</span></h2>
+    <p>ArgoCD is a declarative GitOps controller for Kubernetes (a CNCF graduated project). It watches Git repos, compares the manifests there with what is running, shows the difference in a visual UI, and syncs the cluster to match.</p>
+    <ul>
+      <li><strong>Drift detection:</strong> someone ran <code>kubectl edit</code>? ArgoCD marks the app <em>OutOfSync</em> and can auto-heal it.</li>
+      <li><strong>Easy rollback:</strong> deploy a previous Git commit with one click or <code>git revert</code>.</li>
+      <li><strong>Multi-cluster:</strong> one ArgoCD can manage dev, staging and prod clusters.</li>
+      <li><strong>Great UI:</strong> live resource tree, diffs, logs, health status.</li>
+    </ul>
+  </div>
+
+  <div class="section" id="s6-3">
+    <h2><span class="sec-emoji">🏗️</span> Architecture <span class="lvl b">Basic</span></h2>
+    <div class="diagram">
+      <svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs>
+        <g font-family="Noto Sans" font-size="12" font-weight="600">
+          <rect x="20" y="30" width="130" height="60" rx="8" fill="#dceaf7" stroke="#2383e2"/><text x="85" y="55" text-anchor="middle" fill="#1d4f9f">Git repo</text><text x="85" y="72" text-anchor="middle" fill="#1d4f9f" font-size="10" font-weight="500">YAML / Helm / Kustomize</text>
+          <rect x="20" y="190" width="130" height="60" rx="8" fill="#e8deee" stroke="#6b4d8a"/><text x="85" y="216" text-anchor="middle" fill="#4b3366">User / CLI / UI</text>
+          <rect x="200" y="20" width="360" height="240" rx="12" fill="#f7f6f3" stroke="#d3d3d0"/>
+          <text x="380" y="42" text-anchor="middle" fill="#37352f" font-weight="700">ARGOCD (namespace: argocd)</text>
+          <rect x="220" y="60" width="150" height="50" rx="8" fill="#37352f"/><text x="295" y="82" text-anchor="middle" fill="#ffd43b">Repo Server</text><text x="295" y="98" text-anchor="middle" fill="#e6e6e3" font-size="10" font-weight="500">renders manifests</text>
+          <rect x="390" y="60" width="150" height="50" rx="8" fill="#37352f"/><text x="465" y="82" text-anchor="middle" fill="#ffd43b">API Server</text><text x="465" y="98" text-anchor="middle" fill="#e6e6e3" font-size="10" font-weight="500">UI · CLI · RBAC · SSO</text>
+          <rect x="220" y="130" width="320" height="56" rx="8" fill="#37352f"/><text x="380" y="153" text-anchor="middle" fill="#ffd43b">Application Controller</text><text x="380" y="171" text-anchor="middle" fill="#e6e6e3" font-size="10" font-weight="500">compares desired vs live · syncs · self-heals</text>
+          <rect x="220" y="200" width="150" height="46" rx="8" fill="#555"/><text x="295" y="227" text-anchor="middle" fill="#fff" font-weight="500">Redis (cache)</text>
+          <rect x="390" y="200" width="150" height="46" rx="8" fill="#555"/><text x="465" y="227" text-anchor="middle" fill="#fff" font-weight="500">Dex (SSO)</text>
+          <rect x="610" y="90" width="130" height="110" rx="10" fill="#ddedea" stroke="#0f7b0f"/><text x="675" y="125" text-anchor="middle" fill="#0a5f0a">Kubernetes</text><text x="675" y="143" text-anchor="middle" fill="#0a5f0a">cluster(s)</text><text x="675" y="165" text-anchor="middle" fill="#0a5f0a" font-size="10" font-weight="500">Deployments, Services…</text>
+          <g stroke="#37352f" stroke-width="2" marker-end="url(#ar1)"><line x1="152" y1="60" x2="218" y2="85"/><line x1="152" y1="220" x2="388" y2="95"/><line x1="542" y1="158" x2="608" y2="150"/></g>
+        </g>
+      </svg>
+      <div class="diagram-caption">Figure 6.1 · ArgoCD components</div>
+    </div>
+    <table>
+      <thead><tr><th>Component</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td>API Server</td><td>Serves the web UI, CLI and API; handles auth &amp; RBAC</td></tr>
+        <tr><td>Repo Server</td><td>Clones Git repos and renders Helm/Kustomize/plain YAML into manifests</td></tr>
+        <tr><td>Application Controller</td><td>The reconciler: compares desired state to live state and applies changes</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section" id="s6-4">
+    <h2><span class="sec-emoji">⚙️</span> Install &amp; first app <span class="lvl b">Basic</span></h2>
+<pre><span class="pre-lang">bash</span><code>kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+<span class="c"># initial admin password</span>
+argocd admin initial-password -n argocd
+
+<span class="c"># reach the UI locally → https://localhost:8080</span>
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+
+argocd login localhost:8080
+argocd app create guestbook \
+  --repo https://github.com/argoproj/argocd-example-apps.git \
+  --path guestbook \
+  --dest-server https://kubernetes.default.svc \
+  --dest-namespace default
+argocd app sync guestbook</code></pre>
+    <div class="callout note">
+      <div class="callout-icon">📌</div>
+      <div class="callout-body">For production, install via the official <strong>Helm chart</strong> or HA manifests, put the UI behind an Ingress with TLS, and delete the initial admin account once SSO is configured.</div>
+    </div>
+  </div>
+
+  <div class="section" id="s6-5">
+    <h2><span class="sec-emoji">📜</span> The Application manifest <span class="lvl i">Intermediate</span></h2>
+    <p>The core ArgoCD object is the <code>Application</code> custom resource: "take <em>this path</em> in <em>this repo</em> and keep it deployed to <em>this cluster/namespace</em>". It is itself YAML you keep in Git.</p>
+<pre><span class="pre-lang">application.yaml</span><code>apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: shop-api
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/my-org/shop-config.git
+    targetRevision: main                  <span class="c"># branch, tag or commit</span>
+    path: apps/shop-api/overlays/staging
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: shop
+  syncPolicy:
+    automated:
+      prune: true                         <span class="c"># delete resources removed from Git</span>
+      selfHeal: true                      <span class="c"># revert manual cluster changes</span>
+    syncOptions:
+      - CreateNamespace=true</code></pre>
+  </div>
+
+  <div class="section" id="s6-6">
+    <h2><span class="sec-emoji">🧰</span> Helm &amp; Kustomize <span class="lvl i">Intermediate</span></h2>
+    <p>ArgoCD natively understands several manifest formats. The two you will use most:</p>
+<pre><span class="pre-lang">Helm source</span><code>source:
+  repoURL: https://github.com/my-org/charts.git
+  path: charts/shop-api
+  helm:
+    valueFiles: [values-prod.yaml]
+    parameters:
+      - { name: image.tag, value: "a1b2c3d" }     <span class="c"># CI updates this value</span></code></pre>
+<pre><span class="pre-lang">Kustomize layout (base + overlays)</span><code>apps/shop-api/
+├── base/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── kustomization.yaml
+└── overlays/
+    ├── staging/kustomization.yaml     <span class="c"># replicas: 2, image tag, small resources</span>
+    └── production/kustomization.yaml  <span class="c"># replicas: 6, image tag, bigger resources</span>
+
+<span class="c"># overlays/production/kustomization.yaml</span>
+resources: [../../base]
+images:
+  - name: shop-api
+    newName: ghcr.io/my-org/shop-api
+    newTag: a1b2c3d
+patches:
+  - target: { kind: Deployment, name: shop-api }
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 6</code></pre>
+  </div>
+
+  <div class="section" id="s6-7">
+    <h2><span class="sec-emoji">❤️</span> Sync policies, status &amp; health <span class="lvl i">Intermediate</span></h2>
+    <div class="cards">
+      <div class="card"><div class="card-title"><span class="badge green">Synced</span> / <span class="badge orange">OutOfSync</span></div><div class="card-desc">Does the live cluster match Git?</div></div>
+      <div class="card"><div class="card-title"><span class="badge green">Healthy</span> / <span class="badge red">Degraded</span> / <span class="badge blue">Progressing</span></div><div class="card-desc">Are the resources actually working (pods ready, etc.)?</div></div>
+    </div>
+    <table>
+      <thead><tr><th>Setting</th><th>Effect</th></tr></thead>
+      <tbody>
+        <tr><td>Manual sync (default)</td><td>ArgoCD shows differences; a human clicks <strong>Sync</strong>. Equals Continuous <em>Delivery</em>.</td></tr>
+        <tr><td><code>automated</code></td><td>Syncs automatically on Git change. Equals Continuous <em>Deployment</em>.</td></tr>
+        <tr><td><code>prune</code></td><td>Removes cluster resources that no longer exist in Git</td></tr>
+        <tr><td><code>selfHeal</code></td><td>Undoes out-of-band manual changes</td></tr>
+        <tr><td><code>ignoreDifferences</code></td><td>Skip fields legitimately changed by others (e.g. HPA-managed <code>replicas</code>)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section" id="s6-8">
+    <h2><span class="sec-emoji">🌳</span> App-of-apps &amp; ApplicationSet <span class="lvl e">Expert</span></h2>
+    <p>Managing 200 Application manifests by hand does not scale. ArgoCD offers two patterns:</p>
+    <div class="compare">
+      <div class="compare-col"><h4>App of Apps</h4><p>One "root" Application whose Git path contains <em>other</em> Application manifests. Syncing the root bootstraps an entire platform (ingress, monitoring, apps) from one command.</p></div>
+      <div class="compare-col"><h4>ApplicationSet</h4><p>A <em>template + generator</em> that stamps out Applications automatically — one per cluster, per folder, per Git branch or per pull request.</p></div>
+    </div>
+<pre><span class="pre-lang">applicationset.yaml</span><code>apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata: { name: shop-services, namespace: argocd }
+spec:
+  generators:
+    - git:                                      <span class="c"># one app per folder under services/</span>
+        repoURL: https://github.com/my-org/shop-config.git
+        revision: main
+        directories: [{ path: services/* }]
+  template:
+    metadata: { name: '{{path.basename}}' }
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/my-org/shop-config.git
+        targetRevision: main
+        path: '{{path}}'
+      destination: { server: https://kubernetes.default.svc, namespace: '{{path.basename}}' }
+      syncPolicy: { automated: { prune: true, selfHeal: true } }</code></pre>
+    <p>Add a new folder <code>services/payments/</code>, merge the PR — a new Application appears and deploys with zero extra clicks.</p>
+  </div>
+
+  <div class="section" id="s6-9">
+    <h2><span class="sec-emoji">🌊</span> Sync waves &amp; hooks <span class="lvl e">Expert</span></h2>
+    <p>Real deployments have ordering needs: create the database before the app, run schema migrations before new pods start. Annotations control this:</p>
+<pre><span class="pre-lang">YAML</span><code># Sync WAVES: lower numbers apply first (default 0)
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"       <span class="c"># e.g. namespace / CRDs / database</span>
+
+# Sync HOOKS: run a Job at a lifecycle point
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrate
+  annotations:
+    argocd.argoproj.io/hook: PreSync          <span class="c"># before the main sync</span>
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - { name: migrate, image: ghcr.io/my-org/shop-api:a1b2c3d, command: ["./migrate.sh"] }</code></pre>
+    <p>Hook phases: <code>PreSync</code>, <code>Sync</code>, <code>PostSync</code>, <code>SyncFail</code>. A failing <code>PreSync</code> hook aborts the release — so a bad migration never reaches new pods.</p>
+  </div>
+
+  <div class="section" id="s6-10">
+    <h2><span class="sec-emoji">🐤</span> Progressive delivery with Argo Rollouts <span class="lvl e">Expert</span></h2>
+    <p>Plain Kubernetes <code>Deployment</code> only supports a basic rolling update. <strong>Argo Rollouts</strong> (a companion project) adds <strong>canary</strong> and <strong>blue-green</strong> with automated, metric-based promotion and rollback — and ArgoCD shows and syncs it like any other resource.</p>
+<pre><span class="pre-lang">rollout.yaml</span><code>apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata: { name: shop-api }
+spec:
+  replicas: 5
+  selector: { matchLabels: { app: shop-api } }
+  template:
+    metadata: { labels: { app: shop-api } }
+    spec:
+      containers: [{ name: api, image: ghcr.io/my-org/shop-api:a1b2c3d }]
+  strategy:
+    canary:
+      steps:
+        - setWeight: 10
+        - pause: { duration: 2m }
+        - analysis:                           <span class="c"># query Prometheus; auto-rollback if failing</span>
+            templates: [{ templateName: success-rate }]
+        - setWeight: 50
+        - pause: { duration: 5m }
+        - setWeight: 100</code></pre>
+  </div>
+
+  <div class="section" id="s6-11">
+    <h2><span class="sec-emoji">🔐</span> RBAC, SSO &amp; secrets <span class="lvl e">Expert</span></h2>
+    <ul>
+      <li><strong>AppProjects</strong> restrict which repos, clusters and namespaces a team's Applications may use — multi-tenancy boundaries.</li>
+      <li><strong>RBAC</strong> (<code>argocd-rbac-cm</code>) maps SSO groups to roles such as <em>read-only</em>, <em>sync</em>, <em>admin</em>.</li>
+      <li><strong>SSO</strong> via OIDC/SAML (Okta, Azure AD, Google, GitHub) through Dex or direct OIDC.</li>
+    </ul>
+    <div class="callout warn">
+      <div class="callout-icon">🔒</div>
+      <div class="callout-body"><strong>Never commit plain Kubernetes Secrets to Git.</strong> GitOps needs a secret strategy: <strong>Sealed Secrets</strong> (encrypted in Git), <strong>External Secrets Operator</strong> (syncs from AWS Secrets Manager / Vault), or <strong>SOPS</strong> encryption. Git holds a <em>reference</em> or ciphertext, never the plaintext.</div>
+    </div>
+  </div>
+
+  <div class="section" id="s6-12">
+    <h2><span class="sec-emoji">🔗</span> End-to-end: CI tool + ArgoCD <span class="lvl e">Expert</span></h2>
+    <p>This is the reference architecture of most modern Kubernetes teams: <strong>CI builds, GitOps deploys</strong>. Note that CI never talks to the cluster.</p>
+    <div class="diagram">
+      <svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="e1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs>
+        <g font-family="Noto Sans" font-size="12" font-weight="600">
+          <rect x="15" y="30" width="110" height="50" rx="8" fill="#dceaf7" stroke="#2383e2"/><text x="70" y="52" text-anchor="middle" fill="#1d4f9f">App repo</text><text x="70" y="68" text-anchor="middle" fill="#1d4f9f" font-size="10" font-weight="500">code push</text>
+          <rect x="160" y="30" width="140" height="50" rx="8" fill="#37352f"/><text x="230" y="52" text-anchor="middle" fill="#ffd43b">CI pipeline</text><text x="230" y="68" text-anchor="middle" fill="#e6e6e3" font-size="10" font-weight="500">Jenkins / GitLab / Actions</text>
+          <rect x="335" y="30" width="120" height="50" rx="8" fill="#fdecc8" stroke="#dfab01"/><text x="395" y="52" text-anchor="middle" fill="#a07a00">Registry</text><text x="395" y="68" text-anchor="middle" fill="#a07a00" font-size="10" font-weight="500">image :a1b2c3d</text>
+          <rect x="335" y="130" width="120" height="50" rx="8" fill="#dceaf7" stroke="#2383e2"/><text x="395" y="152" text-anchor="middle" fill="#1d4f9f">Config repo</text><text x="395" y="168" text-anchor="middle" fill="#1d4f9f" font-size="10" font-weight="500">image tag bumped</text>
+          <rect x="490" y="130" width="110" height="50" rx="8" fill="#37352f"/><text x="545" y="160" text-anchor="middle" fill="#ffd43b">ArgoCD</text>
+          <rect x="635" y="130" width="110" height="50" rx="8" fill="#ddedea" stroke="#0f7b0f"/><text x="690" y="160" text-anchor="middle" fill="#0a5f0a">Cluster</text>
+          <g stroke="#37352f" stroke-width="2" marker-end="url(#e1)"><line x1="127" y1="55" x2="158" y2="55"/><line x1="302" y1="55" x2="333" y2="55"/><line x1="230" y1="82" x2="333" y2="148"/><line x1="545" y1="130" x2="460" y2="150" stroke-dasharray="5 3"/><line x1="602" y1="155" x2="633" y2="155"/></g>
+          <text x="75" y="115" fill="#37352f" font-weight="700">1 · build, test, scan, push image</text>
+          <text x="75" y="205" fill="#37352f" font-weight="700">2 · CI commits new tag to config repo   3 · ArgoCD detects &amp; syncs</text>
+        </g>
+      </svg>
+      <div class="diagram-caption">Figure 6.2 · CI/CD split between CI tool and ArgoCD</div>
+    </div>
+<pre><span class="pre-lang">GitHub Actions: last job of CI</span><code>  update-config:
+    needs: image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: my-org/shop-config
+          token: ${{ secrets.CONFIG_REPO_TOKEN }}
+      - run: |
+          cd apps/shop-api/overlays/staging
+          kustomize edit set image shop-api=ghcr.io/my-org/shop-api:${{ github.sha }}
+          git config user.name  "ci-bot"
+          git config user.email "ci-bot@example.com"
+          git commit -am "shop-api: deploy ${{ github.sha }}"
+          git push</code></pre>
+    <p>Staging syncs automatically. For production, a pull request to the <code>production</code> overlay (approved by a human) is the release gate — the PR <em>is</em> the audit trail. Rolling back = <code>git revert</code>.</p>
+  </div>
+</section>
+
+<!-- ================= TAB 7: EXPERT PRACTICES ================= -->
+<section class="panel" id="t7" data-toc='[
+  ["s7-1","DevSecOps in the pipeline"],
+  ["s7-2","Supply-chain security"],
+  ["s7-3","Infrastructure as Code in CI/CD"],
+  ["s7-4","Speed &amp; reliability"],
+  ["s7-5","Testing strategy"],
+  ["s7-6","Rollbacks &amp; observability"],
+  ["s7-7","Choosing the right tool"],
+  ["s7-8","Learning path"]
+]'>
+  <div class="panel-header">
+    <div class="level-row"><span class="level-tag adv">Expert</span></div>
+    <p class="panel-eyebrow">Module 07 · Mastery</p>
+    <h1 class="panel-title">Expert Practices &amp; Decision Guide</h1>
+    <p class="panel-subtitle">What separates a working pipeline from a great one: security, speed, reliability, rollbacks — plus a guide for picking the right tool and a roadmap for what to practise next.</p>
+  </div>
+
+  <div class="section" id="s7-1">
+    <h2><span class="sec-emoji">🛡️</span> DevSecOps — shift security left</h2>
+    <p>Finding a vulnerability in a pull request costs minutes; finding it in production costs weeks. Add automated security checks at every stage:</p>
+    <table>
+      <thead><tr><th>Check</th><th>Finds</th><th>Typical tools</th><th>When</th></tr></thead>
+      <tbody>
+        <tr><td>Secret scanning</td><td>Committed passwords/API keys</td><td>Gitleaks, TruffleHog</td><td>Pre-commit + every PR</td></tr>
+        <tr><td>SAST</td><td>Insecure code patterns</td><td>SonarQube, Semgrep, CodeQL</td><td>PR</td></tr>
+        <tr><td>SCA</td><td>Vulnerable dependencies</td><td>Dependabot, Snyk, OWASP Dep-Check</td><td>PR + nightly</td></tr>
+        <tr><td>Container scan</td><td>CVEs in image layers</td><td>Trivy, Grype</td><td>After image build</td></tr>
+        <tr><td>IaC scan</td><td>Misconfigured Terraform/K8s</td><td>Checkov, tfsec, kube-linter</td><td>PR</td></tr>
+        <tr><td>DAST</td><td>Runtime web vulnerabilities</td><td>OWASP ZAP</td><td>Against staging</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section" id="s7-2">
+    <h2><span class="sec-emoji">⛓️</span> Software supply-chain security</h2>
+    <ul>
+      <li><strong>SBOM</strong> (Software Bill of Materials): generate a list of every component in the image (Syft, <code>docker sbom</code>).</li>
+      <li><strong>Sign images</strong> with <strong>cosign</strong> and verify the signature at deploy time (Kyverno, Sigstore policy controller).</li>
+      <li><strong>Provenance</strong> (SLSA): record <em>which pipeline built this artifact from which commit</em>.</li>
+      <li><strong>Pin</strong> base images by digest and third-party actions by commit SHA.</li>
+      <li><strong>Least privilege</strong>: short-lived OIDC credentials, per-environment secrets, protected branches.</li>
+    </ul>
+<pre><span class="pre-lang">bash</span><code>trivy image --exit-code 1 --severity HIGH,CRITICAL $IMAGE      <span class="c"># fail the build on serious CVEs</span>
+syft $IMAGE -o spdx-json &gt; sbom.json                            <span class="c"># generate SBOM</span>
+cosign sign --yes $IMAGE                                        <span class="c"># keyless signing via OIDC</span></code></pre>
+  </div>
+
+  <div class="section" id="s7-3">
+    <h2><span class="sec-emoji">🏗️</span> Infrastructure as Code in CI/CD</h2>
+    <p>Pipelines should deploy <em>infrastructure</em> the same way as applications. The standard Terraform flow gives a human-reviewable plan before anything changes:</p>
+<pre><span class="pre-lang">GitHub Actions: terraform.yml</span><code>on:
+  pull_request: { paths: ['infra/**'] }
+  push: { branches: [main], paths: ['infra/**'] }
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    permissions: { id-token: write, contents: read, pull-requests: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform -chdir=infra init -input=false
+      - run: terraform -chdir=infra fmt -check
+      - run: terraform -chdir=infra validate
+      - run: terraform -chdir=infra plan -out=tfplan -input=false     <span class="c"># shown on the PR</span>
+      - if: github.ref == 'refs/heads/main'
+        run: terraform -chdir=infra apply -input=false tfplan          <span class="c"># only after merge</span></code></pre>
+    <p>Store Terraform state in a remote, locked backend (S3 + DynamoDB lock, Terraform Cloud) — never in the runner.</p>
+  </div>
+
+  <div class="section" id="s7-4">
+    <h2><span class="sec-emoji">⚡</span> Speed &amp; reliability</h2>
+    <div class="cards">
+      <div class="card"><div class="card-title">Cache aggressively</div><div class="card-desc">Dependency caches keyed on lockfile hashes; Docker layer caching; remote build caches (Bazel, Gradle).</div></div>
+      <div class="card"><div class="card-title">Parallelise</div><div class="card-desc">Run independent jobs/test shards at the same time; use DAG / <code>needs</code>.</div></div>
+      <div class="card"><div class="card-title">Fail fast</div><div class="card-desc">Put cheap checks (lint, unit tests) first; stop on first failure.</div></div>
+      <div class="card"><div class="card-title">Run only what changed</div><div class="card-desc">Path filters and monorepo tooling avoid rebuilding unaffected services.</div></div>
+      <div class="card"><div class="card-title">Ephemeral runners</div><div class="card-desc">Clean environments per job eliminate "polluted agent" flakiness.</div></div>
+      <div class="card"><div class="card-title">Kill flaky tests</div><div class="card-desc">Quarantine and fix; a pipeline people re-run "until green" teaches them to ignore red.</div></div>
+    </div>
+    <div class="callout note">
+      <div class="callout-icon">⏱️</div>
+      <div class="callout-body"><strong>Target:</strong> developer feedback on a pull request in under ~10 minutes. Longer than that and engineers context-switch and batch up risky large changes — the opposite of what CI is for.</div>
+    </div>
+  </div>
+
+  <div class="section" id="s7-5">
+    <h2><span class="sec-emoji">🧪</span> Testing strategy — the pyramid</h2>
+    <div class="diagram">
+      <svg viewBox="0 0 700 230" xmlns="http://www.w3.org/2000/svg">
+        <g font-family="Noto Sans" font-size="13" font-weight="600">
+          <polygon points="350,20 440,80 260,80" fill="#fadec9" stroke="#d9730d"/><text x="350" y="65" text-anchor="middle" fill="#a85a08">E2E</text>
+          <polygon points="260,80 440,80 500,140 200,140" fill="#fdecc8" stroke="#dfab01"/><text x="350" y="116" text-anchor="middle" fill="#a07a00">Integration / API</text>
+          <polygon points="200,140 500,140 560,200 140,200" fill="#ddedea" stroke="#0f7b0f"/><text x="350" y="176" text-anchor="middle" fill="#0a5f0a">Unit tests</text>
+          <text x="600" y="60" fill="#787774" font-size="11" font-weight="500">few · slow · costly</text>
+          <text x="600" y="180" fill="#787774" font-size="11" font-weight="500">many · fast · cheap</text>
+        </g>
+      </svg>
+      <div class="diagram-caption">Figure 7.1 · Many fast unit tests, fewer slow end-to-end tests</div>
+    </div>
+    <p>Continuous deployment is only as safe as your tests. Add <strong>smoke tests</strong> after each deploy (is the health endpoint up? can a user log in?) and <strong>contract tests</strong> between services.</p>
+  </div>
+
+  <div class="section" id="s7-6">
+    <h2><span class="sec-emoji">↩️</span> Rollbacks &amp; observability</h2>
+    <table>
+      <thead><tr><th>Tool</th><th>How to roll back</th></tr></thead>
+      <tbody>
+        <tr><td>Jenkins</td><td>Re-run a previous build / redeploy the previously tagged artifact; automate with a parameterised "deploy version X" job</td></tr>
+        <tr><td>GitLab CI</td><td>Environments page → <strong>Rollback</strong> on an earlier deployment</td></tr>
+        <tr><td>GitHub Actions</td><td>Re-run the old workflow run, or <code>workflow_dispatch</code> with a version input</td></tr>
+        <tr><td>ArgoCD</td><td><code>git revert</code> the config commit (preferred) or <code>argocd app rollback</code></td></tr>
+        <tr><td>Argo Rollouts</td><td>Automatic abort + rollback when analysis metrics fail</td></tr>
+      </tbody>
+    </table>
+    <p>Close the loop with <strong>observability</strong>: send deploy markers to Grafana/Datadog, alert on error-rate and latency regressions right after a release, and track the four DORA metrics from Module 01.</p>
+  </div>
+
+  <div class="section" id="s7-7">
+    <h2><span class="sec-emoji">🧭</span> Choosing the right tool</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>If your situation is…</th><th>Choose</th></tr></thead>
+      <tbody>
+        <tr><td>Code already on GitHub, want zero infrastructure to manage</td><td><strong>GitHub Actions</strong></td></tr>
+        <tr><td>Want one platform for repo + CI/CD + registry + security scanning</td><td><strong>GitLab CI/CD</strong></td></tr>
+        <tr><td>Complex legacy builds, air-gapped network, need unlimited customisation, have a platform team</td><td><strong>Jenkins</strong></td></tr>
+        <tr><td>Deploying to Kubernetes with audit, drift detection and multi-cluster needs</td><td><strong>ArgoCD</strong> (paired with any CI above)</td></tr>
+        <tr><td>Regulated environment needing approvals and an audit trail</td><td>Any CI + <strong>ArgoCD</strong> with PR-based promotion</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="section" id="s7-8">
+    <h2><span class="sec-emoji">🎓</span> Learning path</h2>
+    <div class="cards">
+      <div class="card"><div class="card-icon" style="background:var(--green-soft)">🌱</div><div class="card-title">Basic</div><div class="card-desc">Understand CI vs CD. Write a simple build+test pipeline in GitHub Actions or GitLab CI. Learn Git branching and Docker.</div></div>
+      <div class="card"><div class="card-icon" style="background:#e3ecfb">🌿</div><div class="card-title">Intermediate</div><div class="card-desc">Secrets, caching, matrix builds, Docker image publishing, environments with approvals, Jenkins Declarative pipelines, deploy to Kubernetes.</div></div>
+      <div class="card"><div class="card-icon" style="background:#f5e0e9">🌳</div><div class="card-title">Expert</div><div class="card-desc">Reusable workflows/shared libraries, OIDC, GitOps with ArgoCD &amp; Rollouts, supply-chain security, DORA metrics, platform engineering.</div></div>
+    </div>
+    <div class="callout success">
+      <div class="callout-icon">🏁</div>
+      <div class="callout-body"><strong>Practice project:</strong> take a small web app → build &amp; test on every PR (GitHub Actions) → scan and push an image → bump the tag in a config repo → let ArgoCD deploy it to a local <code>kind</code> or <code>minikube</code> cluster → break it on purpose and roll back with <code>git revert</code>. Then take the Assessment tab.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TAB 8: ASSESSMENT ================= -->
+<section class="panel" id="t8" data-toc='[
+  ["s8-1","Knowledge check"]
+]'>
+  <div class="panel-header">
+    <div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div>
+    <p class="panel-eyebrow">Module 08</p>
+    <h1 class="panel-title">Assessment</h1>
+    <p class="panel-subtitle">Test yourself on CI/CD Automation — from basic to expert.</p>
+  </div>
+  <div class="section" id="s8-1"><div class="cb-assess-intro"><h3>Test what you've learned</h3><p>Full-screen, timed assessment on CI/CD Automation.</p><ul><li><strong>50 multiple-choice questions</strong> — concepts and scenarios, basic to expert</li><li><strong>60-minute</strong> timer with warning state and automatic submission</li><li>Question palette, Previous/Next, Mark for Review</li><li>Full-screen and tab-switch warnings — <strong>3 warnings auto-submit</strong></li><li>Copy, cut, right-click and screenshot/print shortcuts are blocked</li><li>Questions and options are shuffled on every attempt</li></ul><button class="cb-start" id="cbAssessStart">▶ Start Assessment</button></div></div>
+</section>
+
+  </main>
+</div>
+
+<script>
+/* ---------- Tabs, TOC, scroll spy ---------- */
+(function(){
+  const tabs=document.querySelectorAll('.tab'), panels=document.querySelectorAll('.panel');
+  const tocEl=document.getElementById('toc'), total=tabs.length, pt=document.getElementById('progressText');
+  function buildToc(panel){
+    const data=JSON.parse(panel.getAttribute('data-toc')||'[]');
+    tocEl.innerHTML=data.map(([id,l])=>`<li><a href="#${id}" data-target="${id}">${l}</a></li>`).join('');
+    const f=tocEl.querySelector('a'); if(f)f.classList.add('active');
+  }
+  function activate(i){
+    tabs.forEach((t,k)=>t.classList.toggle('active',k===i));
+    panels.forEach((p,k)=>p.classList.toggle('active',k===i));
+    buildToc(panels[i]); pt.textContent=`Tab ${i+1} of ${total}`;
+    window.scrollTo({top:0,behavior:'instant'});
+    tabs[i].scrollIntoView({block:'nearest',inline:'nearest'});
+  }
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('.toc-list a'); if(!a)return; e.preventDefault();
+    const el=document.getElementById(a.dataset.target);
+    if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});
+  });
+  let tick=false;
+  function spy(){
+    const p=document.querySelector('.panel.active'); if(!p){tick=false;return;}
+    let cur=null; p.querySelectorAll('.section').forEach(s=>{ if(s.getBoundingClientRect().top-180<0)cur=s.id; });
+    if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));
+    tick=false;
+  }
+  window.addEventListener('scroll',()=>{ if(!tick){requestAnimationFrame(spy);tick=true;} },{passive:true});
+  window.resetProgress=()=>activate(0);
+  activate(0);
+})();
+
+/* Assessment — timed full-screen exam with rules & security */
+(function(){
+  const ROLE = "DevOps Engineer \u2014 CI/CD Automation";
+  const QUESTION_BANK = [{"id": "cicd_automation_devops_3-01", "q": "What is the key difference between Continuous Delivery and Continuous Deployment?", "options": ["Delivery has no automated tests", "Deployment releases to production automatically; Delivery needs a manual approval", "Delivery is only for mobile apps", "There is no difference"], "answer": 1, "difficulty": "", "explanation": "Both automate up to a release-ready artifact. Continuous Deployment also pushes to production automatically; Delivery keeps a human approval step."}, {"id": "cicd_automation_devops_3-02", "q": "'Build once, deploy many' means:", "options": ["Build separately for each environment", "Promote the same artifact through dev, staging and prod", "Build only once per month", "Deploy only once"], "answer": 1, "difficulty": "", "explanation": "Rebuilding per environment means you are not testing what you ship. Promote one immutable artifact."}, {"id": "cicd_automation_devops_3-03", "q": "Which model is ArgoCD?", "options": ["Push-based: CI pushes into the cluster", "Pull-based: an in-cluster agent reconciles from Git", "Manual FTP deploys", "Cron-only"], "answer": 1, "difficulty": "", "explanation": "ArgoCD runs inside the cluster, pulls desired state from Git and continuously reconciles it (GitOps)."}, {"id": "cicd_automation_devops_3-04", "q": "Which strategy switches all traffic at once between two identical full environments?", "options": ["Rolling", "Canary", "Blue-Green", "Recreate"], "answer": 2, "difficulty": "", "explanation": "Blue-Green keeps the old (blue) and new (green) stacks side by side and flips the router, giving instant cut-over and rollback."}, {"id": "cicd_automation_devops_3-05", "q": "In Jenkins, why should the controller have 0 executors?", "options": ["Executors are deprecated", "To keep builds off the controller for security and stability", "Jenkins cannot run builds on controllers", "To save disk"], "answer": 1, "difficulty": "", "explanation": "The controller manages scheduling and secrets. Running builds there risks both stability and credential exposure."}, {"id": "cicd_automation_devops_3-06", "q": "What is a Jenkins Shared Library used for?", "options": ["Sharing Docker images", "Reusing pipeline code across many repos", "Storing artifacts", "Managing users"], "answer": 1, "difficulty": "", "explanation": "A shared library is a separate Git repo of Groovy code that Jenkinsfiles import, so pipeline logic is maintained in one place."}, {"id": "cicd_automation_devops_3-07", "q": "Which Jenkinsfile directive pauses the pipeline for a human approval?", "options": ["when", "post", "input", "parallel"], "answer": 2, "difficulty": "", "explanation": "The input step waits for a person to approve, implementing Continuous Delivery approval."}, {"id": "cicd_automation_devops_3-08", "q": "Which block runs regardless of success or failure in Declarative Jenkins?", "options": ["post { always { } }", "environment { }", "agent { }", "options { }"], "answer": 0, "difficulty": "", "explanation": "post { always { } } executes after the pipeline or stage no matter the result \u2014 good for publishing reports and cleanup."}, {"id": "cicd_automation_devops_3-09", "q": "In .gitlab-ci.yml, jobs in the SAME stage run:", "options": ["One after another", "In parallel (if runners are available)", "Only on Fridays", "Only manually"], "answer": 1, "difficulty": "", "explanation": "Stages run in order, but jobs inside a stage run in parallel."}, {"id": "cicd_automation_devops_3-10", "q": "What does 'needs:' do in GitLab CI?", "options": ["Installs packages", "Lets a job start as soon as listed jobs finish, ignoring stage order (DAG)", "Sets environment variables", "Defines runners"], "answer": 1, "difficulty": "", "explanation": "needs builds a directed acyclic graph so jobs don't wait for an entire stage."}, {"id": "cicd_automation_devops_3-11", "q": "Difference between GitLab artifacts and cache?", "options": ["They are identical", "Artifacts pass job outputs between jobs; cache speeds up repeated runs best-effort", "Cache is for secrets", "Artifacts are deleted instantly"], "answer": 1, "difficulty": "", "explanation": "Artifacts are guaranteed outputs handed to later jobs/UI; cache is an optimisation that a job must not depend on."}, {"id": "cicd_automation_devops_3-12", "q": "Best way to authenticate a GitLab or GitHub pipeline to AWS without storing long-lived keys?", "options": ["Commit keys to the repo", "OIDC federation with short-lived tokens", "Email keys to the runner", "Use the root account"], "answer": 1, "difficulty": "", "explanation": "OIDC lets the cloud trust the CI platform's identity and issue temporary credentials."}, {"id": "cicd_automation_devops_3-13", "q": "Where are GitHub Actions workflows stored?", "options": ["/workflows at repo root", ".github/workflows/", ".actions/", "Jenkinsfile"], "answer": 1, "difficulty": "", "explanation": "Workflow YAML files live under .github/workflows/ in the repository."}, {"id": "cicd_automation_devops_3-14", "q": "What does 'permissions: contents: read' at the top of a workflow achieve?", "options": ["Makes the repo private", "Limits the GITHUB_TOKEN to least privilege", "Speeds up builds", "Enables caching"], "answer": 1, "difficulty": "", "explanation": "Restricting default token permissions limits damage if a step is compromised."}, {"id": "cicd_automation_devops_3-15", "q": "Why pin third-party actions to a full commit SHA?", "options": ["Faster downloads", "Tags can be moved; a SHA is immutable and protects against supply-chain tampering", "SHAs are required by GitHub", "It enables matrix builds"], "answer": 1, "difficulty": "", "explanation": "A mutable tag like @v3 can be repointed to malicious code; a commit SHA cannot."}, {"id": "cicd_automation_devops_3-16", "q": "A reusable workflow is called with which trigger/keyword?", "options": ["on: workflow_call and uses: org/repo/.github/workflows/x.yml@ref", "on: schedule", "runs-on: reusable", "needs: workflow"], "answer": 0, "difficulty": "", "explanation": "The callee declares on: workflow_call; the caller references it with uses: at job level."}, {"id": "cicd_automation_devops_3-17", "q": "In ArgoCD, what does selfHeal: true do?", "options": ["Restarts the Argo server", "Reverts manual changes in the cluster back to the state in Git", "Deletes the Git repo", "Backs up etcd"], "answer": 1, "difficulty": "", "explanation": "selfHeal detects drift (e.g. someone ran kubectl edit) and re-applies the Git-defined state."}, {"id": "cicd_automation_devops_3-18", "q": "What does prune: true do in an ArgoCD sync policy?", "options": ["Compresses manifests", "Deletes cluster resources that have been removed from Git", "Prunes old Docker images", "Deletes the Application"], "answer": 1, "difficulty": "", "explanation": "Pruning removes live resources no longer defined in the source of truth."}, {"id": "cicd_automation_devops_3-19", "q": "Which ArgoCD feature generates many Applications from a template (per cluster/folder/PR)?", "options": ["Sync hook", "ApplicationSet", "ConfigMap", "Ingress"], "answer": 1, "difficulty": "", "explanation": "ApplicationSet uses generators (git, list, cluster, pull request) to stamp out Applications at scale."}, {"id": "cicd_automation_devops_3-20", "q": "In a modern GitOps flow, how does production get a new image version?", "options": ["CI runs kubectl apply on prod", "CI updates the image tag in the config repo; ArgoCD syncs it (after a PR approval for prod)", "Developers SSH into nodes", "The registry pushes into the cluster"], "answer": 1, "difficulty": "", "explanation": "CI never touches the cluster. The Git commit to the config repo is the release, and a revert is the rollback."}, {"id": "cicd_automation_devops_3-21", "q": "What is Continuous Integration (CI)?", "options": ["Merging code to a shared branch frequently with automated builds and tests", "Writing integration documents", "Deploying to production every night manually", "Merging once per release"], "answer": 0, "difficulty": "", "explanation": "CI catches integration problems early by building and testing every change."}, {"id": "cicd_automation_devops_3-22", "q": "A CI pipeline should fail when\u2026", "options": ["A developer goes home", "Code coverage increases", "The build takes 1 second", "Tests, linting or security checks fail"], "answer": 3, "difficulty": "", "explanation": "Failing fast stops broken code from moving forward."}, {"id": "cicd_automation_devops_3-23", "q": "Trunk-based development means\u2026", "options": ["Developers merge small changes to main frequently, often behind feature flags", "No version control", "Long-lived feature branches for months", "Only one developer commits"], "answer": 0, "difficulty": "", "explanation": "Short-lived branches reduce merge conflicts."}, {"id": "cicd_automation_devops_3-24", "q": "A feature flag allows\u2026", "options": ["Encrypting secrets", "Skipping tests", "Deleting features", "Deploying code while controlling whether a feature is enabled at runtime"], "answer": 3, "difficulty": "", "explanation": "Decouples deploy from release."}, {"id": "cicd_automation_devops_3-25", "q": "A canary deployment\u2026", "options": ["Deploys without monitoring", "Sends a small percentage of traffic to the new version before full rollout", "Deploys only on Fridays", "Switches all traffic at once"], "answer": 1, "difficulty": "", "explanation": "Limits blast radius."}, {"id": "cicd_automation_devops_3-26", "q": "A rolling deployment\u2026", "options": ["Replaces all instances at once", "Replaces instances gradually with the new version", "Requires two full environments", "Never updates instances"], "answer": 1, "difficulty": "", "explanation": "Default in Kubernetes Deployments."}, {"id": "cicd_automation_devops_3-27", "q": "The main benefit of blue-green deployment is\u2026", "options": ["Instant switch and instant rollback between two environments", "Lowest infrastructure cost", "No need for testing", "No load balancer needed"], "answer": 0, "difficulty": "", "explanation": "Costs double infra during switch."}, {"id": "cicd_automation_devops_3-28", "q": "Artifact repositories (Nexus, Artifactory, ECR) store\u2026", "options": ["Versioned build outputs like images and packages", "Developer laptops", "Monitoring dashboards", "Source code only"], "answer": 0, "difficulty": "", "explanation": "Promote the same artifact across environments."}, {"id": "cicd_automation_devops_3-29", "q": "Semantic versioning MAJOR.MINOR.PATCH \u2014 a breaking change bumps\u2026", "options": ["Nothing", "MAJOR", "PATCH", "MINOR"], "answer": 1, "difficulty": "", "explanation": "Signals incompatibility."}, {"id": "cicd_automation_devops_3-30", "q": "The test pyramid recommends\u2026", "options": ["Mostly end-to-end tests", "Only manual tests", "Many unit tests, fewer integration tests, few end-to-end tests", "No unit tests"], "answer": 2, "difficulty": "", "explanation": "Fast, cheap tests at the base."}, {"id": "cicd_automation_devops_3-31", "q": "SAST tools scan\u2026", "options": ["Source code for vulnerabilities without running it", "Cloud bills", "Network traffic", "Running applications only"], "answer": 0, "difficulty": "", "explanation": "Static Application Security Testing."}, {"id": "cicd_automation_devops_3-32", "q": "DAST tools test\u2026", "options": ["Container image layers only", "A running application from the outside", "Source code statically", "Git history"], "answer": 1, "difficulty": "", "explanation": "Dynamic Application Security Testing."}, {"id": "cicd_automation_devops_3-33", "q": "SCA (software composition analysis) checks\u2026", "options": ["Commit messages", "Third-party dependencies for known vulnerabilities and licences", "Server temperature", "UI design"], "answer": 1, "difficulty": "", "explanation": "E.g. Dependabot, Snyk."}, {"id": "cicd_automation_devops_3-34", "q": "Pipeline secrets should be stored\u2026", "options": ["In commit messages", "In the README", "Hard-coded in YAML", "In the CI platform's secret store or a vault, never in the repo"], "answer": 3, "difficulty": "", "explanation": "Masked and access-controlled."}, {"id": "cicd_automation_devops_3-35", "q": "In Jenkins, a Declarative Pipeline starts with\u2026", "options": ["build { }", "job { }", "node { } only", "pipeline { }"], "answer": 3, "difficulty": "", "explanation": "Declarative syntax root block."}, {"id": "cicd_automation_devops_3-36", "q": "Jenkins agents are\u2026", "options": ["Machines/containers that run pipeline steps", "Users", "Credentials", "Plugins"], "answer": 0, "difficulty": "", "explanation": "Keep work off the controller."}, {"id": "cicd_automation_devops_3-37", "q": "Jenkins 'stash/unstash' is used to\u2026", "options": ["Store secrets", "Delete workspaces", "Pass files between stages/agents in the same run", "Archive long-term artifacts"], "answer": 2, "difficulty": "", "explanation": "Short-lived file transfer."}, {"id": "cicd_automation_devops_3-38", "q": "In GitLab CI, 'rules:' controls\u2026", "options": ["When a job is added to the pipeline", "Runner tags only", "Job artifacts", "Container images"], "answer": 0, "difficulty": "", "explanation": "Conditional job inclusion."}, {"id": "cicd_automation_devops_3-39", "q": "GitLab runners are\u2026", "options": ["Agents that execute CI jobs", "Merge request reviewers", "Issue trackers", "Docker registries"], "answer": 0, "difficulty": "", "explanation": "Shared, group or project runners."}, {"id": "cicd_automation_devops_3-40", "q": "GitLab 'environment:' in a job enables\u2026", "options": ["Linting", "Variables only", "Tracking deployments and rollbacks per environment", "Caching"], "answer": 2, "difficulty": "", "explanation": "Deployment history in UI."}, {"id": "cicd_automation_devops_3-41", "q": "In GitHub Actions, a matrix strategy\u2026", "options": ["Encrypts secrets", "Stops workflows", "Runs a job across combinations of versions/OS", "Merges PRs"], "answer": 2, "difficulty": "", "explanation": "Parallel test coverage."}, {"id": "cicd_automation_devops_3-42", "q": "GitHub Actions 'environments' with required reviewers provide\u2026", "options": ["Faster builds", "Code formatting", "Manual approval gates before deployment", "Free runners"], "answer": 2, "difficulty": "", "explanation": "Protection rules."}, {"id": "cicd_automation_devops_3-43", "q": "GitHub Actions cache action is used to\u2026", "options": ["Deploy apps", "Store secrets", "Archive logs forever", "Reuse dependencies between runs to speed builds"], "answer": 3, "difficulty": "", "explanation": "Keyed by lockfile hash."}, {"id": "cicd_automation_devops_3-44", "q": "GitOps means\u2026", "options": ["Storing logs in Git", "Git is the single source of truth for desired state, reconciled automatically", "Using Git only for docs", "Manual kubectl apply from laptops"], "answer": 1, "difficulty": "", "explanation": "Pull-based reconciliation."}, {"id": "cicd_automation_devops_3-45", "q": "Pull-based GitOps (ArgoCD/Flux) is more secure because\u2026", "options": ["It skips authentication", "It uses public repos only", "The cluster pulls changes, so CI doesn't need cluster credentials", "It disables RBAC"], "answer": 2, "difficulty": "", "explanation": "Smaller attack surface."}, {"id": "cicd_automation_devops_3-46", "q": "An ArgoCD Application that is 'OutOfSync' means\u2026", "options": ["The app is healthy and matches Git", "Pods are deleted", "Live cluster state differs from Git", "Git is offline"], "answer": 2, "difficulty": "", "explanation": "Sync to reconcile."}, {"id": "cicd_automation_devops_3-47", "q": "Flux is\u2026", "options": ["A CNCF GitOps toolkit similar to ArgoCD", "A CI server", "A container runtime", "A monitoring tool"], "answer": 0, "difficulty": "", "explanation": "Alternative GitOps controller."}, {"id": "cicd_automation_devops_3-48", "q": "DORA 'lead time for changes' measures\u2026", "options": ["Time from commit to running in production", "Build duration only", "Time to hire engineers", "Meeting length"], "answer": 0, "difficulty": "", "explanation": "Delivery speed."}, {"id": "cicd_automation_devops_3-49", "q": "DORA 'change failure rate' measures\u2026", "options": ["Percentage of deployments causing failures", "Uptime only", "Test count", "Number of commits"], "answer": 0, "difficulty": "", "explanation": "Stability."}, {"id": "cicd_automation_devops_3-50", "q": "DORA 'MTTR' (time to restore) measures\u2026", "options": ["Release frequency", "Build time", "How quickly service is restored after an incident", "Time to merge PRs"], "answer": 2, "difficulty": "", "explanation": "Recovery speed."}];
+  const EXAM_MINUTES = Math.ceil(QUESTION_BANK.length*1.2);
+  const EXAM_SECONDS = EXAM_MINUTES*60;
+  const EXAM_COUNT = QUESTION_BANK.length;
+  const LS_KEY = 'careerBuddyAssessment:' + ROLE;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false, warns=0, proctorOn=false, lastWarn=0;
+  const esc = s => String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const fmt=t=>{const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s};
+  const css=`
+  .cb-exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .cb-exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .cb-exam-top .et-title{font-size:16px;font-weight:800}.cb-exam-top .et-sub{font-size:12px;color:#cdd5e5}.cb-exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}.cb-exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:cbpulse 1s infinite}@keyframes cbpulse{50%{opacity:.5}}
+  .cb-exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}.cb-exam-q-pane{padding:28px 36px;overflow:auto}.cb-exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}.cb-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}.cb-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}.cb-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}.cb-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}.cb-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}.cb-opt:hover{border-color:#14213D;background:#f9f9ff}.cb-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}.cb-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}.cb-opt.sel .k{background:#14213D;color:#fff}.cb-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}.cb-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}.cb-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}.cb-btn.nav:disabled{opacity:.4;cursor:not-allowed}.cb-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}.cb-btn.mark.on{background:#FCA311;color:#14213D}.cb-btn.submit{background:#FCA311;color:#14213D}.cb-btn.primary{background:#14213D;color:#fff}.cb-side-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}.cb-count{font-size:13px;color:#4a5568;font-weight:600}.cb-count b{color:#14213D}.cb-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.cb-pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}.cb-pal.answered{background:#14213D;color:#fff;border-color:#14213D}.cb-pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}.cb-pal.cur{outline:2px solid #14213D;outline-offset:1px}.cb-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}.cb-legend span{display:inline-flex;align-items:center;gap:8px}.cb-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}.cb-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}.cb-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}.cb-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}.cb-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}.cb-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}.cb-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}.cb-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}.cb-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}.cb-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}.cb-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}.cb-rev .r.ok{border-left-color:#38a169}.cb-rev .r.no{border-left-color:#e53e3e}.cb-rev .rq{font-weight:700;margin-bottom:6px}.cb-rev .ra{font-size:13px;margin:2px 0}.cb-rev .ra.wrong{color:#c53030}.cb-rev .ra.cor{color:#276749}.cb-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}.cb-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}.cb-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}.cb-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}.cb-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}.cb-confirm .row{display:flex;gap:10px;justify-content:flex-end}.cb-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}.cb-cover small{font-weight:500;color:#cdd5e5;font-size:14px}.cb-assess-intro{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}.cb-assess-intro h3{margin:0 0 8px;font-size:21px}.cb-assess-intro p{margin:6px 0;color:var(--ink-soft)}.cb-assess-intro ul{margin:12px 0 18px}.cb-start{border:0;background:#14213D;color:#fff;border-radius:9px;padding:12px 18px;font:700 14px inherit;cursor:pointer}.cb-start:hover{opacity:.92}
+  @media(max-width:820px){.cb-exam-main{grid-template-columns:1fr}.cb-exam-side{border-left:none;border-top:1px solid #e2e8f0}.cb-exam-q-pane{padding:22px 18px}.cb-exam-top{padding:10px 14px}}
+  `;
+  function injectCss(){if(document.getElementById('cbExamCss'))return;const s=document.createElement('style');s.id='cbExamCss';s.textContent=css;document.head.appendChild(s)}
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function buildAttempt(){
+    const recent=JSON.parse(localStorage.getItem(LS_KEY+'_attempts')||'[]');
+    let selected=[], sig='';
+    for(let tries=0;tries<25;tries++){
+      selected=shuffle(QUESTION_BANK.slice()).slice(0,EXAM_COUNT);
+      sig=selected.map(x=>x.id).sort().join('|');
+      if(!recent.includes(sig))break;
+    }
+    recent.unshift(sig); try{localStorage.setItem(LS_KEY+'_attempts',JSON.stringify(recent.slice(0,20)))}catch(e){}
+    return selected.map(q=>{const c=JSON.parse(JSON.stringify(q)); const pairs=c.options.map((o,i)=>({o,i}));shuffle(pairs);c.options=pairs.map(x=>x.o);c.answer=pairs.findIndex(x=>x.i===q.answer);return c});
+  }
+  function confirmBox(title,msg,okLabel){return new Promise(resolve=>{injectCss();const d=document.createElement('div');d.className='cb-confirm';d.innerHTML=`<div class="box"><h3>${esc(title)}</h3><p>${esc(msg)}</p><div class="row"><button class="cb-btn nav" data-a="0">Cancel</button><button class="cb-btn primary" data-a="1">${esc(okLabel||'Confirm')}</button></div></div>`;document.body.appendChild(d);d.addEventListener('click',e=>{if(e.target===d){d.remove();resolve(false);return}const b=e.target.closest('[data-a]');if(!b)return;d.remove();resolve(b.dataset.a==='1')})})}
+  function startEntry(){showSplash()}
+  function showSplash(){injectCss();const sp=document.createElement('div');sp.className='cb-splash';sp.id='cbExamSplash';sp.innerHTML=`<div class="card"><h2>🎯 ${esc(ROLE)} — Assessment</h2><p>A timed, full-screen assessment based on this course.</p><ul><li><b>${EXAM_COUNT} questions</b> drawn from this course's question bank</li><li><b>${EXAM_MINUTES}-minute</b> timer — the assessment auto-submits when time is up</li><li>Navigate freely, answer questions, and <b>mark questions for review</b></li><li>Questions and answer options are shuffled on every attempt</li></ul><p style="font-weight:700;color:#14213D;margin-bottom:6px">Assessment rules</p><ul style="margin-top:0"><li>The assessment runs in <b>fullscreen</b>.</li><li>Do not switch tabs/windows or exit fullscreen.</li><li><b>3 warnings</b> for tab/window switching or leaving fullscreen will auto-submit the assessment.</li><li>Copy, cut, right-click and common screenshot/print shortcuts are blocked during the assessment.</li></ul><button class="cb-btn primary" id="cbExamBegin" style="width:100%;padding:14px">Start Assessment →</button></div>`;document.body.appendChild(sp);document.getElementById('cbExamBegin').addEventListener('click',()=>{if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});sp.remove();enterExam()})}
+  function enterExam(){injectCss();items=buildAttempt();answers={};marked={};cur=0;remaining=EXAM_SECONDS;examOn=true;document.body.style.overflow='hidden';const ov=document.createElement('div');ov.className='cb-exam-overlay';ov.id='cbExamOverlay';ov.innerHTML=`<div class="cb-exam-top"><div><div class="et-title">${esc(ROLE)} — Assessment</div><div class="et-sub">${EXAM_COUNT} questions · ${EXAM_MINUTES}-minute timer · one attempt</div></div><div class="cb-exam-timer" id="cbExamTimer">${fmt(remaining)}</div></div><div class="cb-exam-main"><div class="cb-exam-q-pane" id="cbExamQ"></div><div class="cb-exam-side"><div class="cb-count">Answered <b id="cbExamAnsN">0</b> / ${EXAM_COUNT}</div><h4 class="cb-side-title">Question palette</h4><div class="cb-palette" id="cbExamPal"></div><div class="cb-legend"><span><i style="background:#14213D;border-color:#14213D"></i> Answered</span><span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span><span><i></i> Not answered</span></div><button class="cb-btn submit" id="cbExamSubmit" style="width:100%">Submit Assessment</button></div></div>`;document.body.appendChild(ov);buildPalette();renderQ();timerId=setInterval(tick,1000);window.addEventListener('beforeunload',beforeUnload);startProctor();document.getElementById('cbExamSubmit').addEventListener('click',()=>submitExam(false))}
+  function beforeUnload(e){if(examOn){e.preventDefault();e.returnValue=''}}
+  function tick(){remaining--;const el=document.getElementById('cbExamTimer');if(el){el.textContent=fmt(Math.max(remaining,0));if(remaining<=300)el.classList.add('warn')}if(remaining<=0)submitExam(true)}
+  function buildPalette(){const pal=document.getElementById('cbExamPal');pal.innerHTML='';items.forEach((it,n)=>{const b=document.createElement('button');b.className='cb-pal';b.textContent=n+1;b.dataset.n=n;b.addEventListener('click',()=>{cur=n;renderQ()});pal.appendChild(b)});refreshPalette()}
+  function refreshPalette(){document.querySelectorAll('#cbExamPal .cb-pal').forEach(b=>{const n=+b.dataset.n,id=items[n].id;b.classList.toggle('answered',id in answers);b.classList.toggle('marked',!!marked[id]);b.classList.toggle('cur',n===cur)});const el=document.getElementById('cbExamAnsN');if(el)el.textContent=Object.keys(answers).length}
+  function renderQ(){const it=items[cur],id=it.id,pane=document.getElementById('cbExamQ');pane.innerHTML=`<div class="cb-qnum">Question ${cur+1} of ${items.length}</div><div class="cb-qtext">${esc(it.q)}${it.difficulty?`<span class="diff">${esc(it.difficulty)}</span>`:''}</div><div class="cb-opts" id="cbExamOpts">${it.options.map((o,i)=>`<div class="cb-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${esc(o)}</span></div>`).join('')}</div><div class="cb-actions"><button class="cb-btn nav" id="cbPrev" ${cur===0?'disabled':''}>← Previous</button><button class="cb-btn mark${marked[id]?' on':''}" id="cbMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button><button class="cb-btn nav" id="cbNext" ${cur===items.length-1?'disabled':''}>Next →</button></div>`;pane.querySelectorAll('.cb-opt').forEach(el=>el.addEventListener('click',()=>{answers[id]=+el.dataset.i;pane.querySelectorAll('.cb-opt').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');refreshPalette()}));document.getElementById('cbPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ()}});document.getElementById('cbNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ()}});document.getElementById('cbMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ()});refreshPalette()}
+  async function submitExam(auto){if(!examOn)return;const unanswered=items.length-Object.keys(answers).length;if(!auto){const ok=await confirmBox('Submit assessment?',unanswered?`You have ${unanswered} unanswered question(s). Once submitted, you cannot change your answers.`:'Once submitted, you cannot change your answers.','Submit Assessment');if(!ok)return}examOn=false;clearInterval(timerId);window.removeEventListener('beforeunload',beforeUnload);stopProctor();const score=items.reduce((n,it)=>n+(answers[it.id]===it.answer?1:0),0);saveScore(score,items.length);showResults(score)}
+  function saveScore(score,total){const a=JSON.parse(localStorage.getItem(LS_KEY)||'[]');a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,EXAM_COUNT)))}catch(e){}}
+  function showResults(score){const total=items.length,pct=Math.round(score/total*100);let msg='Keep practicing — review the questions you missed and try again.';if(pct>=85)msg='Outstanding — strong command of this topic.';else if(pct>=65)msg='Solid performance. Review the harder areas and try another attempt.';else if(pct>=50)msg='Borderline — revisit the course topics and retake the assessment.';const rev=items.map((it,n)=>{const you=answers[it.id],attempted=you!=null;const your=attempted?String.fromCharCode(65+you)+'. '+esc(it.options[you]):'<i>Not answered</i>';const cor=String.fromCharCode(65+it.answer)+'. '+esc(it.options[it.answer]);return `<div class="r ${attempted&&you===it.answer?'ok':'no'}"><div class="rq">Q${n+1}. ${esc(it.q)}</div><div class="ra ${attempted&&you===it.answer?'cor':'wrong'}">Your answer: ${your}</div>${attempted&&you!==it.answer?`<div class="ra cor">Correct: ${cor}</div>`:''}${it.explanation?`<div class="rx">${esc(it.explanation)}</div>`:''}</div>`}).join('');const ov=document.getElementById('cbExamOverlay');ov.innerHTML=`<div class="cb-exam-top"><div class="et-title">Result — ${esc(ROLE)} Assessment</div><button class="cb-btn" id="cbClose" style="background:rgba(255,255,255,.15);color:#fff">✕ Close</button></div><div class="cb-exam-q-pane" style="flex:1"><div class="cb-result"><div class="cb-score">${score} / ${total}</div><div class="cb-rmsg">${pct}% correct — ${msg}</div><div style="margin-top:16px"><button class="cb-btn primary" id="cbRetry">↻ Take another assessment</button></div><div class="cb-rev">${rev}</div></div></div>`;document.getElementById('cbRetry').addEventListener('click',()=>{ov.remove();enterExam()});document.getElementById('cbClose').addEventListener('click',()=>closeExam())}
+  function closeExam(){stopProctor();const ov=document.getElementById('cbExamOverlay');if(ov)ov.remove();document.body.style.overflow='';if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}
+  function warning(title,msg){if(!proctorOn||!examOn)return;const now=Date.now();if(now-lastWarn<1200)return;lastWarn=now;warns++;const cover=document.getElementById('cbExamCover')||document.createElement('div');cover.className='cb-cover';cover.id='cbExamCover';cover.style.display='flex';cover.innerHTML=`<div>⚠️ ${esc(title)}</div><small>${esc(msg)}</small><small>Warning ${warns} of 3</small><button class="cb-btn primary" id="cbResume">Return to assessment</button>`;document.body.appendChild(cover);document.getElementById('cbResume').onclick=()=>{cover.style.display='none';if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});if(warns>=3)submitExam(true)};if(warns>=3)setTimeout(()=>submitExam(true),500)}
+  function visHandler(){if(document.hidden)warning('Tab or window switch detected','Please stay on the assessment screen. Repeated violations will submit the assessment automatically.')}
+  function fsHandler(){if(examOn&&!document.fullscreenElement)warning('Fullscreen exited','The assessment must remain in fullscreen mode.')}
+  function blurHandler(){if(examOn)warning('Focus changed','Please keep the assessment window active.')}
+  function focusHandler(){}
+  function blockEvt(e){if(examOn){e.preventDefault();warning('Action blocked','Copy, cut and right-click are disabled during the assessment.')}}
+  function keyGuard(e){if(!examOn)return;const k=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&['c','x','p','s','u'].includes(k)){e.preventDefault();warning('Shortcut blocked','This assessment disables copy, print, save and source shortcuts.')}if(k==='f12'){e.preventDefault();warning('Developer tools shortcut blocked','This action is disabled during the assessment.')}}
+  function printGuard(e){if(examOn&&e.key==='PrintScreen'){e.preventDefault();warning('Screenshot action blocked','Screenshot capture is restricted during the assessment.')}}
+  function startProctor(){warns=0;lastWarn=0;proctorOn=true;document.addEventListener('visibilitychange',visHandler);document.addEventListener('fullscreenchange',fsHandler);window.addEventListener('blur',blurHandler);document.addEventListener('contextmenu',blockEvt,true);document.addEventListener('copy',blockEvt,true);document.addEventListener('cut',blockEvt,true);document.addEventListener('keydown',keyGuard,true);document.addEventListener('keyup',printGuard,true)}
+  function stopProctor(){proctorOn=false;document.removeEventListener('visibilitychange',visHandler);document.removeEventListener('fullscreenchange',fsHandler);window.removeEventListener('blur',blurHandler);document.removeEventListener('contextmenu',blockEvt,true);document.removeEventListener('copy',blockEvt,true);document.removeEventListener('cut',blockEvt,true);document.removeEventListener('keydown',keyGuard,true);document.removeEventListener('keyup',printGuard,true);const c=document.getElementById('cbExamCover');if(c)c.remove()}
+  document.addEventListener('click',function(e){const b=e.target.closest('#cbAssessStart');if(b){e.preventDefault();startEntry();}},true)
+  window.addEventListener('keydown',e=>{if(e.key==='Escape'&&examOn)e.preventDefault()});
+})();
+
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  // Window capture runs before the page's own document-level start handler (#cbAssessStart pages).
+  window.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    try{var r=window.parent.document.getElementById('riya-assistant-root');if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+<style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body>
+</html>

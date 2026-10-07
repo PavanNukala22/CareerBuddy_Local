@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Systems Programming — A Visual Course for SREs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff; --bg-soft:#f7f6f3; --bg-block:#f1f1ef;
+  --ink:#37352f; --ink-soft:#787774; --ink-mute:#9b9a97;
+  --line:#e9e9e7; --line-strong:#d3d3d0;
+  --accent:#14213D; --accent-soft:#eef1f7;
+  --green:#0f7b0f; --green-soft:#ddedea;
+  --orange:#d9730d; --orange-soft:#fadec9;
+  --red:#e03e3e; --red-soft:#ffe2dd;
+  --purple:#22345f; --purple-soft:#eef1f7;
+  --yellow:#dfab01; --yellow-soft:#fdecc8;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body,button,input,textarea,select,table,th,td,h1,h2,h3,h4,p,li,div,span,a,strong,em,small{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
+body{background:var(--bg);color:var(--ink);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+code,pre,pre *,code *{font-family:'Noto Sans Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+
+/* Header */
+.header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand-mark{width:34px;height:34px;display:grid;place-items:center;background:linear-gradient(135deg,#14213D 0%,#2f6fdb 100%);border-radius:8px;color:#fff;font-weight:800;font-size:13px;box-shadow:var(--shadow-sm)}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500;color:var(--ink-soft)}
+.progress-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-soft);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--bg-soft)}
+.tabbar{display:flex;gap:2px;padding:6px 24px;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--line);background:#fff}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{padding:9px 15px;background:transparent;border:none;border-radius:8px;font-size:13.5px;font-weight:500;color:#4a5568;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.tab:hover{background:var(--accent-soft);color:var(--accent)}
+.tab.active{background:var(--accent);color:#fff;font-weight:700}
+
+/* Layout */
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr)}
+@media (max-width:960px){.layout{grid-template-columns:1fr}.toc{display:none}}
+.toc{position:sticky;top:112px;align-self:start;height:calc(100vh - 124px);overflow-y:auto;padding:30px 16px 30px 28px;border-right:1px solid var(--line);scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);font-weight:700;margin-bottom:12px;padding-left:8px}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{display:block;padding:5px 10px;font-size:13px;color:var(--ink-soft);text-decoration:none;border-radius:4px;line-height:1.4}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{color:#fff;background:#16233f;font-weight:600;border-radius:12px;padding:9px 14px}
+.main{padding:44px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:28px 18px 60px}.header-top{padding:12px 16px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel-header{margin-bottom:34px}
+.panel-eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);margin:0 0 8px}
+.panel-title{font-size:38px;line-height:1.15;font-weight:700;letter-spacing:-.02em;margin:0 0 14px}
+.panel-subtitle{font-size:17px;color:var(--ink-soft);margin:0;max-width:760px;line-height:1.6}
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.level-tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.inter{background:#e3ecfb;color:#1d4f9f}
+.level-tag.adv{background:#f5e0e9;color:#8c1a63}
+
+.section{margin-top:46px;scroll-margin-top:140px}
+.section h2{font-size:27px;font-weight:700;letter-spacing:-.01em;margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.section h2 .sec-emoji{font-size:23px}
+.section h3{font-size:18px;font-weight:700;margin:26px 0 8px}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:5px 0}
+.lvl{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.03em;text-transform:uppercase}
+.lvl.b{background:var(--green-soft);color:#0a5f0a}
+.lvl.i{background:#e3ecfb;color:#1d4f9f}
+.lvl.e{background:#f5e0e9;color:#8c1a63}
+
+code{font-size:.87em;background:#f6f5f4;border:1px solid var(--line);padding:1px 6px;border-radius:4px;color:#c2410c}
+pre{background:#1f2430;color:#e6e6e3;padding:18px 20px;border-radius:var(--radius);overflow-x:auto;font-size:13px;line-height:1.65;margin:14px 0;box-shadow:var(--shadow-sm);position:relative}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{position:absolute;top:8px;right:12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9aa3b5;font-weight:700}
+.c{color:#7f8ba3;font-style:italic}
+
+.callout{display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start;background:var(--bg-block);border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout-icon{width:28px;height:28px;display:grid;place-items:center;background:#fff;border-radius:6px;font-size:16px;border:1px solid var(--line)}
+.callout-body{font-size:14.5px;line-height:1.6}
+.callout.tip{background:var(--accent-soft);border-color:#c7d2ea}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.card-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:8px;font-size:18px;margin-bottom:10px}
+.card-title{font-weight:700;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.55}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;border:1px solid var(--line)}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--bg-soft);font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+.table-wrap{overflow-x:auto}
+
+.diagram{background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin:18px 0;text-align:center}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{font-size:12px;color:var(--ink-soft);margin-top:10px;font-style:italic}
+
+.badge{display:inline-block;padding:2px 8px;font-size:11px;font-weight:700;border-radius:4px}
+.badge.blue{background:var(--accent-soft);color:#1d4f9f}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.red{background:var(--red-soft);color:#a82e2e}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:760px){.compare{grid-template-columns:1fr}}
+.compare-col{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.compare-col h4{margin:0 0 8px;font-size:15px;font-weight:700}
+.compare-col p{font-size:13.5px;margin:6px 0}
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{padding:4px 10px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500}
+
+/* stepper (flow list) */
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}
+.flow .st{background:var(--accent);color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600}
+.flow .ar{color:var(--ink-mute);font-weight:700}
+
+/* quiz */
+.quiz-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px 28px;box-shadow:var(--shadow-sm);margin-top:18px}
+.quiz-bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin:10px 0 20px}
+.quiz-bar>div{height:100%;width:0;background:var(--accent);transition:width .3s}
+.qmeta{font-size:12px;font-weight:700;color:var(--ink-soft);letter-spacing:.05em;text-transform:uppercase}
+.qtext{font-size:17px;font-weight:600;margin:6px 0 14px}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;gap:12px;align-items:center;padding:11px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg-soft);cursor:pointer;font-size:14.5px}
+.opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt .k{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0}
+.opt.correct{background:var(--green-soft);border-color:var(--green);font-weight:600}
+.opt.wrong{background:var(--red-soft);border-color:var(--red);font-weight:600}
+.opts.done .opt{pointer-events:none}
+.qexp{margin-top:14px;padding:12px 14px;border-radius:8px;background:var(--accent-soft);font-size:14px;display:none}
+.qbtn{margin-top:16px;background:var(--accent);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
+.qscore{font-size:44px;font-weight:800;text-align:center;margin:14px 0 4px}
+
+/* ===== Assessment start card (Royal HRMS format) ===== */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header"><div class="header-top"><div class="brand"><div class="brand-mark">SP</div><span>Systems Programming<span class="brand-sub"> · SRE course</span></span></div>
+<div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 6</span></span><button class="btn" onclick="resetProgress()">↺ Reset</button></div></div>
+<nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1">Toil & Why Code</button><button class="tab" data-tab="t2">Python</button><button class="tab" data-tab="t3">Go</button><button class="tab" data-tab="t4">Rust</button><button class="tab" data-tab="t5">Automation Patterns</button><button class="tab" data-tab="t6">Assessment</button></nav></header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside><main class="main">
+<section class="panel" id="t1" data-toc='[["s1-1", "What is toil?"], ["s1-2", "Choosing a language"], ["s1-3", "Measure toil before automating"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span></div><p class="panel-eyebrow">Module 01 · Foundations</p><h1 class="panel-title">Systems Programming for SREs</h1><p class="panel-subtitle">SREs are software engineers who treat operations as a software problem. The goal: write small, reliable tools so humans stop doing the same task twice.</p></div><div class="section" id="s1-1"><h2><span class="sec-emoji">🧹</span> What is toil? <span class="lvl b">Basic</span></h2><p><strong>Toil</strong> is manual, repetitive, automatable work that scales with service size and brings no lasting value. Google SRE caps toil at <strong>50%</strong> of an SRE's time.</p><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🔁</div><div class="card-title">Repetitive</div><div class="card-desc">Same steps every week, e.g. rotating certs by hand</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft)">🤖</div><div class="card-title">Automatable</div><div class="card-desc">A script could do it</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft)">📈</div><div class="card-title">Scales linearly</div><div class="card-desc">More servers = more manual work</div></div><div class="card"><div class="card-icon" style="background:var(--yellow-soft)">🚫</div><div class="card-title">No enduring value</div><div class="card-desc">Service is no better afterwards</div></div></div><div class="callout tip"><div class="callout-icon">🚰</div><div class="callout-body"><strong>Analogy:</strong> bailing water with a bucket (toil) vs fixing the leak (engineering).</div></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">🧰</span> Choosing a language <span class="lvl b">Basic</span></h2><div class="table-wrap"><table><tr><th>Language</th><th>Strengths</th><th>Typical SRE use</th><th>Learning curve</th></tr><tr><td><strong>Python</strong></td><td>Fast to write, huge libraries</td><td>Glue scripts, API automation, data analysis</td><td>Easy</td></tr><tr><td><strong>Go</strong></td><td>Single static binary, great concurrency</td><td>CLIs, Kubernetes operators, exporters, agents</td><td>Moderate</td></tr><tr><td><strong>Rust</strong></td><td>Memory safety, no GC, top speed</td><td>Performance-critical agents, proxies, eBPF tools</td><td>Steep</td></tr><tr><td>Bash</td><td>Always there</td><td>One-off glue, CI steps</td><td>Easy but fragile</td></tr></table></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Rule of thumb: start in <strong>Python</strong>, move to <strong>Go</strong> when you need distribution and concurrency, use <strong>Rust</strong> when latency or safety is critical.</div></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">📊</span> Measure toil before automating <span class="lvl i">Intermediate</span></h2><p>Automate by <em>return on time</em>: </p><pre><span class="pre-lang">python</span><code>def worth_automating(minutes_per_run, runs_per_month, build_hours):
+    saved = minutes_per_run * runs_per_month * 12 / 60   # hours per year
+    return saved &gt; build_hours, round(saved, 1)
+
+print(worth_automating(20, 30, 8))   # (True, 120.0)</code></pre></div></section><section class="panel" id="t2" data-toc='[["s2-1", "Basics: a health-check script"], ["s2-2", "Intermediate: concurrency"], ["s2-3", "Intermediate: a Prometheus exporter"], ["s2-4", "Expert: retries with backoff &amp;amp; jitter"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span></div><p class="panel-eyebrow">Module 02 · Scripting</p><h1 class="panel-title">Python for Automation</h1><p class="panel-subtitle">Python is the SRE's Swiss army knife: readable, quick and well supported by every cloud and monitoring tool.</p></div><div class="section" id="s2-1"><h2><span class="sec-emoji">🐍</span> Basics: a health-check script <span class="lvl b">Basic</span></h2><p>Check a list of URLs and report failures:</p><pre><span class="pre-lang">python</span><code>import requests
+
+URLS = ["https://example.com", "https://api.example.com/health"]
+
+for url in URLS:
+    try:
+        r = requests.get(url, timeout=3)
+        status = "OK" if r.ok else f"BAD {r.status_code}"
+    except requests.RequestException as e:
+        status = f"DOWN ({e.__class__.__name__})"
+    print(f"{url:40} {status}")</code></pre><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Always set a <code>timeout</code>. The default is <em>none</em>, and a hung call can freeze your tool forever.</div></div></div><div class="section" id="s2-2"><h2><span class="sec-emoji">⚡</span> Intermediate: concurrency <span class="lvl i">Intermediate</span></h2><p>Checking 500 hosts one by one is slow. I/O-bound work parallelises easily with threads:</p><pre><span class="pre-lang">python</span><code>from concurrent.futures import ThreadPoolExecutor
+import requests
+
+def check(url):
+    try: return url, requests.get(url, timeout=3).status_code
+    except requests.RequestException: return url, None
+
+with ThreadPoolExecutor(max_workers=20) as pool:
+    for url, code in pool.map(check, urls):
+        if code != 200: print("ALERT", url, code)</code></pre></div><div class="section" id="s2-3"><h2><span class="sec-emoji">📡</span> Intermediate: a Prometheus exporter <span class="lvl i">Intermediate</span></h2><p>Expose your own metrics in 10 lines:</p><pre><span class="pre-lang">python</span><code>from prometheus_client import Gauge, start_http_server
+import shutil, time
+
+disk = Gauge("backup_disk_free_bytes", "Free space on backup volume")
+start_http_server(9100)
+while True:
+    disk.set(shutil.disk_usage("/backup").free)
+    time.sleep(15)</code></pre></div><div class="section" id="s2-4"><h2><span class="sec-emoji">🔁</span> Expert: retries with backoff &amp; jitter <span class="lvl e">Expert</span></h2><p>Naive retries cause <strong>retry storms</strong>. Use exponential backoff plus randomness:</p><pre><span class="pre-lang">python</span><code>import random, time
+
+def retry(fn, tries=5, base=0.5, cap=30):
+    for n in range(tries):
+        try: return fn()
+        except Exception:
+            if n == tries - 1: raise
+            time.sleep(random.uniform(0, min(cap, base * 2**n)))   # full jitter</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Only retry <strong>idempotent</strong> operations (safe to run twice) and respect rate limits.</div></div></div></section><section class="panel" id="t3" data-toc='[["s3-1", "Basics: a small CLI"], ["s3-2", "Intermediate: goroutines &amp;amp; channels"], ["s3-3", "Expert: Kubernetes automation with client-go"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 03 · Tooling</p><h1 class="panel-title">Go for SRE Tooling</h1><p class="panel-subtitle">Go compiles to a single static binary, starts instantly and makes concurrency simple. Docker, Kubernetes, Terraform and Prometheus are all written in Go.</p></div><div class="section" id="s3-1"><h2><span class="sec-emoji">🐹</span> Basics: a small CLI <span class="lvl b">Basic</span></h2><p>A tool that prints whether a TCP port is open:</p><pre><span class="pre-lang">go</span><code>package main
+
+import ("fmt"; "net"; "os"; "time")
+
+func main() {
+    addr := os.Args[1]                      // e.g. db.internal:5432
+    conn, err := net.DialTimeout("tcp", addr, 2*time.Second)
+    if err != nil { fmt.Println("CLOSED:", err); os.Exit(1) }
+    defer conn.Close()
+    fmt.Println("OPEN:", addr)
+}</code></pre><div class="callout success"><div class="callout-icon">✅</div><div class="callout-body"><code>GOOS=linux GOARCH=amd64 go build</code> gives one file you can copy to any server. No runtime to install.</div></div></div><div class="section" id="s3-2"><h2><span class="sec-emoji">🧵</span> Intermediate: goroutines &amp; channels <span class="lvl i">Intermediate</span></h2><p>A goroutine is a lightweight thread; a channel passes results between them.</p><pre><span class="pre-lang">go</span><code>func probe(url string, out chan&lt;- string) {
+    resp, err := http.Get(url)
+    if err != nil { out &lt;- url + " DOWN"; return }
+    out &lt;- fmt.Sprintf("%s %d", url, resp.StatusCode)
+}
+
+out := make(chan string)
+for _, u := range urls { go probe(u, out) }
+for range urls { fmt.Println(&lt;-out) }</code></pre></div><div class="section" id="s3-3"><h2><span class="sec-emoji">☸️</span> Expert: Kubernetes automation with client-go <span class="lvl e">Expert</span></h2><p>Delete pods stuck in <code>Evicted</code> state across a cluster:</p><pre><span class="pre-lang">go</span><code>pods, _ := cs.CoreV1().Pods("").List(ctx, metav1.ListOptions{
+    FieldSelector: "status.phase=Failed"})
+for _, p := range pods.Items {
+    if p.Status.Reason == "Evicted" {
+        cs.CoreV1().Pods(p.Namespace).Delete(ctx, p.Name, metav1.DeleteOptions{})
+    }
+}</code></pre><div class="callout tip"><div class="callout-icon">🧠</div><div class="callout-body">Next level: wrap this logic in a <strong>controller / operator</strong> (kubebuilder, controller-runtime) that continuously reconciles desired vs actual state.</div></div></div></section><section class="panel" id="t4" data-toc='[["s4-1", "Ownership in one minute"], ["s4-2", "Intermediate: fast log scanner"], ["s4-3", "Expert: async with Tokio"]]'><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 04 · Performance & Safety</p><h1 class="panel-title">Rust for Critical Tools</h1><p class="panel-subtitle">Rust gives C-like speed with compile-time memory safety. Use it where a crash or a pause is expensive: agents on every host, proxies, eBPF programs.</p></div><div class="section" id="s4-1"><h2><span class="sec-emoji">🦀</span> Ownership in one minute <span class="lvl i">Intermediate</span></h2><p>Each value has <strong>one owner</strong>; when the owner goes out of scope the memory is freed. No garbage collector, no use-after-free, no data races.</p><pre><span class="pre-lang">rust</span><code>let a = String::from("log line");
+let b = a;              // ownership MOVES to b
+// println!("{}", a);   // compile error: a was moved
+println!("{}", b);</code></pre></div><div class="section" id="s4-2"><h2><span class="sec-emoji">📂</span> Intermediate: fast log scanner <span class="lvl i">Intermediate</span></h2><p>Count ERROR lines in a large file with a few lines of safe code:</p><pre><span class="pre-lang">rust</span><code>use std::{fs::File, io::{BufRead, BufReader}};
+
+fn main() -&gt; std::io::Result&lt;()&gt; {
+    let f = BufReader::new(File::open("app.log")?);
+    let n = f.lines().flatten().filter(|l| l.contains("ERROR")).count();
+    println!("errors: {n}");
+    Ok(())
+}</code></pre></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🚀</span> Expert: async with Tokio <span class="lvl e">Expert</span></h2><p>Probe thousands of endpoints concurrently with one small binary:</p><pre><span class="pre-lang">rust</span><code>#[tokio::main]
+async fn main() {
+    let urls = vec!["https://a.example", "https://b.example"];
+    let tasks: Vec&lt;_&gt; = urls.into_iter().map(|u| tokio::spawn(async move {
+        let r = reqwest::get(u).await;
+        (u, r.map(|x| x.status()))
+    })).collect();
+    for t in tasks { println!("{:?}", t.await.unwrap()); }
+}</code></pre><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Typical trade: Rust takes longer to write, but the result is tiny, fast and rarely crashes in production.</div></div></div></section><section class="panel" id="t5" data-toc='[["s5-1", "Idempotency"], ["s5-2", "Safety rails"], ["s5-3", "Test your tooling"]]'><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 05 · Engineering discipline</p><h1 class="panel-title">Eliminating Toil Well</h1><p class="panel-subtitle">Good automation is itself a reliability risk. These patterns keep your tools safe.</p></div><div class="section" id="s5-1"><h2><span class="sec-emoji">♻️</span> Idempotency <span class="lvl i">Intermediate</span></h2><p>Running a tool twice must give the same result as running it once.</p><div class="compare"><div class="compare-col" style="background:var(--red-soft);border-color:#f5b8b0"><h4>❌ Not idempotent</h4><p>• <code>echo "line" >> file</code> appends every run</p><p>• "create user" fails on second run</p></div><div class="compare-col" style="background:var(--green-soft);border-color:#bdd9d2"><h4>✅ Idempotent</h4><p>• "ensure line exists in file"</p><p>• "create user if missing"</p></div></div></div><div class="section" id="s5-2"><h2><span class="sec-emoji">🛑</span> Safety rails <span class="lvl i">Intermediate</span></h2><ul><li><strong>Dry-run</strong> flag that prints actions only</li><li><strong>Blast-radius limits</strong>: act on max N hosts per run</li><li><strong>Rate limiting</strong> and pause between batches</li><li><strong>Audit logs</strong> of who ran what</li><li><strong>Kill switch</strong> to stop mid-run</li></ul><pre><span class="pre-lang">python</span><code>def drain(nodes, dry_run=True, max_nodes=3):
+    if len(nodes) &gt; max_nodes:
+        raise SystemExit(f"refusing: {len(nodes)} &gt; {max_nodes}")
+    for n in nodes:
+        print(("[dry-run] " if dry_run else "") + f"drain {n}")</code></pre></div><div class="section" id="s5-3"><h2><span class="sec-emoji">🧪</span> Test your tooling <span class="lvl e">Expert</span></h2><p>Treat tools as production software: unit tests, integration tests against a staging account, linting, versioned releases and a changelog.</p><div class="flow"><span class="st">Runbook</span><span class="ar">→</span><span class="st">Script</span><span class="ar">→</span><span class="st">Tested tool</span><span class="ar">→</span><span class="st">Self-service / auto-trigger</span></div></div></section><section class="panel" id="t6" data-toc='[["t6-1","Take the Assessment"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 06</p><h1 class="panel-title">Final Assessment</h1><p class="panel-subtitle">50 multiple-choice questions spanning every module of this course — from fundamentals to expert-level scenarios. Timed, full-screen and proctored.</p></div><div class="section" id="t6-1"><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div><div class="assess-intro-text">A timed, exam-style final assessment for the SRE Systems Programming track. Questions cover every module — from foundations to expert-level scenarios — and are shuffled on every attempt.</div><ul class="assess-intro-list"><li><strong>50 Multiple-Choice questions</strong> — concept checks plus scenario-based judgement calls</li><li>Difficulty ranges from <strong>Basic</strong> to <strong>Expert</strong></li><li>60-minute timer, question palette, mark-for-review, full explanations after you submit</li><li>Fullscreen proctoring: 3 tab-switch / fullscreen-exit warnings auto-submit the test; copy and right-click are disabled</li><li>Your attempts and top score are saved in this browser</li></ul><button class="assess-start-btn" id="assessStartBtn" type="button">▶ Start Assessment</button></div><div id="scoreBoard" class="score-board" style="display:none"></div></div></section>
+</main></div>
+<script>
+/* ---------- Tabs, TOC, scroll spy ---------- */
+(function(){
+  const tabs=document.querySelectorAll('.tab'), panels=document.querySelectorAll('.panel');
+  const tocEl=document.getElementById('toc'), total=tabs.length, pt=document.getElementById('progressText');
+  function buildToc(panel){
+    const data=JSON.parse(panel.getAttribute('data-toc')||'[]');
+    tocEl.innerHTML=data.map(([id,l])=>`<li><a href="#${id}" data-target="${id}">${l}</a></li>`).join('');
+    const f=tocEl.querySelector('a'); if(f)f.classList.add('active');
+  }
+  let manual=null;
+  function activate(i){
+    tabs.forEach((t,k)=>t.classList.toggle('active',k===i));
+    panels.forEach((p,k)=>p.classList.toggle('active',k===i));
+    manual=null; buildToc(panels[i]); pt.textContent=`Tab ${i+1} of ${total}`;
+    window.scrollTo({top:0,behavior:'instant'});
+    tabs[i].scrollIntoView({inline:'center',block:'nearest'});
+  }
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('.toc-list a'); if(!a)return; e.preventDefault();
+    const el=document.getElementById(a.dataset.target);
+    manual=a.dataset.target; tocEl.querySelectorAll('a').forEach(x=>x.classList.toggle('active',x===a));
+    if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});
+  });
+  let tick=false;
+  function spy(){
+    if(manual){tick=false;return;}
+    const p=document.querySelector('.panel.active'); if(!p){tick=false;return;}
+    let cur=null; const secs=[...p.querySelectorAll('.section')];
+    secs.forEach(s=>{ if(s.getBoundingClientRect().top-180<0)cur=s.id; });
+    if(secs.length && window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-4) cur=secs[secs.length-1].id;
+    if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));
+    tick=false;
+  }
+  window.addEventListener('scroll',()=>{ if(!tick){requestAnimationFrame(spy);tick=true;} },{passive:true});
+  ['wheel','touchstart','keydown','pointerdown'].forEach(ev=>window.addEventListener(ev,e=>{if(e.target&&e.target.closest&&e.target.closest('.toc-list a'))return;manual=null},{passive:true}));
+  window.resetProgress=()=>activate(0);
+  activate(0);
+})();
+
+
+window.COURSE = {"slug": "sre-systems-programming", "title": "SRE Systems Programming", "assess": [{"q": "Which best describes toil?", "options": ["Manual, repetitive, automatable work that scales with the size of the service", "Any on-call work", "Writing code", "Attending meetings"], "answer": 0, "exp": "Toil brings no enduring value: the service is no better afterwards."}, {"q": "Google SRE suggests capping toil at roughly what share of an SRE's time?", "options": ["50%", "5%", "25%", "90%"], "answer": 0, "exp": "The rest should go to engineering work that removes toil."}, {"q": "Which is NOT a characteristic of toil?", "options": ["It is repetitive", "It leaves the service permanently better", "It can be automated", "It grows linearly with service size"], "answer": 1, "exp": "Work with lasting value is engineering, not toil."}, {"q": "Rotating TLS certificates by hand every quarter is an example of…", "options": ["Engineering project work", "A postmortem action", "Toil", "Capacity planning"], "answer": 2, "exp": "Manual, repetitive and automatable."}, {"q": "A 20-minute task runs 30 times a month and automation takes 8 hours to build. Hours saved per year?", "options": ["10 hours", "60 hours", "120 hours", "240 hours"], "answer": 2, "exp": "20 min × 30 × 12 ÷ 60 = 120 h — far more than the 8 h build cost."}, {"q": "A 5-minute task runs twice a month and automation would take 40 hours. What should you do?", "options": ["Automate it immediately", "Automate it in Rust", "Automate it because it saves 120 hours", "Don't automate it now — it saves only about 2 hours a year"], "answer": 3, "exp": "5 min × 2 × 12 ÷ 60 = 2 h per year."}, {"q": "Which language is best for a single static binary CLI with easy concurrency?", "options": ["Go", "Bash", "PHP", "Ruby"], "answer": 0, "exp": "Go compiles to one file you can copy to any server."}, {"q": "Why is Python usually the first choice for SRE glue scripts?", "options": ["It has the fastest runtime", "It offers memory safety without a GC", "It produces a single static binary by default", "It is readable and quick to write, with libraries for every cloud and monitoring tool"], "answer": 3, "exp": "Python is the SRE's Swiss army knife."}, {"q": "What is the course's rule of thumb for choosing a language?", "options": ["Always start in Rust", "Start in Python, move to Go for distribution and concurrency, use Rust when latency or safety is critical", "Use Bash for everything", "Pick whichever language is newest"], "answer": 1, "exp": "Match the language to the job."}, {"q": "Bash is best suited to…", "options": ["Long-lived concurrent agents", "Memory-critical proxies", "One-off glue and CI steps; it becomes fragile for larger tools", "Kubernetes operators"], "answer": 2, "exp": "Always there, easy, but fragile."}, {"q": "Why must you always set a timeout on an HTTP call in a Python script?", "options": ["Timeouts are optional and have no effect", "The default is no timeout, so a hung call can block forever", "It makes requests encrypted", "It speeds up DNS"], "answer": 1, "exp": "requests.get(url, timeout=3) bounds the wait."}, {"q": "Which exception class catches the errors raised by the requests library in the health-check example?", "options": ["KeyError", "StopIteration", "requests.RequestException", "SystemExit"], "answer": 2, "exp": "It is the base class for requests errors such as timeouts and connection failures."}, {"q": "Checking 500 hosts one at a time is slow. What is the simplest speed-up for this I/O-bound task?", "options": ["Run the checks in a thread pool (ThreadPoolExecutor)", "Add more CPU cores only", "Remove the timeouts", "Rewrite the script in assembly"], "answer": 0, "exp": "Threads let other checks proceed while one waits on the network."}, {"q": "Why do threads help for network checks in Python?", "options": ["Python has no interpreter lock", "Threads make the CPU faster", "The work is mostly waiting on I/O, so other threads can run meanwhile", "Threads skip timeouts"], "answer": 2, "exp": "Threads suit I/O-bound work; CPU-bound work needs processes."}, {"q": "In the Prometheus exporter example, which metric type fits 'free disk bytes' that goes up and down?", "options": ["Counter", "Histogram", "Info", "Gauge"], "answer": 3, "exp": "A gauge can increase or decrease."}, {"q": "How does Prometheus collect metrics from a Python exporter?", "options": ["The exporter pushes data over SSH", "It reads the exporter's source code", "It receives email reports", "It scrapes the exporter's HTTP endpoint on a schedule"], "answer": 3, "exp": "start_http_server(9100) exposes the /metrics endpoint."}, {"q": "Naive immediate retries from many clients can cause…", "options": ["Faster recovery for every client", "Lower latency", "A retry storm that overloads an already struggling service", "Automatic load balancing"], "answer": 2, "exp": "Use exponential backoff with jitter."}, {"q": "Why add jitter to exponential backoff?", "options": ["To make retries slower on purpose", "To skip errors", "To log more", "To avoid synchronised retry storms"], "answer": 3, "exp": "Randomness spreads retries out in time."}, {"q": "In the sample retry function, how long does it sleep between attempts?", "options": ["A random value between 0 and min(cap, base × 2^n)", "A fixed one second", "Always exactly the cap", "The sum of all previous sleeps"], "answer": 0, "exp": "That is 'full jitter'."}, {"q": "Which operation is safe to retry blindly?", "options": ["Charging a card with no idempotency key", "Appending a line to a file", "Setting a feature flag to a specific value", "Sending a notification email"], "answer": 2, "exp": "Only retry idempotent operations and respect rate limits."}, {"q": "An idempotent operation is one that…", "options": ["Runs only once", "Needs root access", "Never fails", "Gives the same result when run repeatedly"], "answer": 3, "exp": "Running a tool twice must equal running it once."}, {"q": "Which of these is idempotent?", "options": ["Create a user if it is missing", "echo \"line\" &gt;&gt; file", "Create a user that fails on the second run", "Append a log entry each run"], "answer": 0, "exp": "'Ensure' semantics are idempotent; blind appends and plain creates are not."}, {"q": "Why does Go start instantly and need no runtime installed on the target host?", "options": ["It runs on a JVM", "It compiles to a single static native binary", "It interprets scripts", "It downloads libraries at start-up"], "answer": 1, "exp": "That is why Go is popular for CLIs and agents."}, {"q": "How do you build a Linux amd64 binary from another OS in Go?", "options": ["Install Python on the server", "Set GOOS=linux and GOARCH=amd64, then run go build", "It is impossible", "Compile on the server only"], "answer": 1, "exp": "Cross-compilation is built in."}, {"q": "Which Go call opens a TCP connection with a timeout in the port-check example?", "options": ["net.DialTimeout", "os.Open", "http.ListenAndServe", "time.Sleep"], "answer": 0, "exp": "It returns an error if the port is closed or the timeout expires."}, {"q": "What does 'defer conn.Close()' do in Go?", "options": ["Delays program start", "Runs in a background goroutine", "Suppresses errors", "Runs the call when the surrounding function returns"], "answer": 3, "exp": "Defer is the idiomatic way to release resources."}, {"q": "What is a goroutine?", "options": ["A kernel module", "A lightweight thread managed by the Go runtime", "A package manager", "A type of channel"], "answer": 1, "exp": "Goroutines are cheap enough to run thousands at once."}, {"q": "In Go, a channel is used to…", "options": ["Pass values safely between goroutines", "Compile code for another OS", "Encrypt network traffic", "Declare a package"], "answer": 0, "exp": "In the probe example, workers send results back on a channel."}, {"q": "Which of these tools are written in Go?", "options": ["NGINX and Redis", "Git and Bash", "Kubernetes and Prometheus", "The Linux kernel and systemd"], "answer": 2, "exp": "Docker and Terraform are also written in Go."}, {"q": "The client-go sample deletes pods in which state?", "options": ["Running", "Evicted (phase Failed)", "Pending", "Succeeded"], "answer": 1, "exp": "It lists pods with status.phase=Failed and checks the Evicted reason."}, {"q": "What is the 'next level' beyond a one-off cleanup script?", "options": ["A cron job that runs every second", "A controller or operator that continuously reconciles desired and actual state", "A longer Bash script", "A manual runbook"], "answer": 1, "exp": "kubebuilder and controller-runtime help build operators."}, {"q": "What does Rust's ownership model provide?", "options": ["Automatic garbage collection", "Dynamic typing", "Hot reload", "Memory safety without a garbage collector"], "answer": 3, "exp": "Each value has one owner and is freed when that owner goes out of scope."}, {"q": "After 'let b = a;' for a String in Rust, using 'a' causes…", "options": ["A compile error because ownership moved to b", "A runtime panic", "It prints the old value", "A silent copy"], "answer": 0, "exp": "Moves are enforced at compile time, preventing use-after-free."}, {"q": "Why wrap a File in a BufReader in the Rust log scanner?", "options": ["It encrypts the file", "It reads in buffered chunks instead of making a system call per line", "It converts lines to uppercase", "The program would not compile otherwise"], "answer": 1, "exp": "Buffered reading is much faster for large logs."}, {"q": "When is Rust the right choice for an SRE tool?", "options": ["For quick one-off scripts", "When latency or safety is critical, such as host agents, proxies or eBPF tools", "When nobody on the team has time to learn it", "Whenever you need the quickest first draft"], "answer": 1, "exp": "Rust is slower to write but tiny, fast and rarely crashes in production."}, {"q": "In the Tokio example, what is Tokio used for?", "options": ["Running many probes concurrently on an async runtime", "Compiling Go code", "Managing Kubernetes clusters", "Encrypting traffic"], "answer": 0, "exp": "tokio::spawn creates lightweight async tasks."}, {"q": "Which two are examples of safety rails for automation?", "options": ["Hard-coded passwords and no logs", "Unlimited concurrency and no audit trail", "A dry-run flag and a blast-radius limit", "Automatic deletion without confirmation"], "answer": 2, "exp": "Also useful: rate limiting, audit logs and a kill switch."}, {"q": "The drain function refuses to run if more than max_nodes=3 nodes are given. What happens with 10 nodes?", "options": ["It drains the first 3 nodes", "It drains all 10 nodes", "It ignores max_nodes", "It exits with a refusal message and drains nothing"], "answer": 3, "exp": "This is a blast-radius limit."}, {"q": "What does a dry-run flag do?", "options": ["Runs the tool twice", "Skips all validation", "Deletes the logs", "Prints the actions that would be taken without performing them"], "answer": 3, "exp": "It lets operators verify intent before making changes."}, {"q": "How should SRE tooling be treated?", "options": ["As throwaway scripts", "As production software: unit tests, integration tests, linting, versioned releases and a changelog", "As documentation only", "As something only the author should run"], "answer": 1, "exp": "Bad automation is itself a reliability risk."}, {"q": "What is the maturity path for automation?", "options": ["Runbook → Script → Tested tool → Self-service or auto-trigger", "Script → Delete runbook → Hope", "Self-service → Runbook → Script", "Tested tool → Manual steps → Runbook"], "answer": 0, "exp": "Each step removes more toil and risk."}, {"q": "A frequent runbook task now has a stable script. Best next step?", "options": ["Add tests and safety rails, version it, then make it self-service or auto-triggered", "Keep it on one laptop", "Delete the runbook", "Run it as root with no logs"], "answer": 0, "exp": "Promote the script into a tested, shared tool."}, {"q": "A Python script that calls an API hangs forever during an outage. The fix is to…", "options": ["Remove the try/except", "Set a timeout and handle the request exceptions", "Retry forever with no delay", "Disable DNS caching"], "answer": 1, "exp": "No timeout means a hung call can freeze the tool."}, {"q": "You need a fleet agent where pauses are unacceptable and memory-safety bugs are costly. Which language?", "options": ["Bash", "Python", "PHP", "Rust"], "answer": 3, "exp": "No GC and compile-time safety suit host agents and proxies."}, {"q": "A CLI must be copied to 2,000 servers that have no language runtimes installed. Which language fits?", "options": ["Go, because it builds a single static binary", "Python with many third-party packages", "A Java application needing a JVM", "Bash with many dependencies"], "answer": 0, "exp": "Copy one file and run it."}, {"q": "A teammate needs a quick one-off script to call an API and parse JSON. Which language?", "options": ["Rust", "Python", "Assembly", "C++"], "answer": 1, "exp": "Fast to write and well supported by every API."}, {"q": "An automation tool retries a non-idempotent 'create ticket' call 5 times and creates duplicates. Best fix?", "options": ["Retry more times", "Remove the logs", "Make the call idempotent, using an idempotency key or checking whether it already exists", "Increase the thread count"], "answer": 2, "exp": "Retries are only safe for idempotent operations."}, {"q": "A drain tool's selector has a typo and matches 400 nodes. Which safety rail prevents disaster?", "options": ["Running faster", "More verbose logging only", "A blast-radius limit that refuses runs above N nodes, plus dry-run review", "Running as root"], "answer": 2, "exp": "Limit how much damage one mistake can do."}, {"q": "A tool stops partway and operators need to halt it immediately. Which rail helps?", "options": ["A longer timeout", "A bigger thread pool", "A changelog entry", "A kill switch"], "answer": 3, "exp": "Kill switches stop a runaway automation mid-run."}, {"q": "What makes automation 'a reliability risk' if done carelessly?", "options": ["Automation is always slower than humans", "Scripts cannot log", "A buggy tool can change many hosts quickly and at scale", "Automation removes all alerting"], "answer": 2, "exp": "That is why safety rails and tests matter."}]};
+
+/* =====================================================================
+   Final assessment — full-screen, timed mock exam (graded in-browser)
+   ===================================================================== */
+(function(){
+  const C = window.COURSE;
+  const BANK = C.assess.map((q,i)=>Object.assign({id:'q'+i}, q));
+  const EXAM_SECONDS = 60*60;
+  const LS_KEY = 'sre_scores_' + C.slug;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash .card:hover{transform:none}
+  .exam-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9;padding:0}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-fswarn{position:fixed;inset:0;z-index:100003;background:rgba(15,23,42,.92);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#fff;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fswarn .fw-box{max-width:520px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .exam-fswarn h3{font-size:30px;font-weight:800;margin:0;display:flex;align-items:center;gap:12px;color:#fff}
+  .exam-fswarn p{margin:0;font-size:16px;color:#e2e8f0;line-height:1.5}
+  .exam-fswarn .fw-count{font-size:16px;font-weight:600;color:#fff}
+  .exam-fswarn .fw-btn{margin-top:6px;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:15px 26px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+  .exam-fswarn .fw-btn:hover{background:#000}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}.exam-q-pane{padding:20px}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+  function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function examDialog(title,msg,okLabel,cancel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">${cancel?'<button class="exam-btn nav" data-a="0">Cancel</button>':''}<button class="exam-btn primary" data-a="1">${okLabel||'OK'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d && cancel){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores(); a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: tab-switch / fullscreen-exit warnings (3 strikes -> auto-submit) ---- */
+  let warns=0, lastWarn=0, proctorOn=false;
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function hideFsWarn(){ const w=document.getElementById('examFsWarn'); if(w)w.remove(); }
+  function showFsWarn(n){
+    injectCss(); hideFsWarn();
+    const w=document.createElement('div'); w.className='exam-fswarn'; w.id='examFsWarn';
+    w.innerHTML='<div class="fw-box"><h3><span>&#9888;&#65039;</span> Fullscreen exited</h3>'+
+      '<p>The assessment must remain in fullscreen mode.</p>'+
+      '<div class="fw-count">Warning '+n+' of 3</div>'+
+      '<button class="fw-btn" id="examFsReturn">Return to assessment</button></div>';
+    document.body.appendChild(w);
+    const btn=document.getElementById('examFsReturn');
+    btn.addEventListener('click',()=>{
+      const el=document.documentElement;
+      const done=()=>{ fsWanted=true; hideFsWarn(); };
+      if(el.requestFullscreen){ el.requestFullscreen().then(done).catch(()=>{}); } else { done(); }
+    });
+    try{btn.focus();}catch(e){}
+  }
+  function countWarn(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<1500)return; lastWarn=now;
+    warns++;
+    if(warns>=3){ hideFsWarn(); examDialog('Test submitted','You left the test 3 times. It has been auto-submitted.'); submitExam(true); }
+    else if(kind==='fs'){ showFsWarn(warns); }
+    else { examDialog('Warning '+warns+' of 3','Switching tabs or leaving the window is not allowed. After 3 warnings the test is auto-submitted.'); }
+  }
+  function fsHandler(){
+    if(!examOn)return;
+    if(document.fullscreenElement){ hideFsWarn(); return; }
+    if(fsWanted){ countWarn('fs'); }
+  }
+  function visHandler(){ if(document.hidden){ showCover(); countWarn(); } else { hideCover(); } }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function keyGuard(e){ const k=(e.key||'').toLowerCase(); if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; } }
+  let fsWanted=false;
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+  }
+  function stopProctor(){
+    proctorOn=false; hideFsWarn();
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    hideCover();
+  }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; ${C.title} &mdash; Final Assessment</h2>
+      <p>A timed, exam-style assessment modelled on real SRE interview screens.</p>
+      <ul>
+        <li><b>${BANK.length} questions</b>, shuffled every attempt</li>
+        <li><b>60-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Correct answers and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> where your browser allows it</li>
+        <li><b>No tab / window switching</b> and <b>no exiting fullscreen (Esc)</b> &mdash; 3 warnings and the test <b>auto-submits</b></li>
+        <li>Copy and right-click are disabled during the test</li>
+      </ul>
+      <div style="display:flex;gap:10px"><button class="exam-btn nav" id="examCancel" style="flex:0 0 auto">Cancel</button>
+      <button class="exam-btn primary" id="examBegin" style="flex:1;padding:14px">Start Test &rarr;</button></div>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examCancel').addEventListener('click',()=>sp.remove());
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      fsWanted=false;
+      if(document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().then(()=>{fsWanted=true;}).catch(()=>{}); }
+      sp.remove(); enterExam();
+    });
+  }
+
+  function enterExam(){
+    injectCss();
+    items = shuffle(BANK);
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    const ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">${C.title} &mdash; Final Assessment</div><div class="et-sub">${items.length} questions &middot; one attempt &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}</div>
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}" tabindex="0"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>{
+      const pick=()=>{ answers[id]=+el.dataset.i; pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); refreshPalette(); };
+      el.addEventListener('click',pick);
+      el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();} });
+    });
+    document.getElementById('examPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    document.getElementById('examNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();});
+    refreshPalette();
+    pane.scrollTop=0;
+  }
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examDialog('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test', true);
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    let score=0; items.forEach(it=>{ if(answers[it.id]===it.answer) score++; });
+    showResults(score);
+  }
+  function showResults(score){
+    const total=items.length; saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below, revisit the modules and try again.';
+    if(pct>=85)msg='Outstanding &mdash; you are operating at an expert level for this role.';
+    else if(pct>=65)msg='Solid pass. Review the questions you missed and you are interview-ready.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the modules you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const you=answers[it.id], attempted=(you!=null), ok=attempted&&you===it.answer;
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      inner+= attempted ? '<div class="ra '+(ok?'cor':'wrong')+'">Your answer: '+String.fromCharCode(65+you)+'. '+it.options[you]+'</div>' : '<div class="ra wrong">Your answer: <i>Not answered</i></div>';
+      if(!ok) inner+='<div class="ra cor">Correct: '+String.fromCharCode(65+it.answer)+'. '+it.options[it.answer]+'</div>';
+      if(it.exp) inner+='<div class="rx">'+it.exp+'</div>';
+      return '<div class="r '+(ok?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; ${C.title}</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another attempt</button></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    document.getElementById('examRetry').addEventListener('click',()=>{ closeExam(); showSplash(); });
+    document.getElementById('examClose').addEventListener('click',closeExam);
+  }
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',showSplash);
+  renderScoreboard();
+})();
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+<style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body>
+</html>

@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Databases &amp; Caching — Backend Developer Learning Module</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#d9730d 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans',system-ui,sans-serif;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans',system-ui,sans-serif;font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'Noto Sans',system-ui,sans-serif;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'Noto Sans',system-ui,sans-serif;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'Noto Sans',system-ui,sans-serif;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'Noto Sans',system-ui,sans-serif;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'Noto Sans',system-ui,sans-serif;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'Noto Sans',system-ui,sans-serif;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+
+/* ============= Module additions (same visual language) ============= */
+.table-wrap{overflow-x:auto;margin:16px 0;-webkit-overflow-scrolling:touch}
+.table-wrap table{margin:0;min-width:560px}
+.formula{display:inline-block;font-size:12.5px;background:var(--bg-code);border:1px solid var(--line);padding:2px 8px;border-radius:4px;color:#14213D;font-weight:500}
+.saq-toggle{margin-top:10px}
+.mcq-opt:focus-visible,.btn:focus-visible,.tab:focus-visible,.assess-start-btn:focus-visible,.saq textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.example{border:1px solid var(--line);border-left:4px solid var(--orange);border-radius:var(--radius);padding:14px 18px;margin:16px 0;background:#fffdf9}
+.example-title{font-weight:700;font-size:13px;color:#a85a08;margin-bottom:6px;letter-spacing:.02em}
+.example p,.example ul{margin:6px 0;font-size:14.5px}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.expert{background:#14213D;color:#fff}
+.term{display:grid;grid-template-columns:190px 1fr;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.term:last-child{border-bottom:none}
+details{border:1px solid var(--line);border-radius:var(--radius);margin:10px 0;background:#fff}
+summary{cursor:pointer;padding:11px 16px;font-weight:600;font-size:15px}details[open] summary{border-bottom:1px solid var(--line)}details>div{padding:10px 16px 12px;font-size:14.5px;line-height:1.6;color:#3a3833}
+.term b{color:#14213D}
+.terms{border:1px solid var(--line);border-radius:var(--radius);padding:4px 16px;margin:16px 0;background:#fff}
+@media (max-width:720px){
+  .header-top{padding:12px 16px;flex-wrap:wrap}
+  .brand{font-size:14px;line-height:1.35}
+  .brand-sub{display:block;margin-left:0}
+  .panel-title{font-size:30px}
+  .section h2{font-size:22px}
+  .assess-modal-box{padding:0 18px 40px}
+  .term{grid-template-columns:1fr;gap:2px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+<style>
+/* Noto Sans everywhere */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,td,th,div,section,header,nav,aside,main,label,button,input,textarea,small,strong,b,em,i,code,pre,svg text{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif !important}
+</style>
+<style>pre,pre code,code{font-family:'Noto Sans Mono',ui-monospace,Consolas,monospace !important}pre{font-size:13px}</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-top">
+    <div class="brand"><div class="brand-mark">DB</div><span>Backend Developer<span class="brand-sub"> · Databases &amp; Caching</span></span></div>
+    <div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 8</span></span>
+      <button class="btn" onclick="resetProgress()" title="Reset to first tab"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9"/><path d="M2 4v3.5h3.5"/></svg> Reset</button></div>
+  </div>
+  <nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Foundations</button><button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> PostgreSQL</button><button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> MySQL</button><button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> MongoDB</button><button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> Redis</button><button class="tab" data-tab="t6" role="tab"><span class="tab-num">06</span> Indexing & Optimization</button><button class="tab" data-tab="t7" role="tab"><span class="tab-num">07</span> Practice</button><button class="tab" data-tab="t8" role="tab"><span class="tab-num">08</span> Assessment</button></nav>
+</header>
+<div class="layout">
+  <aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside>
+  <main class="main">
+<section class="panel active" id="t1" data-toc='[["s1-1", "What is a database?"], ["s1-2", "Types of databases"], ["s1-3", "What is caching and why?"], ["s1-4", "ACID, BASE and CAP"], ["s1-5", "Key terms"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span></div><div class="panel-eyebrow">Module 01 · Foundations</div><h1 class="panel-title">What are Databases & Caching?</h1><p class="panel-subtitle">Start from zero: what a database is, the main types, and why caches sit in front of them.</p></div><div class="section" id="s1-1"><h2><span class="sec-emoji">🗄️</span> What is a database?</h2><p>A <strong>database</strong> is an organised collection of data that applications can store, find, update and delete reliably. A <strong>DBMS</strong> (database management system) such as PostgreSQL is the software that does this work for you: storage, queries, security, backups and concurrent access.</p><div class="compare"><div class="compare-col"><h4>🔴 Plain files (CSV, JSON)</h4><p style="font-size:14px;color:var(--ink-soft);margin:0">Slow to search, no safe concurrent writes, no rules, easy to corrupt.</p></div><div class="compare-col"><h4>🟢 A DBMS</h4><p style="font-size:14px;color:var(--ink-soft);margin:0">Fast indexed search, transactions, constraints, access control, backups and replication.</p></div></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">🧩</span> Types of databases</h2><div class="table-wrap"><table><tr><th>Type</th><th>Data model</th><th>Examples</th><th>Best for</th></tr><tr><td><strong>Relational (SQL)</strong></td><td>Tables with rows, columns and relations</td><td>PostgreSQL, MySQL</td><td>Orders, payments, anything needing integrity</td></tr><tr><td><strong>Document</strong></td><td>JSON-like documents in collections</td><td>MongoDB</td><td>Flexible, nested, fast-changing data</td></tr><tr><td><strong>Key-value / in-memory</strong></td><td>Key → value held in RAM</td><td>Redis</td><td>Caching, sessions, counters, queues</td></tr><tr><td><strong>Wide-column</strong></td><td>Rows with dynamic columns</td><td>Cassandra</td><td>Huge write-heavy workloads</td></tr><tr><td><strong>Graph</strong></td><td>Nodes and edges</td><td>Neo4j</td><td>Social networks, recommendations</td></tr><tr><td><strong>Time-series</strong></td><td>Timestamped measurements</td><td>InfluxDB, TimescaleDB</td><td>Metrics, IoT</td></tr></table></div><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#14213D">🧮</div><div class="card-title">PostgreSQL</div><div class="card-desc">Feature-rich relational database.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🐬</div><div class="card-title">MySQL</div><div class="card-desc">Popular, fast relational database.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🍃</div><div class="card-title">MongoDB</div><div class="card-desc">Document database.</div></div><div class="card"><div class="card-icon" style="background:var(--pink-soft);color:#8c1a63">⚡</div><div class="card-title">Redis</div><div class="card-desc">In-memory store and cache.</div></div></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">⚡</span> What is caching and why?</h2><p>A <strong>cache</strong> keeps a copy of frequently read data in a faster place so the database is not asked every time. Redis answers in well under a millisecond from memory; a disk-based query may take tens of milliseconds.</p><div class="diagram"><svg viewBox="0 0 720 130" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans"><defs><marker id="m1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><rect x="8" y="20" width="118" height="90" rx="12" fill="#14213D" stroke="#d3d3d0"/><text x="67.0" y="54" text-anchor="middle" fill="#fff" font-weight="700" font-size="12">Client</text><text x="67.0" y="80" text-anchor="middle" fill="#fff" font-size="10.5">Sends request</text><line x1="128" y1="65" x2="144" y2="65" stroke="#37352f" stroke-width="2" marker-end="url(#m1)"/><rect x="148" y="20" width="118" height="90" rx="12" fill="#eef1f7" stroke="#d3d3d0"/><text x="207.0" y="54" text-anchor="middle" fill="#14213D" font-weight="700" font-size="12">API server</text><text x="207.0" y="80" text-anchor="middle" fill="#37352f" font-size="10.5">Checks cache</text><line x1="268" y1="65" x2="284" y2="65" stroke="#37352f" stroke-width="2" marker-end="url(#m1)"/><rect x="288" y="20" width="118" height="90" rx="12" fill="#ddedea" stroke="#d3d3d0"/><text x="347.0" y="54" text-anchor="middle" fill="#14213D" font-weight="700" font-size="12">Redis cache</text><text x="347.0" y="80" text-anchor="middle" fill="#37352f" font-size="10.5">Hit → return</text><line x1="408" y1="65" x2="424" y2="65" stroke="#37352f" stroke-width="2" marker-end="url(#m1)"/><rect x="428" y="20" width="118" height="90" rx="12" fill="#fadec9" stroke="#d3d3d0"/><text x="487.0" y="54" text-anchor="middle" fill="#14213D" font-weight="700" font-size="12">Database</text><text x="487.0" y="80" text-anchor="middle" fill="#37352f" font-size="10.5">Miss → query</text><line x1="548" y1="65" x2="564" y2="65" stroke="#37352f" stroke-width="2" marker-end="url(#m1)"/><rect x="568" y="20" width="118" height="90" rx="12" fill="#0f7b0f" stroke="#d3d3d0"/><text x="627.0" y="54" text-anchor="middle" fill="#fff" font-weight="700" font-size="12">Cache fill</text><text x="627.0" y="80" text-anchor="middle" fill="#fff" font-size="10.5">Store with TTL</text></svg><div class="diagram-caption">Figure 1.1 · Read path with a cache</div></div><ul><li><strong>Cache hit:</strong> data found in cache. <strong>Cache miss:</strong> not found, so read the database.</li><li><strong>TTL</strong> (time to live) removes stale entries automatically.</li></ul></div><div class="section" id="s1-4"><h2><span class="sec-emoji">🔒</span> ACID, BASE and CAP</h2><div class="table-wrap"><table><tr><th>Idea</th><th>Meaning</th></tr><tr><td><strong>ACID</strong></td><td>Atomicity (all or nothing), Consistency (rules hold), Isolation (transactions do not interfere), Durability (committed data survives crashes)</td></tr><tr><td><strong>BASE</strong></td><td>Basically Available, Soft state, Eventually consistent: favours availability at scale</td></tr><tr><td><strong>CAP theorem</strong></td><td>During a network partition a distributed system must choose between consistency and availability</td></tr></table></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Rule of thumb: <strong>SQL for money and relationships, MongoDB for flexible documents, Redis for speed</strong>. Most real systems use several together (polyglot persistence).</div></div></div><div class="section" id="s1-5"><h2><span class="sec-emoji">📖</span> Key terms</h2><div class="terms"><div class="term"><b>Schema</b><span>The structure of tables and columns.</span></div><div class="term"><b>Query</b><span>A request to read or change data.</span></div><div class="term"><b>Transaction</b><span>A group of operations that succeed or fail together.</span></div><div class="term"><b>Index</b><span>A structure that speeds up lookups.</span></div><div class="term"><b>Replication</b><span>Copying data to other servers.</span></div><div class="term"><b>Sharding</b><span>Splitting data across servers.</span></div><div class="term"><b>Eviction</b><span>Removing cache entries when memory is full.</span></div><div class="term"><b>Latency</b><span>Time taken to answer one request.</span></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which database type is the best fit for a session cache?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Relational</li><li class="mcq-opt"><span class="opt-letter">B</span> Key-value in-memory (Redis)</li><li class="mcq-opt"><span class="opt-letter">C</span> Graph</li><li class="mcq-opt"><span class="opt-letter">D</span> Time-series</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite. Answer: Key-value in-memory (Redis)"></div></div></div></section>
+<section class="panel" id="t2" data-toc='[["s2-1", "What is PostgreSQL?"], ["s2-2", "SQL basics with examples"], ["s2-3", "Transactions, isolation and MVCC"], ["s2-4", "Intermediate: CTEs, window functions, JSONB"], ["s2-5", "Advanced and expert topics"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag adv">→ Advanced</span></div><div class="panel-eyebrow">Module 02 · PostgreSQL</div><h1 class="panel-title">PostgreSQL</h1><p class="panel-subtitle">An open-source relational database known for correctness, SQL standards and rich features.</p></div><div class="section" id="s2-1"><h2><span class="sec-emoji">🐘</span> What is PostgreSQL?</h2><p><strong>PostgreSQL</strong> (Postgres) is an object-relational database with strong ACID guarantees. It stores data in <strong>tables</strong>; each <strong>row</strong> is a record, each <strong>column</strong> has a type, and <strong>primary and foreign keys</strong> link tables.</p><div class="table-wrap"><table><tr><th>Common type</th><th>Use</th></tr><tr><td><code>integer, bigint, serial</code></td><td>Whole numbers and auto-ids</td></tr><tr><td><code>numeric(10,2)</code></td><td>Exact money values</td></tr><tr><td><code>text, varchar(n)</code></td><td>Strings</td></tr><tr><td><code>timestamptz</code></td><td>Time with time zone (preferred)</td></tr><tr><td><code>boolean, uuid</code></td><td>Flags and unique ids</td></tr><tr><td><code>jsonb</code></td><td>Indexed binary JSON</td></tr><tr><td><code>array</code></td><td>Lists inside a column</td></tr></table></div></div><div class="section" id="s2-2"><h2><span class="sec-emoji">🧪</span> SQL basics with examples</h2><pre><span class="pre-lang">sql</span><code>CREATE TABLE users (
+  id BIGSERIAL PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE TABLE orders (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT REFERENCES users(id),
+  total NUMERIC(10,2) CHECK (total &gt;= 0),
+  status TEXT DEFAULT &#x27;new&#x27;
+);
+INSERT INTO users(email) VALUES (&#x27;asha@example.com&#x27;);
+SELECT u.email, COUNT(o.id) AS orders, SUM(o.total) AS spent
+FROM users u LEFT JOIN orders o ON o.user_id = u.id
+GROUP BY u.email HAVING SUM(o.total) &gt; 1000
+ORDER BY spent DESC LIMIT 10;</code></pre><div class="table-wrap"><table><tr><th>Join</th><th>Returns</th></tr><tr><td>INNER</td><td>Rows matching in both tables</td></tr><tr><td>LEFT</td><td>All left rows, matches from right (NULL if none)</td></tr><tr><td>FULL</td><td>All rows from both</td></tr><tr><td>CROSS</td><td>Every combination</td></tr></table></div></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🔁</span> Transactions, isolation and MVCC</h2><pre><span class="pre-lang">sql</span><code>BEGIN;
+UPDATE accounts SET balance = balance - 500 WHERE id = 1;
+UPDATE accounts SET balance = balance + 500 WHERE id = 2;
+COMMIT;   -- or ROLLBACK;</code></pre><p><strong>MVCC</strong> (multi-version concurrency control) keeps old row versions so readers never block writers. Default isolation is <strong>READ COMMITTED</strong>; stricter levels are REPEATABLE READ and SERIALIZABLE.</p><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Dead row versions pile up. <strong>VACUUM</strong> (run by autovacuum) reclaims them; ignoring it causes table bloat.</div></div></div><div class="section" id="s2-4"><h2><span class="sec-emoji">🚀</span> Intermediate: CTEs, window functions, JSONB</h2><pre><span class="pre-lang">sql</span><code>WITH monthly AS (
+  SELECT user_id, date_trunc(&#x27;month&#x27;, created_at) m, SUM(total) t
+  FROM orders GROUP BY 1, 2)
+SELECT user_id, m, t,
+       RANK() OVER (PARTITION BY m ORDER BY t DESC) AS rnk,
+       LAG(t) OVER (PARTITION BY user_id ORDER BY m) AS prev
+FROM monthly;
+
+SELECT * FROM events WHERE payload @&gt; &#x27;{&quot;type&quot;:&quot;click&quot;}&#x27;;  -- jsonb containment</code></pre></div><div class="section" id="s2-5"><h2><span class="sec-emoji">🏆</span> Advanced and expert topics</h2><div class="table-wrap"><table><tr><th>Topic</th><th>What to know</th></tr><tr><td>Partitioning</td><td>Split big tables by range, list or hash; prune partitions for faster queries</td></tr><tr><td>Replication</td><td>Streaming (physical) replicas for failover and read scaling; logical replication per table</td></tr><tr><td>WAL</td><td>Write-ahead log guarantees durability and powers replication and point-in-time recovery</td></tr><tr><td>Connection pooling</td><td>Use PgBouncer; each connection is a costly process</td></tr><tr><td>Extensions</td><td>PostGIS (maps), pg_trgm (fuzzy search), pg_stat_statements (slow query stats)</td></tr><tr><td>Locking</td><td>Row locks, <code>SELECT ... FOR UPDATE</code>, deadlock handling</td></tr></table></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which feature lets readers and writers work without blocking each other?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Sharding</li><li class="mcq-opt"><span class="opt-letter">B</span> MVCC</li><li class="mcq-opt"><span class="opt-letter">C</span> Partitioning</li><li class="mcq-opt"><span class="opt-letter">D</span> VACUUM FULL</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite. Answer: MVCC"></div></div></div></section>
+<section class="panel" id="t3" data-toc='[["s3-1", "What is MySQL?"], ["s3-2", "MySQL vs PostgreSQL"], ["s3-3", "Intermediate and advanced"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span></div><div class="panel-eyebrow">Module 03 · MySQL</div><h1 class="panel-title">MySQL</h1><p class="panel-subtitle">The widely deployed relational database behind many web applications.</p></div><div class="section" id="s3-1"><h2><span class="sec-emoji">🐬</span> What is MySQL?</h2><p><strong>MySQL</strong> is an open-source relational database that uses SQL. It is pluggable: the SQL layer talks to a <strong>storage engine</strong>. Always choose <strong>InnoDB</strong> (default): transactions, row-level locking, foreign keys and crash recovery. MyISAM is legacy and has none of these.</p><pre><span class="pre-lang">sql</span><code>CREATE TABLE products (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  stock INT DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+SELECT name, price FROM products WHERE stock &gt; 0 ORDER BY price LIMIT 20;</code></pre></div><div class="section" id="s3-2"><h2><span class="sec-emoji">⚖️</span> MySQL vs PostgreSQL</h2><div class="table-wrap"><table><tr><th>Area</th><th>MySQL</th><th>PostgreSQL</th></tr><tr><td>Default isolation</td><td>REPEATABLE READ</td><td>READ COMMITTED</td></tr><tr><td>Strength</td><td>Simple, fast reads, huge ecosystem</td><td>Advanced SQL, JSONB, extensions</td></tr><tr><td>Table storage</td><td>Clustered on primary key (InnoDB)</td><td>Heap tables plus separate indexes</td></tr><tr><td>Replication</td><td>Binlog-based async / semi-sync, Group Replication</td><td>WAL streaming and logical</td></tr></table></div></div><div class="section" id="s3-3"><h2><span class="sec-emoji">🔧</span> Intermediate and advanced</h2><ul><li><strong>Clustered index:</strong> InnoDB stores rows in primary-key order, so keep the primary key short and sequential; every secondary index stores the primary key.</li><li><strong>Binary log (binlog)</strong> records changes for replication and point-in-time recovery; replicas replay it.</li><li><strong>Replication lag:</strong> read replicas may be seconds behind. Read-your-own-writes from the primary.</li><li><strong>Strict mode</strong> (<code>sql_mode</code>) rejects bad data instead of silently truncating it.</li><li><strong>High availability:</strong> Group Replication / InnoDB Cluster, ProxySQL for routing, Percona XtraBackup for hot backups.</li></ul><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Use <code>utf8mb4</code>, not <code>utf8</code>, so emoji and all Unicode characters are stored correctly.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which MySQL storage engine supports transactions and foreign keys?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> MyISAM</li><li class="mcq-opt"><span class="opt-letter">B</span> InnoDB</li><li class="mcq-opt"><span class="opt-letter">C</span> MEMORY</li><li class="mcq-opt"><span class="opt-letter">D</span> CSV</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite. Answer: InnoDB"></div></div></div></section>
+<section class="panel" id="t4" data-toc='[["s4-1", "What is MongoDB?"], ["s4-2", "CRUD examples"], ["s4-3", "Data modelling: embed or reference?"], ["s4-4", "Aggregation pipeline"], ["s4-5", "Advanced: replica sets, sharding, transactions"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span></div><div class="panel-eyebrow">Module 04 · MongoDB</div><h1 class="panel-title">MongoDB</h1><p class="panel-subtitle">A document database: store flexible JSON-like (BSON) documents without a fixed schema.</p></div><div class="section" id="s4-1"><h2><span class="sec-emoji">🍃</span> What is MongoDB?</h2><p><strong>MongoDB</strong> stores data as <strong>documents</strong> inside <strong>collections</strong>. Documents can nest objects and arrays, and two documents in a collection can have different fields.</p><div class="table-wrap"><table><tr><th>SQL</th><th>MongoDB</th></tr><tr><td>Table</td><td>Collection</td></tr><tr><td>Row</td><td>Document</td></tr><tr><td>Column</td><td>Field</td></tr><tr><td>JOIN</td><td><code>$lookup</code> or embedded documents</td></tr><tr><td>Index</td><td>Index</td></tr></table></div></div><div class="section" id="s4-2"><h2><span class="sec-emoji">🧪</span> CRUD examples</h2><pre><span class="pre-lang">javascript</span><code>db.users.insertOne({ name: &quot;Asha&quot;, email: &quot;asha@example.com&quot;,
+  address: { city: &quot;Vijayawada&quot; }, tags: [&quot;vip&quot;, &quot;beta&quot;] });
+db.users.find({ &quot;address.city&quot;: &quot;Vijayawada&quot; }, { name: 1, _id: 0 });
+db.users.updateOne({ email: &quot;asha@example.com&quot; }, { $set: { plan: &quot;pro&quot; }, $inc: { logins: 1 } });
+db.users.deleteOne({ email: &quot;asha@example.com&quot; });</code></pre><div class="table-wrap"><table><tr><th>Operator</th><th>Use</th></tr><tr><td><code>$gt $lt $in</code></td><td>Compare values</td></tr><tr><td><code>$set $inc $push</code></td><td>Update fields, counters, arrays</td></tr><tr><td><code>$and $or</code></td><td>Combine conditions</td></tr></table></div></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🧱</span> Data modelling: embed or reference?</h2><div class="compare"><div class="compare-col"><h4>📦 Embed</h4><p style="font-size:14px;color:var(--ink-soft);margin:0">Data read together and owned by the parent (order with its line items). One read, atomic update.</p></div><div class="compare-col"><h4>🔗 Reference</h4><p style="font-size:14px;color:var(--ink-soft);margin:0">Data shared, large or unbounded (comments on a post). Store ids and fetch with <code>$lookup</code>.</p></div></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">A document is limited to 16 MB. Never embed an array that grows forever.</div></div></div><div class="section" id="s4-4"><h2><span class="sec-emoji">📊</span> Aggregation pipeline</h2><pre><span class="pre-lang">javascript</span><code>db.orders.aggregate([
+  { $match: { status: &quot;paid&quot; } },
+  { $group: { _id: &quot;$userId&quot;, total: { $sum: &quot;$amount&quot; }, n: { $sum: 1 } } },
+  { $sort: { total: -1 } },
+  { $limit: 5 }
+]);</code></pre><p>Stages run in order; put <code>$match</code> and <code>$limit</code> early so indexes can be used and less data flows on.</p></div><div class="section" id="s4-5"><h2><span class="sec-emoji">🏆</span> Advanced: replica sets, sharding, transactions</h2><ul><li><strong>Replica set:</strong> one primary and several secondaries with automatic failover through elections. Use write concern <code>majority</code> for safety.</li><li><strong>Sharding:</strong> splits a collection across shards by a <strong>shard key</strong>. A poor key (monotonic, low cardinality) creates hot shards.</li><li><strong>Multi-document transactions</strong> exist but cost performance; good modelling usually avoids them.</li><li><strong>Schema validation</strong> (<code>$jsonSchema</code>) adds rules while keeping flexibility.</li></ul><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Best choice for an ever-growing list of comments on a post?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Embed them all in the post</li><li class="mcq-opt"><span class="opt-letter">B</span> Reference them in a separate collection</li><li class="mcq-opt"><span class="opt-letter">C</span> Store as one big string</li><li class="mcq-opt"><span class="opt-letter">D</span> Use a transaction</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite. Answer: Reference them in a separate collection"></div></div></div></section>
+<section class="panel" id="t5" data-toc='[["s5-1", "What is Redis?"], ["s5-2", "Commands in action"], ["s5-3", "Caching patterns"], ["s5-4", "Advanced: persistence, eviction, scaling, pitfalls"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span></div><div class="panel-eyebrow">Module 05 · Redis</div><h1 class="panel-title">Redis</h1><p class="panel-subtitle">An in-memory data store used for caching, sessions, rate limiting, queues and leaderboards.</p></div><div class="section" id="s5-1"><h2><span class="sec-emoji">⚡</span> What is Redis?</h2><p><strong>Redis</strong> (Remote Dictionary Server) keeps data in RAM and serves it in microseconds. Commands run on a single thread, so each one is atomic. It is mostly a <strong>cache</strong> in front of a primary database, but it can also be a primary store.</p><div class="table-wrap"><table><tr><th>Data type</th><th>Example commands</th><th>Use</th></tr><tr><td>String</td><td><code>SET GET INCR</code></td><td>Cache values, counters</td></tr><tr><td>Hash</td><td><code>HSET HGETALL</code></td><td>Objects (user profile)</td></tr><tr><td>List</td><td><code>LPUSH RPOP</code></td><td>Queues</td></tr><tr><td>Set</td><td><code>SADD SISMEMBER</code></td><td>Unique items, tags</td></tr><tr><td>Sorted set</td><td><code>ZADD ZRANGE</code></td><td>Leaderboards, scheduling</td></tr><tr><td>Stream</td><td><code>XADD XREAD</code></td><td>Event logs</td></tr></table></div></div><div class="section" id="s5-2"><h2><span class="sec-emoji">🧪</span> Commands in action</h2><pre><span class="pre-lang">redis</span><code>SET user:42 &#x27;{&quot;name&quot;:&quot;Asha&quot;}&#x27; EX 300     # expires in 300 s
+GET user:42
+INCR page:views
+HSET session:abc user 42 role admin
+ZADD leaderboard 1500 &quot;asha&quot;
+ZREVRANGE leaderboard 0 2 WITHSCORES
+TTL user:42</code></pre></div><div class="section" id="s5-3"><h2><span class="sec-emoji">🧠</span> Caching patterns</h2><div class="table-wrap"><table><tr><th>Pattern</th><th>How it works</th><th>Trade-off</th></tr><tr><td><strong>Cache-aside</strong></td><td>App reads cache; on miss reads DB and fills cache</td><td>Simple; first read is slow</td></tr><tr><td><strong>Write-through</strong></td><td>Write to cache and DB together</td><td>Fresh cache; slower writes</td></tr><tr><td><strong>Write-behind</strong></td><td>Write to cache, flush to DB later</td><td>Fast writes; risk of data loss</td></tr><tr><td><strong>Read-through</strong></td><td>Cache layer loads from DB itself</td><td>Cleaner app; needs a cache library</td></tr></table></div><pre><span class="pre-lang">python</span><code>def get_user(uid):
+    key = f&quot;user:{uid}&quot;
+    cached = redis.get(key)
+    if cached:
+        return json.loads(cached)                 # hit
+    user = db.fetch_user(uid)                      # miss
+    redis.set(key, json.dumps(user), ex=300)       # fill with TTL
+    return user
+
+def update_user(uid, data):
+    db.update_user(uid, data)
+    redis.delete(f&quot;user:{uid}&quot;)                    # invalidate</code></pre></div><div class="section" id="s5-4"><h2><span class="sec-emoji">🏆</span> Advanced: persistence, eviction, scaling, pitfalls</h2><div class="table-wrap"><table><tr><th>Topic</th><th>Details</th></tr><tr><td>Persistence</td><td><strong>RDB</strong> snapshots (compact, may lose recent writes) and <strong>AOF</strong> log (safer, larger); use both for durability</td></tr><tr><td>Eviction</td><td><code>maxmemory-policy</code>: <code>allkeys-lru</code>, <code>allkeys-lfu</code>, <code>volatile-ttl</code>, <code>noeviction</code></td></tr><tr><td>Replication and Sentinel</td><td>Replicas copy the primary; Sentinel handles failover</td></tr><tr><td>Redis Cluster</td><td>Data split over 16,384 hash slots across nodes</td></tr><tr><td>Atomic work</td><td>Transactions (<code>MULTI/EXEC</code>) and Lua scripts; distributed locks with <code>SET key val NX PX</code></td></tr></table></div><div class="table-wrap"><table><tr><th>Cache problem</th><th>Cause</th><th>Fix</th></tr><tr><td>Stampede</td><td>Hot key expires, many requests hit the DB</td><td>Locking, early refresh, TTL jitter</td></tr><tr><td>Penetration</td><td>Requests for keys that never exist</td><td>Cache null results, Bloom filter</td></tr><tr><td>Avalanche</td><td>Many keys expire together</td><td>Randomise TTLs</td></tr></table></div><div class="mcq" data-answer="0"><div class="mcq-q"><span class="mcq-qnum">Q.</span> A hot key expires and thousands of requests hit the database. This is a…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Cache stampede</li><li class="mcq-opt"><span class="opt-letter">B</span> Cache hit</li><li class="mcq-opt"><span class="opt-letter">C</span> Eviction</li><li class="mcq-opt"><span class="opt-letter">D</span> Replica lag</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite. Answer: Cache stampede"></div></div></div></section>
+<section class="panel" id="t6" data-toc='[["s6-1", "What is an index?"], ["s6-2", "Types of indexes"], ["s6-3", "Reading query plans"], ["s6-4", "Composite index rules"], ["s6-5", "Query optimization checklist"]]'><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 06 · Indexing & Optimization</div><h1 class="panel-title">Database Indexing & Query Optimization</h1><p class="panel-subtitle">Understand how indexes work, read query plans and make slow queries fast.</p></div><div class="section" id="s6-1"><h2><span class="sec-emoji">📚</span> What is an index?</h2><p>An <strong>index</strong> is a separate sorted structure, like a book index, that lets the database jump to rows instead of scanning the whole table (a <strong>sequential / full scan</strong>). Cost: extra disk space and slower writes, because every INSERT, UPDATE and DELETE must also update the indexes.</p><pre><span class="pre-lang">sql</span><code>CREATE INDEX idx_orders_user ON orders(user_id);
+CREATE UNIQUE INDEX idx_users_email ON users(email);
+-- MongoDB:  db.orders.createIndex({ userId: 1, createdAt: -1 })</code></pre></div><div class="section" id="s6-2"><h2><span class="sec-emoji">🧩</span> Types of indexes</h2><div class="table-wrap"><table><tr><th>Type</th><th>Good for</th><th>Notes</th></tr><tr><td><strong>B-tree</strong></td><td>Equality, ranges, ORDER BY</td><td>Default in all databases</td></tr><tr><td><strong>Hash</strong></td><td>Equality only</td><td>PostgreSQL hash, Redis keys</td></tr><tr><td><strong>Composite</strong></td><td>Multi-column filters</td><td>Column order matters</td></tr><tr><td><strong>Covering</strong></td><td>Index-only reads</td><td><code>INCLUDE</code> columns (PostgreSQL)</td></tr><tr><td><strong>Partial</strong></td><td>Only a subset of rows</td><td><code>WHERE status = 'new'</code></td></tr><tr><td><strong>GIN / GiST</strong></td><td>JSONB, arrays, full text, geo</td><td>PostgreSQL</td></tr><tr><td><strong>Text / TTL / geo</strong></td><td>MongoDB search, expiry, location</td><td>MongoDB</td></tr></table></div></div><div class="section" id="s6-3"><h2><span class="sec-emoji">🔎</span> Reading query plans</h2><pre><span class="pre-lang">sql</span><code>EXPLAIN (ANALYZE, BUFFERS)
+SELECT * FROM orders WHERE user_id = 42 ORDER BY created_at DESC LIMIT 10;
+-- Seq Scan            -&gt; reads the whole table (bad on big tables)
+-- Index Scan          -&gt; uses an index
+-- Index Only Scan     -&gt; answered from the index alone
+-- compare estimated vs actual rows; large gaps mean stale statistics (run ANALYZE)</code></pre><p>MySQL uses <code>EXPLAIN</code> / <code>EXPLAIN ANALYZE</code> (check <code>type</code>, <code>key</code>, <code>rows</code>); MongoDB uses <code>.explain("executionStats")</code> and looks for <code>IXSCAN</code> instead of <code>COLLSCAN</code>.</p></div><div class="section" id="s6-4"><h2><span class="sec-emoji">🧠</span> Composite index rules</h2><pre><span class="pre-lang">sql</span><code>CREATE INDEX idx_o ON orders(user_id, status, created_at);
+-- Uses the index:   WHERE user_id = 1
+--                   WHERE user_id = 1 AND status = &#x27;paid&#x27;
+-- Cannot use it well: WHERE status = &#x27;paid&#x27;   (skips the leftmost column)</code></pre><ul><li><strong>Leftmost-prefix rule:</strong> an index on (a, b, c) helps a, a+b and a+b+c.</li><li>Order: equality columns first, then range, then sort columns.</li><li>Functions on a column (<code>WHERE lower(email)=…</code>, <code>WHERE date(created_at)=…</code>) hide it from the index; use an expression index or rewrite the filter.</li><li>Low-cardinality columns (e.g. boolean) alone rarely benefit from an index.</li></ul></div><div class="section" id="s6-5"><h2><span class="sec-emoji">🏆</span> Query optimization checklist</h2><div class="table-wrap"><table><tr><th>Problem</th><th>Fix</th></tr><tr><td><code>SELECT *</code></td><td>Select only the columns you need</td></tr><tr><td>N+1 queries (one query per row)</td><td>Use a JOIN, IN list or batch loading</td></tr><tr><td>Deep <code>OFFSET</code> pagination</td><td>Keyset pagination: <code>WHERE id &lt; :last ORDER BY id DESC LIMIT 20</code></td></tr><tr><td>Slow repeated reads</td><td>Cache results in Redis</td></tr><tr><td>Unknown slow queries</td><td>Enable the slow query log / <code>pg_stat_statements</code></td></tr><tr><td>Stale statistics</td><td><code>ANALYZE</code>; keep autovacuum healthy</td></tr><tr><td>Too many indexes</td><td>Drop unused ones; they slow every write</td></tr><tr><td>Huge tables</td><td>Partition, archive old data, add read replicas</td></tr></table></div><div class="example"><div class="example-title">Before and after</div><p>Query: <span class="formula">SELECT * FROM orders WHERE user_id = 42</span> on 10 million rows. Without an index: sequential scan, about 2 s. After <code>CREATE INDEX ON orders(user_id)</code>: index scan, a few ms.</p></div><div class="mcq" data-answer="2"><div class="mcq-q"><span class="mcq-qnum">Q.</span> An index on (a, b, c) will NOT help a query filtering only on…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> a</li><li class="mcq-opt"><span class="opt-letter">B</span> a and b</li><li class="mcq-opt"><span class="opt-letter">C</span> b</li><li class="mcq-opt"><span class="opt-letter">D</span> a, b and c</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite. Answer: b"></div></div></div></section>
+<section class="panel" id="t7" data-toc='[["s7-1", "Scenario"], ["s7-2", "Task 1 \u00b7 Choose databases"], ["s7-3", "Task 2 \u00b7 Index it"], ["s7-4", "Task 3 \u00b7 Diagnose"], ["s7-5", "Task 4 \u00b7 Cache safely"], ["s7-6", "Task 5 \u00b7 Scale"]]'><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 07 · Practice</div><h1 class="panel-title">Practice: Design the Data Layer for ShopKart</h1><p class="panel-subtitle">Apply everything: pick the right database, model data, add indexes and cache safely.</p></div><div class="quiz-progress"><span class="quiz-score">0 / 0 correct</span><div class="quiz-bar-track"><div class="quiz-bar-fill"></div></div><button class="btn quiz-reset-btn">↻ Reset answers</button></div><div class="section" id="s7-1"><h2><span class="sec-emoji">🛒</span> Scenario</h2><p><strong>ShopKart</strong> is an e-commerce site with 2 million users. It stores orders and payments, a product catalogue with varying attributes (phones, shirts, books), user sessions, and a "top sellers" list. The orders page has become slow.</p></div><div class="section" id="s7-2"><h2><span class="sec-emoji">1️⃣</span> Task 1 · Choose databases</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Which database would you use for orders, the catalogue, and sessions/top sellers? Say why.</div><textarea placeholder="Orders… Catalogue… Sessions…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> <strong>Orders and payments:</strong> PostgreSQL or MySQL (ACID transactions, foreign keys). <strong>Catalogue:</strong> MongoDB (flexible attributes per product) or PostgreSQL JSONB. <strong>Sessions and top sellers:</strong> Redis (TTL for sessions, sorted set for the leaderboard).</div></div></div><div class="section" id="s7-3"><h2><span class="sec-emoji">2️⃣</span> Task 2 · Index it</h2><pre><span class="pre-lang">sql</span><code>SELECT id, total, created_at FROM orders
+WHERE user_id = 42 AND status = &#x27;paid&#x27;
+ORDER BY created_at DESC LIMIT 20;</code></pre><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Write the best index for this query and explain the column order.</div><textarea placeholder="CREATE INDEX…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> <code>CREATE INDEX idx_orders_user_status_created ON orders(user_id, status, created_at DESC);</code> Two equality columns come first, then the sort column, so the database filters and returns rows already ordered, with no extra sort.</div></div></div><div class="section" id="s7-4"><h2><span class="sec-emoji">3️⃣</span> Task 3 · Diagnose</h2><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> EXPLAIN shows "Seq Scan" on a 10-million-row table for a filter on user_id. What is the first step?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Add more RAM</li><li class="mcq-opt"><span class="opt-letter">B</span> Create an index on user_id and re-run EXPLAIN ANALYZE</li><li class="mcq-opt"><span class="opt-letter">C</span> Switch to MongoDB</li><li class="mcq-opt"><span class="opt-letter">D</span> Delete old rows</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite. Answer: Create an index on user_id and re-run EXPLAIN ANALYZE"></div></div><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> The dashboard runs 101 queries to show 100 orders with their products. What is wrong and how do you fix it?</div><textarea placeholder="Problem… Fix…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> This is the <strong>N+1 query</strong> problem. Fetch orders, then load all products in one query (JOIN or <code>WHERE id IN (…)</code>), or batch-load them.</div></div></div><div class="section" id="s7-5"><h2><span class="sec-emoji">4️⃣</span> Task 4 · Cache safely</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Product pages are cached in Redis with a 10-minute TTL. A sale starts and a hot product page expires, sending thousands of requests to the database. Propose two fixes.</div><textarea placeholder="Fix 1… Fix 2…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Use a short lock so only one request rebuilds the cache (others wait or serve stale data); refresh before expiry; add random jitter to TTLs; pre-warm the cache before the sale. Invalidate the key on price or stock updates.</div></div></div><div class="section" id="s7-6"><h2><span class="sec-emoji">5️⃣</span> Task 5 · Scale</h2><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Reads are heavy but writes are modest. The best first scaling step is…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Shard immediately</li><li class="mcq-opt"><span class="opt-letter">B</span> Add read replicas and caching</li><li class="mcq-opt"><span class="opt-letter">C</span> Remove all indexes</li><li class="mcq-opt"><span class="opt-letter">D</span> Use a bigger text column</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite. Answer: Add read replicas and caching"></div></div></div></section>
+<section class="panel" id="t8" data-toc='[["sA-1","Take the Assessment"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag expert">→ Expert</span></div><p class="panel-eyebrow">Module 08</p><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">Test yourself on PostgreSQL, MySQL, MongoDB, Redis, indexing and query optimization.</p></div><div class="section" id="sA-1"><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div><div class="assess-intro-text">A timed, full-screen assessment with one attempt window, a question palette and a score at the end. Please read the rules below before you start.</div>
+<ul class="assess-intro-list"><li><strong>50 questions</strong> per attempt, randomly selected from a larger question bank — concept checks and workplace scenarios, Simple to Advanced</li><li><strong>60-minute</strong> timer with a warning state; the assessment auto-submits when time is up</li><li>Question palette, Previous / Next and <strong>Mark for Review</strong></li><li>Runs in <strong>full-screen</strong> — do not switch tabs/windows or exit full-screen</li><li><strong>3 warnings</strong> for tab/window switching or leaving full-screen will auto-submit</li><li>Copy, cut, right-click and common print/save/screenshot shortcuts are blocked</li><li>Questions and options are shuffled on every attempt</li></ul>
+<button class="assess-start-btn" id="assessStartBtn">▶ Start Assessment</button></div></div>
+</section>
+  </main>
+</div>
+<script>
+
+/* Tabs, dynamic TOC, scroll-spy, progress pill */
+(function(){
+  const tabs=document.querySelectorAll('.tab'),panels=document.querySelectorAll('.panel'),tocEl=document.getElementById('toc'),total=tabs.length,pt=document.getElementById('progressText');
+  function buildToc(panel){const data=JSON.parse(panel.getAttribute('data-toc')||'[]');tocEl.innerHTML=data.map(([id,l])=>`<li><a href="#${id}" data-target="${id}">${l}</a></li>`).join('');const f=tocEl.querySelector('a');if(f)f.classList.add('active');}
+  function activate(i){tabs.forEach((t,k)=>{t.classList.toggle('active',k===i);t.setAttribute('aria-selected',k===i)});panels.forEach((p,k)=>p.classList.toggle('active',k===i));buildToc(panels[i]);pt.textContent=`Tab ${i+1} of ${total}`;window.scrollTo({top:0,behavior:'instant'});tabs[i].scrollIntoView({block:'nearest',inline:'nearest'});}
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{const a=e.target.closest('.toc-list a');if(!a)return;e.preventDefault();const el=document.getElementById(a.dataset.target);if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});});
+  let tk=false;function spy(){const ap=document.querySelector('.panel.active');if(!ap)return;let cur=null;ap.querySelectorAll('.section').forEach(s=>{if(s.getBoundingClientRect().top-180<0)cur=s.id});if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));tk=false;}
+  window.addEventListener('scroll',()=>{if(!tk){requestAnimationFrame(spy);tk=true}},{passive:true});
+  window.resetProgress=()=>activate(0);activate(0);
+})();
+/* Inline MCQs, per-panel score, model answers */
+(function(){
+  function update(panel){const bar=panel.querySelector('.quiz-progress');if(!bar||bar.id)return;const all=panel.querySelectorAll('.mcq').length,done=panel.querySelectorAll('.mcq.answered').length,okc=panel.querySelectorAll('.mcq.answered[data-correct="1"]').length;bar.querySelector('.quiz-score').textContent=`${okc} / ${all} correct`;bar.querySelector('.quiz-bar-fill').style.width=(all?done/all*100:0)+'%';}
+  document.querySelectorAll('.mcq').forEach(m=>{const ans=+m.dataset.answer,opts=m.querySelectorAll('.mcq-opt'),fb=m.querySelector('.mcq-feedback');
+    opts.forEach((o,i)=>{o.tabIndex=0;o.setAttribute('role','button');const go=()=>{if(m.classList.contains('answered'))return;m.classList.add('answered');const r=i===ans;m.dataset.correct=r?'1':'0';opts[ans].classList.add('correct');if(!r)o.classList.add('incorrect');fb.className='mcq-feedback '+(r?'ok':'bad');fb.textContent=r?fb.dataset.ok:fb.dataset.bad;update(m.closest('.panel'));};
+      o.addEventListener('click',go);o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});});});
+  document.querySelectorAll('.panel').forEach(p=>{update(p);const rb=p.querySelector('.quiz-reset-btn');if(rb)rb.addEventListener('click',()=>{p.querySelectorAll('.mcq').forEach(m=>{m.classList.remove('answered');delete m.dataset.correct;m.querySelectorAll('.mcq-opt').forEach(o=>o.classList.remove('correct','incorrect'));const fb=m.querySelector('.mcq-feedback');fb.className='mcq-feedback';fb.textContent='';});p.querySelectorAll('.saq textarea').forEach(t=>t.value='');p.querySelectorAll('.saq-model').forEach(x=>x.classList.remove('show'));p.querySelectorAll('.saq-toggle').forEach(b=>b.textContent='Show model answer');update(p);});});
+  document.querySelectorAll('.saq-toggle').forEach(b=>b.addEventListener('click',()=>{const s=b.nextElementSibling.classList.toggle('show');b.textContent=s?'Hide model answer':'Show model answer';}));
+})();
+/* Assessment modal — one question at a time */
+/* Secure timed assessment (rules & proctoring from refer_assessment.html) */
+
+/* =============================================================
+   CareerBuddy Role Assessment — Python-reference style exam
+   91 role-specific questions; 50 randomly selected per attempt.
+   ============================================================= */
+(function(){
+  const ROLE = "Backend Developer \u2014 Databases & Caching";
+  const QUESTION_BANK = [{"id": "databases_and_caching-01", "q": "Which is a relational database?", "options": ["MongoDB", "PostgreSQL", "Redis", "Neo4j"], "answer": 1, "difficulty": "Simple"}, {"id": "databases_and_caching-02", "q": "What does the \"I\" in ACID stand for?", "options": ["Integrity", "Isolation", "Indexing", "Immediate"], "answer": 1, "difficulty": "Simple"}, {"id": "databases_and_caching-03", "q": "A cache hit means\u2026", "options": ["Data was found in the cache", "The database crashed", "The key expired", "A write failed"], "answer": 0, "difficulty": "Simple"}, {"id": "databases_and_caching-04", "q": "PostgreSQL's default isolation level is\u2026", "options": ["READ UNCOMMITTED", "READ COMMITTED", "REPEATABLE READ", "SERIALIZABLE"], "answer": 1, "difficulty": "Simple"}, {"id": "databases_and_caching-05", "q": "MVCC in PostgreSQL lets\u2026", "options": ["Readers and writers avoid blocking each other", "Tables skip primary keys", "Queries run without indexes", "Data live only in RAM"], "answer": 0, "difficulty": "Simple"}, {"id": "databases_and_caching-06", "q": "The recommended MySQL storage engine is\u2026", "options": ["MyISAM", "InnoDB", "MEMORY", "ARCHIVE"], "answer": 1, "difficulty": "Simple"}, {"id": "databases_and_caching-07", "q": "In InnoDB, secondary indexes store\u2026", "options": ["Row pointers only", "The primary key value", "Nothing", "Table names"], "answer": 1, "difficulty": "Medium"}, {"id": "databases_and_caching-08", "q": "In MongoDB, a SQL \"row\" is a\u2026", "options": ["Collection", "Document", "Shard", "Index"], "answer": 1, "difficulty": "Medium"}, {"id": "databases_and_caching-09", "q": "Which is a good reason to reference instead of embed?", "options": ["Data is small and always read together", "The array can grow without limit", "You want one read", "Atomic update of one document"], "answer": 1, "difficulty": "Medium"}, {"id": "databases_and_caching-10", "q": "A poor MongoDB shard key is\u2026", "options": ["High cardinality", "A monotonically increasing value", "Evenly distributed", "Used in queries"], "answer": 1, "difficulty": "Medium"}, {"id": "databases_and_caching-11", "q": "Which Redis type suits a leaderboard?", "options": ["String", "List", "Sorted set", "Hash"], "answer": 2, "difficulty": "Medium"}, {"id": "databases_and_caching-12", "q": "In cache-aside, on a miss the application\u2026", "options": ["Fails", "Reads the database and fills the cache", "Deletes the database row", "Restarts Redis"], "answer": 1, "difficulty": "Advanced"}, {"id": "databases_and_caching-13", "q": "Which Redis policy evicts the least recently used key from all keys?", "options": ["noeviction", "allkeys-lru", "volatile-ttl", "allkeys-random only"], "answer": 1, "difficulty": "Advanced"}, {"id": "databases_and_caching-14", "q": "Writing to an index-backed table is slower because\u2026", "options": ["Indexes must also be updated", "SQL is interpreted", "Rows are compressed", "Caches are cleared"], "answer": 0, "difficulty": "Advanced"}, {"id": "databases_and_caching-15", "q": "An index on (a, b, c) helps a query filtering only on\u2026", "options": ["b", "c", "a", "b and c"], "answer": 2, "difficulty": "Advanced"}, {"id": "databases_and_caching-16", "q": "Which fixes deep OFFSET pagination?", "options": ["Larger OFFSET", "Keyset pagination", "SELECT *", "Remove ORDER BY"], "answer": 1, "difficulty": "Advanced"}, {"id": "databases_caching-017", "q": "What does the \"A\" in ACID stand for?", "options": ["Atomicity", "Aggregation", "Authorization", "Availability"], "answer": 0, "difficulty": "Simple", "explanation": "A transaction is all-or-nothing."}, {"id": "databases_caching-018", "q": "Which SQL clause filters rows after grouping?", "options": ["WHERE", "HAVING", "LIMIT", "ORDER BY"], "answer": 1, "difficulty": "Simple", "explanation": "HAVING filters groups; WHERE filters rows before grouping."}, {"id": "databases_caching-019", "q": "What is a primary key?", "options": ["A copy of the table", "A column or set of columns that uniquely identifies each row", "A cache key", "An encrypted column"], "answer": 1, "difficulty": "Simple", "explanation": "Primary keys are unique and not null."}, {"id": "databases_caching-020", "q": "What does a foreign key enforce?", "options": ["Automatic sharding", "Faster writes", "Referential integrity between tables", "Encryption at rest"], "answer": 2, "difficulty": "Simple", "explanation": "It ensures referenced rows exist."}, {"id": "databases_caching-021", "q": "Which SQL join returns only rows with matches in both tables?", "options": ["CROSS JOIN", "LEFT JOIN", "INNER JOIN", "FULL OUTER JOIN"], "answer": 2, "difficulty": "Simple", "explanation": "INNER JOIN keeps matching rows only."}, {"id": "databases_caching-022", "q": "Which command shows the execution plan in PostgreSQL?", "options": ["EXPLAIN", "TRACE ROUTE", "DESCRIBE CACHE", "SHOW PLAN"], "answer": 0, "difficulty": "Simple", "explanation": "EXPLAIN (ANALYZE) shows planned and actual execution."}, {"id": "databases_caching-023", "q": "What is a cache miss?", "options": ["The cache crashed", "The requested data is not in the cache", "The cache is full of hits", "The data is encrypted"], "answer": 1, "difficulty": "Simple", "explanation": "A miss forces a read from the source of truth."}, {"id": "databases_caching-024", "q": "What does TTL mean for a cached key?", "options": ["Total transaction length", "Table type label", "Transfer throttle limit", "Time to live before it expires"], "answer": 3, "difficulty": "Simple", "explanation": "After the TTL the key is removed."}, {"id": "databases_caching-025", "q": "Which database type is MongoDB?", "options": ["Key-value only", "Wide-column database", "Graph database", "Document database"], "answer": 3, "difficulty": "Simple", "explanation": "MongoDB stores BSON documents."}, {"id": "databases_caching-026", "q": "Which Redis data structure stores field-value pairs under one key?", "options": ["Bitmap", "List", "Hash", "HyperLogLog"], "answer": 2, "difficulty": "Simple", "explanation": "A hash is like a small object or map."}, {"id": "databases_caching-027", "q": "What does normalization primarily reduce?", "options": ["Index count", "Network latency", "Disk usage to zero", "Data redundancy and update anomalies"], "answer": 3, "difficulty": "Simple", "explanation": "Normalized schemas store each fact once."}, {"id": "databases_caching-028", "q": "What does the SQL keyword DISTINCT do?", "options": ["Sorts the rows", "Removes duplicate rows from the result", "Locks the table", "Creates an index"], "answer": 1, "difficulty": "Simple", "explanation": "DISTINCT returns unique rows."}, {"id": "databases_caching-029", "q": "Which isolation level in PostgreSQL prevents non-repeatable reads?", "options": ["None; it cannot be prevented", "READ COMMITTED", "REPEATABLE READ", "READ UNCOMMITTED"], "answer": 2, "difficulty": "Medium", "explanation": "REPEATABLE READ gives a stable snapshot for the transaction."}, {"id": "databases_caching-030", "q": "What is a phantom read?", "options": ["A read from the cache", "A read blocked by a lock", "A read of uncommitted data", "A repeated query sees new rows inserted by another transaction"], "answer": 3, "difficulty": "Medium", "explanation": "Phantoms appear when range queries return different row sets."}, {"id": "databases_caching-031", "q": "What does VACUUM do in PostgreSQL?", "options": ["Deletes all rows", "Encrypts data files", "Reclaims space from dead tuples left by MVCC", "Rebuilds the server binary"], "answer": 2, "difficulty": "Medium", "explanation": "Updates and deletes leave dead row versions that must be cleaned up."}, {"id": "databases_caching-032", "q": "Which index type is best for full-text search or JSONB containment in PostgreSQL?", "options": ["No index type supports it", "Hash only", "GIN", "BRIN on random data"], "answer": 2, "difficulty": "Medium", "explanation": "GIN indexes map element values to rows."}, {"id": "databases_caching-033", "q": "Which index type is compact and suits very large, naturally ordered tables like time-series?", "options": ["GIN", "GiST only for text", "BRIN", "Hash"], "answer": 2, "difficulty": "Medium", "explanation": "BRIN stores summaries of block ranges."}, {"id": "databases_caching-034", "q": "What does a partial index do?", "options": ["Indexes half of each column", "Disables the primary key", "Indexes only NULLs always", "Indexes only the rows matching a condition"], "answer": 3, "difficulty": "Medium", "explanation": "It is smaller and faster for targeted queries such as WHERE active."}, {"id": "databases_caching-035", "q": "What is a covering index?", "options": ["An index on every column", "A backup of the table", "An index that contains all columns a query needs, avoiding table lookups", "An encrypted index"], "answer": 2, "difficulty": "Medium", "explanation": "Index-only scans read just the index."}, {"id": "databases_caching-036", "q": "In PostgreSQL, what is the effect of a long-running open transaction?", "options": ["It can hold back vacuum and cause table bloat", "It disables MVCC", "It deletes old WAL immediately", "It makes queries faster"], "answer": 0, "difficulty": "Medium", "explanation": "Old row versions cannot be removed while it may still need them."}, {"id": "databases_caching-037", "q": "What is WAL used for in PostgreSQL?", "options": ["Compressing tables", "Caching query results", "Storing user passwords", "Durability and replication via sequential change logging"], "answer": 3, "difficulty": "Medium", "explanation": "Changes are written to the write-ahead log before data files."}, {"id": "databases_caching-038", "q": "Which MySQL feature does InnoDB use to avoid dirty reads while allowing concurrency?", "options": ["MVCC with undo logs", "No transactions", "File copies", "Table-level locks only"], "answer": 0, "difficulty": "Medium", "explanation": "InnoDB keeps old versions in undo for consistent reads."}, {"id": "databases_caching-039", "q": "What is the default isolation level in MySQL InnoDB?", "options": ["READ UNCOMMITTED", "REPEATABLE READ", "READ COMMITTED", "SERIALIZABLE"], "answer": 1, "difficulty": "Medium", "explanation": "InnoDB defaults to REPEATABLE READ."}, {"id": "databases_caching-040", "q": "What does a clustered index in InnoDB mean?", "options": ["Rows are stored randomly", "Table rows are stored in primary key order inside the index", "Every index is a copy of the table", "Indexes live in memory only"], "answer": 1, "difficulty": "Medium", "explanation": "The primary key index holds the full row."}, {"id": "databases_caching-041", "q": "Why is a very wide or random UUID primary key a concern in InnoDB?", "options": ["MySQL forbids them", "UUIDs are not unique", "They disable replication", "Every secondary index carries it and random inserts fragment the tree"], "answer": 3, "difficulty": "Medium", "explanation": "Larger keys inflate secondary indexes and cause page splits."}, {"id": "databases_caching-042", "q": "What does binary log replication in MySQL do?", "options": ["Replicas apply logged changes from the source", "Encrypts queries", "Creates read-only views", "Backs up only schemas"], "answer": 0, "difficulty": "Medium", "explanation": "The binlog records data changes for replicas and point-in-time recovery."}, {"id": "databases_caching-043", "q": "In MongoDB, what is a replica set?", "options": ["A shard", "A backup file", "An index", "A group of nodes holding the same data with automatic failover"], "answer": 3, "difficulty": "Medium", "explanation": "A primary accepts writes and secondaries replicate."}, {"id": "databases_caching-044", "q": "What does the MongoDB aggregation pipeline do?", "options": ["Compiles SQL", "Processes documents through ordered stages like $match and $group", "Creates a cache", "Formats BSON"], "answer": 1, "difficulty": "Medium", "explanation": "Each stage transforms the stream of documents."}, {"id": "databases_caching-045", "q": "Which MongoDB write concern gives the strongest durability across replicas?", "options": ["w: 1 with journaling off", "w: \"majority\"", "w: 0", "No write concern"], "answer": 1, "difficulty": "Medium", "explanation": "Majority acknowledgment survives most failovers."}, {"id": "databases_caching-046", "q": "When is embedding documents in MongoDB a good choice?", "options": ["Documents exceed 16 MB", "Items are updated independently by many services", "Data is read together and the embedded set is small and bounded", "The array grows forever"], "answer": 2, "difficulty": "Medium", "explanation": "Embedding gives one read and atomic document updates."}, {"id": "databases_caching-047", "q": "What is the maximum BSON document size in MongoDB?", "options": ["16 MB", "1 GB", "16 KB", "Unlimited"], "answer": 0, "difficulty": "Medium", "explanation": "The 16 MB limit pushes you toward references for unbounded growth."}, {"id": "databases_caching-048", "q": "What does Redis persistence option AOF do?", "options": ["Logs each write operation so the dataset can be replayed", "Compresses keys", "Stores only the last snapshot", "Disables disk writes"], "answer": 0, "difficulty": "Medium", "explanation": "AOF favors durability; RDB snapshots favor compactness."}, {"id": "databases_caching-049", "q": "Which Redis command sets a key only if it does not exist and adds an expiry atomically?", "options": ["APPEND key", "KEYS *", "SET key value NX EX seconds", "GET key"], "answer": 2, "difficulty": "Medium", "explanation": "NX plus EX is the basis of simple distributed locks."}, {"id": "databases_caching-050", "q": "Why is the Redis KEYS command discouraged in production?", "options": ["It needs a password", "It is removed from Redis", "It deletes keys", "It scans the whole keyspace and blocks the single-threaded server"], "answer": 3, "difficulty": "Medium", "explanation": "Use SCAN for incremental iteration instead."}, {"id": "databases_caching-051", "q": "What problem is a cache stampede?", "options": ["Cache memory leak", "Many requests recompute the same expired entry at once", "Replication lag", "Wrong TTL type"], "answer": 1, "difficulty": "Medium", "explanation": "Locking, request coalescing or early refresh mitigate it."}, {"id": "databases_caching-052", "q": "What does cache penetration refer to?", "options": ["Slow eviction", "Too many TTLs", "Hot keys", "Repeated requests for keys that exist nowhere, always hitting the database"], "answer": 3, "difficulty": "Medium", "explanation": "Negative caching or Bloom filters help."}, {"id": "databases_caching-053", "q": "What is write-through caching?", "options": ["Writes skip the database", "Reads bypass the cache", "Writes are only batched later by an admin", "Writes go to the cache and the database synchronously"], "answer": 3, "difficulty": "Medium", "explanation": "It keeps cache and store consistent at the cost of write latency."}, {"id": "databases_caching-054", "q": "Which Redis eviction policy removes only keys that have a TTL, least recently used first?", "options": ["noeviction", "allkeys-random", "allkeys-lfu", "volatile-lru"], "answer": 3, "difficulty": "Medium", "explanation": "volatile policies consider only keys with an expiry."}, {"id": "databases_caching-055", "q": "What does EXPLAIN ANALYZE add over plain EXPLAIN?", "options": ["It encrypts the plan", "It creates indexes", "It actually runs the query and reports real timings and row counts", "It rewrites the query"], "answer": 2, "difficulty": "Medium", "explanation": "Actual versus estimated rows reveals planner misjudgments."}, {"id": "databases_caching-056", "q": "What does a sequential scan on a large table in an EXPLAIN plan often suggest?", "options": ["Excellent performance", "A missing or unusable index for the filter", "A corrupt table", "A replication issue"], "answer": 1, "difficulty": "Medium", "explanation": "It may be fine for small tables but is costly for selective filters."}, {"id": "databases_caching-057", "q": "Which query pattern usually prevents an index from being used?", "options": ["Wrapping the indexed column in a function, such as WHERE lower(email) = ...", "Selecting fewer columns", "Using equality on the column", "Adding LIMIT"], "answer": 0, "difficulty": "Medium", "explanation": "Use an expression index or avoid the function."}, {"id": "databases_caching-058", "q": "What is the leftmost prefix rule for composite indexes?", "options": ["Column order never matters", "Only unique columns are usable", "The index helps only the last column", "The index helps queries that filter on its leading columns in order"], "answer": 3, "difficulty": "Medium", "explanation": "An index on (a, b) serves a and a+b, but not b alone."}, {"id": "databases_caching-059", "q": "Two transactions each update rows the other holds locked, and the database aborts one. What is this?", "options": ["A replication lag", "A phantom read", "A deadlock", "A cache stampede"], "answer": 2, "difficulty": "Advanced", "explanation": "Databases detect cycles and roll back a victim; retry the transaction."}, {"id": "databases_caching-060", "q": "What is the lost update problem and a common fix?", "options": ["A replica stops; restart it", "An index is dropped; recreate it", "Two writers overwrite each other; use SELECT FOR UPDATE or optimistic version checks", "A cache entry vanishes; add TTL"], "answer": 2, "difficulty": "Advanced", "explanation": "Concurrency control prevents silent overwrites."}, {"id": "databases_caching-061", "q": "Why might a PostgreSQL index not be used even though it exists?", "options": ["The planner estimates a sequential scan is cheaper, for example for low selectivity", "The database must be restarted", "Indexes are only for writes", "EXPLAIN disables indexes"], "answer": 0, "difficulty": "Advanced", "explanation": "Cost-based planning chooses the cheapest plan using statistics."}, {"id": "databases_caching-062", "q": "What does ANALYZE update in PostgreSQL?", "options": ["WAL files", "Planner statistics about data distribution", "The server version", "User passwords"], "answer": 1, "difficulty": "Advanced", "explanation": "Fresh statistics lead to better plans."}, {"id": "databases_caching-063", "q": "What is replication lag and why does it matter for read replicas?", "options": ["Lag only affects backups", "Writes are rejected", "Replicas are always ahead", "Replicas trail the primary, so reads may be stale after a write"], "answer": 3, "difficulty": "Advanced", "explanation": "Read-your-writes needs routing to the primary or lag checks."}, {"id": "databases_caching-064", "q": "A hot row counter is updated by thousands of transactions per second. Which approach reduces contention?", "options": ["Shard the counter or aggregate in Redis and flush periodically", "Use SELECT *", "Add more indexes", "Increase the isolation level"], "answer": 0, "difficulty": "Advanced", "explanation": "Contention on a single row serializes writes."}, {"id": "databases_caching-065", "q": "Which is the best way to avoid N+1 queries with an ORM?", "options": ["Query inside a loop", "Add random sleeps", "Disable the ORM cache", "Eager load or join the related data in one or few queries"], "answer": 3, "difficulty": "Advanced", "explanation": "Batching related loads reduces round trips."}, {"id": "databases_caching-066", "q": "What is the main risk of using OFFSET 100000 LIMIT 20?", "options": ["Lost updates", "Duplicate primary keys", "Index corruption", "The database must scan and discard 100000 rows each time"], "answer": 3, "difficulty": "Advanced", "explanation": "Use keyset pagination for deep pages."}, {"id": "databases_caching-067", "q": "Which statement about SERIALIZABLE isolation is true?", "options": ["It makes concurrent transactions behave as if run one after another, and may abort some for retry", "It removes the need for indexes", "It is the fastest level", "It disables transactions"], "answer": 0, "difficulty": "Advanced", "explanation": "Applications must handle serialization failures."}, {"id": "databases_caching-068", "q": "What is a sensible strategy for a zero-downtime column rename in production?", "options": ["Expand and contract: add new column, dual-write, backfill, switch reads, drop old", "Take the site offline always", "ALTER and hope", "Rename and restart"], "answer": 0, "difficulty": "Advanced", "explanation": "Staged migrations keep old and new code compatible."}, {"id": "databases_caching-069", "q": "Why is MongoDB shard key choice critical?", "options": ["It sets the password", "It only names the cluster", "It determines data distribution, query routing and is hard to change", "It has no effect on performance"], "answer": 2, "difficulty": "Advanced", "explanation": "Poor choices cause hot shards and scatter-gather queries."}, {"id": "databases_caching-070", "q": "What is a scatter-gather query in a sharded cluster?", "options": ["A cached query", "A query lacking the shard key that must be sent to all shards", "A transaction retry", "A query using a unique index"], "answer": 1, "difficulty": "Advanced", "explanation": "It increases latency and load."}, {"id": "databases_caching-071", "q": "What does the Redis single-threaded command execution model imply?", "options": ["Persistence is impossible", "One slow command can block all other clients", "Redis cannot be fast", "Commands run in parallel"], "answer": 1, "difficulty": "Advanced", "explanation": "Avoid O(N) commands on big collections."}, {"id": "databases_caching-072", "q": "Which Redis feature provides automatic failover for a primary-replica setup?", "options": ["Redis Sentinel or Redis Cluster", "MONITOR", "DEBUG SLEEP", "FLUSHALL"], "answer": 0, "difficulty": "Advanced", "explanation": "Sentinel promotes a replica when the primary fails."}, {"id": "databases_caching-073", "q": "Which technique keeps a distributed lock safe against a client crashing while holding it?", "options": ["A lock named \"lock\"", "Deleting without checking ownership", "A lock with no expiry", "A lock with an expiry (TTL) and a unique token verified on release"], "answer": 3, "difficulty": "Advanced", "explanation": "Expiry avoids deadlock; token check avoids releasing someone else's lock."}, {"id": "databases_caching-074", "q": "What is the hot key problem in Redis Cluster?", "options": ["Replication is disabled", "Keys expire too fast", "Memory is too cheap", "One popular key overloads a single node regardless of cluster size"], "answer": 3, "difficulty": "Advanced", "explanation": "Mitigate with local caching or key replication."}, {"id": "databases_caching-075", "q": "When should you choose a relational database over MongoDB?", "options": ["You want to avoid schemas at all costs", "Data has strong relationships and requires multi-row ACID transactions", "You need no queries", "Data has no structure ever"], "answer": 1, "difficulty": "Advanced", "explanation": "Relational models shine for integrity and complex joins."}, {"id": "databases_caching-076", "q": "What does the CAP theorem state about partitioned distributed systems?", "options": ["Only SQL databases are affected", "You can have all three always", "You must trade off consistency and availability during a partition", "Partitions cannot happen"], "answer": 2, "difficulty": "Advanced", "explanation": "During a network partition a system chooses C or A."}, {"id": "databases_caching-077", "q": "What is read-through caching?", "options": ["The app writes only to the cache", "The cache itself loads missing data from the store on a miss", "The cache never expires", "Reads bypass the cache"], "answer": 1, "difficulty": "Advanced", "explanation": "The application talks only to the cache layer."}, {"id": "databases_caching-078", "q": "What is a common mitigation for cache avalanche?", "options": ["Evict everything hourly", "Randomize (jitter) TTLs so keys do not expire simultaneously", "Disable the cache", "Use identical TTLs"], "answer": 1, "difficulty": "Advanced", "explanation": "Staggered expiry smooths load on the database."}, {"id": "databases_caching-079", "q": "How does a Bloom filter help a cache in front of a database?", "options": ["It cheaply tells you a key definitely does not exist, avoiding useless lookups", "It replaces TTLs", "It guarantees no false positives for presence", "It stores all values"], "answer": 0, "difficulty": "Advanced", "explanation": "Bloom filters can give false positives but never false negatives."}, {"id": "databases_caching-080", "q": "A query filters on status and sorts by created_at DESC with LIMIT 20. Which index is likely best?", "options": ["No index", "Hash index on status", "Index on created_at only with no status", "Composite index on (status, created_at DESC)"], "answer": 3, "difficulty": "Advanced", "explanation": "Equality column first, then the sort column, avoids a sort step."}, {"id": "databases_caching-081", "q": "What is index bloat and how is it handled?", "options": ["Indexes are deleted nightly", "Indexes copy tables", "Indexes grow with dead entries; reindex or vacuum to reclaim space", "Indexes become encrypted"], "answer": 2, "difficulty": "Advanced", "explanation": "Heavy update churn leaves unused space."}, {"id": "databases_caching-082", "q": "Which statement about too many indexes is correct?", "options": ["Each index slows writes and uses storage, so keep only indexes that serve real queries", "Indexes reduce memory use", "Indexes never affect writes", "More indexes always speed up everything"], "answer": 0, "difficulty": "Advanced", "explanation": "Index maintenance has a cost on every insert, update and delete."}, {"id": "databases_caching-083", "q": "What is the purpose of connection pooling for databases?", "options": ["Reuse a limited set of connections to avoid exhausting the server", "Replace indexes", "Encrypt traffic", "Cache query results"], "answer": 0, "difficulty": "Advanced", "explanation": "Opening connections is costly and servers cap them; PgBouncer is a common pooler."}, {"id": "databases_caching-084", "q": "What does a prepared statement offer besides SQL injection resistance?", "options": ["Automatic sharding", "Parse and plan reuse for repeated queries", "Free storage", "Skipping transactions"], "answer": 1, "difficulty": "Advanced", "explanation": "The server can reuse the parsed statement."}, {"id": "databases_caching-085", "q": "In PostgreSQL, what does ON CONFLICT DO UPDATE enable?", "options": ["Upsert: insert or update when a unique constraint conflicts", "Creating views", "Changing isolation", "Dropping a table"], "answer": 0, "difficulty": "Advanced", "explanation": "It provides atomic insert-or-update semantics."}, {"id": "databases_caching-086", "q": "What is the key trade-off of denormalization?", "options": ["Stronger consistency by default", "Faster reads at the cost of redundancy and more complex writes", "Smaller data always", "No need for indexes"], "answer": 1, "difficulty": "Advanced", "explanation": "Duplicated data must be kept in sync."}, {"id": "databases_caching-087", "q": "Which approach best protects against a cache serving stale data after a database update?", "options": ["Never invalidate", "Disable the database", "Invalidate or update the cache entry on write, with a TTL as a safety net", "Cache forever"], "answer": 2, "difficulty": "Advanced", "explanation": "Invalidation plus expiry bounds staleness."}, {"id": "databases_caching-088", "q": "What does MongoDB's explain(\"executionStats\") help you see?", "options": ["Disk temperature", "The server's password", "Whether a query used an index and how many documents it examined", "Replica topology only"], "answer": 2, "difficulty": "Advanced", "explanation": "Compare nReturned with totalDocsExamined."}, {"id": "databases_caching-089", "q": "What is the effect of a MongoDB TTL index?", "options": ["Documents are copied to another shard", "Documents are removed automatically after a time-based field expires", "Documents are encrypted", "Documents become read-only"], "answer": 1, "difficulty": "Advanced", "explanation": "TTL indexes suit sessions and logs."}, {"id": "databases_caching-090", "q": "Which backup approach enables point-in-time recovery for PostgreSQL?", "options": ["Base backup plus continuous WAL archiving", "Dumping once a year", "Copying files while running with no coordination", "Restarting the server"], "answer": 0, "difficulty": "Advanced", "explanation": "Replaying WAL up to a chosen moment restores state."}, {"id": "databases_caching-091", "q": "What does a Redis pipeline do?", "options": ["Encrypts the connection", "Makes commands atomic", "Sends multiple commands without waiting for each reply, reducing round trips", "Creates replicas"], "answer": 2, "difficulty": "Advanced", "explanation": "Pipelining cuts latency; MULTI/EXEC or Lua gives atomicity."}];
+  const EXAM_Q = Math.min(50, QUESTION_BANK.length);
+  const EXAM_SECONDS = 60*60;
+  const LS_KEY = 'careerBuddyAssessment:' + ROLE;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false, warns=0, proctorOn=false, lastWarn=0;
+  const esc = s => String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const fmt=t=>{const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s};
+  const css=`
+  .cb-exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .cb-exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .cb-exam-top .et-title{font-size:16px;font-weight:800}.cb-exam-top .et-sub{font-size:12px;color:#cdd5e5}.cb-exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}.cb-exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:cbpulse 1s infinite}@keyframes cbpulse{50%{opacity:.5}}
+  .cb-exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}.cb-exam-q-pane{padding:28px 36px;overflow:auto}.cb-exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}.cb-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}.cb-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}.cb-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}.cb-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}.cb-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}.cb-opt:hover{border-color:#14213D;background:#f9f9ff}.cb-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}.cb-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}.cb-opt.sel .k{background:#14213D;color:#fff}.cb-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}.cb-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}.cb-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}.cb-btn.nav:disabled{opacity:.4;cursor:not-allowed}.cb-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}.cb-btn.mark.on{background:#FCA311;color:#14213D}.cb-btn.submit{background:#FCA311;color:#14213D}.cb-btn.primary{background:#14213D;color:#fff}.cb-side-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}.cb-count{font-size:13px;color:#4a5568;font-weight:600}.cb-count b{color:#14213D}.cb-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.cb-pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}.cb-pal.answered{background:#14213D;color:#fff;border-color:#14213D}.cb-pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}.cb-pal.cur{outline:2px solid #14213D;outline-offset:1px}.cb-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}.cb-legend span{display:inline-flex;align-items:center;gap:8px}.cb-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}.cb-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}.cb-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}.cb-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}.cb-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}.cb-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}.cb-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}.cb-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}.cb-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}.cb-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}.cb-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}.cb-rev .r.ok{border-left-color:#38a169}.cb-rev .r.no{border-left-color:#e53e3e}.cb-rev .rq{font-weight:700;margin-bottom:6px}.cb-rev .ra{font-size:13px;margin:2px 0}.cb-rev .ra.wrong{color:#c53030}.cb-rev .ra.cor{color:#276749}.cb-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}.cb-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}.cb-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}.cb-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}.cb-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}.cb-confirm .row{display:flex;gap:10px;justify-content:flex-end}.cb-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}.cb-cover small{font-weight:500;color:#cdd5e5;font-size:14px}.cb-assess-intro{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}.cb-assess-intro h3{margin:0 0 8px;font-size:21px}.cb-assess-intro p{margin:6px 0;color:var(--ink-soft)}.cb-assess-intro ul{margin:12px 0 18px}.cb-start{border:0;background:#14213D;color:#fff;border-radius:9px;padding:12px 18px;font:700 14px inherit;cursor:pointer}.cb-start:hover{opacity:.92}
+  @media(max-width:820px){.cb-exam-main{grid-template-columns:1fr}.cb-exam-side{border-left:none;border-top:1px solid #e2e8f0}.cb-exam-q-pane{padding:22px 18px}.cb-exam-top{padding:10px 14px}}
+  `;
+  function injectCss(){if(document.getElementById('cbExamCss'))return;const s=document.createElement('style');s.id='cbExamCss';s.textContent=css;document.head.appendChild(s)}
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function buildAttempt(){
+    const recent=JSON.parse(localStorage.getItem(LS_KEY+'_attempts')||'[]');
+    let selected=[], sig='';
+    for(let tries=0;tries<25;tries++){
+      selected=shuffle(QUESTION_BANK.slice()).slice(0,EXAM_Q);
+      sig=selected.map(x=>x.id).sort().join('|');
+      if(!recent.includes(sig))break;
+    }
+    recent.unshift(sig); try{localStorage.setItem(LS_KEY+'_attempts',JSON.stringify(recent.slice(0,20)))}catch(e){}
+    return selected.map(q=>{const c=JSON.parse(JSON.stringify(q)); const right=q.answer; const pairs=c.options.map((o,i)=>({o,i}));shuffle(pairs);c.options=pairs.map(x=>x.o);c.answer=pairs.findIndex(x=>x.i===right);return c});
+  }
+  function confirmBox(title,msg,okLabel){return new Promise(resolve=>{injectCss();const d=document.createElement('div');d.className='cb-confirm';d.innerHTML=`<div class="box"><h3>${esc(title)}</h3><p>${esc(msg)}</p><div class="row"><button class="cb-btn nav" data-a="0">Cancel</button><button class="cb-btn primary" data-a="1">${esc(okLabel||'Confirm')}</button></div></div>`;document.body.appendChild(d);d.addEventListener('click',e=>{if(e.target===d){d.remove();resolve(false);return}const b=e.target.closest('[data-a]');if(!b)return;d.remove();resolve(b.dataset.a==='1')})})}
+  function startEntry(){showSplash()}
+  function showSplash(){injectCss();const sp=document.createElement('div');sp.className='cb-splash';sp.id='cbExamSplash';sp.innerHTML=`<div class="card"><h2>🎯 ${esc(ROLE)} — Assessment</h2><p>A timed, full-screen assessment based on this course.</p><ul><li><b>${EXAM_Q} questions</b> selected randomly from a <b>${QUESTION_BANK.length}-question bank</b></li><li><b>${Math.round(EXAM_SECONDS/60)}-minute</b> timer — the assessment auto-submits when time is up</li><li>Navigate freely, answer questions, and <b>mark questions for review</b></li><li>Questions and answer options are shuffled on every attempt</li></ul><p style="font-weight:700;color:#14213D;margin-bottom:6px">Assessment rules</p><ul style="margin-top:0"><li>The assessment runs in <b>fullscreen</b>.</li><li>Do not switch tabs/windows or exit fullscreen.</li><li><b>3 warnings</b> for tab/window switching or leaving fullscreen will auto-submit the assessment.</li><li>Copy, cut, right-click and common screenshot/print shortcuts are blocked during the assessment.</li></ul><button class="cb-btn primary" id="cbExamBegin" style="width:100%;padding:14px">Start Assessment →</button></div>`;document.body.appendChild(sp);document.getElementById('cbExamBegin').addEventListener('click',()=>{if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});sp.remove();enterExam()})}
+  function enterExam(){injectCss();items=buildAttempt();answers={};marked={};cur=0;remaining=EXAM_SECONDS;examOn=true;document.body.style.overflow='hidden';const ov=document.createElement('div');ov.className='cb-exam-overlay';ov.id='cbExamOverlay';ov.innerHTML=`<div class="cb-exam-top"><div><div class="et-title">${esc(ROLE)} — Assessment</div><div class="et-sub">${EXAM_Q} questions · timed · full-screen</div></div><div class="cb-exam-timer" id="cbExamTimer">${fmt(remaining)}</div></div><div class="cb-exam-main"><div class="cb-exam-q-pane" id="cbExamQ"></div><div class="cb-exam-side"><div class="cb-count">Answered <b id="cbExamAnsN">0</b> / ${EXAM_Q}</div><h4 class="cb-side-title">Question palette</h4><div class="cb-palette" id="cbExamPal"></div><div class="cb-legend"><span><i style="background:#14213D;border-color:#14213D"></i> Answered</span><span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span><span><i></i> Not answered</span></div><button class="cb-btn submit" id="cbExamSubmit" style="width:100%">Submit Assessment</button></div></div>`;document.body.appendChild(ov);buildPalette();renderQ();timerId=setInterval(tick,1000);window.addEventListener('beforeunload',beforeUnload);startProctor();document.getElementById('cbExamSubmit').addEventListener('click',()=>submitExam(false))}
+  function beforeUnload(e){if(examOn){e.preventDefault();e.returnValue=''}}
+  function tick(){remaining--;const el=document.getElementById('cbExamTimer');if(el){el.textContent=fmt(Math.max(remaining,0));if(remaining<=300)el.classList.add('warn')}if(remaining<=0)submitExam(true)}
+  function buildPalette(){const pal=document.getElementById('cbExamPal');pal.innerHTML='';items.forEach((it,n)=>{const b=document.createElement('button');b.className='cb-pal';b.textContent=n+1;b.dataset.n=n;b.addEventListener('click',()=>{cur=n;renderQ()});pal.appendChild(b)});refreshPalette()}
+  function refreshPalette(){document.querySelectorAll('#cbExamPal .cb-pal').forEach(b=>{const n=+b.dataset.n,id=items[n].id;b.classList.toggle('answered',id in answers);b.classList.toggle('marked',!!marked[id]);b.classList.toggle('cur',n===cur)});const el=document.getElementById('cbExamAnsN');if(el)el.textContent=Object.keys(answers).length}
+  function renderQ(){const it=items[cur],id=it.id,pane=document.getElementById('cbExamQ');pane.innerHTML=`<div class="cb-qnum">Question ${cur+1} of ${items.length}</div><div class="cb-qtext">${esc(it.q)}${it.difficulty?`<span class="diff">${esc(it.difficulty)}</span>`:''}</div><div class="cb-opts" id="cbExamOpts">${it.options.map((o,i)=>`<div class="cb-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${esc(o)}</span></div>`).join('')}</div><div class="cb-actions"><button class="cb-btn nav" id="cbPrev" ${cur===0?'disabled':''}>← Previous</button><button class="cb-btn mark${marked[id]?' on':''}" id="cbMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button><button class="cb-btn nav" id="cbNext" ${cur===items.length-1?'disabled':''}>Next →</button></div>`;pane.querySelectorAll('.cb-opt').forEach(el=>el.addEventListener('click',()=>{answers[id]=+el.dataset.i;pane.querySelectorAll('.cb-opt').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');refreshPalette()}));document.getElementById('cbPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ()}});document.getElementById('cbNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ()}});document.getElementById('cbMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ()});refreshPalette()}
+  async function submitExam(auto){if(!examOn)return;const unanswered=items.length-Object.keys(answers).length;if(!auto){const ok=await confirmBox('Submit assessment?',unanswered?`You have ${unanswered} unanswered question(s). Once submitted, you cannot change your answers.`:'Once submitted, you cannot change your answers.','Submit Assessment');if(!ok)return}examOn=false;clearInterval(timerId);window.removeEventListener('beforeunload',beforeUnload);stopProctor();const score=items.reduce((n,it)=>n+(answers[it.id]===it.answer?1:0),0);saveScore(score,items.length);showResults(score)}
+  function saveScore(score,total){const a=JSON.parse(localStorage.getItem(LS_KEY)||'[]');a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,EXAM_Q)))}catch(e){}}
+  function showResults(score){const total=items.length,pct=Math.round(score/total*100);let msg='Keep practicing — review the questions you missed and try again.';if(pct>=85)msg='Outstanding — strong command of this role domain.';else if(pct>=65)msg='Solid performance. Review the harder areas and try another attempt.';else if(pct>=50)msg='Borderline — revisit the role topics and retake the assessment.';const rev=items.map((it,n)=>{const you=answers[it.id],attempted=you!=null;const your=attempted?String.fromCharCode(65+you)+'. '+esc(it.options[you]):'<i>Not answered</i>';const cor=String.fromCharCode(65+it.answer)+'. '+esc(it.options[it.answer]);return `<div class="r ${attempted&&you===it.answer?'ok':'no'}"><div class="rq">Q${n+1}. ${esc(it.q)}</div><div class="ra ${attempted&&you===it.answer?'cor':'wrong'}">Your answer: ${your}</div>${attempted&&you!==it.answer?`<div class="ra cor">Correct: ${cor}</div>`:''}${it.explanation?`<div class="rx">${esc(it.explanation)}</div>`:''}</div>`}).join('');const ov=document.getElementById('cbExamOverlay');ov.innerHTML=`<div class="cb-exam-top"><div class="et-title">Result — ${esc(ROLE)} Assessment</div><button class="cb-btn" id="cbClose" style="background:rgba(255,255,255,.15);color:#fff">✕ Close</button></div><div class="cb-exam-q-pane" style="flex:1"><div class="cb-result"><div class="cb-score">${score} / ${total}</div><div class="cb-rmsg">${pct}% correct — ${msg}</div><div style="margin-top:16px"><button class="cb-btn primary" id="cbRetry">↻ Take another assessment</button></div><div class="cb-rev">${rev}</div></div></div>`;document.getElementById('cbRetry').addEventListener('click',()=>{ov.remove();enterExam()});document.getElementById('cbClose').addEventListener('click',()=>closeExam())}
+  function closeExam(){stopProctor();const ov=document.getElementById('cbExamOverlay');if(ov)ov.remove();document.body.style.overflow='';if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}
+  function warning(title,msg){if(!proctorOn||!examOn)return;const now=Date.now();if(now-lastWarn<1200)return;lastWarn=now;warns++;const cover=document.getElementById('cbExamCover')||document.createElement('div');cover.className='cb-cover';cover.id='cbExamCover';cover.style.display='flex';cover.innerHTML=`<div>⚠️ ${esc(title)}</div><small>${esc(msg)}</small><small>Warning ${warns} of 3</small><button class="cb-btn primary" id="cbResume">Return to assessment</button>`;document.body.appendChild(cover);document.getElementById('cbResume').onclick=()=>{cover.style.display='none';if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});if(warns>=3)submitExam(true)};if(warns>=3)setTimeout(()=>submitExam(true),500)}
+  function visHandler(){if(document.hidden)warning('Tab or window switch detected','Please stay on the assessment screen. Repeated violations will submit the assessment automatically.')}
+  function fsHandler(){if(examOn&&!document.fullscreenElement)warning('Fullscreen exited','The assessment must remain in fullscreen mode.')}
+  function blurHandler(){if(examOn)warning('Focus changed','Please keep the assessment window active.')}
+  function focusHandler(){}
+  function blockEvt(e){if(examOn){e.preventDefault();warning('Action blocked','Copy, cut and right-click are disabled during the assessment.')}}
+  function keyGuard(e){if(!examOn)return;const k=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&['c','x','p','s','u'].includes(k)){e.preventDefault();warning('Shortcut blocked','This assessment disables copy, print, save and source shortcuts.')}if(k==='f12'){e.preventDefault();warning('Developer tools shortcut blocked','This action is disabled during the assessment.')}}
+  function printGuard(e){if(examOn&&e.key==='PrintScreen'){e.preventDefault();warning('Screenshot action blocked','Screenshot capture is restricted during the assessment.')}}
+  function startProctor(){warns=0;lastWarn=0;proctorOn=true;document.addEventListener('visibilitychange',visHandler);document.addEventListener('fullscreenchange',fsHandler);window.addEventListener('blur',blurHandler);document.addEventListener('contextmenu',blockEvt,true);document.addEventListener('copy',blockEvt,true);document.addEventListener('cut',blockEvt,true);document.addEventListener('keydown',keyGuard,true);document.addEventListener('keyup',printGuard,true)}
+  function stopProctor(){proctorOn=false;document.removeEventListener('visibilitychange',visHandler);document.removeEventListener('fullscreenchange',fsHandler);window.removeEventListener('blur',blurHandler);document.removeEventListener('contextmenu',blockEvt,true);document.removeEventListener('copy',blockEvt,true);document.removeEventListener('cut',blockEvt,true);document.removeEventListener('keydown',keyGuard,true);document.removeEventListener('keyup',printGuard,true);const c=document.getElementById('cbExamCover');if(c)c.remove()}
+  document.addEventListener('click',function(e){const b=e.target.closest('#assessStartBtn');if(b){e.preventDefault();startEntry();}},true)
+  window.addEventListener('keydown',e=>{if(e.key==='Escape'&&examOn)e.preventDefault()});
+})();
+
+
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+<style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body>
+</html>

@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Design &amp; Techniques — Manual QA Course</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff; --bg-soft:#f7f6f3; --bg-block:#f1f1ef;
+  --ink:#37352f; --ink-soft:#787774; --ink-mute:#9b9a97;
+  --line:#e9e9e7; --line-strong:#d3d3d0;
+  --accent:#14213D; --accent-soft:#eef1f7;
+  --green:#0f7b0f; --green-soft:#ddedea;
+  --orange:#d9730d; --orange-soft:#fadec9;
+  --red:#e03e3e; --red-soft:#ffe2dd;
+  --purple:#22345f; --purple-soft:#eef1f7;
+  --yellow:#dfab01; --yellow-soft:#fdecc8;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body,button,input,textarea,select,table,th,td,h1,h2,h3,h4,p,li,div,span,a,strong,em,small{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
+body{background:var(--bg);color:var(--ink);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+code,pre,pre *,code *{font-family:'Noto Sans Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+
+/* Header */
+.header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand-mark{width:34px;height:34px;display:grid;place-items:center;background:linear-gradient(135deg,#14213D 0%,#2f6fdb 100%);border-radius:8px;color:#fff;font-weight:800;font-size:13px;box-shadow:var(--shadow-sm)}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500;color:var(--ink-soft)}
+.progress-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-soft);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--bg-soft)}
+.tabbar{display:flex;gap:2px;padding:6px 24px;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--line);background:#fff}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{padding:9px 15px;background:transparent;border:none;border-radius:8px;font-size:13.5px;font-weight:500;color:#4a5568;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.tab:hover{background:var(--accent-soft);color:var(--accent)}
+.tab.active{background:var(--accent);color:#fff;font-weight:700}
+
+/* Layout */
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr)}
+@media (max-width:960px){.layout{grid-template-columns:1fr}.toc{display:none}}
+.toc{position:sticky;top:112px;align-self:start;height:calc(100vh - 124px);overflow-y:auto;padding:30px 16px 30px 28px;border-right:1px solid var(--line);scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);font-weight:700;margin-bottom:12px;padding-left:8px}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{display:block;padding:5px 10px;font-size:13px;color:var(--ink-soft);text-decoration:none;border-radius:4px;line-height:1.4}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{color:#fff;background:#16233f;font-weight:600;border-radius:12px;padding:9px 14px}
+.main{padding:44px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:28px 18px 60px}.header-top{padding:12px 16px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel-header{margin-bottom:34px}
+.panel-eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);margin:0 0 8px}
+.panel-title{font-size:38px;line-height:1.15;font-weight:700;letter-spacing:-.02em;margin:0 0 14px}
+.panel-subtitle{font-size:17px;color:var(--ink-soft);margin:0;max-width:760px;line-height:1.6}
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.level-tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.inter{background:#e3ecfb;color:#1d4f9f}
+.level-tag.adv{background:#f5e0e9;color:#8c1a63}
+
+.section{margin-top:46px;scroll-margin-top:140px}
+.section h2{font-size:27px;font-weight:700;letter-spacing:-.01em;margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.section h2 .sec-emoji{font-size:23px}
+.section h3{font-size:18px;font-weight:700;margin:26px 0 8px}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:5px 0}
+.lvl{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.03em;text-transform:uppercase}
+.lvl.b{background:var(--green-soft);color:#0a5f0a}
+.lvl.i{background:#e3ecfb;color:#1d4f9f}
+.lvl.e{background:#f5e0e9;color:#8c1a63}
+
+code{font-size:.87em;background:#f6f5f4;border:1px solid var(--line);padding:1px 6px;border-radius:4px;color:#c2410c}
+pre{background:#1f2430;color:#e6e6e3;padding:18px 20px;border-radius:var(--radius);overflow-x:auto;font-size:13px;line-height:1.65;margin:14px 0;box-shadow:var(--shadow-sm);position:relative}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{position:absolute;top:8px;right:12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9aa3b5;font-weight:700}
+.c{color:#7f8ba3;font-style:italic}
+
+.callout{display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start;background:var(--bg-block);border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout-icon{width:28px;height:28px;display:grid;place-items:center;background:#fff;border-radius:6px;font-size:16px;border:1px solid var(--line)}
+.callout-body{font-size:14.5px;line-height:1.6}
+.callout.tip{background:var(--accent-soft);border-color:#c7d2ea}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.card-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:8px;font-size:18px;margin-bottom:10px}
+.card-title{font-weight:700;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.55}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;border:1px solid var(--line)}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--bg-soft);font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+.table-wrap{overflow-x:auto}
+
+.diagram{background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin:18px 0;text-align:center}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{font-size:12px;color:var(--ink-soft);margin-top:10px;font-style:italic}
+
+.badge{display:inline-block;padding:2px 8px;font-size:11px;font-weight:700;border-radius:4px}
+.badge.blue{background:var(--accent-soft);color:#1d4f9f}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.red{background:var(--red-soft);color:#a82e2e}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:760px){.compare{grid-template-columns:1fr}}
+.compare-col{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.compare-col h4{margin:0 0 8px;font-size:15px;font-weight:700}
+.compare-col p{font-size:13.5px;margin:6px 0}
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{padding:4px 10px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500}
+
+/* stepper (flow list) */
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}
+.flow .st{background:var(--accent);color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600}
+.flow .ar{color:var(--ink-mute);font-weight:700}
+
+/* quiz */
+.quiz-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px 28px;box-shadow:var(--shadow-sm);margin-top:18px}
+.quiz-bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin:10px 0 20px}
+.quiz-bar>div{height:100%;width:0;background:var(--accent);transition:width .3s}
+.qmeta{font-size:12px;font-weight:700;color:var(--ink-soft);letter-spacing:.05em;text-transform:uppercase}
+.qtext{font-size:17px;font-weight:600;margin:6px 0 14px}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;gap:12px;align-items:center;padding:11px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg-soft);cursor:pointer;font-size:14.5px}
+.opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt .k{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0}
+.opt.correct{background:var(--green-soft);border-color:var(--green);font-weight:600}
+.opt.wrong{background:var(--red-soft);border-color:var(--red);font-weight:600}
+.opts.done .opt{pointer-events:none}
+.qexp{margin-top:14px;padding:12px 14px;border-radius:8px;background:var(--accent-soft);font-size:14px;display:none}
+.qbtn{margin-top:16px;background:var(--accent);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
+.qscore{font-size:44px;font-weight:800;text-align:center;margin:14px 0 4px}
+
+.ex{border:1px solid #c7d2ea;border-left:5px solid var(--accent);background:#fff;border-radius:var(--radius);padding:16px 18px;margin:18px 0;box-shadow:var(--shadow-sm)}
+.ex-h{font-weight:700;font-size:15.5px;margin-bottom:8px}
+.ex-tag{display:inline-block;background:var(--accent);color:#fff;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-right:8px;vertical-align:1px}
+.ex-b p,.ex-s p{margin:6px 0}
+.ex details{margin-top:10px;border-top:1px dashed var(--line-strong);padding-top:10px}
+.ex summary{cursor:pointer;font-weight:700;font-size:13.5px;color:var(--accent)}
+.ex-s{margin-top:8px;background:var(--green-soft);border-radius:8px;padding:10px 14px;font-size:14.5px}
+.ex-s ul,.ex-s ol{margin:6px 0}
+.tool{background:var(--bg-soft);border:1px solid var(--line-strong);border-radius:12px;padding:18px;margin:18px 0}
+.tool input[type=number],.tool input[type=text]{padding:7px 10px;border:1px solid var(--line-strong);border-radius:6px;font-size:14px;width:110px}
+.tool label{font-size:13px;font-weight:600;margin-right:6px}
+.tool .out{margin-top:12px}
+.sm td,.sm th{padding:7px 10px;font-size:13px}
+.kbd{font-family:'Noto Sans Mono',monospace;font-size:.85em;background:#fff;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;padding:0 5px}
+.ok{color:var(--green);font-weight:700}.no{color:var(--red);font-weight:700}
+.takeaway{background:linear-gradient(135deg,#14213D,#22345f);color:#fff;border-radius:var(--radius);padding:16px 20px;margin:20px 0}
+.takeaway strong{color:#fff}.takeaway ul{margin:6px 0;padding-left:20px;color:#fff}.takeaway li{color:#fff}
+@media print{.header,.toc{display:none}.panel{display:block!important}}
+
+/* ===== Secure assessment (AMCAT-style) ===== */
+.qz-hidden{display:none !important}
+.qz-btn{background:var(--accent);color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:14.5px;font-weight:700;cursor:pointer;font-family:inherit}
+.qz-btn:hover{filter:brightness(1.15)}
+.qz-btn.sec{background:var(--bg-soft);color:var(--ink);border:1px solid var(--line-strong)}
+.qz-btn:disabled{opacity:.5;cursor:not-allowed}
+.qz-center{text-align:center}
+.qz-list{list-style:none;padding:0;margin:14px 0}
+.qz-list li{display:flex;justify-content:space-between;padding:11px 14px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--bg-soft);font-size:14px}
+.qz-list li span{color:var(--ink-soft)}
+.qz-blk{margin:0 0 16px}
+.qz-blk h3{margin:0 0 6px;font-size:15px;color:var(--accent)}
+.qz-blk ul{margin:0;padding-left:20px;color:var(--ink-soft);font-size:14px;line-height:1.7}
+.qz-danger{background:var(--red-soft);border:1px solid #f5c2c2;border-radius:10px;padding:12px 14px;font-size:13.5px;color:#a12626;margin-bottom:16px}
+.qz-note{background:var(--yellow-soft);border:1px solid #f3d9a0;border-radius:10px;padding:12px 14px;font-size:13.5px;color:#7a5c00;margin-bottom:16px}
+.qz-agree{display:flex;gap:10px;align-items:flex-start;padding:14px;border:1px dashed var(--line-strong);border-radius:10px;background:var(--bg-soft);margin-bottom:18px}
+.qz-agree input{margin-top:4px;width:16px;height:16px;accent-color:var(--accent);flex-shrink:0}
+.qz-agree label{font-size:14px;cursor:pointer}
+#qzOverlay{position:fixed;inset:0;z-index:100000;background:var(--bg-soft);overflow-y:auto}
+#qzOverlay .qz-in{max-width:780px;margin:0 auto;padding:20px 16px 60px}
+.qz-exit-row{display:flex;justify-content:flex-end;margin-bottom:10px}
+.qz-exit{background:#fff;color:var(--ink-soft);border:1px solid var(--line-strong);border-radius:8px;padding:8px 14px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit}
+.qz-exit:hover{background:var(--red-soft);color:var(--red);border-color:var(--red)}
+.qz-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.qz-name{font-weight:800;font-size:17px;color:var(--accent)}
+.qz-timer{background:#0b1526;color:#fff;padding:8px 14px;border-radius:8px;font-weight:700;font-variant-numeric:tabular-nums;min-width:78px;text-align:center}
+.qz-timer.warn{background:var(--red);animation:qzp 1s infinite}
+@keyframes qzp{50%{opacity:.6}}
+.qz-bar{height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:18px}
+.qz-bar>div{height:100%;background:var(--accent);width:0;transition:width .2s}
+.qz-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px;box-shadow:var(--shadow-sm)}
+.qz-qn{font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.qz-qt{font-size:17px;font-weight:600;margin-bottom:14px;line-height:1.5}
+.qz-opts{display:flex;flex-direction:column;gap:9px}
+.qz-opt{display:flex;gap:12px;align-items:center;padding:11px 14px;border:1px solid var(--line);border-radius:9px;background:#fff;cursor:pointer;font-size:14.5px}
+.qz-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.qz-opt.sel{border-color:var(--accent);background:var(--yellow-soft);font-weight:600}
+.qz-opt .k{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0}
+.qz-jump{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0}
+.qz-jump span{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:12px;border:1px solid var(--line-strong);cursor:pointer;background:var(--bg-soft)}
+.qz-jump span.ans{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.qz-jump span.cur{outline:2px solid var(--accent)}
+.qz-nav{display:flex;justify-content:space-between;gap:10px;margin-top:20px}
+.qz-nav .r{display:flex;gap:8px}
+.qz-valid{display:none;background:var(--red-soft);color:var(--red);border:1px solid #f5c2c2;border-radius:8px;padding:10px 14px;font-size:13.5px;font-weight:700;margin-top:14px;text-align:center}
+.qz-valid.show{display:block}
+.qz-modal{position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;padding:20px}
+.qz-modal .bd{position:absolute;inset:0;background:rgba(11,21,38,.72)}
+.qz-modal .bx{position:relative;background:#fff;border-radius:14px;padding:30px 26px;max-width:420px;width:100%;text-align:center;box-shadow:var(--shadow-md)}
+.qz-modal h3{margin:8px 0 10px;font-size:17px;line-height:1.4}
+.qz-modal p{margin:0 0 14px;color:var(--ink-soft);font-size:14px}
+.qz-modal .cnt{font-size:13px;font-weight:700;color:var(--ink-soft);margin-bottom:16px}
+.qz-score{font-size:44px;font-weight:800;text-align:center;margin:10px 0 2px}
+.qz-rev{width:100%;border-collapse:collapse;margin-top:12px;font-size:13.5px}
+.qz-rev th,.qz-rev td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.qz-rev th{font-size:12px;color:var(--ink-soft)}
+.qz-tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11.5px;font-weight:700}
+.qz-tag.c{background:var(--green-soft);color:var(--green)}
+.qz-tag.w{background:var(--red-soft);color:var(--red)}
+.qz-tag.s{background:var(--yellow-soft);color:#7a5c00}
+.qz-exp{font-size:12.5px;color:var(--ink-soft);margin-top:4px}
+body.qz-nosel, body.qz-nosel *{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-top">
+    <div class="brand"><div class="brand-mark">TD</div><span>Test Design &amp; Techniques<span class="brand-sub"> · Manual QA course</span></span></div>
+    <div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 8</span></span><button class="btn" onclick="resetProgress()">↺ Reset</button></div>
+  </div>
+  <nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1">Foundations</button><button class="tab" data-tab="t2">Equivalence Partitioning</button><button class="tab" data-tab="t3">Boundary Value Analysis</button><button class="tab" data-tab="t4">Decision Tables & More</button><button class="tab" data-tab="t5">State Transition</button><button class="tab" data-tab="t6">Exploratory Testing</button><button class="tab" data-tab="t7">Practice Lab</button><button class="tab" data-tab="t8">Assessment</button></nav>
+</header>
+<div class="layout">
+  <aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside>
+  <main class="main">
+<section class="panel active" id="t1" data-toc='[["s1-1", "What is software testing?"], ["s1-2", "Error, defect and failure"], ["s1-3", "Why we cannot test everything \u2014 and why techniques exist"], ["s1-4", "The seven testing principles"], ["s1-5", "Verification vs Validation, levels and types"], ["s1-6", "Anatomy of a test case"], ["s1-7", "The family of test design techniques"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span></div><p class="panel-eyebrow">Module 01 · Foundations</p><h1 class="panel-title">Testing Fundamentals</h1><p class="panel-subtitle">What testing is, why exhaustive testing is impossible, and why test design techniques exist — everything you need before designing your first test.</p></div>
+<div class="section" id="s1-1"><h2><span class="sec-emoji">🔍</span> What is software testing? <span class="lvl b">Basic</span></h2>
+<p><strong>Software testing</strong> is the activity of running (or examining) a software product to find out <em>whether it does what it should do, and doesn't do what it shouldn't</em>. A tester collects <strong>information</strong> about quality so that people can make good decisions — "is it safe to release?".</p>
+<div class="callout tip"><div class="callout-icon">🍽️</div><div class="callout-body"><strong>Analogy:</strong> a food inspector at a restaurant. They do not cook the meal; they check the kitchen, taste the dish and compare it against hygiene rules and the menu promise. They cannot taste every grain of rice — so they choose <em>smart samples</em>. Test design techniques are exactly that: choosing smart samples.</div></div>
+<p>A <strong>Manual QA Tester / Test Analyst</strong> does this by hand — reading requirements, designing tests, executing them through the UI or tools, observing results and reporting defects — without writing automation code.</p>
+<div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🎯</div><div class="card-title">Find defects</div><div class="card-desc">Reveal problems before customers do.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft)">📏</div><div class="card-title">Build confidence</div><div class="card-desc">Show the product meets the agreed requirements.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft)">🛡️</div><div class="card-title">Prevent defects</div><div class="card-desc">Reviewing requirements early stops bugs being coded at all.</div></div><div class="card"><div class="card-icon" style="background:var(--yellow-soft)">📊</div><div class="card-title">Give information</div><div class="card-desc">Provide risk and quality data to stakeholders.</div></div></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">🐞</span> Error, defect and failure <span class="lvl b">Basic</span></h2>
+<p>Three words that sound alike but describe three different moments in a bug's life:</p>
+<div class="flow"><span class="st">Error (human mistake)</span><span class="ar">→</span><span class="st">Defect / Bug (wrong code or document)</span><span class="ar">→</span><span class="st">Failure (wrong behaviour at run time)</span></div>
+<div class="table-wrap"><table class=""><tr><th>Term</th><th>Meaning</th><th>Example</th></tr><tr><td><strong>Error / Mistake</strong></td><td>A human slip while analysing, designing or coding.</td><td>Developer misreads "18 or older" as "older than 18".</td></tr><tr><td><strong>Defect / Bug / Fault</strong></td><td>The flaw that the mistake leaves behind in the product.</td><td>Code says <code>age &gt; 18</code> instead of <code>age &gt;= 18</code>.</td></tr><tr><td><strong>Failure</strong></td><td>Visible wrong behaviour when the defect is executed.</td><td>A user who is exactly 18 is rejected at registration.</td></tr></table></div>
+<div class="callout note"><div class="callout-icon">📝</div><div class="callout-body">Not every defect causes a failure — a defect in code that is never executed stays hidden. Testing can only <em>show</em> failures; the tester then helps trace them back to defects.</div></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">♾️</span> Why we cannot test everything — and why techniques exist <span class="lvl b">Basic</span></h2>
+<p>Imagine a single input box that accepts a whole number from 1 to 100,000. Testing "every" value means 100,000 tests. A form with five such fields means 10<sup>25</sup> combinations. That is <strong>exhaustive testing</strong> — and it is impossible.</p>
+<p>So testers must <strong>select</strong> a small, powerful set of tests. <strong>Test design techniques</strong> are systematic recipes for that selection, with a promise: <em>"if there is a bug of this kind, one of these tests will probably catch it."</em></p>
+<div class="compare"><div class="compare-col" style="background:var(--red-soft)"><h4>❌ Without techniques</h4><p>• Tests picked by gut feeling</p><p>• Many redundant tests, big gaps</p><p>• Cannot explain "how much testing is enough"</p><p>• Results differ person to person</p></div><div class="compare-col" style="background:var(--green-soft)"><h4>✅ With techniques</h4><p>• Tests chosen by a repeatable logic</p><p>• Fewer tests, higher defect yield</p><p>• Coverage can be measured and explained</p><p>• Consistent across the team</p></div></div></div><div class="section" id="s1-4"><h2><span class="sec-emoji">📜</span> The seven testing principles <span class="lvl b">Basic</span></h2>
+<div class="table-wrap"><table class=""><tr><th>#</th><th>Principle</th><th>What it means in practice</th></tr><tr><td>1</td><td>Testing shows presence of defects</td><td>Passing tests never prove "no bugs"; they only reduce risk.</td></tr><tr><td>2</td><td>Exhaustive testing is impossible</td><td>Use risk and techniques to focus effort.</td></tr><tr><td>3</td><td>Early testing saves time and money</td><td>Review requirements <em>before</em> code exists (shift-left).</td></tr><tr><td>4</td><td>Defects cluster together</td><td>A few modules hold most bugs — look harder there.</td></tr><tr><td>5</td><td>Pesticide paradox</td><td>Repeating the same tests stops finding new bugs; refresh them.</td></tr><tr><td>6</td><td>Testing is context dependent</td><td>A banking app and a game need different testing.</td></tr><tr><td>7</td><td>Absence-of-defects fallacy</td><td>A bug-free product that does not meet user needs is still a failure.</td></tr></table></div></div><div class="section" id="s1-5"><h2><span class="sec-emoji">⚖️</span> Verification vs Validation, levels and types <span class="lvl b">Basic</span></h2>
+<div class="compare">
+<div class="compare-col"><h4>🔧 Verification</h4><p>"Are we building the product <strong>right</strong>?"</p><p>Checks work-products against specifications: reviews, walkthroughs, static analysis.</p></div>
+<div class="compare-col"><h4>🧑‍💼 Validation</h4><p>"Are we building the <strong>right</strong> product?"</p><p>Checks the product meets real user needs: running the software, UAT.</p></div></div>
+<h3>Test levels (where)</h3>
+<div class="flow"><span class="st">Unit</span><span class="ar">→</span><span class="st">Integration</span><span class="ar">→</span><span class="st">System</span><span class="ar">→</span><span class="st">Acceptance (UAT)</span></div>
+<h3>Test types (what)</h3>
+<div class="pill-row"><span class="pill">Functional</span><span class="pill">Non-functional (performance, security, usability)</span><span class="pill">Regression</span><span class="pill">Smoke / Sanity</span><span class="pill">Re-testing (confirmation)</span><span class="pill">Compatibility</span><span class="pill">Accessibility</span></div>
+<p>As a manual tester you mostly work at <strong>system</strong> and <strong>acceptance</strong> level — testing the whole application the way a user would.</p></div><div class="section" id="s1-6"><h2><span class="sec-emoji">🧾</span> Anatomy of a test case <span class="lvl b">Basic</span></h2>
+<p>A <strong>test case</strong> is a documented set of inputs, preconditions, steps and expected results used to check one specific behaviour.</p>
+<div class="table-wrap"><table class=""><tr><th>Field</th><th>Purpose</th><th>Example</th></tr><tr><td>ID</td><td>Unique reference</td><td>TC_REG_014</td></tr><tr><td>Title</td><td>One-line intent</td><td>Registration rejects age 17</td></tr><tr><td>Preconditions</td><td>State needed before starting</td><td>User is on the Sign-up page, logged out</td></tr><tr><td>Test data</td><td>Exact inputs</td><td>Age = 17</td></tr><tr><td>Steps</td><td>Numbered actions</td><td>1. Enter age 17 &nbsp; 2. Click <em>Register</em></td></tr><tr><td>Expected result</td><td>What <em>should</em> happen — decided from the requirement, not from the app</td><td>Error "You must be 18 or older"; no account created</td></tr><tr><td>Actual result / Status</td><td>Filled during execution</td><td>Pass / Fail / Blocked / Skipped</td></tr><tr><td>Priority</td><td>Business importance</td><td>High</td></tr></table></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">The <strong>test oracle</strong> (how you know what is "expected") must come from requirements, user stories or domain rules — never from "whatever the app currently does".</div></div></div><div class="section" id="s1-7"><h2><span class="sec-emoji">🌳</span> The family of test design techniques <span class="lvl b">Basic</span></h2>
+<div class="cards">
+<div class="card"><div class="card-icon" style="background:var(--accent-soft)">⬛</div><div class="card-title">Black-box (specification-based)</div><div class="card-desc">Tests derived from requirements without looking at code. <strong>Equivalence Partitioning, Boundary Value Analysis, Decision Tables, State Transition, Use-case testing.</strong></div></div>
+<div class="card"><div class="card-icon" style="background:var(--yellow-soft)">⬜</div><div class="card-title">White-box (structure-based)</div><div class="card-desc">Tests derived from code structure — statement, branch coverage. Mostly developers; testers should know the idea.</div></div>
+<div class="card"><div class="card-icon" style="background:var(--green-soft)">🧠</div><div class="card-title">Experience-based</div><div class="card-desc">Tests derived from skill and intuition. <strong>Exploratory testing, error guessing, checklists.</strong></div></div></div>
+<p>This course follows a path from the simplest technique to the most open-ended:</p>
+<div class="flow"><span class="st">Equivalence Partitioning</span><span class="ar">→</span><span class="st">Boundary Value Analysis</span><span class="ar">→</span><span class="st">Decision Table</span><span class="ar">→</span><span class="st">State Transition</span><span class="ar">→</span><span class="st">Exploratory</span></div><div class="takeaway"><strong>🎯 Key takeaways</strong><ul><li>Testing = smart sampling, because exhaustive testing is impossible.</li><li>Error → defect → failure: you observe failures, you report defects.</li><li>A test case needs an expected result taken from an independent oracle.</li><li>Black-box techniques come from requirements; experience-based from skill.</li></ul></div></div>
+</section>
+<section class="panel" id="t2" data-toc='[["s2-1", "What is Equivalence Partitioning (EP)?"], ["s2-2", "Step-by-step procedure"], ["s2-3", "EP on business rules and outputs"], ["s2-4", "Coverage and common mistakes"], ["s2-5", "Practice"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span></div><p class="panel-eyebrow">Module 02 · Black-box technique</p><h1 class="panel-title">Equivalence Partitioning</h1><p class="panel-subtitle">Group inputs that behave alike and test one value per group — the fastest way to cut hundreds of tests to a handful.</p></div>
+<div class="section" id="s2-1"><h2><span class="sec-emoji">🧩</span> What is Equivalence Partitioning (EP)? <span class="lvl b">Basic</span></h2>
+<p><strong>Equivalence Partitioning</strong> divides all possible inputs (or outputs) into groups — <strong>partitions</strong> — where the system should behave <em>the same way</em> for every value in the group. Because they behave alike, you test <strong>just one representative</strong> from each partition.</p>
+<div class="callout tip"><div class="callout-icon">🚌</div><div class="callout-body"><strong>Analogy:</strong> a school bus charges by age group — child (0–12), adult (13–59), senior (60+). To check the fare logic you don't ride with every age; you check one child, one adult, one senior. The groups are "equivalence classes".</div></div>
+<h3>Core assumption</h3>
+<p>If one value in a partition exposes a defect, <em>every</em> value in that partition would; if one passes, the rest are expected to pass.</p>
+<h3>Valid vs invalid partitions</h3>
+<div class="cards"><div class="card"><div class="card-icon" style="background:var(--green-soft)">✅</div><div class="card-title">Valid partition</div><div class="card-desc">Values the requirement says are accepted. Test them to confirm correct processing.</div></div><div class="card"><div class="card-icon" style="background:var(--red-soft)">🚫</div><div class="card-title">Invalid partition</div><div class="card-desc">Values that must be rejected. Test them to confirm correct error handling.</div></div></div></div><div class="section" id="s2-2"><h2><span class="sec-emoji">📐</span> Step-by-step procedure <span class="lvl b">Basic</span></h2>
+<div class="flow"><span class="st">1 Identify input</span><span class="ar">→</span><span class="st">2 Find rules / ranges</span><span class="ar">→</span><span class="st">3 Split valid & invalid</span><span class="ar">→</span><span class="st">4 Pick one value each</span><span class="ar">→</span><span class="st">5 Write test cases</span></div>
+<h3>Worked example — "Age" field</h3>
+<p><em>Requirement:</em> An insurance form accepts whole-number ages from <strong>18 to 60</strong> inclusive.</p>
+<div class="diagram"><svg viewBox="0 0 760 170" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans" font-size="13" font-weight="600">
+<rect x="20" y="50" width="220" height="50" rx="6" fill="#ffe2dd" stroke="#e03e3e"/><text x="130" y="72" text-anchor="middle" fill="#a82e2e">Invalid</text><text x="130" y="90" text-anchor="middle" fill="#a82e2e" font-weight="400">age ≤ 17</text>
+<rect x="240" y="50" width="280" height="50" rx="6" fill="#ddedea" stroke="#0f7b0f"/><text x="380" y="72" text-anchor="middle" fill="#0a5f0a">Valid</text><text x="380" y="90" text-anchor="middle" fill="#0a5f0a" font-weight="400">18 ≤ age ≤ 60</text>
+<rect x="520" y="50" width="220" height="50" rx="6" fill="#ffe2dd" stroke="#e03e3e"/><text x="630" y="72" text-anchor="middle" fill="#a82e2e">Invalid</text><text x="630" y="90" text-anchor="middle" fill="#a82e2e" font-weight="400">age ≥ 61</text>
+<g fill="#14213D"><circle cx="130" cy="125" r="5"/><circle cx="380" cy="125" r="5"/><circle cx="630" cy="125" r="5"/></g>
+<text x="130" y="150" text-anchor="middle">test with 10</text><text x="380" y="150" text-anchor="middle">test with 35</text><text x="630" y="150" text-anchor="middle">test with 75</text>
+<text x="380" y="30" text-anchor="middle" fill="#787774" font-weight="400">One representative value per partition</text></svg><div class="diagram-caption">Three numeric partitions — one test each.</div></div>
+<div class="table-wrap"><table class=""><tr><th>Partition</th><th>Range</th><th>Valid?</th><th>Representative</th></tr><tr><td>EP1</td><td>age ≤ 17</td><td><span class="no">Invalid</span></td><td>10</td></tr><tr><td>EP2</td><td>18 – 60</td><td><span class="ok">Valid</span></td><td>35</td></tr><tr><td>EP3</td><td>age ≥ 61</td><td><span class="no">Invalid</span></td><td>75</td></tr><tr><td>EP4</td><td>Non-numeric (letters, symbols)</td><td><span class="no">Invalid</span></td><td>"abc", "#$%"</td></tr><tr><td>EP5</td><td>Decimal number</td><td><span class="no">Invalid</span></td><td>25.5</td></tr><tr><td>EP6</td><td>Empty / blank</td><td><span class="no">Invalid</span></td><td>(nothing)</td></tr><tr><td>EP7</td><td>Negative number</td><td><span class="no">Invalid</span></td><td>-5</td></tr></table></div>
+<p>Only <strong>7 tests</strong> cover thousands of possible entries.</p></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🛒</span> EP on business rules and outputs <span class="lvl i">Intermediate</span></h2>
+<p>EP is not just for numbers. Partition anything with distinct behaviour: user roles, file types, payment methods, order amounts, even <em>outputs</em>.</p>
+<h3>Example — shipping fee</h3>
+<p>Order total up to 499.99 → ₹50 fee. 500 and above → free shipping.</p>
+<div class="table-wrap"><table class=""><tr><th>Partition</th><th>Order total</th><th>Expected output</th><th>Test value</th></tr><tr><td>EP1</td><td>0.01 – 499.99</td><td>Fee ₹50</td><td>250</td></tr><tr><td>EP2</td><td>500.00 and above</td><td>Fee ₹0</td><td>800</td></tr><tr><td>EP3</td><td>0 or negative</td><td>Error</td><td>-10</td></tr><tr><td>EP4</td><td>Not a number</td><td>Error</td><td>"ten"</td></tr></table></div>
+<h3>Example — file upload (type partitions)</h3>
+<div class="pill-row"><span class="pill">Allowed: .jpg .png</span><span class="pill">Not allowed: .exe</span><span class="pill">Not allowed: .pdf</span><span class="pill">No extension</span><span class="pill">Zero-byte file</span><span class="pill">Very large file</span></div>
+<h3>Multiple inputs</h3>
+<p>When a screen has several fields, partition each one, then combine <strong>carefully</strong>:</p>
+<ul><li><strong>Valid combination:</strong> use one valid value from every field — can cover all valid partitions in a few tests.</li>
+<li><strong>Invalid tests:</strong> change <em>only one</em> field to invalid per test, keep others valid — otherwise you can't tell which invalid value caused the error (<em>defect masking</em>).</li></ul><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Never combine two invalid values in one test unless you are deliberately testing that combination. The first error message may hide the second defect.</div></div></div><div class="section" id="s2-4"><h2><span class="sec-emoji">📏</span> Coverage and common mistakes <span class="lvl i">Intermediate</span></h2>
+<p><strong>EP coverage</strong> = (partitions tested ÷ total partitions) × 100. Aim for 100% of identified partitions.</p>
+<div class="table-wrap"><table class=""><tr><th>Mistake</th><th>Why it hurts</th><th>Fix</th></tr><tr><td>Forgetting invalid partitions</td><td>Only "happy path" tested</td><td>Always ask "what else could be entered?"</td></tr><tr><td>Overlapping partitions</td><td>Same value belongs to two groups</td><td>Make ranges mutually exclusive</td></tr><tr><td>Missing data-type partitions</td><td>Letters, symbols, blank untested</td><td>Add type/format partitions</td></tr><tr><td>Choosing a boundary as representative</td><td>Mixes EP and BVA</td><td>Choose a typical middle value; use BVA for edges</td></tr><tr><td>Wrong oracle</td><td>Expectation guessed from app</td><td>Derive from requirement</td></tr></table></div><div class="takeaway"><strong>🎯 Key takeaways</strong><ul><li>Split inputs into groups that behave the same; test one value per group.</li><li>Always include invalid partitions: type, format, blank, negative, too large.</li><li>Vary one invalid field at a time to avoid masking.</li><li>EP finds <em>class</em> defects; boundaries are the next technique.</li></ul></div></div><div class="section" id="s2-5"><h2><span class="sec-emoji">🏋️</span> Practice <span class="lvl b">Basic</span></h2>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 2.1 — Password length</div><div class="ex-b"><p>A password must be <strong>8 to 16 characters</strong>. Identify the equivalence partitions and one test value for each.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><ul><li>EP1 Too short (1–7) → "abc12"</li><li>EP2 Valid (8–16) → "Abcdef12"</li><li>EP3 Too long (17+) → 20 characters</li><li>EP4 Empty → ""</li><li>EP5 Only spaces → "        "</li></ul><p>Bonus: partitions by <em>content</em> — with/without digit, uppercase, special character — if the rules require them.</p></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 2.2 — Student grade</div><div class="ex-b"><p>Marks 0–100: 0–34 = Fail, 35–59 = Pass, 60–74 = Merit, 75–100 = Distinction. List partitions (including invalid) and test values.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><table><tr><th>Partition</th><th>Value</th><th>Expected</th></tr><tr><td>&lt; 0</td><td>-5</td><td>Error</td></tr><tr><td>0–34</td><td>20</td><td>Fail</td></tr><tr><td>35–59</td><td>45</td><td>Pass</td></tr><tr><td>60–74</td><td>68</td><td>Merit</td></tr><tr><td>75–100</td><td>90</td><td>Distinction</td></tr><tr><td>&gt; 100</td><td>150</td><td>Error</td></tr><tr><td>Non-numeric / blank</td><td>"A", ""</td><td>Error</td></tr></table></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 2.3 — Login form (two inputs)</div><div class="ex-b"><p>Username and password both required. Design the minimum tests using the "one invalid at a time" rule.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><ol><li>Valid username + valid password → login succeeds</li><li>Valid username + wrong password → error</li><li>Unknown username + valid password → error</li><li>Blank username + valid password → "username required"</li><li>Valid username + blank password → "password required"</li></ol><p>Note: error messages should not reveal which of the two was wrong (security).</p></div></details></div></div>
+</section>
+<section class="panel" id="t3" data-toc='[["s3-1", "What is Boundary Value Analysis (BVA)?"], ["s3-2", "2-value vs 3-value BVA"], ["s3-3", "Applying BVA to different data types"], ["s3-4", "EP + BVA together"], ["s3-5", "Expert: robust, worst-case and non-obvious boundaries"], ["s3-6", "Practice"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 03 · Black-box technique</p><h1 class="panel-title">Boundary Value Analysis</h1><p class="panel-subtitle">Defects live on the edges. Learn 2-value and 3-value BVA, data-type boundaries and hidden technical limits.</p></div>
+<div class="section" id="s3-1"><h2><span class="sec-emoji">📍</span> What is Boundary Value Analysis (BVA)? <span class="lvl b">Basic</span></h2>
+<p><strong>Boundary Value Analysis</strong> focuses on the <em>edges</em> of partitions. Experience shows that developers make mistakes at boundaries far more often than in the middle — typically by confusing <code>&lt;</code> with <code>&lt;=</code> or being off by one.</p>
+<div class="callout tip"><div class="callout-icon">🎢</div><div class="callout-body"><strong>Analogy:</strong> a height bar at a theme park: "must be at least 120 cm." The interesting tests are 119, 120 and 121 cm — not 90 or 170.</div></div>
+<div class="diagram"><svg viewBox="0 0 760 150" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans" font-size="13" font-weight="600">
+<line x1="30" y1="70" x2="730" y2="70" stroke="#37352f" stroke-width="2"/>
+<rect x="260" y="55" width="240" height="30" fill="#ddedea" opacity=".8"/>
+<g><circle cx="200" cy="70" r="7" fill="#e03e3e"/><circle cx="260" cy="70" r="7" fill="#0f7b0f"/><circle cx="320" cy="70" r="7" fill="#0f7b0f"/><circle cx="440" cy="70" r="7" fill="#0f7b0f"/><circle cx="500" cy="70" r="7" fill="#0f7b0f"/><circle cx="560" cy="70" r="7" fill="#e03e3e"/></g>
+<g text-anchor="middle"><text x="200" y="105">17</text><text x="260" y="105">18</text><text x="320" y="105">19</text><text x="440" y="105">59</text><text x="500" y="105">60</text><text x="560" y="105">61</text>
+<text x="260" y="35" fill="#0a5f0a">Lower boundary</text><text x="500" y="35" fill="#0a5f0a">Upper boundary</text><text x="380" y="135" fill="#787774" font-weight="400">Valid range 18 – 60 (green) · red = invalid neighbours</text></g></svg><div class="diagram-caption">Boundary values for an age field 18–60 (3-value BVA).</div></div>
+<h3>The classic bug BVA catches</h3>
+<pre><span class="pre-lang">pseudo-code</span><code>if (age &gt; 18 &amp;&amp; age &lt; 60) {   <span class="c">// BUG: should be &gt;= 18 and &lt;= 60</span>
+    accept();
+}</code></pre>
+<p>Tests for 25 or 40 pass. Only <strong>18</strong> and <strong>60</strong> reveal the defect.</p></div><div class="section" id="s3-2"><h2><span class="sec-emoji">✌️</span> 2-value vs 3-value BVA <span class="lvl b">Basic</span></h2>
+<div class="table-wrap"><table class=""><tr><th>Method</th><th>Values per boundary</th><th>Age 18–60 example</th><th>Use when</th></tr><tr><td><strong>2-value</strong></td><td>Boundary + nearest value in the neighbouring partition</td><td>17, 18, 60, 61</td><td>Standard; efficient</td></tr><tr><td><strong>3-value</strong></td><td>Boundary + both neighbours</td><td>17, 18, 19, 59, 60, 61</td><td>Higher-risk areas (finance, medical)</td></tr></table></div>
+<div class="tool"><strong>🧮 Try it — Boundary calculator</strong><br><br>
+<label>Min</label><input type="number" id="bvaMin" value="18"> <label>Max</label><input type="number" id="bvaMax" value="60"> <label>Step</label><input type="number" id="bvaStep" value="1" step="any"> <button class="qbtn" style="margin:0 0 0 8px;padding:7px 16px" id="bvaGo">Generate</button>
+<div class="out" id="bvaOut"></div></div>
+<p>Step is the smallest unit the field supports: 1 for integers, 0.01 for money, 0.1 for one decimal.</p></div><div class="section" id="s3-3"><h2><span class="sec-emoji">🧮</span> Applying BVA to different data types <span class="lvl i">Intermediate</span></h2>
+<div class="table-wrap"><table class=""><tr><th>Data type</th><th>Boundary thinking</th><th>Example (limit)</th><th>Values</th></tr><tr><td>Integer range</td><td>min−1, min, min+1, max−1, max, max+1</td><td>Quantity 1–10</td><td>0, 1, 2, 9, 10, 11</td></tr><tr><td>Money</td><td>Smallest unit 0.01</td><td>Discount tier ≥ ₹100</td><td>99.99, 100.00, 100.01</td></tr><tr><td>Text length</td><td>Characters count</td><td>Name max 50 chars</td><td>49, 50, 51 characters; 0 and 1 for min</td></tr><tr><td>Date</td><td>Day before / on / after</td><td>Offer valid till 31-Dec</td><td>30-Dec, 31-Dec, 01-Jan; leap day 29-Feb</td></tr><tr><td>Time</td><td>Seconds/minutes edges</td><td>Session timeout 15 min</td><td>14:59, 15:00, 15:01</td></tr><tr><td>Collections</td><td>Item count</td><td>Cart 1–20 items</td><td>0, 1, 2, 19, 20, 21</td></tr><tr><td>File size</td><td>Bytes</td><td>Upload ≤ 5 MB</td><td>4.99 MB, 5 MB, 5.01 MB</td></tr><tr><td>Pagination</td><td>Records per page</td><td>10 per page</td><td>10 records, 11 records, 0 records</td></tr></table></div>
+<h3>Worked example — tiered discount</h3>
+<p>Order value: up to 99.99 → 0% · 100.00–499.99 → 5% · 500.00 and above → 10%.</p>
+<div class="table-wrap"><table class=""><tr><th>Boundary</th><th>Test values</th><th>Expected discount</th></tr><tr><td>Lower limit (0.00)</td><td>-0.01 / 0.00 / 0.01</td><td>Error / 0% / 0%</td></tr><tr><td>First tier edge</td><td>99.99 / 100.00 / 100.01</td><td>0% / 5% / 5%</td></tr><tr><td>Second tier edge</td><td>499.99 / 500.00 / 500.01</td><td>5% / 10% / 10%</td></tr></table></div></div><div class="section" id="s3-4"><h2><span class="sec-emoji">🔗</span> EP + BVA together <span class="lvl i">Intermediate</span></h2>
+<p>The two techniques are partners. <strong>EP</strong> finds the groups; <strong>BVA</strong> picks the edges of ordered groups. A solid design uses both:</p>
+<div class="flow"><span class="st">Partition the input (EP)</span><span class="ar">→</span><span class="st">Mark ordered boundaries</span><span class="ar">→</span><span class="st">Add BVA values at edges</span><span class="ar">→</span><span class="st">Add one mid-value per partition</span><span class="ar">→</span><span class="st">Add invalid types (letters, blank)</span></div>
+<p>For age 18–60 the final set is: 17, 18, 19, 35 (mid), 59, 60, 61, plus "abc", blank, -5, 25.5.</p>
+<h3>BVA beyond a single field</h3>
+<ul><li><strong>Output boundaries:</strong> choose inputs so the <em>result</em> lands exactly on a limit (e.g. total becomes exactly 500.00 after tax).</li>
+<li><strong>Internal limits:</strong> max database field length, API payload size, session limits, 32-bit integer maximum (2,147,483,647).</li>
+<li><strong>Multiple variables:</strong> hold all other variables at nominal values while one moves through its boundaries.</li></ul></div><div class="section" id="s3-5"><h2><span class="sec-emoji">🧠</span> Expert: robust, worst-case and non-obvious boundaries <span class="lvl e">Expert</span></h2>
+<div class="table-wrap"><table class=""><tr><th>Variant</th><th>Idea</th><th>When</th></tr><tr><td><strong>Robust BVA</strong></td><td>Include values beyond the invalid side (min−1, max+1) to test error handling</td><td>Always for user-facing inputs</td></tr><tr><td><strong>Worst-case BVA</strong></td><td>Combine boundaries of <em>all</em> variables (5<sup>n</sup> tests)</td><td>Safety-critical, small variable count</td></tr><tr><td><strong>Hidden boundaries</strong></td><td>Limits not in the requirement: DB column size, UI truncation, timeout, rate-limit</td><td>Ask developers / inspect DevTools</td></tr></table></div>
+<h3>Hunting hidden boundaries</h3>
+<ul><li>Paste 5,000 characters into a "name" field — does the UI break or the DB truncate silently?</li>
+<li>Enter 2147483648 (int overflow), 0.1+0.2 style decimals, multi-byte characters (emoji, "ñ") that count differently in bytes and characters.</li>
+<li>Check time zones and daylight-saving changes around date boundaries; midnight and month/year rollovers.</li></ul><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Ask <em>"is the limit inclusive or exclusive?"</em> If the requirement says "up to 60", clarify before you assume. Ambiguous wording is itself a defect in the requirement.</div></div><div class="takeaway"><strong>🎯 Key takeaways</strong><ul><li>Bugs love edges: test min−1, min, min+1, max−1, max, max+1.</li><li>Know the smallest step of the data type (1, 0.01, 1 char, 1 day).</li><li>Use EP for the groups and BVA for the edges.</li><li>Look for hidden technical boundaries, not only documented ones.</li></ul></div></div><div class="section" id="s3-6"><h2><span class="sec-emoji">🏋️</span> Practice <span class="lvl b">Basic</span></h2>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 3.1 — Quantity field</div><div class="ex-b"><p>Cart quantity accepts <strong>1 to 10</strong>. List 3-value BVA tests with expected results.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><table><tr><th>Value</th><th>Expected</th></tr><tr><td>0</td><td>Rejected</td></tr><tr><td>1</td><td>Accepted</td></tr><tr><td>2</td><td>Accepted</td></tr><tr><td>9</td><td>Accepted</td></tr><tr><td>10</td><td>Accepted</td></tr><tr><td>11</td><td>Rejected</td></tr></table></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 3.2 — Username length</div><div class="ex-b"><p>Username must be 5–12 characters. Give boundary tests.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><ul><li>4 chars → rejected</li><li>5 chars → accepted</li><li>6 chars → accepted</li><li>11 chars → accepted</li><li>12 chars → accepted</li><li>13 chars → rejected</li></ul></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 3.3 — Library fine (money + dates)</div><div class="ex-b"><p>A book is due on 10-June. Returned on or before the due date → no fine. Each day late costs ₹5, capped at ₹100. Design boundary tests.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><ul><li>Return 09-June, 10-June → ₹0</li><li>Return 11-June (1 day late) → ₹5</li><li>Return day 19 late → ₹95; day 20 late → ₹100 (cap reached)</li><li>Return day 21 late → still ₹100 (cap holds)</li><li>Month boundary: due 30-June, return 01-July → ₹5</li></ul></div></details></div></div>
+</section>
+<section class="panel" id="t4" data-toc='[["s4-1", "Decision table testing"], ["s4-2", "Pairwise (all-pairs) testing"], ["s4-3", "Use-case and user-journey testing"], ["s4-4", "Error guessing and checklists"], ["s4-5", "Choosing the right technique"], ["s4-6", "Practice"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 04 · Black-box technique</p><h1 class="panel-title">Decision Tables, Pairwise &amp; Other Techniques</h1><p class="panel-subtitle">When rules combine, when parameters multiply and how to choose the right technique.</p></div>
+<div class="section" id="s4-1"><h2><span class="sec-emoji">📋</span> Decision table testing <span class="lvl i">Intermediate</span></h2>
+<p>EP and BVA test inputs <em>one at a time</em>. Real business logic often depends on <strong>combinations</strong> of conditions. A <strong>decision table</strong> lists every combination of conditions (rules) and the action the system must take.</p>
+<h3>Example — loan approval</h3>
+<p>Approve if credit score is good <strong>and</strong> income is sufficient. If score is good but income is low, send for manual review. Otherwise reject.</p>
+<div class="table-wrap"><table class="sm"><tr><th></th><th>Rule 1</th><th>Rule 2</th><th>Rule 3</th><th>Rule 4</th></tr><tr><td><strong>Credit score good?</strong></td><td>Y</td><td>Y</td><td>N</td><td>N</td></tr><tr><td><strong>Income sufficient?</strong></td><td>Y</td><td>N</td><td>Y</td><td>N</td></tr><tr><td><strong>Action: Approve</strong></td><td>✔</td><td></td><td></td><td></td></tr><tr><td><strong>Action: Manual review</strong></td><td></td><td>✔</td><td></td><td></td></tr><tr><td><strong>Action: Reject</strong></td><td></td><td></td><td>✔</td><td>✔</td></tr></table></div>
+<p>Each column becomes at least one test case. With <em>n</em> binary conditions there are 2<sup>n</sup> rules — 3 conditions = 8 rules, 5 conditions = 32 rules.</p>
+<h3>How to build one</h3>
+<div class="flow"><span class="st">List conditions</span><span class="ar">→</span><span class="st">List actions</span><span class="ar">→</span><span class="st">Enumerate combinations</span><span class="ar">→</span><span class="st">Fill expected actions</span><span class="ar">→</span><span class="st">Merge impossible/identical rules</span><span class="ar">→</span><span class="st">Make test cases</span></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Collapse rules where one condition does not matter (marked "–"). Rules 3 and 4 above could merge into "score bad → reject".</div></div></div><div class="section" id="s4-2"><h2><span class="sec-emoji">🔀</span> Pairwise (all-pairs) testing <span class="lvl e">Expert</span></h2>
+<p>A page with 4 settings of 3 options each has 3<sup>4</sup> = 81 combinations. Research shows most bugs are triggered by the interaction of just <strong>two</strong> parameters. <strong>Pairwise testing</strong> chooses the smallest set where every pair of values appears at least once — here about 9–10 tests instead of 81.</p>
+<div class="table-wrap"><table class="sm"><tr><th>Test</th><th>Browser</th><th>OS</th><th>Language</th></tr><tr><td>1</td><td>Chrome</td><td>Windows</td><td>English</td></tr><tr><td>2</td><td>Chrome</td><td>macOS</td><td>Hindi</td></tr><tr><td>3</td><td>Firefox</td><td>Windows</td><td>Hindi</td></tr><tr><td>4</td><td>Firefox</td><td>macOS</td><td>English</td></tr><tr><td>5</td><td>Safari</td><td>Windows</td><td>Telugu</td></tr><tr><td>6</td><td>Safari</td><td>macOS</td><td>English</td></tr></table></div>
+<p>Tools such as <strong>PICT</strong> (Microsoft) or free web pairwise generators create these tables for you.</p></div><div class="section" id="s4-3"><h2><span class="sec-emoji">📖</span> Use-case and user-journey testing <span class="lvl i">Intermediate</span></h2>
+<p>Derive tests from <strong>end-to-end user scenarios</strong>: a <em>main success path</em>, <em>alternate paths</em> and <em>exception paths</em>.</p>
+<div class="table-wrap"><table class=""><tr><th>Path</th><th>Online purchase example</th></tr><tr><td>Main</td><td>Search → add to cart → checkout → pay → confirmation email</td></tr><tr><td>Alternate</td><td>Pay with wallet instead of card; apply coupon</td></tr><tr><td>Exception</td><td>Payment declined; item goes out of stock during checkout; session expires</td></tr></table></div></div><div class="section" id="s4-4"><h2><span class="sec-emoji">🧠</span> Error guessing and checklists <span class="lvl i">Intermediate</span></h2>
+<p><strong>Error guessing</strong> uses experience to predict where bugs hide. Build a personal <em>fault list</em>:</p>
+<div class="pill-row"><span class="pill">Empty / null input</span><span class="pill">Leading & trailing spaces</span><span class="pill">Special characters  &lt;&gt; ' " % \</span><span class="pill">SQL-like text  ' OR 1=1 --</span><span class="pill">Very long strings</span><span class="pill">Copy-paste with formatting</span><span class="pill">Double-click Submit</span><span class="pill">Browser Back after submit</span><span class="pill">Duplicate record</span><span class="pill">Past / future dates</span><span class="pill">Leap day 29-Feb</span><span class="pill">Zero and negative values</span><span class="pill">Unicode / emoji</span><span class="pill">Session timeout mid-action</span></div></div><div class="section" id="s4-5"><h2><span class="sec-emoji">🗺️</span> Choosing the right technique <span class="lvl e">Expert</span></h2>
+<div class="table-wrap"><table class=""><tr><th>Situation</th><th>Best technique</th></tr><tr><td>Input fields with ranges or groups</td><td>Equivalence Partitioning + BVA</td></tr><tr><td>Several conditions drive a business outcome</td><td>Decision table</td></tr><tr><td>Behaviour depends on history / status</td><td>State transition</td></tr><tr><td>Many configuration parameters</td><td>Pairwise</td></tr><tr><td>Journey across screens or systems</td><td>Use-case testing</td></tr><tr><td>Little documentation, need fast learning</td><td>Exploratory testing</td></tr><tr><td>Past defect patterns known</td><td>Error guessing / checklists</td></tr></table></div><div class="callout note"><div class="callout-icon">📝</div><div class="callout-body">Experts <strong>combine</strong> techniques: specification-based techniques give systematic coverage; exploratory testing finds what the specification forgot.</div></div></div><div class="section" id="s4-6"><h2><span class="sec-emoji">🏋️</span> Practice <span class="lvl b">Basic</span></h2>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 4.1 — Free delivery decision table</div><div class="ex-b"><p>Delivery is free if the customer is a <strong>Prime member</strong> OR the order is <strong>above ₹500</strong>. Otherwise ₹40 is charged. Build the decision table.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><table><tr><th></th><th>R1</th><th>R2</th><th>R3</th><th>R4</th></tr><tr><td>Prime member?</td><td>Y</td><td>Y</td><td>N</td><td>N</td></tr><tr><td>Order &gt; ₹500?</td><td>Y</td><td>N</td><td>Y</td><td>N</td></tr><tr><td><strong>Free delivery</strong></td><td>✔</td><td>✔</td><td>✔</td><td></td></tr><tr><td><strong>Charge ₹40</strong></td><td></td><td></td><td></td><td>✔</td></tr></table><p>4 rules → 4 tests. Add BVA on the 500 limit (500.00 vs 500.01).</p></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 4.2 — Pick the technique</div><div class="ex-b"><p>For each, name the best primary technique: (a) Coupon valid for 3 months; (b) Order status workflow; (c) Seat-type × payment × device combinations; (d) New feature with no spec.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><ul><li>(a) BVA on dates</li><li>(b) State transition</li><li>(c) Pairwise</li><li>(d) Exploratory</li></ul></div></details></div></div>
+</section>
+<section class="panel" id="t5" data-toc='[["s5-1", "What is State Transition Testing?"], ["s5-2", "State diagram and state table"], ["s5-3", "Designing tests & coverage levels"], ["s5-4", "Worked example \u2014 ATM PIN with memory"], ["s5-5", "Expert: sequences, concurrency and time"], ["s5-6", "Practice"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 05 · Black-box technique</p><h1 class="panel-title">State Transition Testing</h1><p class="panel-subtitle">Test systems whose behaviour depends on their current state and history — from order workflows to ATM PIN logic.</p></div>
+<div class="section" id="s5-1"><h2><span class="sec-emoji">🔄</span> What is State Transition Testing? <span class="lvl b">Basic</span></h2>
+<p>Some systems behave differently depending on their <strong>current state</strong> and on what happened before. A user account can be <em>Active</em>, <em>Locked</em> or <em>Closed</em>; an order can be <em>New</em>, <em>Paid</em>, <em>Shipped</em>. <strong>State transition testing</strong> checks that the system moves correctly between states when events occur — and that it refuses illegal moves.</p>
+<div class="callout tip"><div class="callout-icon">🚦</div><div class="callout-body"><strong>Analogy:</strong> a traffic light. Red → Green → Yellow → Red is allowed. Red → Yellow directly is not. You can test the legal cycle, and you can test that illegal jumps are impossible.</div></div>
+<h3>The four building blocks</h3>
+<div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft)">⭕</div><div class="card-title">State</div><div class="card-desc">A condition the system stays in until something happens (Locked, Paid).</div></div><div class="card"><div class="card-icon" style="background:var(--yellow-soft)">⚡</div><div class="card-title">Event</div><div class="card-desc">Trigger that may cause a change (enter wrong PIN, click Pay).</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft)">➡️</div><div class="card-title">Transition</div><div class="card-desc">Move from one state to another caused by an event.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft)">🎬</div><div class="card-title">Action / Output</div><div class="card-desc">What the system does during the move (send email, show error).</div></div></div></div><div class="section" id="s5-2"><h2><span class="sec-emoji">🧭</span> State diagram and state table <span class="lvl b">Basic</span></h2>
+<p>Example — an order lifecycle. Only <em>New</em> and <em>Paid</em> orders may be cancelled.</p>
+<div class="diagram"><svg viewBox="0 0 780 250" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans" font-size="12.5" font-weight="600">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs>
+<g stroke="#37352f" stroke-width="1.6" fill="none" marker-end="url(#ar)">
+<line x1="150" y1="90" x2="205" y2="90"/><line x1="320" y1="90" x2="375" y2="90"/><line x1="490" y1="90" x2="545" y2="90"/>
+<path d="M260 62 C260 20 130 20 95 62"/><path d="M430 62 C430 10 130 5 95 62" stroke-dasharray="4 3"/>
+<path d="M270 118 L270 190 L320 190" stroke="#e03e3e"/><path d="M95 118 L95 190 L200 190" stroke="#e03e3e"/></g>
+<g fill="#eef1f7" stroke="#14213D" stroke-width="1.6"><rect x="30" y="62" width="120" height="56" rx="10"/><rect x="205" y="62" width="115" height="56" rx="10"/><rect x="375" y="62" width="115" height="56" rx="10"/><rect x="545" y="62" width="130" height="56" rx="10"/></g>
+<g fill="#fdecc8" stroke="#dfab01" stroke-width="1.6"><rect x="200" y="162" width="120" height="56" rx="10"/><rect x="320" y="162" width="130" height="56" rx="10"/></g>
+<g text-anchor="middle" fill="#14213D"><text x="90" y="95">NEW</text><text x="262" y="95">PAID</text><text x="432" y="95">SHIPPED</text><text x="610" y="95">DELIVERED</text><text x="260" y="195">CANCELLED</text><text x="385" y="195">(invalid)</text></g>
+<g font-weight="400" fill="#37352f" text-anchor="middle"><text x="178" y="82">pay</text><text x="348" y="82">ship</text><text x="518" y="82">deliver</text><text x="178" y="30">cancel</text><text x="40" y="150" fill="#a82e2e">cancel</text><text x="300" y="150" fill="#a82e2e">cancel</text></g></svg><div class="diagram-caption">Order lifecycle. Red arrows = cancel; cancelling a Shipped order must be blocked.</div></div>
+<h3>State table (shows valid <em>and</em> invalid cells)</h3>
+<div class="table-wrap"><table class=""><tr><th>Current state</th><th>Pay</th><th>Ship</th><th>Deliver</th><th>Cancel</th></tr><tr><td><strong>New</strong></td><td>Paid</td><td><span class="no">Invalid</span></td><td><span class="no">Invalid</span></td><td>Cancelled</td></tr><tr><td><strong>Paid</strong></td><td><span class="no">Invalid</span></td><td>Shipped</td><td><span class="no">Invalid</span></td><td>Cancelled (+refund)</td></tr><tr><td><strong>Shipped</strong></td><td><span class="no">Invalid</span></td><td><span class="no">Invalid</span></td><td>Delivered</td><td><span class="no">Invalid</span></td></tr><tr><td><strong>Delivered</strong></td><td><span class="no">Invalid</span></td><td><span class="no">Invalid</span></td><td><span class="no">Invalid</span></td><td><span class="no">Invalid</span></td></tr><tr><td><strong>Cancelled</strong></td><td><span class="no">Invalid</span></td><td><span class="no">Invalid</span></td><td><span class="no">Invalid</span></td><td><span class="no">Invalid</span></td></tr></table></div><div class="callout note"><div class="callout-icon">📝</div><div class="callout-body">The table matters more than the diagram: it forces you to look at <strong>every cell</strong>. Diagrams usually show only valid transitions; defects love the empty cells.</div></div></div><div class="section" id="s5-3"><h2><span class="sec-emoji">📏</span> Designing tests & coverage levels <span class="lvl i">Intermediate</span></h2>
+<h3>Coverage levels</h3>
+<div class="table-wrap"><table class=""><tr><th>Level</th><th>Meaning</th><th>For the order example</th></tr><tr><td><strong>All states</strong></td><td>Visit every state at least once</td><td>New, Paid, Shipped, Delivered, Cancelled</td></tr><tr><td><strong>All valid transitions (0-switch)</strong></td><td>Execute every valid single transition</td><td>pay, ship, deliver, cancel-from-New, cancel-from-Paid = 5</td></tr><tr><td><strong>All invalid transitions</strong></td><td>Attempt every invalid cell</td><td>e.g. ship a New order, cancel a Shipped order</td></tr><tr><td><strong>N-switch (sequences)</strong></td><td>Chains of N+1 transitions (1-switch = pairs)</td><td>pay→ship, ship→deliver, new→cancel→(pay)…</td></tr></table></div>
+<h3>Test cases for 0-switch + selected invalid</h3>
+<div class="table-wrap"><table class="sm"><tr><th>ID</th><th>Start</th><th>Event</th><th>Expected end</th><th>Check</th></tr><tr><td>ST1</td><td>New</td><td>Pay</td><td>Paid</td><td>Receipt email sent</td></tr><tr><td>ST2</td><td>Paid</td><td>Ship</td><td>Shipped</td><td>Tracking id created</td></tr><tr><td>ST3</td><td>Shipped</td><td>Deliver</td><td>Delivered</td><td>Review request sent</td></tr><tr><td>ST4</td><td>New</td><td>Cancel</td><td>Cancelled</td><td>No charge</td></tr><tr><td>ST5</td><td>Paid</td><td>Cancel</td><td>Cancelled</td><td>Refund initiated</td></tr><tr><td>ST6</td><td>New</td><td>Ship</td><td><em>No change</em></td><td>Error "Pay first"</td></tr><tr><td>ST7</td><td>Shipped</td><td>Cancel</td><td><em>No change</em></td><td>Cancel option hidden / rejected</td></tr></table></div></div><div class="section" id="s5-4"><h2><span class="sec-emoji">🏧</span> Worked example — ATM PIN with memory <span class="lvl i">Intermediate</span></h2>
+<p><em>Rule:</em> Three wrong PIN attempts in a row retain the card. A correct PIN at any time shows the menu.</p>
+<div class="table-wrap"><table class=""><tr><th>State</th><th>Correct PIN</th><th>Wrong PIN</th></tr><tr><td>Card inserted (0 fails)</td><td>Menu</td><td>Wrong-1</td></tr><tr><td>Wrong-1</td><td>Menu</td><td>Wrong-2</td></tr><tr><td>Wrong-2</td><td>Menu</td><td>Card retained</td></tr><tr><td>Menu</td><td>—</td><td>—</td></tr><tr><td>Card retained</td><td>No action</td><td>No action</td></tr></table></div>
+<p>This system needs <strong>memory</strong> — it must remember how many failures happened. Test the sequence <em>wrong, wrong, correct</em> (counter must reset) and <em>wrong, wrong, wrong</em> (card kept). Also test that the counter resets for the next card.</p></div><div class="section" id="s5-5"><h2><span class="sec-emoji">🧠</span> Expert: sequences, concurrency and time <span class="lvl e">Expert</span></h2>
+<ul><li><strong>Round-trip paths:</strong> test sequences that return to a start state (Active → Suspended → Active) to expose leftover data.</li>
+<li><strong>Time-based events:</strong> session timeout, OTP expiry, scheduled jobs — the "event" is the clock. Test just before and just after.</li>
+<li><strong>Concurrent events:</strong> two tabs press <em>Pay</em> and <em>Cancel</em> together; double-click Pay; race conditions.</li>
+<li><strong>Back / refresh / deep links:</strong> browser Back after a state change; opening a URL meant for a different state.</li>
+<li><strong>Data consequences:</strong> after each transition verify the <em>database</em> state, emails, audit log and downstream systems — not only the screen.</li></ul><div class="takeaway"><strong>🎯 Key takeaways</strong><ul><li>Identify states, events, transitions and actions.</li><li>Build a state table to expose invalid transitions.</li><li>Cover all states → all valid transitions → invalid transitions → sequences.</li><li>Test history (counters), time and concurrency for expert depth.</li></ul></div></div><div class="section" id="s5-6"><h2><span class="sec-emoji">🏋️</span> Practice <span class="lvl b">Basic</span></h2>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 5.1 — Account lock</div><div class="ex-b"><p>Account: <em>Active</em>. 5 wrong passwords → <em>Locked</em>. Locked user can <em>Reset password</em> → Active. Draw the state table and list 6 tests.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><ol><li>Active + correct login → Active (logged in)</li><li>Active + 4 wrong then correct → counter reset, logged in</li><li>Active + 5 wrong → Locked, message shown</li><li>Locked + correct password → still Locked</li><li>Locked + reset password → Active</li><li>After reset, 1 wrong attempt → counter starts from 1 (not 5)</li></ol></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 5.2 — Document workflow</div><div class="ex-b"><p>Document states: Draft → Submitted → Approved / Rejected. Rejected goes back to Draft. Approved is final. List invalid transitions to test.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><ul><li>Draft → Approved (skip review)</li><li>Draft → Rejected</li><li>Approved → Draft / Rejected (final state)</li><li>Submitted → Draft by the author (unless allowed)</li><li>Rejected → Approved directly</li></ul></div></details></div></div>
+</section>
+<section class="panel" id="t6" data-toc='[["s6-1", "What is exploratory testing?"], ["s6-2", "Charters and session-based testing"], ["s6-3", "Heuristics: where to look"], ["s6-4", "Taking good notes & reporting"], ["s6-5", "Expert: making exploration repeatable and measurable"], ["s6-6", "Practice"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 06 · Experience-based technique</p><h1 class="panel-title">Exploratory Testing</h1><p class="panel-subtitle">Learn, design and execute at the same time — with charters, heuristics, tours and disciplined notes.</p></div>
+<div class="section" id="s6-1"><h2><span class="sec-emoji">🧭</span> What is exploratory testing? <span class="lvl b">Basic</span></h2>
+<p><strong>Exploratory testing</strong> is simultaneous <strong>learning, test design and test execution</strong>. You don't follow a pre-written script; you explore the software, observe, form a hypothesis and decide the next test <em>based on what you just learned</em>.</p>
+<div class="callout tip"><div class="callout-icon">🕵️</div><div class="callout-body"><strong>Analogy:</strong> a scripted test is a guided tour with a printed itinerary. Exploratory testing is a detective walking into a room — every clue shapes the next question.</div></div>
+<div class="compare"><div class="compare-col" style="background:var(--bg-block)"><h4>📄 Scripted testing</h4><p>• Tests designed in advance</p><p>• Repeatable, easy to audit</p><p>• Good for regression and compliance</p><p>• Risk: only finds what was imagined</p></div><div class="compare-col" style="background:var(--accent-soft)"><h4>🧭 Exploratory testing</h4><p>• Design + execution at the same time</p><p>• Adapts to what is discovered</p><p>• Great for new features, thin specs</p><p>• Risk: needs skill and good notes</p></div></div>
+<p><strong>Exploratory ≠ random clicking.</strong> It is structured by a <em>goal</em> (charter), a <em>time-box</em> and <em>notes</em>.</p></div><div class="section" id="s6-2"><h2><span class="sec-emoji">📜</span> Charters and session-based testing <span class="lvl i">Intermediate</span></h2>
+<p>A <strong>charter</strong> is a one-sentence mission for a session:</p>
+<pre><span class="pre-lang">template</span><code>Explore  &lt;area / feature&gt;
+With     &lt;resources: data, tools, personas, configuration&gt;
+To discover  &lt;information: risks, defects, behaviours&gt;</code></pre>
+<p><strong>Example:</strong> <em>Explore the checkout payment page with expired, international and 3-D-Secure cards to discover problems with error handling.</em></p>
+<h3>Session-Based Test Management (SBTM)</h3>
+<div class="flow"><span class="st">Pick a charter</span><span class="ar">→</span><span class="st">Time-box 60–120 min</span><span class="ar">→</span><span class="st">Test & take notes</span><span class="ar">→</span><span class="st">Log bugs / questions</span><span class="ar">→</span><span class="st">Debrief with lead</span></div>
+<div class="table-wrap"><table class="sm"><tr><th>Session sheet field</th><th>Contents</th></tr><tr><td>Charter</td><td>Mission of the session</td></tr><tr><td>Tester / date / duration</td><td>Who, when, how long</td></tr><tr><td>Build & environment</td><td>App version, browser, data set</td></tr><tr><td>Notes</td><td>What was tested, observations, ideas</td></tr><tr><td>Bugs</td><td>IDs of defects raised</td></tr><tr><td>Issues / questions</td><td>Blockers and unclear requirements</td></tr><tr><td>TBS split</td><td>% time on Test design/execution, Bug investigation, Setup</td></tr></table></div></div><div class="section" id="s6-3"><h2><span class="sec-emoji">🧰</span> Heuristics: where to look <span class="lvl i">Intermediate</span></h2>
+<h3>SFDIPOT — Product coverage heuristic</h3>
+<div class="table-wrap"><table class="sm"><tr><th>Letter</th><th>Dimension</th><th>Ask yourself</th></tr><tr><td>S</td><td>Structure</td><td>What is it built from? files, modules, third-party services</td></tr><tr><td>F</td><td>Function</td><td>What does it do? every feature, calculation, error handling</td></tr><tr><td>D</td><td>Data</td><td>What goes in/out? valid, invalid, big, empty, boundaries</td></tr><tr><td>I</td><td>Interfaces</td><td>UI, APIs, imports/exports, integrations</td></tr><tr><td>P</td><td>Platform</td><td>Browsers, OS, devices, DB, network</td></tr><tr><td>O</td><td>Operations</td><td>How will real users really use it? Common vs rare tasks</td></tr><tr><td>T</td><td>Time</td><td>Timeouts, ordering, concurrency, scheduling, time zones</td></tr></table></div>
+<h3>Tours (James Whittaker)</h3>
+<div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🏛️</div><div class="card-title">Landmark tour</div><div class="card-desc">Visit the key features in a chosen order.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft)">💰</div><div class="card-title">Money tour</div><div class="card-desc">Test the features that earn the revenue.</div></div><div class="card"><div class="card-icon" style="background:var(--yellow-soft)">🚪</div><div class="card-title">Back-alley tour</div><div class="card-desc">Visit the least-used corners of the app.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft)">🗑️</div><div class="card-title">Garbage-collector tour</div><div class="card-desc">Systematically go through every item — every menu, every link.</div></div><div class="card"><div class="card-icon" style="background:var(--red-soft)">😈</div><div class="card-title">Antisocial tour</div><div class="card-desc">Do the wrong thing: invalid, hostile, unexpected input.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🛋️</div><div class="card-title">Couch-potato tour</div><div class="card-desc">Do as little as possible: accept defaults, leave fields empty.</div></div></div>
+<h3>Other quick mnemonics</h3>
+<ul><li><strong>CRUD:</strong> Create, Read, Update, Delete — for every data object.</li>
+<li><strong>Goldilocks:</strong> too big, too small, just right.</li>
+<li><strong>Interrupt:</strong> lose network, refresh, press Back, switch tab, lock phone mid-action.</li>
+<li><strong>FEW HICCUPPS</strong> (oracles): Familiar problems, Explainability, World, History, Image, Comparable products, Claims, User expectations, Product, Purpose, Statutes.</li></ul></div><div class="section" id="s6-4"><h2><span class="sec-emoji">✍️</span> Taking good notes & reporting <span class="lvl i">Intermediate</span></h2>
+<p>If it isn't written down it didn't happen. Use a timestamped log:</p>
+<pre><span class="pre-lang">session notes</span><code>10:02  Charter: explore profile photo upload
+10:05  JPG 2MB ok. PNG ok. GIF accepted? -&gt; yes (spec says only JPG/PNG)  [Q1]
+10:12  Photo 12MB -&gt; spinner never ends, no error     [BUG-231]
+10:20  Upload, then Back, then Forward -&gt; old photo shown   [IDEA: caching]
+10:31  Idea: test on mobile Safari, same file  -&gt; TODO</code></pre>
+<p>Mark entries as <strong>B</strong>ug, <strong>Q</strong>uestion, <strong>I</strong>dea, <strong>T</strong>odo. Finish each session with a <strong>debrief</strong>: what was covered, what was found, what is still risky.</p>
+<h3>When to use exploratory testing</h3>
+<ul><li>New feature with incomplete documentation</li><li>After scripted tests pass — to hunt for what scripts missed</li><li>Time pressure — high value per hour</li><li>Learning an unfamiliar product (onboarding)</li><li>Investigating a bug cluster</li></ul></div><div class="section" id="s6-5"><h2><span class="sec-emoji">🧠</span> Expert: making exploration repeatable and measurable <span class="lvl e">Expert</span></h2>
+<ul><li><strong>Risk-driven charters:</strong> rank features by business impact × likelihood of failure; write charters for the top risks first.</li>
+<li><strong>Test ideas map:</strong> draw a mind map of the product; colour areas "explored / partly / untouched" to show coverage visually.</li>
+<li><strong>Paired exploratory sessions:</strong> a tester + a developer or BA. Different perspectives find different bugs; the developer learns what hurts users.</li>
+<li><strong>Bug bashes:</strong> time-boxed event where many people explore before release; give them charters and a shared bug template.</li>
+<li><strong>Convert discoveries into scripts:</strong> a bug found exploratorily becomes a regression test (manual or automated) so it cannot return.</li>
+<li><strong>Metrics:</strong> sessions per week, bugs per session, TBS ratio, charter coverage — measures of <em>learning</em>, not just bug count.</li></ul><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Common pitfalls: no charter (aimless clicking), no notes (cannot repeat or defend), no time-box (endless), testing only the happy path. Fix: charter + timer + notes + debrief.</div></div><div class="takeaway"><strong>🎯 Key takeaways</strong><ul><li>Exploratory = learn + design + execute together, with a charter and time-box.</li><li>Heuristics (SFDIPOT, tours, CRUD) give structure to curiosity.</li><li>Notes and debrief make the work visible and defensible.</li><li>Complement, never replace, scripted techniques.</li></ul></div></div><div class="section" id="s6-6"><h2><span class="sec-emoji">🏋️</span> Practice <span class="lvl b">Basic</span></h2>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 6.1 — Write charters</div><div class="ex-b"><p>Write three charters for a food-delivery app: ordering, payment, order tracking.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><ul><li>Explore the <strong>cart</strong> with different restaurants, quantities and coupons to discover price-calculation errors.</li><li>Explore <strong>payment</strong> using failed, cancelled and slow transactions to discover duplicate-charge or stuck-order problems.</li><li>Explore <strong>live tracking</strong> while switching networks and putting the app in the background to discover stale or wrong status.</li></ul></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 6.2 — 30-minute session</div><div class="ex-b"><p>Pick any website with a search box. Run a 30-minute session with the charter: <em>Explore search with unusual input to discover crashes and poor messages.</em> Log at least 5 notes (B/Q/I/T).</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>Ideas to try: empty search; 500 characters; only spaces; <code>&lt;script&gt;</code>; emoji; SQL quote; mixed languages; very common word; pressing Enter twice; search then Back; special filters; copy-paste with trailing newline.</p></div></details></div></div>
+</section>
+<section class="panel" id="t7" data-toc='[["s7-1", "Mini project \u2014 design tests for a real feature"], ["s7-2", "Self-review checklist"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 07 · Hands-on</p><h1 class="panel-title">Practice Lab</h1><p class="panel-subtitle">Apply every technique to one realistic feature, then check your own solution.</p></div>
+<div class="section" id="s7-1"><h2><span class="sec-emoji">🧪</span> Mini project — design tests for a real feature <span class="lvl b">Basic</span></h2>
+<p><strong>Feature: "Book a movie ticket".</strong> Rules:</p>
+<ul><li>User selects 1–6 seats per booking.</li><li>Seat price ₹200 (standard) or ₹350 (premium).</li><li>Booking is allowed up to 30 minutes before show time.</li><li>Coupon <code>MOVIE10</code> gives 10% off, only if total ≥ ₹1,000.</li><li>Seats are held for 5 minutes during payment; then released.</li></ul>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Task A — Equivalence & boundaries</div><div class="ex-b"><p>Design tests for number of seats, coupon eligibility and booking cut-off.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><table class="sm"><tr><th>Area</th><th>Tests</th></tr><tr><td>Seats</td><td>0 ✗, 1 ✓, 2 ✓, 5 ✓, 6 ✓, 7 ✗, "abc", blank, -1</td></tr><tr><td>Coupon total</td><td>₹999.99 (no discount), ₹1,000.00 (10%), ₹1,000.01 (10%); coupon in lowercase; expired code</td></tr><tr><td>Cut-off</td><td>Book 31 min, 30 min, 29 min before show; at show time; after show</td></tr><tr><td>Seat type mix</td><td>All standard, all premium, mix (EP combination)</td></tr></table></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Task B — Decision table for the coupon</div><div class="ex-b"><p>Conditions: coupon valid? total ≥ 1000? Actions: apply 10% / show "coupon invalid" / show "minimum ₹1000".</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><table class="sm"><tr><th></th><th>R1</th><th>R2</th><th>R3</th><th>R4</th></tr><tr><td>Coupon valid</td><td>Y</td><td>Y</td><td>N</td><td>N</td></tr><tr><td>Total ≥ 1000</td><td>Y</td><td>N</td><td>Y</td><td>N</td></tr><tr><td>Apply 10%</td><td>✔</td><td></td><td></td><td></td></tr><tr><td>Msg: min ₹1000</td><td></td><td>✔</td><td></td><td></td></tr><tr><td>Msg: invalid coupon</td><td></td><td></td><td>✔</td><td>✔</td></tr></table></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Task C — State transition</div><div class="ex-b"><p>Seat states: Available → Held (5 min) → Booked, or Held → Available (timeout / cancel). Write 8 tests.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><ol><li>Available → Held when user proceeds to payment</li><li>Held → Booked on successful payment</li><li>Held → Available after 5:00 timeout</li><li>Held → Available on user cancel</li><li>Booked → Held (invalid) by another user</li><li>Two users select same seat simultaneously: only one gets Held</li><li>Payment succeeds at 4:59 vs 5:01 (boundary of hold)</li><li>Back button after Booked must not re-hold the seat</li></ol></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Task D — Exploratory charter</div><div class="ex-b"><p>Write a charter and 6 ideas.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p><strong>Charter:</strong> Explore the seat-selection and payment flow with slow network, double-clicks and multiple tabs to discover seat double-booking or lost payments.</p><p>Ideas: pay in two tabs; kill network after clicking Pay; change device clock; browser Back after success; session expiry on payment page; coupon applied then seats changed.</p></div></details></div></div><div class="section" id="s7-2"><h2><span class="sec-emoji">📝</span> Self-review checklist <span class="lvl b">Basic</span></h2>
+<ul><li>☐ Did I cover valid <em>and</em> invalid partitions?</li><li>☐ Did I test min−1, min, min+1, max−1, max, max+1?</li><li>☐ Did I check combinations of conditions (decision table)?</li><li>☐ Did I try illegal state transitions?</li><li>☐ Did I run at least one time-boxed exploratory session?</li><li>☐ Is every expected result traceable to a requirement?</li></ul></div>
+</section>
+<section class="panel" id="t8" data-toc='[["sq", "Knowledge check"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 08 · Assessment</p><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">21 timed multiple-choice questions in a secured full-screen test. Answers and explanations are shown after submission.</p></div>
+<div class="section" id="sq"><div class="quiz-card" id="quizRoot"></div></div>
+</section>
+  </main>
+</div>
+<script>
+/* ---------- Tabs, TOC, scroll spy ---------- */
+(function(){
+  const tabs=document.querySelectorAll('.tab'), panels=document.querySelectorAll('.panel');
+  const tocEl=document.getElementById('toc'), total=tabs.length, pt=document.getElementById('progressText');
+  function buildToc(panel){
+    const data=JSON.parse(panel.getAttribute('data-toc')||'[]');
+    tocEl.innerHTML=data.map(([id,l])=>`<li><a href="#${id}" data-target="${id}">${l}</a></li>`).join('');
+    const f=tocEl.querySelector('a'); if(f)f.classList.add('active');
+  }
+  let manual=null;
+  function activate(i){
+    tabs.forEach((t,k)=>t.classList.toggle('active',k===i));
+    panels.forEach((p,k)=>p.classList.toggle('active',k===i));
+    manual=null; buildToc(panels[i]); pt.textContent=`Tab ${i+1} of ${total}`;
+    window.scrollTo({top:0,behavior:'instant'});
+    tabs[i].scrollIntoView({inline:'center',block:'nearest'});
+  }
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('.toc-list a'); if(!a)return; e.preventDefault();
+    const el=document.getElementById(a.dataset.target);
+    manual=a.dataset.target; tocEl.querySelectorAll('a').forEach(x=>x.classList.toggle('active',x===a));
+    if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});
+  });
+  let tick=false;
+  function spy(){
+    if(manual){tick=false;return;}
+    const p=document.querySelector('.panel.active'); if(!p){tick=false;return;}
+    let cur=null; const secs=[...p.querySelectorAll('.section')];
+    secs.forEach(s=>{ if(s.getBoundingClientRect().top-180<0)cur=s.id; });
+    if(secs.length && window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-4) cur=secs[secs.length-1].id;
+    if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));
+    tick=false;
+  }
+  window.addEventListener('scroll',()=>{ if(!tick){requestAnimationFrame(spy);tick=true;} },{passive:true});
+  ['wheel','touchstart','keydown','pointerdown'].forEach(ev=>window.addEventListener(ev,e=>{ if(e.target&&e.target.closest&&e.target.closest('.toc-list a'))return; manual=null; },{passive:true}));
+  window.resetProgress=()=>activate(0);
+  activate(0);
+})();
+
+
+const __root=document.getElementById('quizRoot');
+if(__root){__root.innerHTML='<div class="qz-card"><h2 style="margin-top:0">Test Design &amp; Techniques — Final Assessment</h2>'
++'<p style="color:var(--ink-soft);font-size:14px;line-height:1.6">A timed, proctored, exam-style assessment. Questions are shuffled on every attempt and answers with explanations are shown only after you submit.</p>'
++'<ul class="qz-list"><li><b>Questions</b><span>21 multiple-choice</span></li><li><b>Time limit</b><span>32 min</span></li><li><b>Secure mode</b><span>Fullscreen · 3 warnings → auto-submit</span></li></ul>'
++'<div class="qz-center"><button class="qz-btn" id="assessStartBtn" type="button">▶ Start Assessment</button></div></div><div id="scoreBoard" class="score-board" style="display:none"></div>';}
+window.MT_EXAM = {"slug": "1_test_design_techniques", "title": "Test Design & Techniques · Manual Testing", "minPerQ": 1.5, "assess": [{"q": "Why is exhaustive testing impractical?", "options": ["Testers are slow", "The number of input combinations is practically infinite", "Developers refuse", "Tools are expensive"], "answer": 1, "exp": "Even simple forms have astronomically many combinations, so tests must be selected using techniques and risk."}, {"q": "Which sequence describes how a bug appears?", "options": ["Failure → defect → error", "Defect → error → failure", "Error → defect → failure", "Defect → failure → error"], "answer": 2, "exp": "A human error creates a defect; when executed the defect may produce a failure."}, {"q": "In Equivalence Partitioning, how many values do you normally test from one partition?", "options": ["All of them", "One representative", "Exactly three", "Only the boundaries"], "answer": 1, "exp": "Values in a partition are expected to behave the same, so one representative is enough."}, {"q": "A field accepts 18–60. Which is NOT in the usual 3-value BVA set?", "options": ["17", "19", "35", "61"], "answer": 2, "exp": "35 is a mid-range EP value. BVA uses 17, 18, 19, 59, 60, 61."}, {"q": "When testing multiple invalid inputs on one form, you should usually:", "options": ["Make all invalid at once", "Make one invalid per test, others valid", "Test only valid data", "Test only the first field"], "answer": 1, "exp": "Varying one invalid value at a time avoids defect masking."}, {"q": "Order total ≥ ₹500 gets 10% discount; money step is 0.01. Boundary values for the limit are:", "options": ["499, 500, 501", "499.99, 500.00, 500.01", "400, 500, 600", "500 only"], "answer": 1, "exp": "Use the smallest currency unit: 499.99, 500.00, 500.01."}, {"q": "A Pass status is decided by comparing the actual result with:", "options": ["The developer's opinion", "The previous run", "The expected result from an independent oracle", "The tester's guess"], "answer": 2, "exp": "Expected results must come from requirements or domain rules."}, {"q": "Which technique is best when outcomes depend on combinations of business conditions?", "options": ["Decision table", "Error guessing", "Tours", "Smoke testing"], "answer": 0, "exp": "Decision tables enumerate condition combinations and their actions."}, {"q": "3 conditions with Yes/No values give how many rules in a full decision table?", "options": ["3", "6", "8", "9"], "answer": 2, "exp": "2³ = 8 combinations."}, {"q": "Pairwise testing aims to:", "options": ["Test every combination", "Cover every pair of parameter values with minimal tests", "Test two features only", "Test with two testers"], "answer": 1, "exp": "Most interaction bugs involve two parameters, so all-pairs gives high coverage with far fewer tests."}, {"q": "In a state table, the empty/invalid cells are important because they:", "options": ["Can be ignored", "Show transitions that must be rejected and need negative tests", "Show performance limits", "Show UI colours"], "answer": 1, "exp": "Illegal transitions are where defects often hide."}, {"q": "0-switch coverage means:", "options": ["Testing zero states", "Executing every valid single transition", "Testing without events", "Executing sequences of 3 transitions"], "answer": 1, "exp": "0-switch = each valid transition once; 1-switch = pairs of consecutive transitions."}, {"q": "Which statement about exploratory testing is TRUE?", "options": ["It is random clicking", "It combines learning, design and execution, guided by a charter", "It needs no notes", "It cannot find serious bugs"], "answer": 1, "exp": "It is structured by charters, time-boxes and notes."}, {"q": "A good charter includes:", "options": ["Exact click-by-click steps", "Area to explore, resources, and information to discover", "Only a bug count target", "Developer names"], "answer": 1, "exp": "Explore … with … to discover … — mission, not script."}, {"q": "Which heuristic helps you ask about Structure, Function, Data, Interfaces, Platform, Operations and Time?", "options": ["CRUD", "SFDIPOT", "INVEST", "SMART"], "answer": 1, "exp": "SFDIPOT is a product-coverage heuristic by James Bach."}, {"q": "The pesticide paradox suggests you should:", "options": ["Repeat the same tests forever", "Regularly review and refresh tests", "Stop testing", "Test only once"], "answer": 1, "exp": "The same tests eventually stop finding new defects; vary and update them."}, {"q": "Which pair of techniques is best for a numeric input with a valid range?", "options": ["State transition + tours", "EP + BVA", "Pairwise + checklists", "Use-case + SBTM"], "answer": 1, "exp": "EP identifies partitions; BVA tests their edges."}, {"q": "Reviewing requirements before coding answers which question?", "options": ["Are we building the product right? (verification)", "Are we building the right product? (validation)", "Is the server fast?", "Is the UI pretty?"], "answer": 0, "exp": "Verification checks work-products against specifications; validation checks fitness for real needs."}, {"q": "Cancel on a Shipped order should be blocked. This is a test of:", "options": ["An invalid transition", "A boundary", "A partition", "A tour"], "answer": 0, "exp": "Shipped → Cancel is an invalid cell in the state table; the system must reject it."}, {"q": "Defect clustering means:", "options": ["Bugs spread evenly", "A small number of modules contain most defects", "Defects are always duplicates", "Bugs only appear in UI"], "answer": 1, "exp": "Focus extra effort where defects have already been found."}, {"q": "Which is the best use of exploratory testing?", "options": ["Replace all regression tests", "Find what scripted tests missed, especially in new or poorly documented features", "Avoid documentation", "Run performance tests"], "answer": 1, "exp": "Exploration complements scripted tests and shines when specs are thin."}]};
+/* =====================================================================
+   Final assessment — full-screen, timed mock exam (graded in-browser)
+   ===================================================================== */
+(function(){
+  const C = window.MT_EXAM;
+  const BANK = C.assess.map((q,i)=>Object.assign({id:'q'+i}, q));
+  const EXAM_MIN = Math.max(5, Math.ceil(C.assess.length*C.minPerQ));
+  const EXAM_SECONDS = EXAM_MIN*60;
+  const LS_KEY = 'manualtesting_scores_' + C.slug;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash .card:hover{transform:none}
+  .exam-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9;padding:0}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-fswarn{position:fixed;inset:0;z-index:100003;background:rgba(15,23,42,.92);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#fff;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fswarn .fw-box{max-width:520px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .exam-fswarn h3{font-size:30px;font-weight:800;margin:0;display:flex;align-items:center;gap:12px;color:#fff}
+  .exam-fswarn p{margin:0;font-size:16px;color:#e2e8f0;line-height:1.5}
+  .exam-fswarn .fw-count{font-size:16px;font-weight:600;color:#fff}
+  .exam-fswarn .fw-btn{margin-top:6px;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:15px 26px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+  .exam-fswarn .fw-btn:hover{background:#000}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}.exam-q-pane{padding:20px}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+  function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function examDialog(title,msg,okLabel,cancel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">${cancel?'<button class="exam-btn nav" data-a="0">Cancel</button>':''}<button class="exam-btn primary" data-a="1">${okLabel||'OK'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d && cancel){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores(); a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: tab-switch / fullscreen-exit warnings (3 strikes -> auto-submit) ---- */
+  let warns=0, lastWarn=0, proctorOn=false;
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function hideFsWarn(){ const w=document.getElementById('examFsWarn'); if(w)w.remove(); }
+  function showFsWarn(n){
+    injectCss(); hideFsWarn();
+    const w=document.createElement('div'); w.className='exam-fswarn'; w.id='examFsWarn';
+    w.innerHTML='<div class="fw-box"><h3><span>&#9888;&#65039;</span> Fullscreen exited</h3>'+
+      '<p>The assessment must remain in fullscreen mode.</p>'+
+      '<div class="fw-count">Warning '+n+' of 3</div>'+
+      '<button class="fw-btn" id="examFsReturn">Return to assessment</button></div>';
+    document.body.appendChild(w);
+    const btn=document.getElementById('examFsReturn');
+    btn.addEventListener('click',()=>{
+      const el=document.documentElement;
+      const done=()=>{ fsWanted=true; hideFsWarn(); };
+      if(el.requestFullscreen){ el.requestFullscreen().then(done).catch(()=>{}); } else { done(); }
+    });
+    try{btn.focus();}catch(e){}
+  }
+  function countWarn(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<1500)return; lastWarn=now;
+    warns++;
+    if(warns>=3){ hideFsWarn(); examDialog('Test submitted','You left the test 3 times. It has been auto-submitted.'); submitExam(true); }
+    else if(kind==='fs'){ showFsWarn(warns); }
+    else { examDialog('Warning '+warns+' of 3','Switching tabs or leaving the window is not allowed. After 3 warnings the test is auto-submitted.'); }
+  }
+  function fsHandler(){
+    if(!examOn)return;
+    if(document.fullscreenElement){ hideFsWarn(); return; }
+    if(fsWanted){ countWarn('fs'); }
+  }
+  function visHandler(){ if(document.hidden){ showCover(); countWarn(); } else { hideCover(); } }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function keyGuard(e){ const k=(e.key||'').toLowerCase(); if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; } }
+  let fsWanted=false;
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+  }
+  function stopProctor(){
+    proctorOn=false; hideFsWarn();
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    hideCover();
+  }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; ${C.title} &mdash; Final Assessment</h2>
+      <p>A timed, proctored, exam-style assessment for the Manual Testing track.</p>
+      <ul>
+        <li><b>${BANK.length} questions</b>, shuffled every attempt</li>
+        <li><b>${EXAM_MIN}-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Correct answers and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> where your browser allows it</li>
+        <li><b>No tab / window switching</b> and <b>no exiting fullscreen (Esc)</b> &mdash; 3 warnings and the test <b>auto-submits</b></li>
+        <li>Copy and right-click are disabled during the test</li>
+      </ul>
+      <div style="display:flex;gap:10px"><button class="exam-btn nav" id="examCancel" style="flex:0 0 auto">Cancel</button>
+      <button class="exam-btn primary" id="examBegin" style="flex:1;padding:14px">Start Test &rarr;</button></div>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examCancel').addEventListener('click',()=>sp.remove());
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      fsWanted=false;
+      if(document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().then(()=>{fsWanted=true;}).catch(()=>{}); }
+      sp.remove(); enterExam();
+    });
+  }
+
+  function enterExam(){
+    injectCss();
+    items = shuffle(BANK);
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    const ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">${C.title} &mdash; Final Assessment</div><div class="et-sub">${items.length} questions &middot; one attempt &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}</div>
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}" tabindex="0"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>{
+      const pick=()=>{ answers[id]=+el.dataset.i; pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); refreshPalette(); };
+      el.addEventListener('click',pick);
+      el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();} });
+    });
+    document.getElementById('examPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    document.getElementById('examNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();});
+    refreshPalette();
+    pane.scrollTop=0;
+  }
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examDialog('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test', true);
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    let score=0; items.forEach(it=>{ if(answers[it.id]===it.answer) score++; });
+    showResults(score);
+  }
+  function showResults(score){
+    const total=items.length; saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below, revisit the modules and try again.';
+    if(pct>=85)msg='Outstanding &mdash; you have expert-level command of this topic.';
+    else if(pct>=65)msg='Solid pass. Review the questions you missed and you are interview-ready.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the modules you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const you=answers[it.id], attempted=(you!=null), ok=attempted&&you===it.answer;
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      inner+= attempted ? '<div class="ra '+(ok?'cor':'wrong')+'">Your answer: '+String.fromCharCode(65+you)+'. '+it.options[you]+'</div>' : '<div class="ra wrong">Your answer: <i>Not answered</i></div>';
+      if(!ok) inner+='<div class="ra cor">Correct: '+String.fromCharCode(65+it.answer)+'. '+it.options[it.answer]+'</div>';
+      if(it.exp) inner+='<div class="rx">'+it.exp+'</div>';
+      return '<div class="r '+(ok?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; ${C.title}</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another attempt</button></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    document.getElementById('examRetry').addEventListener('click',()=>{ closeExam(); showSplash(); });
+    document.getElementById('examClose').addEventListener('click',closeExam);
+  }
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',showSplash);
+  renderScoreboard();
+})();
+
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+<style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body>
+</html>

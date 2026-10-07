@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Performance / Load Test Engineer — A Practical Course</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============= Notion-inspired theme ============= */
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#3776ab 0%,#ffd43b 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'Noto Sans Mono',monospace;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans';font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'Noto Sans Mono',monospace;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'Noto Sans Mono',monospace;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'Noto Sans Mono',monospace;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans';font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'Noto Sans Mono',monospace;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'Noto Sans Mono',monospace;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'Noto Sans Mono',monospace;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'Noto Sans Mono',monospace;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'Noto Sans Mono',monospace;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'Noto Sans Mono',monospace;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'Noto Sans Mono',monospace;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-explanation,.assess-fb-example{margin-top:10px;padding:12px 18px;border-radius:10px;background:#fff;border:1px solid var(--line);font-size:14px;line-height:1.6;color:var(--ink)}
+.assess-fb-example{background:var(--bg-soft)}
+.assess-fb-explanation strong,.assess-fb-example strong{color:var(--ink)}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'Noto Sans Mono',monospace;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+</style>
+<!-- ── Global theme overlay (DESIGN-CBuddy.md) ── -->
+<link rel="stylesheet" href="/theme-cbuddy.css">
+<style>
+/* CareerBuddy: sticky sidebar visible scrollbar */
+.toc,.sidebar,.sidenav{scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc::-webkit-scrollbar,.sidebar::-webkit-scrollbar,.sidenav::-webkit-scrollbar{width:9px;height:9px}
+.toc::-webkit-scrollbar-thumb,.sidebar::-webkit-scrollbar-thumb,.sidenav::-webkit-scrollbar-thumb{background:#cbd2e0;border-radius:8px}
+.toc::-webkit-scrollbar-thumb:hover,.sidebar::-webkit-scrollbar-thumb:hover,.sidenav::-webkit-scrollbar-thumb:hover{background:#9aa4b8}
+.toc::-webkit-scrollbar-track,.sidebar::-webkit-scrollbar-track,.sidenav::-webkit-scrollbar-track{background:transparent}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700;800&display=swap">
+<style>
+/* -- Unify typography: Noto Sans everywhere (CareerBuddy) -- */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,dl,dt,dd,td,th,div,section,article,header,footer,nav,aside,main,label,button,input,select,textarea,blockquote,figcaption,small,strong,b,em,i{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif !important}
+.material-symbols-outlined,.material-icons{font-family:'Material Symbols Outlined','Material Icons' !important}
+code,pre,kbd,samp,tt,.mono,[class*="mono"],[class*="Mono"],[class*="code"],[class*="Code"],[class*="tok"],[class*="hljs"]{font-family:'Noto Sans Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+<style>.brand-mark{background:linear-gradient(135deg,#14213D 0%,#2f7d5b 100%)!important}.toc-list a.active{background:#16233f}</style>
+<style>
+/* Tabs: 1px gap between buttons + clearly highlighted active tab */
+.tabbar,.tabs,.tab-bar{gap:1px !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important;transition:background .15s,color .15s,box-shadow .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active,.tab-btn.active,[role="tab"][aria-selected="true"]{background:#14213D !important;color:#fff !important;font-weight:700 !important;border-radius:8px !important;border-bottom-color:transparent !important;box-shadow:0 2px 6px rgba(20,33,61,.28)}
+.tab.active b,.tab.active .tab-num{color:#fff !important}
+.tab:focus-visible{outline:2px solid #FCA311;outline-offset:1px}
+</style>
+<style>
+/* Top navbar: always visible while scrolling, tabs scroll sideways */
+header,.header{position:sticky !important;top:0 !important;z-index:60 !important}
+.tabbar{overflow-x:auto;overscroll-behavior-x:contain;cursor:grab;-webkit-overflow-scrolling:touch}
+.tabbar.dragging{cursor:grabbing;user-select:none}
+</style>
+<style id="examPrintCss">@media print{html{display:none !important}}</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header"><div class="header-top">
+<div class="brand"><div class="brand-mark">PT</div><span>Performance Engineering<span class="brand-sub"> · Performance / Load Test Engineer</span></span></div>
+<div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 5</span></span><button class="btn" onclick="resetProgress()">Reset</button></div></div>
+<nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Overview &amp; Fundamentals</button><button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> Core Concepts &amp; Practice</button><button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> Advanced &amp; Workflows</button><button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> Projects &amp; Interview</button><button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> Assessment &amp; Summary</button></nav></header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside>
+<main class="main">
+<section class="panel active" id="t1" data-toc='[["s1-1", "1. Course Overview"], ["s1-2", "2. Learning Objectives"], ["s1-3", "3. Prerequisites"], ["s1-4", "4. Fundamentals"]]'><div class="panel-header"><div class="panel-eyebrow">Module 01 · Sections 1–4</div><h1 class="panel-title">Course Overview &amp; Fundamentals</h1><p class="panel-subtitle">Understand what a performance engineer does, what you will learn, what you need first and how a performance test lifecycle works.</p><div class="diagram" style="padding:0;border:0"><svg viewBox="0 0 900 110" xmlns="http://www.w3.org/2000/svg" style="border-radius:14px"><defs><linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#14213D"/><stop offset="1" stop-color="#2f7d5b"/></linearGradient></defs><rect width="900" height="110" fill="url(#g1)"/><text x="50" y="75" font-size="44">🧭</text><text x="880" y="98" text-anchor="end" fill="#fff" opacity=".85" font-family="Noto Sans,sans-serif" font-size="14" font-weight="600">OVERVIEW</text></svg></div></div><div class="section" id="s1-1"><h2><span class="sec-emoji">📘</span> 1. Course Overview</h2><p>Every system is fast with one user. A <strong>Performance / Load Test Engineer</strong> finds out what happens when thousands of people arrive at once: whether pages stay quick, whether errors appear, and where the system finally breaks. You design realistic traffic, apply it, watch the system and explain <em>why</em> it slows down.</p><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🔫</div><div class="card-title">Load generation</div><div class="card-desc">JMeter, k6, Gatling and Locust: scripting realistic user journeys and ramping traffic.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">📡</div><div class="card-title">Monitoring and APM</div><div class="card-desc">Prometheus, Grafana, Dynatrace, New Relic and Datadog to see CPU, memory, latency and errors during a test.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🧠</div><div class="card-title">System and protocol knowledge</div><div class="card-desc">HTTP, WebSockets, TCP, memory leaks, CPU use and thread dumps.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">📈</div><div class="card-title">Analysis and modeling</div><div class="card-desc">Percentiles, throughput, Little's Law, baselines, capacity planning and bottleneck analysis.</div></div></div><div style="overflow-x:auto"><table><thead><tr><th>Test type</th><th>Question it answers</th></tr></thead><tbody><tr><td>Baseline</td><td>How does the system behave with a single user or low load?</td></tr><tr><td>Load</td><td>Does it meet targets at expected peak traffic?</td></tr><tr><td>Stress</td><td>Where does it break, and how does it fail?</td></tr><tr><td>Spike</td><td>Can it survive a sudden surge and recover?</td></tr><tr><td>Soak (endurance)</td><td>Does it stay stable for hours? Are there leaks?</td></tr><tr><td>Scalability / capacity</td><td>How much more load can we take if we add resources?</td></tr></tbody></table></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">🎯</span> 2. Learning Objectives</h2><p>By the end of this course you will be able to:</p><ul><li>Explain the main performance test types and choose the right one for a question</li><li>Turn a business requirement into measurable targets such as "p95 under 800 ms at 500 requests per second with under 1% errors"</li><li>Build a workload model from real usage and script it with JMeter, k6, Gatling or Locust</li><li>Monitor servers, databases and applications during a test with Prometheus, Grafana and an APM tool</li><li>Interpret percentiles, throughput and error rate, and apply Little's Law</li><li>Diagnose memory leaks, CPU saturation and thread problems</li><li>Create a baseline, plan capacity and write a clear performance report</li><li>Add performance checks to a CI/CD pipeline</li></ul></div><div class="section" id="s1-3"><h2><span class="sec-emoji">🧰</span> 3. Prerequisites</h2><p>You can start with modest experience. These basics make the course much easier.</p><div style="overflow-x:auto"><table><thead><tr><th>Area</th><th>What you should know</th></tr></thead><tbody><tr><td>Web and HTTP</td><td>Requests, responses, status codes, headers, cookies, JSON</td></tr><tr><td>Testing basics</td><td>Test cases, defects, test data, environments</td></tr><tr><td>Command line</td><td>Running programs, reading logs, simple Linux commands</td></tr><tr><td>A scripting language</td><td>JavaScript or Python at beginner level (loops, functions, JSON)</td></tr><tr><td>System basics</td><td>What CPU, memory, disk and network do on a server</td></tr></tbody></table></div><pre><span class="pre-lang">terminal</span><code>java -version        # needed for JMeter and Gatling
+node --version       # optional, for k6 scripts and tooling
+docker --version     # handy for Prometheus and Grafana</code></pre></div><div class="section" id="s1-4"><h2><span class="sec-emoji">🧱</span> 4. Fundamentals</h2><h3>What is Performance Testing?</h3><p>Performance testing answers one question: <strong>"Will the system stay fast and stable under real-world demand?"</strong> A Performance Engineer designs realistic traffic, applies it, observes the system and explains <em>why</em> it slows down.</p><table><tr><th>Test type</th><th>Goal</th><th>Typical shape</th></tr><tr><td>Baseline</td><td>Measure behaviour at 1 user / low load</td><td>Flat, short</td></tr><tr><td>Load</td><td>Validate expected peak traffic</td><td>Ramp up, hold steady</td></tr><tr><td>Stress</td><td>Find the breaking point</td><td>Keep ramping until failure</td></tr><tr><td>Spike</td><td>Sudden surge (flash sale)</td><td>Instant jump, drop</td></tr><tr><td>Soak / Endurance</td><td>Find leaks &amp; degradation over hours</td><td>Steady load, 4–24 h</td></tr><tr><td>Scalability</td><td>How throughput grows with resources</td><td>Step load vs. nodes</td></tr></table><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Always test with <strong>realistic user behaviour</strong>: think time, mixed transactions, production-like data and environment. Unrealistic tests give false confidence.</div></div><h3>Performance Test Lifecycle</h3><div class="diagram"><svg viewBox="0 0 920 90" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="74" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Goals &amp; SLAs</text><text x="149" y="50" text-anchor="middle" font-size="18" fill="#14213D">→</text><rect x="160" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="224" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Workload model</text><text x="299" y="50" text-anchor="middle" font-size="18" fill="#14213D">→</text><rect x="310" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="374" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Script</text><text x="449" y="50" text-anchor="middle" font-size="18" fill="#14213D">→</text><rect x="460" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="524" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Execute</text><text x="599" y="50" text-anchor="middle" font-size="18" fill="#14213D">→</text><rect x="610" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="674" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Analyse</text><text x="749" y="50" text-anchor="middle" font-size="18" fill="#14213D">→</text><rect x="760" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="824" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Report &amp; retest</text></svg></div><ol><li><strong>Define NFRs</strong> — e.g. "p95 &lt; 800 ms at 500 RPS, error rate &lt; 1%".</li><li><strong>Model workload</strong> — which journeys, what mix, how many concurrent users.</li><li><strong>Script &amp; parameterise</strong> — correlation, test data, assertions.</li><li><strong>Execute</strong> in a production-like environment while monitoring.</li><li><strong>Analyse</strong> — correlate client metrics with server metrics.</li><li><strong>Report</strong> findings, recommend fixes, retest.</li></ol></div></section>
+<section class="panel" id="t2" data-toc='[["s2-1", "5. Core Concepts"], ["s2-2", "6. Topics &amp; Subtopics"], ["s2-3", "7. Practical Examples"], ["s2-4", "8. Hands-on Practice"]]'><div class="panel-header"><div class="panel-eyebrow">Module 02 · Sections 5–8</div><h1 class="panel-title">Core Concepts &amp; Practice</h1><p class="panel-subtitle">Protocol fundamentals, load generation tools, statistics and a hands-on k6 lab.</p><div class="diagram" style="padding:0;border:0"><svg viewBox="0 0 900 110" xmlns="http://www.w3.org/2000/svg" style="border-radius:14px"><defs><linearGradient id="g2" x1="0" x2="1"><stop offset="0" stop-color="#14213D"/><stop offset="1" stop-color="#3b6fb0"/></linearGradient></defs><rect width="900" height="110" fill="url(#g2)"/><text x="50" y="75" font-size="44">⚙️</text><text x="880" y="98" text-anchor="end" fill="#fff" opacity=".85" font-family="Noto Sans,sans-serif" font-size="14" font-weight="600">CORE &amp; PRACTICE</text></svg></div></div><div class="section" id="s2-1"><h2><span class="sec-emoji">⚙️</span> 5. Core Concepts</h2><h3>HTTP / HTTPS</h3><p>Most load tests drive HTTP. Know what makes a request expensive.</p><pre><span class="pre-lang">http</span><code>GET /api/orders/42 HTTP/1.1
+Host: shop.example.com
+Authorization: Bearer eyJhbGciOi...
+Accept-Encoding: gzip
+Connection: keep-alive</code></pre><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🔑</div><div class="card-title">Keep-Alive</div><div class="card-desc">Reuses TCP connections; avoids repeated handshakes.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🔒</div><div class="card-title">TLS Handshake</div><div class="card-desc">Adds CPU + round trips; HTTPS tests cost more.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🗜️</div><div class="card-title">Compression</div><div class="card-desc">gzip/br reduce bytes but add CPU.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🚀</div><div class="card-title">HTTP/2 &amp; 3</div><div class="card-desc">Multiplexing reduces connection count.</div></div></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Break response time into <strong>DNS → TCP connect → TLS → waiting (TTFB) → download</strong>. k6 exposes these as <code>http_req_connecting</code>, <code>http_req_tls_handshaking</code>, <code>http_req_waiting</code>.</div></div><h3>WebSockets</h3><p>A persistent, full-duplex connection started with an HTTP <code>Upgrade</code>. Used for chat, trading, live dashboards. Load is measured by <strong>concurrent connections</strong> and <strong>messages/sec</strong>, not just requests.</p><pre><span class="pre-lang">javascript: k6 websocket</span><code>import ws from "k6/ws";
+export default function () {
+  ws.connect("wss://chat.example.com/socket", {}, (socket) =&gt; {
+    socket.on("open", () =&gt; socket.send(JSON.stringify({ type: "join" })));
+    socket.on("message", (m) =&gt; console.log(m));
+    socket.setTimeout(() =&gt; socket.close(), 30000);
+  });
+}</code></pre><h3>TCP/IP Essentials</h3><div class="diagram"><svg viewBox="0 0 770 90" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="74" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">SYN</text><text x="149" y="50" text-anchor="middle" font-size="18" fill="#14213D">→</text><rect x="160" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="224" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">SYN-ACK</text><text x="299" y="50" text-anchor="middle" font-size="18" fill="#14213D">→</text><rect x="310" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="374" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">ACK</text><text x="449" y="50" text-anchor="middle" font-size="18" fill="#14213D">→</text><rect x="460" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="524" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Data</text><text x="599" y="50" text-anchor="middle" font-size="18" fill="#14213D">→</text><rect x="610" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="674" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">FIN</text></svg></div><ul><li><strong>Ephemeral ports</strong> (~28k by default) limit outbound connections per source IP — a classic injector bottleneck.</li><li><strong>TIME_WAIT</strong> sockets pile up with short connections.</li><li><strong>Packet loss &amp; retransmits</strong> raise latency sharply.</li><li><strong>Connection pools</strong> in app and DB drivers cap concurrency.</li></ul><pre><span class="pre-lang">terminal: linux network checks</span><code>ss -s                         # socket summary
+ss -tan state time-wait | wc -l
+sysctl net.ipv4.ip_local_port_range
+ulimit -n                     # open file descriptor limit</code></pre></div><div class="section" id="s2-2"><h2><span class="sec-emoji">🗂️</span> 6. Topics &amp; Subtopics</h2><h3>Apache JMeter</h3><p>Java-based, GUI for building plans, CLI for running them. Great for HTTP, JDBC, JMS, FTP and many protocols. Test plan = <strong>Thread Group → Samplers → Config Elements → Assertions → Listeners</strong>.</p><pre><span class="pre-lang">terminal: run JMeter headless (never use the GUI to generate load)</span><code>jmeter -n -t checkout.jmx -l results.jtl \
+  -Jusers=200 -Jramp=120 -Jduration=600 \
+  -e -o ./html-report</code></pre><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🧵</div><div class="card-title">Thread Group</div><div class="card-desc">Virtual users, ramp-up and loop/duration.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">📨</div><div class="card-title">HTTP Sampler</div><div class="card-desc">The actual request sent to the server.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🔗</div><div class="card-title">Extractors</div><div class="card-desc">JSON/Regex extractor for correlation (tokens, IDs).</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">⏱️</div><div class="card-title">Timers</div><div class="card-desc">Constant/Gaussian timers model think time.</div></div></div><h3>k6 (Grafana k6)</h3><p>Developer-friendly, scripts in <strong>JavaScript</strong>, engine written in Go. Perfect for CI/CD and "performance as code". Thresholds turn a test into a pass/fail gate.</p><pre><span class="pre-lang">javascript: checkout.js</span><code>import http from "k6/http";
+import { check, sleep } from "k6";
+
+export const options = {
+  stages: [
+    { duration: "2m", target: 100 },  // ramp up
+    { duration: "5m", target: 100 },  // steady
+    { duration: "1m", target: 0 },    // ramp down
+  ],
+  thresholds: {
+    http_req_duration: ["p(95)&lt;800", "p(99)&lt;1500"],
+    http_req_failed:   ["rate&lt;0.01"],
+  },
+};
+
+export default function () {
+  const res = http.get("https://api.example.com/products");
+  check(res, { "status is 200": (r) =&gt; r.status === 200 });
+  sleep(1);                           // think time
+}</code></pre><pre><span class="pre-lang">terminal</span><code>k6 run checkout.js
+k6 run --out experimental-prometheus-rw checkout.js</code></pre><h3>Gatling</h3><p>Scala/Java/Kotlin DSL, asynchronous engine — very high load from a single machine. Produces rich HTML reports automatically.</p><pre><span class="pre-lang">java: simulation</span><code>public class ShopSim extends Simulation {
+  HttpProtocolBuilder http = http.baseUrl("https://shop.example.com");
+  ScenarioBuilder browse = scenario("Browse")
+    .exec(http("home").get("/").check(status().is(200)))
+    .pause(2)
+    .exec(http("search").get("/search?q=phone"));
+  { setUp(browse.injectOpen(rampUsersPerSec(5).to(50).during(300)))
+      .protocols(http); }
+}</code></pre><h3>Locust</h3><p>Pure <strong>Python</strong>. Users are classes, tasks are methods — very easy to add custom logic, and it scales out with master/worker nodes.</p><pre><span class="pre-lang">python: locustfile.py</span><code>from locust import HttpUser, task, between
+
+class ShopUser(HttpUser):
+    wait_time = between(1, 3)            # think time
+
+    @task(3)                             # weight 3
+    def browse(self):
+        self.client.get("/products")
+
+    @task(1)
+    def checkout(self):
+        with self.client.post("/cart", json={"sku": "A1"}, catch_response=True) as r:
+            if r.status_code != 201: r.failure("cart failed")</code></pre><pre><span class="pre-lang">terminal</span><code>locust -f locustfile.py --headless -u 200 -r 10 -t 10m --host https://shop.example.com</code></pre></div><div class="section" id="s2-3"><h2><span class="sec-emoji">💻</span> 7. Practical Examples</h2><h3>Percentiles: Why Averages Lie</h3><p>If 99 requests take 100 ms and 1 takes 10 s, the average is ~200 ms — yet one user in a hundred is suffering. Use <strong>percentiles</strong>.</p><table><tr><th>Metric</th><th>Meaning</th><th>Use for</th></tr><tr><td>p50 (median)</td><td>Half of requests are faster</td><td>Typical experience</td></tr><tr><td>p95</td><td>95% faster than this</td><td>Main SLA target</td></tr><tr><td>p99</td><td>99% faster than this</td><td>Tail latency, outliers</td></tr><tr><td>Max</td><td>Slowest request</td><td>Debugging only</td></tr></table><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Never average percentiles across instances or time windows. Merge raw histograms instead.</div></div><h3>Throughput: RPS / TPS & Little's Law</h3><p><strong>RPS</strong> = requests per second; <strong>TPS</strong> = business transactions per second (one checkout may be 6 requests).</p><pre><span class="pre-lang">little's law</span><code>Concurrent users (N) = Throughput (X) × Response time (R)  [+ think time Z]
+
+N = X × (R + Z)
+
+Example: target 200 TPS, R = 0.5 s, Z = 4.5 s
+        N = 200 × (0.5 + 4.5) = 1000 virtual users</code></pre><pre><span class="pre-lang">workload model example</span><code>Peak hour: 36,000 orders  → 10 orders/sec
+Checkout journey = 6 requests → 60 RPS for checkout
+Mix: 70% browse, 20% search, 10% checkout</code></pre></div><div class="section" id="s2-4"><h2><span class="sec-emoji">🧪</span> 8. Hands-on Practice</h2><h3>Creating a Baseline Test</h3><p>A baseline is your <strong>reference point</strong>: performance of a known-good build under controlled load. Every later result is compared with it.</p><ol><li>Freeze environment, data volume and build version.</li><li>Run a single-user test, then low load (e.g. 10% of peak).</li><li>Run each scenario at least 3 times; check variance (&lt;5–10%).</li><li>Store p50/p95/p99, RPS, error % and resource usage.</li><li>Re-run after every major release and compare for regression.</li></ol><pre><span class="pre-lang">terminal: automated regression gate</span><code>k6 run --summary-export=current.json checkout.js
+python compare.py baseline.json current.json --max-regression 10%</code></pre><h3>Lab: your first k6 load test</h3><p>Run a short load test against a public demo API. Use only systems you are allowed to test; keep the load small.</p><pre><span class="pre-lang">javascript</span><code>import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '30s', target: 10 },   // ramp up to 10 virtual users
+    { duration: '1m',  target: 10 },   // hold
+    { duration: '10s', target: 0 },    // ramp down
+  ],
+  thresholds: {
+    http_req_duration: ['p(95)&lt;800'],  // 95% of requests under 800 ms
+    http_req_failed:   ['rate&lt;0.01'],  // under 1% errors
+  },
+};
+
+export default function () {
+  const res = http.get('https://test.k6.io/');
+  check(res, { 'status is 200': (r) =&gt; r.status === 200 });
+  sleep(1);                            // think time between iterations
+}</code></pre><pre><span class="pre-lang">terminal</span><code>k6 run script.js</code></pre><ol><li>Run the script and read the summary: iterations, p95 latency, error rate.</li><li>Change the target to 20 users and run again.</li><li>Compare both runs and write two sentences: what changed and why.</li><li>Make the threshold fail on purpose and note how k6 reports it.</li></ol></div></section>
+<section class="panel" id="t3" data-toc='[["s3-1", "9. Intermediate Concepts"], ["s3-2", "10. Advanced Concepts"], ["s3-3", "11. Tools &amp; Workflows"], ["s3-4", "12. Testing &amp; Quality"]]'><div class="panel-header"><div class="panel-eyebrow">Module 03 · Sections 9–12</div><h1 class="panel-title">Advanced Concepts &amp; Workflows</h1><p class="panel-subtitle">Tool selection, monitoring and APM, deep diagnosis of leaks, CPU and threads, and quality targets in CI.</p><div class="diagram" style="padding:0;border:0"><svg viewBox="0 0 900 110" xmlns="http://www.w3.org/2000/svg" style="border-radius:14px"><defs><linearGradient id="g3" x1="0" x2="1"><stop offset="0" stop-color="#14213D"/><stop offset="1" stop-color="#7a3fb0"/></linearGradient></defs><rect width="900" height="110" fill="url(#g3)"/><text x="50" y="75" font-size="44">🚀</text><text x="880" y="98" text-anchor="end" fill="#fff" opacity=".85" font-family="Noto Sans,sans-serif" font-size="14" font-weight="600">ADVANCED &amp; WORKFLOWS</text></svg></div></div><div class="section" id="s3-1"><h2><span class="sec-emoji">📈</span> 9. Intermediate Concepts</h2><h3>Choosing the Right Tool</h3><table><tr><th>Tool</th><th>Language</th><th>Strength</th><th>Watch out for</th></tr><tr><td>JMeter</td><td>GUI / XML (Java)</td><td>Huge protocol support, plugins</td><td>Heavy on memory, XML merge conflicts</td></tr><tr><td>k6</td><td>JavaScript</td><td>CI-friendly, thresholds, low footprint</td><td>No browser-level load by default</td></tr><tr><td>Gatling</td><td>Scala / Java / Kotlin</td><td>Efficient engine, great reports</td><td>Steeper learning curve</td></tr><tr><td>Locust</td><td>Python</td><td>Flexible custom logic, distributed</td><td>Python GIL → more workers needed</td></tr></table><div class="callout note"><div class="callout-icon">📝</div><div class="callout-body">Interview tip: there is no "best" tool. Justify the choice by team skills, protocols, CI integration and scale needed.</div></div><h3>Why Monitoring Matters</h3><p>A load tool tells you <strong>what</strong> the user experienced (slow, errors). Monitoring tells you <strong>why</strong> (CPU saturation, DB locks, GC pauses). A great performance engineer always correlates both.</p><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft)">📐</div><div class="card-title">Metrics</div><div class="card-desc">Numbers over time: CPU, RPS, latency.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">📜</div><div class="card-title">Logs</div><div class="card-desc">Events and errors with context.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🧭</div><div class="card-title">Traces</div><div class="card-desc">Path of one request across services.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🧰</div><div class="card-title">APM</div><div class="card-desc">Code-level insight: slow methods, SQL, dependencies.</div></div></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Use the <strong>USE method</strong> for resources (Utilisation, Saturation, Errors) and the <strong>RED method</strong> for services (Rate, Errors, Duration).</div></div><h3>Prometheus</h3><p>Open-source time-series database that <strong>pulls (scrapes)</strong> metrics from targets over HTTP, and is queried with <strong>PromQL</strong>.</p><pre><span class="pre-lang">yaml: prometheus.yml</span><code>scrape_configs:
+  - job_name: "app"
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["app-1:8080", "app-2:8080"]</code></pre><pre><span class="pre-lang">promql</span><code># requests per second over 5 minutes
+rate(http_requests_total[5m])
+
+# p95 latency from a histogram
+histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))
+
+# error ratio
+sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))</code></pre><h3>Grafana</h3><p>Visualisation layer. Connects to Prometheus, InfluxDB, Loki, Elasticsearch and more. Build dashboards that show <strong>load-test metrics beside server metrics</strong> on the same time axis.</p><div class="diagram"><svg viewBox="0 0 620 90" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="74" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">k6 / JMeter</text><text x="149" y="50" text-anchor="middle" font-size="18" fill="#14213D">→</text><rect x="160" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="224" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Prometheus / Influx</text><text x="299" y="50" text-anchor="middle" font-size="18" fill="#14213D">→</text><rect x="310" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="374" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Grafana dashboard</text><text x="449" y="50" text-anchor="middle" font-size="18" fill="#14213D">→</text><rect x="460" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="524" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Alerts</text></svg></div><ul><li>Panels: RPS, p95/p99, error %, active VUs, CPU, memory, GC, DB connections.</li><li>Use annotations to mark test start/stop and deployments.</li><li>Alert rules notify Slack/Email when thresholds break.</li></ul></div><div class="section" id="s3-2"><h2><span class="sec-emoji">🚀</span> 10. Advanced Concepts</h2><h3>Memory Leak Profiling</h3><p>A leak shows up in <strong>soak tests</strong>: heap usage climbs after every GC and never returns to baseline, finally ending in <code>OutOfMemoryError</code>.</p><pre><span class="pre-lang">terminal: JVM</span><code>jcmd &lt;pid&gt; GC.heap_info
+jmap -dump:live,format=b,file=heap.hprof &lt;pid&gt;   # open in Eclipse MAT / VisualVM
+jstat -gcutil &lt;pid&gt; 5s</code></pre><div class="compare"><div class="compare-col"><h4>✅ Healthy</h4><p>Sawtooth heap: grows, GC drops it back to the same floor.</p></div><div class="compare-col"><h4>🚨 Leak</h4><p>Floor rises after each GC; old-gen keeps growing; GC time increases.</p></div></div><p>Common causes: unbounded caches, static collections, unclosed connections/streams, listeners never removed, thread-locals.</p><h3>CPU Utilisation</h3><table><tr><th>Signal</th><th>Meaning</th><th>Action</th></tr><tr><td>High user CPU</td><td>App code is busy (hot loops, JSON, crypto)</td><td>Profile with flame graphs</td></tr><tr><td>High system CPU</td><td>Kernel work: syscalls, context switches</td><td>Check threads, I/O, network</td></tr><tr><td>High iowait</td><td>Waiting for disk</td><td>Look at DB/storage</td></tr><tr><td>Load avg &gt; cores</td><td>Run-queue saturation</td><td>Scale out or optimise</td></tr></table><pre><span class="pre-lang">terminal</span><code>top -H -p &lt;pid&gt;       # per-thread CPU
+vmstat 5 | iostat -x 5
+perf top / async-profiler  # flame graphs</code></pre><h3>Thread Dump Analysis</h3><p>A thread dump is a snapshot of what every thread is doing. Take <strong>3 dumps, 10 seconds apart</strong> and compare — threads stuck in the same place are your suspects.</p><pre><span class="pre-lang">terminal</span><code>jstack -l &lt;pid&gt; &gt; dump1.txt        # or: kill -3 &lt;pid&gt;</code></pre><pre><span class="pre-lang">sample: blocked thread</span><code>"http-nio-8080-exec-17" #58 BLOCKED
+   java.lang.Thread.State: BLOCKED (on object monitor)
+   - waiting to lock &lt;0x00000007a1b2c3d0&gt; (a java.util.HashMap)
+   at com.shop.cart.CartService.update(CartService.java:88)
+   - locked &lt;0x00000007a1b2c3d0&gt; owned by "exec-04"</code></pre><table><tr><th>State</th><th>Typical diagnosis</th></tr><tr><td>RUNNABLE (same frame)</td><td>CPU hotspot or infinite loop</td></tr><tr><td>BLOCKED</td><td>Lock contention / synchronized bottleneck</td></tr><tr><td>WAITING on pool</td><td>Connection or thread-pool exhaustion</td></tr><tr><td>Deadlock</td><td>Circular lock; the JVM prints "Found one Java-level deadlock"</td></tr></table><h3>Bottleneck Analysis</h3><p>Follow the <strong>knee of the curve</strong>: as load rises, throughput flattens and latency shoots up — the first resource to saturate is the bottleneck.</p><table><tr><th>Symptom</th><th>Likely cause</th><th>Check</th></tr><tr><td>Latency up, CPU low</td><td>Locks, pool exhaustion, slow dependency</td><td>Thread dumps, DB waits</td></tr><tr><td>Latency + CPU both high</td><td>Inefficient code or undersized hosts</td><td>Profiler / flame graph</td></tr><tr><td>Errors 502/503/504</td><td>Upstream overloaded, timeouts</td><td>LB &amp; app logs</td></tr><tr><td>Only p99 bad</td><td>GC pauses, cold caches, noisy neighbour</td><td>GC logs, per-instance split</td></tr><tr><td>Throughput plateau</td><td>Connection or thread limit</td><td>Pool config, ulimit</td></tr></table><div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Fix <strong>one bottleneck at a time</strong> and retest — the next one is hiding behind it.</div></div></div><div class="section" id="s3-3"><h2><span class="sec-emoji">🛠️</span> 11. Tools &amp; Workflows</h2><h3>APM: Dynatrace, New Relic, Datadog</h3><p>Application Performance Monitoring tools use agents to capture <strong>distributed traces, slow SQL, JVM/CLR internals and dependencies</strong> automatically.</p><table><tr><th>Tool</th><th>Known for</th><th>Typical use in perf testing</th></tr><tr><td>Dynatrace</td><td>OneAgent auto-discovery, AI root-cause (Davis)</td><td>Automatic problem detection &amp; service flow</td></tr><tr><td>New Relic</td><td>Easy APM + NRQL queries</td><td>Transaction traces, error analytics</td></tr><tr><td>Datadog</td><td>Unified infra + APM + logs + dashboards</td><td>Correlate test load with hosts, containers, k8s</td></tr></table><pre><span class="pre-lang">terminal: tag load-test traffic so it is easy to filter</span><code># add a header the APM can group by
+k6 run -e RUN_ID=build-482 checkout.js
+# http.get(url, { headers: { "x-test-run": __ENV.RUN_ID } })</code></pre><h3>What to Watch During a Test</h3><table><tr><th>Layer</th><th>Key metrics</th><th>Red flag</th></tr><tr><td>Load generator</td><td>CPU, network, error rate</td><td>CPU &gt; 80% → results invalid</td></tr><tr><td>Web / App</td><td>RPS, latency, threads, GC, heap</td><td>Thread pool exhausted, long GC pauses</td></tr><tr><td>Database</td><td>Slow queries, locks, connections, IOPS</td><td>Connection pool at max, lock waits</td></tr><tr><td>Infra</td><td>CPU, memory, disk, network, pod restarts</td><td>Throttling, OOMKilled, swap usage</td></tr></table><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">If the <strong>load generator itself</strong> is saturated, your latency numbers are wrong. Always monitor the injector.</div></div></div><div class="section" id="s3-4"><h2><span class="sec-emoji">✅</span> 12. Testing &amp; Quality</h2><h3>Capacity Planning</h3><div class="diagram"><svg viewBox="0 0 620 90" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="74" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Measure capacity</text><text x="149" y="50" text-anchor="middle" font-size="18" fill="#14213D">→</text><rect x="160" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="224" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Forecast growth</text><text x="299" y="50" text-anchor="middle" font-size="18" fill="#14213D">→</text><rect x="310" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="374" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Add headroom</text><text x="449" y="50" text-anchor="middle" font-size="18" fill="#14213D">→</text><rect x="460" y="20" width="128" height="50" rx="10" fill="#eef1f7" stroke="#14213D"/><text x="524" y="50" text-anchor="middle" font-size="13" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Plan scaling</text></svg></div><pre><span class="pre-lang">example</span><code>1 node sustains 250 RPS at p95 &lt; 800 ms (CPU 70%)
+Expected peak next year: 1,800 RPS
+Nodes = 1800 / 250 = 7.2 → 8 nodes
+Add 30% headroom / N+1 failure → 11 nodes</code></pre><p>Always size at a safe utilisation (usually <strong>60–70% CPU</strong>), not at 100%.</p><h3>Targets, SLOs and quality gates</h3><p>A test without a target is just a measurement. Agree the numbers before you run anything.</p><div style="overflow-x:auto"><table><thead><tr><th>Measure</th><th>Example target</th><th>Notes</th></tr></thead><tbody><tr><td>Response time</td><td>p95 under 800 ms, p99 under 2 s</td><td>Use percentiles, not averages</td></tr><tr><td>Throughput</td><td>500 requests per second at peak</td><td>Derived from business volume and peak factor</td></tr><tr><td>Error rate</td><td>Under 1% (5xx and timeouts)</td><td>Count failed checks as errors too</td></tr><tr><td>CPU</td><td>Under 70% on application servers at peak</td><td>Leave headroom for spikes</td></tr><tr><td>Memory</td><td>Stable over a soak test, no steady growth</td><td>A rising line is a leak signal</td></tr><tr><td>Recovery time</td><td>Back to normal within 5 minutes after a spike</td><td>Check queues and connection pools</td></tr></tbody></table></div><h3>Performance in the pipeline</h3><ul><li>Run a short smoke load test (1–2 minutes) on every merge to catch big regressions.</li><li>Fail the build when a threshold such as p95 latency or error rate is breached.</li><li>Run the full load, stress and soak tests on a schedule against a production-like environment.</li><li>Compare each run with the stored baseline and keep trend graphs.</li></ul></div></section>
+<section class="panel" id="t4" data-toc='[["s4-1", "13. Real-World Projects"], ["s4-2", "14. Best Practices"], ["s4-3", "15. Common Errors &amp; Troubleshooting"], ["s4-4", "16. Interview Preparation"]]'><div class="panel-header"><div class="panel-eyebrow">Module 04 · Sections 13–16</div><h1 class="panel-title">Projects, Best Practices &amp; Interview</h1><p class="panel-subtitle">Build performance projects, follow best practice, troubleshoot bottlenecks and prepare for interviews.</p><div class="diagram" style="padding:0;border:0"><svg viewBox="0 0 900 110" xmlns="http://www.w3.org/2000/svg" style="border-radius:14px"><defs><linearGradient id="g4" x1="0" x2="1"><stop offset="0" stop-color="#14213D"/><stop offset="1" stop-color="#d9730d"/></linearGradient></defs><rect width="900" height="110" fill="url(#g4)"/><text x="50" y="75" font-size="44">🏗️</text><text x="880" y="98" text-anchor="end" fill="#fff" opacity=".85" font-family="Noto Sans,sans-serif" font-size="14" font-weight="600">PROJECTS &amp; INTERVIEW</text></svg></div></div><div class="section" id="s4-1"><h2><span class="sec-emoji">🏗️</span> 13. Real-World Projects</h2><h3>Writing the Report</h3><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🎯</div><div class="card-title">Summary</div><div class="card-desc">Pass/Fail vs SLA in two lines.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">📈</div><div class="card-title">Graphs</div><div class="card-desc">Latency, RPS, errors, CPU on one timeline.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🔎</div><div class="card-title">Findings</div><div class="card-desc">Bottleneck, evidence, impact.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🛠️</div><div class="card-title">Actions</div><div class="card-desc">Prioritised fixes and retest plan.</div></div></div><h3>Capstone projects with acceptance criteria</h3><div style="overflow-x:auto"><table><thead><tr><th>Project</th><th>What you build</th><th>Done when</th></tr></thead><tbody><tr><td>1. API load test</td><td>k6 or JMeter test for a REST API with realistic workload mix, test data, thresholds and think time</td><td>Thresholds defined from stated targets; results exported; report written</td></tr><tr><td>2. Monitoring stack</td><td>Docker Compose with Prometheus and Grafana showing CPU, memory, request rate and latency during a test</td><td>Dashboard shows load and system metrics on one timeline</td></tr><tr><td>3. Baseline and bottleneck report</td><td>Run baseline, load and stress tests on a demo application, find the first bottleneck and recommend a fix</td><td>Evidence from graphs and logs; fix proposed and retested</td></tr></tbody></table></div><h4>Project rubric</h4><div style="overflow-x:auto"><table><thead><tr><th>Area</th><th>Weight</th><th>What reviewers look for</th></tr></thead><tbody><tr><td>Workload realism</td><td>25%</td><td>Journey mix, think time, data variety, sensible user counts</td></tr><tr><td>Measurement</td><td>25%</td><td>Percentiles, throughput, errors and server metrics correlated</td></tr><tr><td>Analysis</td><td>25%</td><td>Clear bottleneck with evidence and impact</td></tr><tr><td>Reporting</td><td>15%</td><td>Short summary, graphs, findings, actions and retest plan</td></tr><tr><td>Repeatability</td><td>10%</td><td>Scripts and environment documented so the run can be repeated</td></tr></tbody></table></div></div><div class="section" id="s4-2"><h2><span class="sec-emoji">⭐</span> 14. Best Practices</h2><h3>Performance testing best practices</h3><div style="overflow-x:auto"><table><thead><tr><th>Practice</th><th>Why it matters</th></tr></thead><tbody><tr><td>Define targets and workload before scripting</td><td>Without them nobody can say pass or fail</td></tr><tr><td>Test in a production-like environment</td><td>A small test server gives numbers that do not transfer</td></tr><tr><td>Model real behaviour: think time, journey mix, data variety</td><td>Unrealistic traffic produces unrealistic results</td></tr><tr><td>Use percentiles and watch the tail</td><td>Averages hide the slowest users</td></tr><tr><td>Monitor the whole stack during every run</td><td>Latency without CPU, memory, database and network data cannot be explained</td></tr><tr><td>Ramp load gradually and hold it</td><td>Gives the system time to reach steady state</td></tr><tr><td>Change one variable at a time</td><td>Otherwise you cannot tell what caused a difference</td></tr><tr><td>Run each scenario more than once and check variance</td><td>A single run can be noise</td></tr><tr><td>Keep the load generator healthy</td><td>If the generator is saturated, you are measuring the tester</td></tr><tr><td>Store baselines and trend them over time</td><td>Regressions show up as drift long before they become incidents</td></tr></tbody></table></div><div class="callout note"><div class="callout-icon">📝</div><div class="callout-body"><strong>Rule of thumb:</strong> if the load generator CPU is above 70–80%, add generators or reduce per-machine load before you trust any result.</div></div></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🩺</span> 15. Common Errors &amp; Troubleshooting</h2><h3>Symptom, likely cause and fix</h3><div style="overflow-x:auto"><table><thead><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr></thead><tbody><tr><td>Errors climb as soon as load increases</td><td>Connection pool, thread pool or rate limit exhausted</td><td>Check pool metrics and server limits; raise limits or add capacity, then retest</td></tr><tr><td>Response time grows steadily during a soak test</td><td>Memory leak or growing queue</td><td>Take heap dumps over time, compare object growth and check queue depth</td></tr><tr><td>p95 is fine but p99 is terrible</td><td>Garbage collection pauses, lock contention or a slow dependency</td><td>Correlate slow requests with GC logs, thread dumps and downstream timings</td></tr><tr><td>Throughput flattens while CPU is low</td><td>Waiting on I/O, locks or a downstream service</td><td>Profile the database and external calls; look for blocked threads</td></tr><tr><td>All requests return the same cached response</td><td>Test data not parameterised, CDN or cache answering</td><td>Parameterise data and bypass or account for the cache deliberately</td></tr><tr><td>Script works for one user but fails under load</td><td>Missing correlation of tokens, sessions or dynamic values</td><td>Extract dynamic values from responses and reuse them per virtual user</td></tr><tr><td>Results differ wildly between runs</td><td>Shared environment noise, cold caches, background jobs</td><td>Freeze the environment, warm up, run at least three times and compare variance</td></tr><tr><td>Load generator crashes or lags</td><td>Not enough CPU, memory or network on the generator</td><td>Distribute load across generators and reduce logging and response storage</td></tr></tbody></table></div><h3>Bottleneck hunting routine</h3><ol><li>Find when the metric first degraded on the timeline.</li><li>Check each layer in order: load balancer, application, database, cache, network.</li><li>Look for the resource that saturates first: CPU, memory, connections, threads, disk, network.</li><li>Form a hypothesis, change one thing and retest.</li><li>Document evidence, the fix and the improvement.</li></ol></div><div class="section" id="s4-4"><h2><span class="sec-emoji">🎤</span> 16. Interview Preparation</h2><h3>Questions and model answers</h3><h4>Q1. What is the difference between load, stress, spike and soak testing?</h4><p><strong>Answer:</strong> Load tests expected peak, stress pushes past it to find the breaking point, spike applies a sudden surge, and soak holds steady load for hours to find leaks.</p><h4>Q2. Why do percentiles matter more than averages?</h4><p><strong>Answer:</strong> Averages hide outliers. p95 and p99 show what the slowest users experience, which is what SLAs usually target.</p><h4>Q3. Explain Little's Law.</h4><p><strong>Answer:</strong> L = λ × W: the average number of concurrent users equals the arrival rate times the average time each spends in the system. It links users, throughput and response time.</p><h4>Q4. What is think time and why include it?</h4><p><strong>Answer:</strong> The pause a real user takes between actions. Without it you generate unrealistic, much heavier traffic.</p><h4>Q5. How do you design a workload model?</h4><p><strong>Answer:</strong> Use production analytics to pick the main journeys and their mix, peak concurrency, data variety and ramp pattern, then confirm it with the product owner.</p><h4>Q6. What is correlation in a load script?</h4><p><strong>Answer:</strong> Extracting dynamic values such as session tokens from responses and sending them in later requests so each virtual user behaves like a real one.</p><h4>Q7. How do you identify a memory leak?</h4><p><strong>Answer:</strong> Run a soak test, watch heap and garbage collection trends, take heap dumps at intervals and compare which objects keep growing.</p><h4>Q8. JMeter, k6, Gatling or Locust?</h4><p><strong>Answer:</strong> JMeter has wide protocol support and a GUI, k6 suits CI with JavaScript and thresholds, Gatling is efficient with good reports, Locust is flexible Python. Choose by team skills, protocols and CI needs.</p><h4>Q9. What would you include in a performance report?</h4><p><strong>Answer:</strong> Summary versus targets, graphs of latency, throughput, errors and resource use on one timeline, findings with evidence, prioritised actions and a retest plan.</p><h4>Q10. How do you know your load generator is not the bottleneck?</h4><p><strong>Answer:</strong> Monitor its CPU, memory and network; if they are high, or response times differ between generators, add generators and rerun.</p></div></section>
+<section class="panel" id="t5" data-toc='[["s5-1", "17. Assessments"], ["s5-2", "18. Course Summary"]]'><div class="panel-header"><div class="panel-eyebrow">Module 05 · Sections 17–18</div><h1 class="panel-title">Assessment &amp; Course Summary</h1><p class="panel-subtitle">Test your knowledge with 50 questions and review the course summary.</p><div class="diagram" style="padding:0;border:0"><svg viewBox="0 0 900 110" xmlns="http://www.w3.org/2000/svg" style="border-radius:14px"><defs><linearGradient id="g5" x1="0" x2="1"><stop offset="0" stop-color="#14213D"/><stop offset="1" stop-color="#ad1a72"/></linearGradient></defs><rect width="900" height="110" fill="url(#g5)"/><text x="50" y="75" font-size="44">🏁</text><text x="880" y="98" text-anchor="end" fill="#fff" opacity=".85" font-family="Noto Sans,sans-serif" font-size="14" font-weight="600">ASSESSMENT</text></svg></div></div><div class="section" id="s5-1"><h2><span class="sec-emoji">📝</span> 17. Assessments</h2><p>50 multiple-choice questions on load tools, monitoring, protocols and performance analysis.</p><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div>
+<div class="assess-intro-text">A timed, exam-style final assessment for the Performance / Load Test Engineer track. Questions cover every module of the course and are shuffled on every attempt.</div>
+<ul class="assess-intro-list"><li><strong>20 Multiple-Choice questions</strong> — concept checks plus scenario-based judgement calls</li><li>25-minute timer, question palette, mark-for-review, full explanations after you submit.</li><li>Your attempts and top score are saved in this browser</li></ul>
+<button class="assess-start-btn" id="assessStartBtn" type="button">▶ Start Assessment</button></div>
+<div id="scoreBoard" class="score-board" style="display:none"></div></div><div class="section" id="s5-2"><h2><span class="sec-emoji">🏁</span> 18. Course Summary</h2><p>You learned how to plan, script, run, monitor and analyse performance tests, and how to turn measurements into clear, actionable findings.</p><div style="overflow-x:auto"><table><thead><tr><th>Area</th><th>Key takeaways</th></tr></thead><tbody><tr><td>Planning</td><td>Targets and workload model first; choose the test type to match the question</td></tr><tr><td>Load generation</td><td>JMeter, k6, Gatling and Locust; realistic journeys, data and think time</td></tr><tr><td>Monitoring</td><td>Prometheus, Grafana and APM show why latency changes</td></tr><tr><td>Fundamentals</td><td>HTTP, WebSockets, TCP, memory, CPU and threads explain most bottlenecks</td></tr><tr><td>Analysis</td><td>Percentiles, throughput, Little's Law, baselines and capacity planning</td></tr><tr><td>Reporting</td><td>Pass or fail versus targets, evidence, actions and retest</td></tr></tbody></table></div><h3>Formula cheat sheet</h3><div style="overflow-x:auto"><table><thead><tr><th>Measure</th><th>Formula</th></tr></thead><tbody><tr><td>Throughput</td><td>Requests ÷ time (RPS or TPS)</td></tr><tr><td>Little's Law</td><td>Concurrent users = throughput × average response time</td></tr><tr><td>Error rate</td><td>Failed requests ÷ total requests × 100</td></tr><tr><td>Percentile p95</td><td>Value below which 95% of samples fall</td></tr><tr><td>Required virtual users</td><td>Target RPS × (response time + think time)</td></tr><tr><td>Headroom</td><td>(Capacity − peak load) ÷ capacity × 100</td></tr></tbody></table></div><div class="callout success"><div class="callout-icon">🏁</div><div class="callout-body"><strong>Key takeaways</strong><ul><li>Measure percentiles, not averages.</li><li>Monitor the whole stack while you test.</li><li>Change one variable at a time.</li><li>Report evidence and a recommended fix.</li></ul></div></div></div></section>
+</main></div>
+<script>
+window.COURSE = {"slug": "performance-load-test-engineer", "title": "Performance / Load Test Engineer", "minutes": 25, "assess": [{"q": "Which test type applies expected peak traffic and holds it steady?", "options": ["Load test", "Stress test", "Spike test", "Smoke test"], "answer": 0, "exp": "A load test validates behaviour at expected peak volume.<br>Example: ramp to 500 users and hold for 30 minutes to confirm p95 stays under the SLA."}, {"q": "Which test best finds memory leaks?", "options": ["Spike test", "Soak (endurance) test", "Smoke test", "Baseline test"], "answer": 1, "exp": "Leaks appear only after long runs; soak tests hold steady load for hours.<br>Example: run 8 hours and watch whether heap floor rises after each GC."}, {"q": "In which language are k6 scripts written?", "options": ["Python", "Scala", "JavaScript", "XML"], "answer": 2, "exp": "k6 uses JavaScript scripts executed by a Go engine.<br>Example: <code>import http from 'k6/http'<\/code>."}, {"q": "Which tool defines users as Python classes with <code>@task<\/code> methods?", "options": ["Gatling", "Locust", "JMeter", "Dynatrace"], "answer": 1, "exp": "Locust is Python-based with HttpUser classes.<br>Example: <code>class ShopUser(HttpUser)<\/code>."}, {"q": "How should JMeter be used to generate real load?", "options": ["GUI mode", "Headless CLI (-n) mode", "Only via browser", "With the View Results Tree on"], "answer": 1, "exp": "GUI mode consumes resources and distorts results.<br>Example: <code>jmeter -n -t plan.jmx -l out.jtl<\/code>."}, {"q": "What does a k6 <code>threshold<\/code> do?", "options": ["Limits CPU", "Sets pass/fail criteria for metrics", "Adds think time", "Records video"], "answer": 1, "exp": "Thresholds fail the run when a metric breaches its limit.<br>Example: <code>http_req_duration: ['p(95)&lt;800']<\/code>."}, {"q": "Prometheus collects metrics mainly by:", "options": ["Receiving pushes only", "Scraping (pulling) targets over HTTP", "Reading logs", "Running load tests"], "answer": 1, "exp": "Prometheus scrapes /metrics endpoints at intervals.<br>Example: <code>scrape_interval: 15s<\/code>."}, {"q": "Which PromQL function gives per-second rate of a counter?", "options": ["sum()", "rate()", "max()", "label_replace()"], "answer": 1, "exp": "rate() converts a counter into a per-second value over a window.<br>Example: <code>rate(http_requests_total[5m])<\/code>."}, {"q": "What is Grafana primarily used for?", "options": ["Generating load", "Visualising metrics on dashboards", "Compiling code", "Managing Git"], "answer": 1, "exp": "Grafana builds dashboards and alerts from many data sources.<br>Example: plot k6 p95 beside CPU on one time axis."}, {"q": "Which method focuses on Rate, Errors and Duration of services?", "options": ["USE method", "RED method", "STAR method", "SMART method"], "answer": 1, "exp": "RED is the service-level monitoring method.<br>Example: dashboard with RPS, 5xx %, and p95 latency."}, {"q": "What is APM used for?", "options": ["Code-level tracing of transactions and dependencies", "Writing test data", "Load balancing", "Compressing images"], "answer": 0, "exp": "APM agents capture traces, slow SQL and service maps.<br>Example: Dynatrace shows which SQL query slows the checkout."}, {"q": "Why must the load generator be monitored?", "options": ["Not needed", "A saturated injector produces invalid latency numbers", "To reduce costs", "To store reports"], "answer": 1, "exp": "If the injector is overloaded, measured time includes its own delay.<br>Example: injector CPU 95% → add more load generators."}, {"q": "Which TLS-related cost makes HTTPS tests heavier than HTTP?", "options": ["Handshake CPU and round trips", "Smaller payloads", "No keep-alive possible", "DNS removal"], "answer": 0, "exp": "TLS handshake adds CPU and latency, mitigated by connection reuse.<br>Example: keep-alive amortises one handshake over many requests."}, {"q": "A WebSocket load test is best measured by:", "options": ["Only page-load time", "Concurrent connections and messages per second", "Disk size", "Git commits"], "answer": 1, "exp": "WebSockets are long-lived, so connections and message rates matter.<br>Example: 10,000 open sockets, 5,000 msgs/s."}, {"q": "A heap whose post-GC floor keeps rising indicates:", "options": ["Healthy behaviour", "A probable memory leak", "Network packet loss", "Low CPU"], "answer": 1, "exp": "Healthy heaps return to the same floor after GC.<br>Example: 400 MB → 600 MB → 800 MB after each full GC."}, {"q": "Many threads in BLOCKED state on the same monitor suggest:", "options": ["Lock contention", "Network outage", "Disk full", "Cold cache only"], "answer": 0, "exp": "Threads waiting on one lock serialize the work.<br>Example: synchronized HashMap in CartService."}, {"q": "Why take several thread dumps instead of one?", "options": ["To compare and spot threads stuck in the same place", "To use more disk", "It is required by JVM", "To reduce CPU"], "answer": 0, "exp": "Single dumps are snapshots; repeated ones show persistence.<br>Example: three dumps 10 s apart all show a thread in the same DB call."}, {"q": "Why use p95/p99 rather than average latency?", "options": ["Averages hide slow tail requests", "Averages are illegal", "Percentiles are faster to compute", "They ignore errors"], "answer": 0, "exp": "Outliers affect real users but vanish in the mean.<br>Example: avg 200 ms but p99 10 s."}, {"q": "Using Little's Law, 100 TPS with 1 s total cycle time (R+Z) needs how many users?", "options": ["10", "100", "1000", "1"], "answer": 1, "exp": "N = X × (R+Z) = 100 × 1.<br>Example: 100 TPS × 1 s = 100 virtual users."}, {"q": "Latency is high while CPU is low. The most likely cause is:", "options": ["Waiting on locks, pools or a slow dependency", "Insufficient CPU", "Too many load generators", "Compression"], "answer": 0, "exp": "Idle CPU with slow responses means threads are waiting, not computing.<br>Example: DB connection pool exhausted at 50/50."}, {"q": "A stress test differs from a load test because it:", "options": ["Uses fewer users", "Pushes load beyond expected capacity to find the breaking point and recovery behaviour", "Runs for exactly one minute", "Only checks the UI"], "answer": 1, "exp": "Stress tests exceed normal limits to see how and where the system fails."}, {"q": "A spike test applies:", "options": ["Only database queries", "No load", "A slow steady increase", "A sudden, sharp jump in load"], "answer": 3, "exp": "Spike tests check whether the system survives and recovers from abrupt surges."}, {"q": "A soak (endurance) test runs:", "options": ["A few seconds at maximum load", "A long duration at moderate load to expose leaks and degradation", "Only on the database", "Only at night with no users"], "answer": 1, "exp": "Long runs reveal memory leaks, connection leaks and slow degradation."}, {"q": "Throughput is best defined as:", "options": ["Time for one request", "Work completed per unit time, such as requests per second", "Number of testers", "CPU temperature"], "answer": 1, "exp": "Throughput measures how much the system processes over time."}, {"q": "What is think time in a load script?", "options": ["Network latency", "Time to write the script", "Server processing time", "A simulated pause between user actions"], "answer": 3, "exp": "Think time models real users reading and deciding between steps."}, {"q": "Why use a gradual ramp-up?", "options": ["To avoid a cold-start shock and see how metrics change as load grows", "To skip warm-up", "To hide errors", "To save licence cost"], "answer": 0, "exp": "Ramping reveals the load level at which latency or errors begin to rise."}, {"q": "Correlation in a load test script means:", "options": ["Extracting dynamic values such as session tokens from responses and reusing them in later requests", "Compressing data", "Adding more users", "Comparing two reports"], "answer": 0, "exp": "Without correlation, replayed requests fail because tokens and IDs are stale."}, {"q": "Parameterization is used to:", "options": ["Feed different data, such as users and search terms, to each virtual user", "Rename tests", "Shorten the report", "Raise the timeout"], "answer": 1, "exp": "Unique data avoids unrealistic cache hits and duplicate-data errors."}, {"q": "A p95 response time of 800 ms means:", "options": ["95% of requests were slower than 800 ms", "800 requests failed", "The average is 800 ms", "95% of requests completed within 800 ms"], "answer": 3, "exp": "The 95th percentile is the value below which 95% of samples fall."}, {"q": "Which JMeter mode is recommended for real load tests?", "options": ["Design mode", "Non-GUI (command line) mode", "Debug mode only", "GUI mode"], "answer": 1, "exp": "Run <code>jmeter -n -t plan.jmx -l results.jtl<\/code>; the GUI consumes resources and skews results."}, {"q": "In JMeter, which element extracts a value from a JSON response?", "options": ["JSON Extractor (a post-processor)", "Thread Group", "Timer", "Listener"], "answer": 0, "exp": "Post-processors such as the JSON Extractor capture values into variables."}, {"q": "How does Locust scale to many users?", "options": ["It cannot scale", "A master coordinates multiple worker processes or machines", "By editing the browser", "Only by using a bigger monitor"], "answer": 1, "exp": "Distributed mode uses a master plus workers to generate more load."}, {"q": "In k6, VU stands for:", "options": ["Visual Update", "Verified Uptime", "Virtual User", "Variable Unit"], "answer": 2, "exp": "A VU is a concurrently running simulated user executing your script."}, {"q": "A constant-arrival-rate executor in k6:", "options": ["Starts iterations at a fixed rate regardless of response time (open model)", "Only works for WebSockets", "Holds a fixed number of VUs", "Stops after one request"], "answer": 0, "exp": "Arrival-rate executors model traffic where new users arrive independently of latency."}, {"q": "In an open workload model:", "options": ["Users only start after another finishes", "New users arrive independently of how slow the system is", "Only one user exists", "The test never ends"], "answer": 1, "exp": "Closed models wait for responses; open models keep arriving, so queues can build up."}, {"q": "Coordinated omission is a problem where:", "options": ["Servers omit headers", "The load tool slows its sending when the system is slow, hiding true latency", "Two testers work on the same script", "Results are exported twice"], "answer": 1, "exp": "It makes latency percentiles look better than what real users would experience."}, {"q": "A bottleneck is:", "options": ["The resource that limits overall system throughput", "A network cable", "A type of test script", "The fastest component"], "answer": 0, "exp": "Fixing anything other than the bottleneck yields little improvement."}, {"q": "Which symptom suggests connection pool exhaustion?", "options": ["Requests queue and latency climbs while CPU stays low", "Low latency and high throughput", "Disk space grows", "Fewer users"], "answer": 0, "exp": "Threads wait for a free connection, so time increases without using CPU."}, {"q": "Which tool helps find a slow SQL query?", "options": ["A spell checker", "The browser console only", "EXPLAIN plans and the slow query log", "A screenshot tool"], "answer": 2, "exp": "Execution plans and slow logs show which queries and indexes cost the most."}, {"q": "CPU saturation is indicated by:", "options": ["A faster network", "Low CPU and low load", "Utilisation near 100% with a growing run queue", "More free memory"], "answer": 2, "exp": "When processes wait for CPU, latency rises even if the application is correct."}, {"q": "Long garbage-collection pauses typically cause:", "options": ["Smaller logs", "Faster responses", "Lower memory use", "Latency spikes and stalls"], "answer": 3, "exp": "Stop-the-world pauses freeze request processing and appear as tail-latency spikes."}, {"q": "What is the purpose of a baseline test?", "options": ["To record reference metrics so later changes can be compared", "To measure UI colours", "To replace production", "To reduce users"], "answer": 0, "exp": "Without a baseline you cannot tell whether a change made things better or worse."}, {"q": "Why test with both cold and warm caches?", "options": ["It reduces test cost", "It is required by HTTP", "Cache behaviour never matters", "Performance can differ greatly when data is not yet cached"], "answer": 3, "exp": "Cold-cache runs show worst-case behaviour; warm runs show steady state."}, {"q": "Test data volume should ideally be:", "options": ["Random text", "Empty", "Production-like in size and distribution", "A single row"], "answer": 2, "exp": "Small datasets hide slow queries and index problems that appear at real scale."}, {"q": "The USE method examines each resource for:", "options": ["Utilisation, Saturation, Errors", "Usage, Storage, Exceptions", "Uptime, Speed, Efficiency", "Users, Sessions, Errors"], "answer": 0, "exp": "USE is a quick checklist for resources such as CPU, memory, disk and network."}, {"q": "An Apdex score measures:", "options": ["Number of servers", "User satisfaction with response times", "Code coverage", "Database size"], "answer": 1, "exp": "Apdex converts response times into satisfied, tolerating and frustrated user categories."}, {"q": "Gatling simulations are written using:", "options": ["COBOL", "A DSL in Scala, Java or Kotlin", "Shell scripts only", "Only a GUI recorder"], "answer": 1, "exp": "Gatling scenarios are code, which makes them version-controllable and reviewable."}, {"q": "Why run distributed load generators?", "options": ["A single machine may run out of CPU or network before the system under test does", "It removes the need for monitoring", "It makes reports shorter", "It is required for GET requests"], "answer": 0, "exp": "Generator limits can distort results, so spread the load across machines."}, {"q": "Why is a warm-up period often excluded from reported results?", "options": ["Tools cannot record it", "Warm-up always has zero errors", "It is illegal to report it", "JIT compilation, cache fills and connection setup distort early measurements"], "answer": 3, "exp": "Steady-state numbers are more representative once caches and pools are initialised."}, {"q": "A sudden rise in HTTP 503 responses under load most likely means:", "options": ["A server or dependency is overloaded or shedding load", "The CDN is faster", "The test script has a typo in the URL", "Think time is too long"], "answer": 0, "exp": "503 Service Unavailable is commonly returned when capacity limits are reached."}]};
+</script>
+<script>
+/* =========================================================
+   Tab switching, dynamic TOC, scroll-spy, progress pill
+   ========================================================= */
+(function(){
+  const tabs   = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel');
+  const tocEl  = document.getElementById('toc');
+  const total  = tabs.length;
+  const progressText = document.getElementById('progressText');
+
+  function buildToc(panel){
+    const data = JSON.parse(panel.getAttribute('data-toc') || '[]');
+    tocEl.innerHTML = data.map(([id,label]) =>
+      `<li><a href="#${id}" data-target="${id}">${label}</a></li>`
+    ).join('');
+    // first link active by default
+    const first = tocEl.querySelector('a');
+    if(first) first.classList.add('active');
+  }
+
+  function activate(idx){
+    tabs.forEach((t,i)=>t.classList.toggle('active', i===idx));
+    panels.forEach((p,i)=>p.classList.toggle('active', i===idx));
+    buildToc(panels[idx]);
+    progressText.textContent = `Tab ${idx+1} of ${total}`;
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+
+  tabs.forEach((t,i)=>{
+    t.addEventListener('click', ()=> activate(i));
+  });
+
+  // Smooth scroll inside the active tab
+  document.addEventListener('click', (e)=>{
+    const a = e.target.closest('.toc-list a');
+    if(!a) return;
+    e.preventDefault();
+    const id = a.getAttribute('data-target');
+    const el = document.getElementById(id);
+    if(el){
+      window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 130, behavior:'smooth'});
+    }
+  });
+
+  // Scroll spy — highlight the nearest visible section
+  let ticking = false;
+  function spy(){
+    const activePanel = document.querySelector('.panel.active');
+    if(!activePanel) return;
+    const sections = activePanel.querySelectorAll('.section');
+    const trigger  = 180; // px from top
+    let current = null;
+    sections.forEach(sec=>{
+      const rect = sec.getBoundingClientRect();
+      if(rect.top - trigger < 0) current = sec.id;
+    });
+    if(current){
+      tocEl.querySelectorAll('a').forEach(a=>{
+        a.classList.toggle('active', a.dataset.target === current);
+      });
+    }
+    ticking = false;
+  }
+  window.addEventListener('scroll', ()=>{
+    if(!ticking){ requestAnimationFrame(spy); ticking = true; }
+  }, {passive:true});
+
+  // Reset
+  window.resetProgress = function(){ activate(0); };
+
+  // Init
+  activate(0);
+})();
+
+/* =====================================================================
+   Final assessment — full-screen, timed mock exam (graded in-browser)
+   ===================================================================== */
+(function(){
+  const C = window.COURSE;
+  const BANK = C.assess.map((q,i)=>Object.assign({id:'q'+i}, q));
+  const EXAM_SECONDS = (C.minutes||60)*60;
+  const LS_KEY = 'rhrms_scores_' + C.slug;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.exam-mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.exam-mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .exam-card{border:1px solid #e9e9e7;background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9;padding:0}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-rev .rx pre{margin:8px 0 0;padding:10px 12px;font-size:12px;line-height:1.5;overflow-x:auto;white-space:pre;border-radius:8px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}.exam-q-pane{padding:20px}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+  function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function examDialog(title,msg,okLabel,cancel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">${cancel?'<button class="exam-btn nav" data-a="0">Cancel</button>':''}<button class="exam-btn primary" data-a="1">${okLabel||'OK'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d && cancel){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores(); a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: tab-switch / fullscreen-exit warnings (3 strikes -> auto-submit) ---- */
+  let warns=0, lastWarn=0, proctorOn=false;
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function proctorModal(title,msg,count,btn,wantFs){
+    return new Promise(res=>{
+      if(!document.getElementById('examWarnCss')){
+        const s=document.createElement('style'); s.id='examWarnCss';
+        s.textContent=`.exam-warn{position:fixed;inset:0;z-index:100003;background:rgba(27,40,68,.97);color:#fff;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-family:'Noto Sans',system-ui,sans-serif}
+.exam-warn .ew-box{max-width:620px;width:100%}
+.exam-warn .ew-title{display:flex;align-items:center;justify-content:center;gap:14px;font-size:34px;font-weight:800;margin:0 0 20px}
+.exam-warn .ew-title span{font-size:32px}
+.exam-warn p{font-size:16px;margin:0 0 20px;line-height:1.5}
+.exam-warn .ew-count{font-size:16px;margin:0 0 22px}
+.exam-warn .ew-btn{background:#0b1526;color:#fff;border:0;border-radius:10px;padding:16px 25px;font:700 16px 'Noto Sans',system-ui,sans-serif;cursor:pointer}
+.exam-warn .ew-btn:hover{background:#000}.exam-warn .ew-btn:focus-visible{outline:3px solid #FCA311;outline-offset:3px}`;
+        document.head.appendChild(s);
+      }
+      const old=document.getElementById('examWarn'); if(old)old.remove();
+      const d=document.createElement('div'); d.id='examWarn'; d.className='exam-warn';
+      d.setAttribute('role','alertdialog'); d.setAttribute('aria-modal','true'); d.setAttribute('aria-label',title);
+      d.innerHTML='<div class="ew-box"><div class="ew-title"><span>&#9888;&#65039;</span>'+title+'</div><p>'+msg+'</p>'+(count?'<div class="ew-count">Warning '+count+' of 3</div>':'')+'<button type="button" class="ew-btn" id="examWarnBtn">'+btn+'</button></div>';
+      document.body.appendChild(d);
+      const b=d.querySelector('#examWarnBtn'); b.focus();
+      d.addEventListener('keydown',e=>{ if(e.key==='Tab'){e.preventDefault();b.focus();} });
+      b.addEventListener('click',()=>{
+        if(wantFs && !inFs()){ requestFs().then(()=>{fsWanted=true;}).catch(()=>{ fsGate(false); }); }
+        graceUntil=Date.now()+2500; d.remove(); res();
+      });
+    });
+  }
+  const WARN_MSG={
+    fs:['Fullscreen exited','The assessment must remain in fullscreen mode.'],
+    tab:['Tab switch detected','Leaving the assessment tab is not allowed.'],
+    blur:['Window focus lost','Switching to another window or application is not allowed.'],
+    shot:['Screenshot attempt detected','Screenshots and screen capture are not allowed during the assessment.'],
+    print:['Print or save attempt detected','Printing or saving the assessment page is not allowed.'],
+    leave:['Page closed or reloaded','Your previous attempt was interrupted because the page was closed or reloaded. This counts as a warning.']
+  };
+  const INT_KEY='rhrms_interrupt_'+C.slug;
+  let graceUntil=0;
+  function countWarn(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<1500)return; lastWarn=now;
+    warns++;
+    const w=WARN_MSG[kind]||WARN_MSG.tab;
+    if(warns>=3){
+      submitExam(true);
+      proctorModal(w[0],'You received 3 warnings, so the assessment has been closed and submitted automatically.',3,'View result',false);
+    } else {
+      proctorModal(w[0],w[1],warns,kind==='leave'?'Continue assessment':'Return to assessment',true);
+    }
+  }
+  /* --- extra restrictions: screenshot, print, window switch, page close --- */
+  function keyGuard(e){
+    const k=(e.key||'').toLowerCase(), c=e.ctrlKey||e.metaKey;
+    if(k==='printscreen'||e.code==='PrintScreen'){ e.preventDefault(); try{navigator.clipboard&&navigator.clipboard.writeText(' ');}catch(x){} countWarn('shot'); return false; }
+    if(e.metaKey&&e.shiftKey&&['3','4','5','s'].includes(k)){ e.preventDefault(); countWarn('shot'); return false; }
+    if(e.ctrlKey&&e.shiftKey&&k==='s'){ e.preventDefault(); countWarn('shot'); return false; }
+    if(c&&(k==='p'||k==='s')){ e.preventDefault(); countWarn('print'); return false; }
+    if(c&&['c','x','u','a'].includes(k)){ e.preventDefault(); return false; }
+    if(e.key==='F12'||(c&&e.shiftKey&&['i','j','c'].includes(k))){ e.preventDefault(); return false; }
+  }
+  function keyUpGuard(e){ if(e.key==='PrintScreen'||e.code==='PrintScreen'){ try{navigator.clipboard&&navigator.clipboard.writeText(' ');}catch(x){} countWarn('shot'); } }
+  function printHandler(){ countWarn('print'); }
+  function blurHandler(){
+    if(!examOn||Date.now()<graceUntil)return;
+    setTimeout(()=>{
+      if(!examOn||document.hidden||document.getElementById('examWarn')||Date.now()<graceUntil)return;
+      if(document.hasFocus&&document.hasFocus())return;
+      showCover(); countWarn('blur');
+    },200);
+  }
+  function focusHandler(){ if(!document.hidden) hideCover(); }
+  function pageHideHandler(){
+    if(!examOn)return;
+    const dup=(Date.now()-lastWarn<2000); /* tab-hidden already counted this close */
+    try{ localStorage.setItem(INT_KEY,JSON.stringify({warns:warns+(dup?0:1),ts:Date.now()})); }catch(e){}
+  }
+  function checkInterrupted(){
+    let p=null; try{ p=JSON.parse(localStorage.getItem(INT_KEY)||'null'); localStorage.removeItem(INT_KEY);}catch(e){}
+    if(!p||!p.warns||Date.now()-p.ts>6*3600*1000)return;
+    warns=Math.min(p.warns,3); lastWarn=Date.now();
+    if(warns>=3){
+      submitExam(true);
+      proctorModal(WARN_MSG.leave[0],'You closed or reloaded the assessment 3 times, so it has been closed and submitted automatically.',3,'View result',false);
+    } else proctorModal(WARN_MSG.leave[0],WARN_MSG.leave[1],warns,'Continue assessment',true);
+  }
+  function inFs(){ return !!(document.fullscreenElement||document.webkitFullscreenElement); }
+  function requestFs(){
+    const el=document.documentElement, fn=el.requestFullscreen||el.webkitRequestFullscreen;
+    if(!fn) return Promise.reject(new Error('Fullscreen not supported'));
+    try{ const r=fn.call(el,{navigationUI:'hide'}); return (r&&r.then)?r:new Promise((ok,no)=>setTimeout(()=>inFs()?ok():no(new Error('blocked')),400)); }catch(e){ return Promise.reject(e); }
+  }
+  function fsGate(first){
+    if(!examOn)return;
+    proctorModal('Fullscreen required', first?'The assessment must run in fullscreen mode. Click the button to continue.':'Your browser blocked fullscreen. Open this page directly in a browser tab (not inside a preview frame) and try again.', 0,'Enter fullscreen',false)
+      .then(()=>{ requestFs().then(()=>{fsWanted=true;}).catch(()=>{ fsGate(false); }); });
+  }
+  function fsHandler(){ if(examOn && !inFs() && fsWanted){ countWarn('fs'); } }
+  function visHandler(){ if(document.hidden){ showCover(); countWarn('tab'); } else { hideCover(); } }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  let fsWanted=false;
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);document.addEventListener('webkitfullscreenchange',fsHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keyup',keyUpGuard,true);
+    window.addEventListener('beforeprint',printHandler);
+    window.addEventListener('blur',blurHandler);
+    window.addEventListener('focus',focusHandler);
+    window.addEventListener('pagehide',pageHideHandler);
+    graceUntil=Date.now()+3000;
+  }
+  function stopProctor(){
+    proctorOn=false;
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);document.removeEventListener('webkitfullscreenchange',fsHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keyup',keyUpGuard,true);
+    window.removeEventListener('beforeprint',printHandler);
+    window.removeEventListener('blur',blurHandler);
+    window.removeEventListener('focus',focusHandler);
+    window.removeEventListener('pagehide',pageHideHandler);
+    try{localStorage.removeItem(INT_KEY);}catch(e){}
+    hideCover();
+  }
+
+  function showSplash(){
+    if(document.getElementById('examSplash')||document.getElementById('examOverlay'))return;
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="exam-card">
+      <h2>&#127919; ${C.title} &mdash; Final Assessment</h2>
+      <p>A timed, exam-style assessment modelled on real enterprise hiring screens.</p>
+      <ul>
+        <li><b>${BANK.length} questions</b>, shuffled every attempt</li>
+        <li><b>${C.minutes||60}-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Correct answers and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> where your browser allows it</li>
+        <li><b>Do not</b> press Esc, exit fullscreen, switch tabs or windows, take screenshots, print, or close/reload the page</li>
+        <li>Each violation is a <b>warning</b>. After <b>3 warnings</b> the assessment is <b>closed and auto-submitted</b></li>
+        <li>Closing or reloading the page counts as a warning on your next start. Copy, right-click and print are disabled</li>
+      </ul>
+      <div style="display:flex;gap:10px"><button class="exam-btn nav" id="examCancel" style="flex:0 0 auto">Cancel</button>
+      <button class="exam-btn primary" id="examBegin" style="flex:1;padding:14px">Start Test &rarr;</button></div>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examCancel').addEventListener('click',()=>sp.remove());
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      fsWanted=false;
+      const fsReq=requestFs();
+      sp.remove(); enterExam();
+      fsReq.then(()=>{fsWanted=true;}).catch(()=>{ fsGate(true); });
+    });
+  }
+
+  function enterExam(){
+    injectCss();
+    items = shuffle(BANK);
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    const ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">${C.title} &mdash; Final Assessment</div><div class="et-sub">${items.length} questions &middot; one attempt &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+    checkInterrupted();
+  }
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}${it.cat?' &middot; '+it.cat:''}</div>
+      <div class="exam-qtext">${it.q}</div>
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}" tabindex="0"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn exam-mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>{
+      const pick=()=>{ answers[id]=+el.dataset.i; pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); refreshPalette(); };
+      el.addEventListener('click',pick);
+      el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();} });
+    });
+    document.getElementById('examPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    document.getElementById('examNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();});
+    refreshPalette();
+    pane.scrollTop=0;
+  }
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examDialog('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test', true);
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    let score=0; items.forEach(it=>{ if(answers[it.id]===it.answer) score++; });
+    showResults(score);
+  }
+  function showResults(score){
+    const total=items.length; saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below, revisit the modules and try again.';
+    if(pct>=85)msg='Outstanding &mdash; you are operating at an expert level for this role.';
+    else if(pct>=(C.pass||65))msg='Solid pass. Review the questions you missed and you are interview-ready.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the modules you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const you=answers[it.id], attempted=(you!=null), ok=attempted&&you===it.answer;
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      inner+= attempted ? '<div class="ra '+(ok?'cor':'wrong')+'">Your answer: '+String.fromCharCode(65+you)+'. '+it.options[you]+'</div>' : '<div class="ra wrong">Your answer: <i>Not answered</i></div>';
+      if(!ok) inner+='<div class="ra cor">Correct: '+String.fromCharCode(65+it.answer)+'. '+it.options[it.answer]+'</div>';
+      if(it.exp) inner+='<div class="rx">'+it.exp+'</div>';
+      return '<div class="r '+(ok?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; ${C.title}</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another attempt</button></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    document.getElementById('examRetry').addEventListener('click',()=>{ closeExam(); showSplash(); });
+    document.getElementById('examClose').addEventListener('click',closeExam);
+  }
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    fsWanted=false; if(inFs()){ (document.exitFullscreen||document.webkitExitFullscreen).call(document); }
+  }
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',showSplash);
+  renderScoreboard();
+})();
+</script>
+
+<script>
+(function(){
+  const t=document.getElementById('tabbar'); if(!t)return;
+  t.addEventListener('wheel',e=>{ if(t.scrollWidth>t.clientWidth && Math.abs(e.deltaY)>Math.abs(e.deltaX)){ t.scrollLeft+=e.deltaY; e.preventDefault(); } },{passive:false});
+  let down=false,sx=0,sl=0,moved=false;
+  t.addEventListener('pointerdown',e=>{ if(e.pointerType==='mouse'&&e.button!==0)return; down=true;moved=false;sx=e.clientX;sl=t.scrollLeft; });
+  window.addEventListener('pointermove',e=>{ if(!down)return; const dx=e.clientX-sx; if(Math.abs(dx)>5){moved=true;t.classList.add('dragging');} if(moved)t.scrollLeft=sl-dx; });
+  window.addEventListener('pointerup',()=>{ down=false; setTimeout(()=>t.classList.remove('dragging'),0); });
+  t.addEventListener('click',e=>{ if(moved){ e.stopPropagation(); e.preventDefault(); moved=false; } },true);
+  new MutationObserver(()=>{ const a=t.querySelector('.tab.active'); if(a) a.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'}); }).observe(t,{subtree:true,attributes:true,attributeFilter:['class']});
+})();
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+<style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body></html>
