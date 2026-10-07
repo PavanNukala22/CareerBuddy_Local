@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Supervisor — Role Learning Module</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#d9730d 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans',system-ui,sans-serif;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans',system-ui,sans-serif;font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'Noto Sans',system-ui,sans-serif;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'Noto Sans',system-ui,sans-serif;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'Noto Sans',system-ui,sans-serif;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'Noto Sans',system-ui,sans-serif;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'Noto Sans',system-ui,sans-serif;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'Noto Sans',system-ui,sans-serif;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+
+/* ============= Module additions (same visual language) ============= */
+.table-wrap{overflow-x:auto;margin:16px 0;-webkit-overflow-scrolling:touch}
+.table-wrap table{margin:0;min-width:560px}
+.formula{display:inline-block;font-size:12.5px;background:var(--bg-code);border:1px solid var(--line);padding:2px 8px;border-radius:4px;color:#14213D;font-weight:500}
+.saq-toggle{margin-top:10px}
+.mcq-opt:focus-visible,.btn:focus-visible,.tab:focus-visible,.assess-start-btn:focus-visible,.saq textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.example{border:1px solid var(--line);border-left:4px solid var(--orange);border-radius:var(--radius);padding:14px 18px;margin:16px 0;background:#fffdf9}
+.example-title{font-weight:700;font-size:13px;color:#a85a08;margin-bottom:6px;letter-spacing:.02em}
+.example p,.example ul{margin:6px 0;font-size:14.5px}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.expert{background:#14213D;color:#fff}
+.term{display:grid;grid-template-columns:190px 1fr;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.term:last-child{border-bottom:none}
+details{border:1px solid var(--line);border-radius:var(--radius);margin:10px 0;background:#fff}
+summary{cursor:pointer;padding:11px 16px;font-weight:600;font-size:15px}details[open] summary{border-bottom:1px solid var(--line)}details>div{padding:10px 16px 12px;font-size:14.5px;line-height:1.6;color:#3a3833}
+.term b{color:#14213D}
+.terms{border:1px solid var(--line);border-radius:var(--radius);padding:4px 16px;margin:16px 0;background:#fff}
+@media (max-width:720px){
+  .header-top{padding:12px 16px;flex-wrap:wrap}
+  .brand{font-size:14px;line-height:1.35}
+  .brand-sub{display:block;margin-left:0}
+  .panel-title{font-size:30px}
+  .section h2{font-size:22px}
+  .assess-modal-box{padding:0 18px 40px}
+  .term{grid-template-columns:1fr;gap:2px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+<style>
+/* Noto Sans everywhere */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,td,th,div,section,header,nav,aside,main,label,button,input,textarea,small,strong,b,em,i,code,pre,svg text{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif !important}
+</style>
+<style id="cb-assess-intro-css">
+.cb-assess-intro{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg,12px);padding:28px 30px;box-shadow:var(--shadow-sm,0 1px 3px rgba(0,0,0,.06));margin-top:18px}
+.cb-assess-intro h3{margin:0 0 8px;font-size:20px;font-weight:600}
+.cb-assess-intro p{margin:6px 0;color:var(--ink-soft);font-size:14px}
+.cb-assess-intro ul{margin:12px 0 18px 18px;color:var(--ink-soft);font-size:13.5px;line-height:1.8}
+.cb-start{border:0;background:var(--accent,#14213d);color:#fff;border-radius:9px;padding:12px 20px;font:700 14px 'Noto Sans',system-ui,sans-serif;cursor:pointer}
+.cb-start:hover{opacity:.9}
+</style>
+
+<style>
+  .role-hero{background:linear-gradient(135deg,#14213D 0%,#22345f 65%,#3d5a8a 100%);color:#fff;border-radius:16px;padding:28px 30px;margin-bottom:28px;box-shadow:var(--shadow-md)}
+  .role-hero h1{font-size:36px;margin:0 0 10px;font-weight:700;letter-spacing:-.02em}
+  .role-hero p{margin:0;max-width:860px;color:#dbe4f5;font-size:15px;line-height:1.7}
+  .role-hero .pill-row{margin-top:18px}
+  .role-hero .pill{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.22);color:#fff}
+  .workflow{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}
+  .workflow .step{border:1px solid var(--line);background:#fff;border-radius:10px;padding:12px;text-align:center;font-size:12px;font-weight:700}
+  .workflow .step span{display:block;font-size:20px;margin-bottom:5px}
+  @media(max-width:900px){.workflow{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:600px){.workflow{grid-template-columns:repeat(2,1fr)}.role-hero h1{font-size:29px}}
+  .skill-map{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+  .skill-map .pill{border-radius:9px;padding:8px 10px;background:#f7f9fc;border-color:#cfe0f4;color:#1d5d9f}
+  .checklist{counter-reset:item;list-style:none;padding:0}
+  .checklist li{counter-increment:item;position:relative;padding:10px 12px 10px 42px;border:1px solid var(--line);border-radius:9px;margin:8px 0;background:#fff}
+  .checklist li:before{content:counter(item);position:absolute;left:12px;top:9px;width:22px;height:22px;border-radius:50%;background:#14213D;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center}
+  .scenario{border:1px solid #c9d9ef;background:#f8fbff;border-radius:12px;padding:18px;margin:16px 0}
+  .scenario h4{margin:0 0 7px;color:#14213D}
+  .metric{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .metric:last-child{border-bottom:none}
+  .metric b{color:#14213D}
+  .matrix td:first-child{font-weight:700;color:#14213D}
+  .small-note{font-size:12.5px;color:var(--ink-soft)}
+  .assessment-launch{margin-top:18px}
+</style>
+<script id="cb-exam-tab">/* Inside the course viewer the assessment opens in its own tab; ?mode=exam starts it on load. */(function(){var q=new URLSearchParams(location.search);if(q.get('mode')==='exam'){addEventListener('load',function(){setTimeout(function(){var b=document.querySelector('.assess-start-btn,#assessStartBtn,#cbAssessStart,#startAssessment');if(!b)return;for(var p=b.parentElement;p&&p!==document.body;p=p.parentElement){if(!p.id)continue;var t=document.querySelector('[data-panel="'+p.id+'"],[data-tab="'+p.id+'"],[aria-controls="'+p.id+'"]');if(t){t.click();break;}}var o=document.getElementById('finalAssessmentOverlay');if(!(o&&!o.hidden))b.click();},50);});return;}if(window.self===window.top)return;addEventListener('click',function(e){if(e.target.closest&&e.target.closest('.assess-start-btn,#assessStartBtn,#cbAssessStart,#startAssessment')){e.preventDefault();e.stopImmediatePropagation();try{var r=window.parent.document.getElementById('riya-assistant-root');if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}window.open(location.pathname+'?mode=exam&assess=1&assessment=1','_blank');}},true);})();</script></head>
+
+<body>
+<header class="header">
+  <div class="header-top">
+    <div class="brand"><div class="brand-mark">SS</div><span>Site Supervisor | Role Learning Module<span class="brand-sub"> · Basic → Intermediate → Advanced → Expertise</span></span></div>
+    <div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 9</span></span><button class="btn" onclick="resetProgress()">↻ Reset</button></div>
+  </div>
+  <nav class="tabbar" role="tablist" id="tabbar">
+    <button class="tab active" data-tab="t1" role="tab">Role Foundations</button>
+    <button class="tab" data-tab="t2" role="tab">Planning</button>
+    <button class="tab" data-tab="t3" role="tab">Drawings &amp; Execution</button>
+    <button class="tab" data-tab="t4" role="tab">Safety &amp; Quality</button>
+    <button class="tab" data-tab="t5" role="tab">People &amp; Resources</button>
+    <button class="tab" data-tab="t6" role="tab">Progress &amp; Reporting</button>
+    <button class="tab" data-tab="t7" role="tab">Advanced Supervision</button>
+    <button class="tab" data-tab="t8" role="tab">Practice &amp; Interview</button>
+    <button class="tab" data-tab="t9" role="tab">Assessment</button>
+  </nav>
+</header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside><main class="main">
+
+<section class="panel active" id="t1" data-toc='[["s1-1","What is Site Supervisor?"],["s1-2","Responsibilities"],["s1-3","Role Variants"],["s1-4","Work Lifecycle"],["s1-5","Core Skills"],["s1-6","Daily Routine"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag fresher">→ Foundations</span></div><div class="panel-eyebrow">Module 01 · Basic</div><h1 class="panel-title">What is a Site Supervisor? Role, Responsibilities &amp; Fundamentals</h1><p class="panel-subtitle">Learn the complete field role: people, drawings, safety, quality, resources, progress, coordination and documentation.</p></div>
+<div class="role-hero"><h1>Site Supervisor</h1><p>A Site Supervisor is the field-level coordinator who turns approved project requirements into safe, organized and measurable execution. The role connects engineering information with crews, subcontractors, materials, equipment, inspections, schedules and reporting.</p><div class="pill-row"><span class="pill">Site execution</span><span class="pill">Safety</span><span class="pill">Quality</span><span class="pill">Planning</span><span class="pill">Coordination</span><span class="pill">Progress</span><span class="pill">Drawings</span><span class="pill">Reporting</span></div></div>
+<div class="section" id="s1-1"><h2><span class="sec-emoji">🧭</span> What is Site Supervisor?</h2><p><strong>Site supervision</strong> is the practical control of field work so the right activity is performed by the right people, in the right sequence, using approved information, resources and controls.</p><div class="cards"><div class="card"><div class="card-title">Translate requirements</div><div class="card-desc">Read drawings, specifications, method statements and work instructions.</div></div><div class="card"><div class="card-title">Lead the crew</div><div class="card-desc">Allocate work, clarify expectations, monitor competence and performance.</div></div><div class="card"><div class="card-title">Control safety</div><div class="card-desc">Identify hazards, verify controls, coordinate permits and stop unsafe work.</div></div><div class="card"><div class="card-title">Control quality</div><div class="card-desc">Verify workmanship, measurements, inspections and acceptance criteria.</div></div><div class="card"><div class="card-title">Control resources</div><div class="card-desc">Coordinate labor, materials, tools, equipment and access.</div></div><div class="card"><div class="card-title">Report reality</div><div class="card-desc">Record progress, constraints, inspections, manpower and actions.</div></div></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><strong>Simple rule:</strong> control the field before problems become incidents, defects, delays or rework.</div></div></div>
+<div class="section" id="s1-2"><h2><span class="sec-emoji">💼</span> Responsibilities</h2><div class="table-wrap"><table><tr><th>Area</th><th>Supervisor responsibility</th><th>Typical evidence</th></tr><tr><td>Planning</td><td>Prepare executable work fronts and priorities.</td><td>Daily/weekly plan</td></tr><tr><td>People</td><td>Allocate tasks, brief crews and coordinate subcontractors.</td><td>Manpower/work allocation</td></tr><tr><td>Technical</td><td>Use latest drawings and approved methods.</td><td>Marked-up drawings/RFIs</td></tr><tr><td>Safety</td><td>Verify hazards, controls, permits, PPE and access.</td><td>Permit/toolbox records</td></tr><tr><td>Quality</td><td>Check work against requirements and inspection points.</td><td>Checklists/NCRs</td></tr><tr><td>Resources</td><td>Ensure materials, tools, plant and utilities are ready.</td><td>Resource tracker</td></tr><tr><td>Progress</td><td>Measure actual output and constraints.</td><td>Daily report/dashboard</td></tr><tr><td>Close-out</td><td>Clear punch items and support handover.</td><td>Handover records</td></tr></table></div></div>
+<div class="section" id="s1-3"><h2><span class="sec-emoji">🪜</span> Role Variants</h2><p>The supplied matrix contains ten related roles. They share the same execution foundation while emphasizing different capabilities.</p><div class="table-wrap"><table><tr><th>Role</th><th>Supporting focus</th></tr><tr><td>Site Supervisor Engineer</td><td>Engineering, design, calculations, problem-solving, technical documentation, AutoCAD, drawings, execution</td></tr><tr><td>Site Supervisor Senior Engineer</td><td>Advanced analysis, design review, troubleshooting, leadership, reporting</td></tr><tr><td>Site Supervisor Project Engineer</td><td>Project execution, planning, coordination, drawings/specifications, reporting</td></tr><tr><td>Site Supervisor Supervisor</td><td>Team supervision, work allocation, safety, quality, progress</td></tr><tr><td>Site Supervisor Coordinator</td><td>Cross-team coordination, documentation, scheduling, communication</td></tr><tr><td>Site Supervisor Planner</td><td>Planning, scheduling, resource allocation, progress, Excel/ERP</td></tr><tr><td>Site Supervisor Quality Engineer</td><td>Inspection, quality plans, RCA, CAPA, documentation</td></tr><tr><td>Site Supervisor Inspector</td><td>Inspection, checklists, drawings, measurements, reporting</td></tr><tr><td>Site Supervisor Technician</td><td>Equipment/process operation, troubleshooting, tools, maintenance, safety</td></tr><tr><td>Site Supervisor Analyst</td><td>Data analysis, KPI tracking, Excel/Power BI, trends, reporting</td></tr></table></div></div>
+<div class="section" id="s1-4"><h2><span class="sec-emoji">🔄</span> Work Lifecycle</h2><div class="workflow"><div class="step"><span>📋</span>Plan</div><div class="step"><span>📐</span>Review</div><div class="step"><span>🧰</span>Prepare</div><div class="step"><span>👷</span>Execute</div><div class="step"><span>🔍</span>Verify</div><div class="step"><span>📊</span>Report &amp; Close</div></div><p>The cycle repeats for every work package. Inspection findings, constraints and changes can send an activity back to planning or technical clarification.</p></div>
+<div class="section" id="s1-5"><h2><span class="sec-emoji">🧩</span> Core Skills</h2><p>Engineering, technical design, calculations, problem-solving, documentation, AutoCAD, construction drawings, site execution, planning, scheduling, leadership, work allocation, safety, quality, progress monitoring, coordination, reporting, Excel/ERP, inspection, measurements, RCA/CAPA, troubleshooting, tools, preventive maintenance and KPI analysis are integrated throughout the role.</p><div class="skill-map"><span class="pill">Engineering</span><span class="pill">Technical design</span><span class="pill">Calculations</span><span class="pill">AutoCAD</span><span class="pill">Construction drawings</span><span class="pill">Site execution</span><span class="pill">Planning</span><span class="pill">Scheduling</span><span class="pill">Leadership</span><span class="pill">Safety</span><span class="pill">Quality</span><span class="pill">Inspection</span><span class="pill">Reporting</span><span class="pill">Excel/ERP</span><span class="pill">RCA/CAPA</span><span class="pill">Troubleshooting</span><span class="pill">KPI analysis</span></div></div>
+<div class="section" id="s1-6"><h2><span class="sec-emoji">🌅</span> Daily Routine</h2><ol class="checklist"><li>Review previous-day progress, issues, incidents and priorities.</li><li>Confirm drawings, methods, permits, work fronts, manpower and equipment.</li><li>Brief the crew and confirm task-specific controls.</li><li>Allocate work with clear quantities, sequence and interfaces.</li><li>Walk work fronts and verify safety, quality, housekeeping and resources.</li><li>Coordinate inspections, measurements, hold/witness points and technical queries.</li><li>Measure actual progress and update the daily report.</li><li>Escalate constraints with owners and due dates.</li><li>Close the shift with status, incomplete work and handover information.</li></ol></div>
+</section>
+
+<section class="panel" id="t2" data-toc='[["s2-1","Work Package Planning"],["s2-2","Scheduling & Dependencies"],["s2-3","Resource Readiness"],["s2-4","Work Front Readiness"],["s2-5","Look-Ahead Planning"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">→ Intermediate</span></div><div class="panel-eyebrow">Module 02 · Planning</div><h1 class="panel-title">Site Planning, Scheduling &amp; Work Front Readiness</h1><p class="panel-subtitle">Convert project plans into ready-to-execute field work.</p></div>
+<div class="section" id="s2-1"><h2><span class="sec-emoji">🗺️</span> Work Package Planning</h2><p>A work package is a manageable group of activities with defined scope, location, resources, sequence and completion criteria.</p><div class="table-wrap"><table><tr><th>Element</th><th>Supervisor question</th></tr><tr><td>Scope</td><td>Exactly what physical work is required?</td></tr><tr><td>Location</td><td>Which area, grid, level or chainage?</td></tr><tr><td>Inputs</td><td>Are drawings, materials, permits and prerequisites ready?</td></tr><tr><td>Resources</td><td>How many people, tools and machines are required?</td></tr><tr><td>Sequence</td><td>What must happen first and what can run in parallel?</td></tr><tr><td>Quality gates</td><td>What must be inspected or released?</td></tr><tr><td>Completion</td><td>What evidence proves the package is complete?</td></tr></table></div></div>
+<div class="section" id="s2-2"><h2><span class="sec-emoji">📅</span> Scheduling &amp; Dependencies</h2><p>Schedules state when work is planned; dependencies determine when work is actually ready.</p><div class="compare"><div class="compare-col"><h4>Dependency</h4><p>Downstream work waits for required prerequisite work or release.</p></div><div class="compare-col"><h4>Constraint</h4><p>A condition preventing planned work: missing material, drawing, access, permit, inspection, manpower or equipment.</p></div></div><div class="example"><div class="example-title">FIELD EXAMPLE</div><p>Painting is planned, but surface preparation has not been released. Do not report painting as started; record the constraint and recover the sequence compliantly.</p></div></div>
+<div class="section" id="s2-3"><h2><span class="sec-emoji">🚜</span> Resource Readiness</h2><div class="cards"><div class="card"><div class="card-title">People</div><div class="card-desc">Competence, headcount and shift coverage.</div></div><div class="card"><div class="card-title">Materials</div><div class="card-desc">Correct type, quantity, identification, storage and release.</div></div><div class="card"><div class="card-title">Plant &amp; equipment</div><div class="card-desc">Capacity, status, maintenance and operator competence.</div></div><div class="card"><div class="card-title">Tools</div><div class="card-desc">Suitability, condition and calibration where required.</div></div><div class="card"><div class="card-title">Access &amp; utilities</div><div class="card-desc">Safe access, lighting, power, water and work-front clearance.</div></div><div class="card"><div class="card-title">Information</div><div class="card-desc">Latest drawings, method, risk controls and inspection requirements.</div></div></div></div>
+<div class="section" id="s2-4"><h2><span class="sec-emoji">🚧</span> Work Front Readiness</h2><ol class="checklist"><li>Correct location and boundary identified.</li><li>Prerequisite work completed and released.</li><li>Latest approved information at the point of work.</li><li>Materials inspected, identified and stored correctly.</li><li>Plant and tools available and fit for purpose.</li><li>Access, lighting, barricading and housekeeping adequate.</li><li>Permits and task-specific controls active.</li><li>Inspection/test points understood by the crew.</li></ol></div>
+<div class="section" id="s2-5"><h2><span class="sec-emoji">🗓️</span> Look-Ahead Planning</h2><div class="table-wrap"><table><tr><th>Horizon</th><th>Focus</th></tr><tr><td>Daily</td><td>Exact work fronts, manpower, quantities, permits, inspections and constraints.</td></tr><tr><td>Weekly</td><td>Upcoming activities, interfaces, material/equipment needs and recovery actions.</td></tr><tr><td>Milestone</td><td>Critical sequence, testing, commissioning and handover readiness.</td></tr></table></div><div class="callout success"><div class="callout-icon">✓</div><div class="callout-body">Ask not only “What are we doing tomorrow?” but also “What could prevent tomorrow's work from starting?”</div></div></div>
+</section>
+
+<section class="panel" id="t3" data-toc='[["s3-1","Construction Drawings"],["s3-2","AutoCAD"],["s3-3","Measurements & Calculations"],["s3-4","Method Statements"],["s3-5","RFI & Change Control"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">→ Advanced</span></div><div class="panel-eyebrow">Module 03 · Technical Execution</div><h1 class="panel-title">Construction Drawings, Technical Information &amp; Execution</h1><p class="panel-subtitle">Read field information confidently, perform practical checks and know when technical clarification is required.</p></div>
+<div class="section" id="s3-1"><h2><span class="sec-emoji">📐</span> Construction Drawings</h2><p>Before use, verify drawing number, title, revision/status, units, dimensions, levels, notes, details, sections and references.</p><div class="table-wrap"><table><tr><th>Element</th><th>Field significance</th></tr><tr><td>Revision block</td><td>Confirms current information and identifies changes.</td></tr><tr><td>Dimensions</td><td>Controls size, location, spacing and geometry.</td></tr><tr><td>Levels</td><td>Controls vertical position and interfaces.</td></tr><tr><td>Sections/details</td><td>Reveal information not visible in the main plan.</td></tr><tr><td>Notes</td><td>May define materials, tolerances and workmanship.</td></tr><tr><td>References</td><td>Connect related sheets, schedules and specifications.</td></tr></table></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Never invent an unclear detail from memory. Raise an RFI/technical query and keep the response controlled.</div></div></div>
+<div class="section" id="s3-2"><h2><span class="sec-emoji">🖥️</span> AutoCAD</h2><p>AutoCAD is a supporting execution tool for reading, checking and communicating drawing information. Useful supervisor activities include layer awareness, measuring geometry, reviewing details, comparing revisions and preparing controlled markups.</p><div class="cards"><div class="card"><div class="card-title">Layer awareness</div><div class="card-desc">Identify disciplines and relevant proposed/existing elements.</div></div><div class="card"><div class="card-title">Measure</div><div class="card-desc">Use drawing geometry and dimensions to understand field requirements.</div></div><div class="card"><div class="card-title">Revision review</div><div class="card-desc">Recognize changed locations and details.</div></div><div class="card"><div class="card-title">Field markup</div><div class="card-desc">Communicate locations and interfaces clearly while following document-control rules.</div></div></div></div>
+<div class="section" id="s3-3"><h2><span class="sec-emoji">🧮</span> Measurements &amp; Calculations</h2><p>Supervisors may verify dimensions, quantities, levels, slopes, areas, volumes and productivity. Always confirm units and acceptance criteria.</p><div class="example"><div class="example-title">SLOPE</div><p>A 120 mm fall over 20 m gives 120 ÷ 20 = <strong>0.006</strong>, or <strong>0.6%</strong>.</p></div><div class="example"><div class="example-title">VOLUME</div><p>A 5 m × 4 m × 0.15 m pad has a geometric volume of <strong>3.0 m³</strong>, subject to the project's measurement rules.</p></div></div>
+<div class="section" id="s3-4"><h2><span class="sec-emoji">🧰</span> Method Statements</h2><p>A method statement should turn approved requirements into an executable sequence with resources, controls, inspections and completion criteria.</p><ol class="checklist"><li>Confirm scope and prerequisites.</li><li>Prepare the area and resources.</li><li>Brief the crew on sequence and hazards.</li><li>Execute in defined stages.</li><li>Inspect/test at planned control points.</li><li>Correct issues before the next controlled stage.</li><li>Housekeep and hand over.</li></ol></div>
+<div class="section" id="s3-5"><h2><span class="sec-emoji">❓</span> RFI &amp; Change Control</h2><p>A strong RFI identifies the exact drawing/detail, location, field condition, impact, evidence and requested clarification. When a change is approved, update controlled information and brief affected teams before execution.</p></div>
+</section>
+
+<section class="panel" id="t4" data-toc='[["s4-1","Safety Leadership"],["s4-2","Risk Assessment"],["s4-3","Permits & High-Risk Work"],["s4-4","Quality Control"],["s4-5","NCR, RCA & CAPA"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">→ Advanced</span></div><div class="panel-eyebrow">Module 04 · Safety &amp; Quality</div><h1 class="panel-title">Safety Leadership, Quality Control &amp; Problem Prevention</h1><p class="panel-subtitle">Make safe and right-first-time execution part of everyday supervision.</p></div>
+<div class="section" id="s4-1"><h2><span class="sec-emoji">🦺</span> Safety Leadership</h2><p>Safety leadership means identifying hazards, verifying controls, listening to workers, stopping unsafe work and planning production around safe execution.</p><div class="cards"><div class="card"><div class="card-title">Pre-task briefing</div><div class="card-desc">Task steps, hazards, controls, interfaces and emergency response.</div></div><div class="card"><div class="card-title">Field observation</div><div class="card-desc">Check whether actual behavior matches planned controls.</div></div><div class="card"><div class="card-title">Stop-work</div><div class="card-desc">Pause work when an immediate uncontrolled risk exists.</div></div><div class="card"><div class="card-title">Learning</div><div class="card-desc">Use observations, near misses and incidents to improve controls.</div></div></div></div>
+<div class="section" id="s4-2"><h2><span class="sec-emoji">⚠️</span> Risk Assessment</h2><div class="workflow"><div class="step"><span>1</span>Identify</div><div class="step"><span>2</span>Assess</div><div class="step"><span>3</span>Control</div><div class="step"><span>4</span>Brief</div><div class="step"><span>5</span>Verify</div><div class="step"><span>6</span>Review</div></div><p>Use the hierarchy of controls where applicable: eliminate, substitute, engineer, administrative controls, then PPE.</p></div>
+<div class="section" id="s4-3"><h2><span class="sec-emoji">🔐</span> Permits &amp; High-Risk Work</h2><div class="table-wrap"><table><tr><th>Work</th><th>Key supervisor checks</th></tr><tr><td>Hot work</td><td>Permit, ignition controls, fire watch and gas testing where required.</td></tr><tr><td>Confined space</td><td>Entry authorization, atmosphere testing, ventilation, communication and rescue.</td></tr><tr><td>Working at height</td><td>Safe access, fall protection and rescue arrangements.</td></tr><tr><td>Lifting</td><td>Lift plan, capacity/status, competent personnel, exclusion zone and communication.</td></tr><tr><td>Electrical</td><td>Isolation/authorization, competent persons and verification of controls.</td></tr></table></div><div class="callout warn"><div class="callout-icon">⛔</div><div class="callout-body">A permit is not just paperwork. Verify the physical controls described by the permit.</div></div></div>
+<div class="section" id="s4-4"><h2><span class="sec-emoji">🔍</span> Quality Control</h2><p>Quality control is built into execution through inspection, measurement, verification and documentation.</p><div class="table-wrap"><table><tr><th>Control</th><th>Example</th></tr><tr><td>Incoming</td><td>Verify identification, quantity, condition and required certificates/status.</td></tr><tr><td>Pre-start</td><td>Confirm prerequisites, dimensions, surfaces and setting-out.</td></tr><tr><td>In-process</td><td>Check critical steps before they become inaccessible.</td></tr><tr><td>Hold point</td><td>Do not proceed until the required release occurs.</td></tr><tr><td>Final</td><td>Confirm acceptance criteria and records are complete.</td></tr></table></div></div>
+<div class="section" id="s4-5"><h2><span class="sec-emoji">🛠️</span> NCR, RCA &amp; CAPA</h2><div class="table-wrap"><table><tr><th>Step</th><th>Action</th></tr><tr><td>Identify</td><td>State requirement, actual condition and evidence.</td></tr><tr><td>Contain</td><td>Tag, segregate, stop or otherwise prevent uncontrolled use.</td></tr><tr><td>Disposition</td><td>Follow approved rework, repair, replacement or use-as-is process.</td></tr><tr><td>Verify</td><td>Inspect/test corrected work and record result.</td></tr><tr><td>Learn</td><td>For recurrence, identify root cause and implement corrective action.</td></tr></table></div><div class="callout success"><div class="callout-icon">✓</div><div class="callout-body"><strong>Correction</strong> fixes the immediate condition; <strong>corrective action</strong> addresses the cause to reduce recurrence.</div></div></div>
+</section>
+
+<section class="panel" id="t5" data-toc='[["s5-1","Team Supervision"],["s5-2","Work Allocation"],["s5-3","Cross-Team Coordination"],["s5-4","Materials, Tools & Equipment"],["s5-5","Troubleshooting & Maintenance"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">→ Advanced</span></div><div class="panel-eyebrow">Module 05 · People &amp; Resources</div><h1 class="panel-title">Team Supervision, Coordination &amp; Resource Control</h1><p class="panel-subtitle">Coordinate crews, subcontractors, tools, equipment and interfaces without losing control.</p></div>
+<div class="section" id="s5-1"><h2><span class="sec-emoji">👥</span> Team Supervision</h2><p>Set the standard, check understanding, observe execution and give timely feedback. Effective supervisors coach instead of waiting for failure.</p><div class="compare"><div class="compare-col"><h4>Effective</h4><ul><li>Clear instructions</li><li>Checks competence</li><li>Delegates with accountability</li><li>Corrects early</li><li>Recognizes good work</li></ul></div><div class="compare-col"><h4>Weak</h4><ul><li>Assumes understanding</li><li>Waits for failures</li><li>Blames individuals</li><li>Reports late</li><li>Allows informal workarounds</li></ul></div></div></div>
+<div class="section" id="s5-2"><h2><span class="sec-emoji">🧑‍🔧</span> Work Allocation</h2><p>Allocate using <strong>competence + priority + location + workload + equipment availability</strong>.</p><div class="table-wrap"><table><tr><th>Factor</th><th>Question</th></tr><tr><td>Competence</td><td>Is the person trained/authorized?</td></tr><tr><td>Priority</td><td>Does it affect a milestone or critical sequence?</td></tr><tr><td>Location</td><td>Can the team work efficiently?</td></tr><tr><td>Workload</td><td>Is the shift allocation realistic?</td></tr><tr><td>Resources</td><td>Are required tools, plant and materials ready?</td></tr></table></div></div>
+<div class="section" id="s5-3"><h2><span class="sec-emoji">🔗</span> Cross-Team Coordination</h2><p>Interfaces between civil, structural, mechanical, electrical, finishing and commissioning teams are common sources of delay and rework. Make prerequisites, responsibilities and handoffs explicit.</p><div class="scenario"><h4>Example</h4><p>Mechanical installation may require civil completion, survey acceptance, anchor-bolt release, clear access and lifting arrangements. Coordinate these before mobilizing the crew.</p></div></div>
+<div class="section" id="s5-4"><h2><span class="sec-emoji">🧰</span> Materials, Tools &amp; Equipment</h2><div class="cards"><div class="card"><div class="card-title">Materials</div><div class="card-desc">Specification, identification, quantity, storage and release.</div></div><div class="card"><div class="card-title">Tools</div><div class="card-desc">Suitability, condition, safe use and calibration where needed.</div></div><div class="card"><div class="card-title">Equipment</div><div class="card-desc">Capacity, inspection, maintenance and operator authorization.</div></div><div class="card"><div class="card-title">Maintenance</div><div class="card-desc">Planned servicing reduces breakdowns and unsafe conditions.</div></div></div></div>
+<div class="section" id="s5-5"><h2><span class="sec-emoji">🔧</span> Troubleshooting &amp; Maintenance</h2><ol class="checklist"><li>Make the situation safe and isolate energy where required.</li><li>Define the symptom and when it started.</li><li>Check obvious causes: power, settings, connections, consumables and environment.</li><li>Use procedures/manuals and competent technicians.</li><li>Repair, test and verify before return to service.</li><li>Record recurring faults and schedule preventive action.</li></ol></div>
+</section>
+
+<section class="panel" id="t6" data-toc='[["s6-1","Progress Measurement"],["s6-2","Daily Site Reporting"],["s6-3","Excel & ERP"],["s6-4","KPI Dashboard"],["s6-5","Trend Analysis & Escalation"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag adv">Advanced</span><span class="level-tag expert">→ Expertise</span></div><div class="panel-eyebrow">Module 06 · Data &amp; Reporting</div><h1 class="panel-title">Progress Monitoring, Reporting, Excel/ERP &amp; KPIs</h1><p class="panel-subtitle">Turn field observations into reliable data for decisions and recovery.</p></div>
+<div class="section" id="s6-1"><h2><span class="sec-emoji">📈</span> Progress Measurement</h2><p>Measure <strong>physical accomplishment</strong>, not effort alone. Define completion before comparing actual with plan.</p><div class="metric"><b>Planned quantity</b><span>Target output for the period</span></div><div class="metric"><b>Actual quantity</b><span>Verified physical output</span></div><div class="metric"><b>Variance</b><span>Actual − planned under the project convention</span></div><div class="metric"><b>Completion %</b><span>Actual ÷ planned × 100 when comparable</span></div><div class="example"><div class="example-title">EXAMPLE</div><p>Plan 200 m; actual 180 m → <strong>90%</strong> completion.</p></div></div>
+<div class="section" id="s6-2"><h2><span class="sec-emoji">📝</span> Daily Site Reporting</h2><p>A strong report answers: <strong>What happened? Where? How much? Who? What stopped us? What is next?</strong></p><div class="table-wrap"><table><tr><th>Block</th><th>Typical content</th></tr><tr><td>Work</td><td>Activities, locations, quantities, status</td></tr><tr><td>Manpower</td><td>Crews, subcontractors, shifts</td></tr><tr><td>Equipment</td><td>Major plant, utilization, breakdowns</td></tr><tr><td>Materials</td><td>Receipts, shortages, status</td></tr><tr><td>Safety</td><td>Toolbox, observations, incidents, permits</td></tr><tr><td>Quality</td><td>Inspections, tests, NCRs, rework</td></tr><tr><td>Constraints</td><td>Cause, impact, owner, due date</td></tr></table></div></div>
+<div class="section" id="s6-3"><h2><span class="sec-emoji">📊</span> Excel &amp; ERP</h2><p>Useful fields include <code>Activity ID</code>, location, planned/actual dates, planned/actual quantities, responsible person, status, constraint, action owner and due date. Consistent naming is essential for reliable analysis.</p></div>
+<div class="section" id="s6-4"><h2><span class="sec-emoji">📌</span> KPI Dashboard</h2><div class="table-wrap"><table><tr><th>KPI</th><th>Purpose</th></tr><tr><td>Schedule variance</td><td>Shows ahead/behind plan.</td></tr><tr><td>Productivity</td><td>Relates output to labor/equipment input.</td></tr><tr><td>Rework/NCR</td><td>Shows quality losses.</td></tr><tr><td>Safety indicators</td><td>Combines proactive controls and outcomes.</td></tr><tr><td>Inspection backlog</td><td>Shows release bottlenecks.</td></tr><tr><td>Equipment downtime</td><td>Shows lost capacity and maintenance needs.</td></tr><tr><td>Constraint ageing</td><td>Shows unresolved future risk.</td></tr></table></div></div>
+<div class="section" id="s6-5"><h2><span class="sec-emoji">🔎</span> Trend Analysis &amp; Escalation</h2><p>Watch for increasing rework, falling productivity, growing inspection backlog, repeated shortages and ageing constraints.</p><div class="scenario"><h4>Decision-ready escalation</h4><p><strong>Fact:</strong> work is 8% behind plan for two periods. <strong>Cause:</strong> shared access. <strong>Impact:</strong> downstream testing may slip. <strong>Recommendation:</strong> approve a coordinated access window and resequence ready work.</p></div></div>
+</section>
+
+<section class="panel" id="t7" data-toc='[["s7-1","Advanced Problem-Solving"],["s7-2","RCA & CAPA"],["s7-3","Constructability"],["s7-4","Risk-Based Supervision"],["s7-5","Expert Leadership"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag adv">Advanced</span><span class="level-tag expert">→ Expertise</span></div><div class="panel-eyebrow">Module 07 · Advanced Leadership</div><h1 class="panel-title">Advanced Supervision, Problem-Solving &amp; Expert Leadership</h1><p class="panel-subtitle">Move from reacting to issues toward predicting, preventing and improving site execution.</p></div>
+<div class="section" id="s7-1"><h2><span class="sec-emoji">🧠</span> Advanced Problem-Solving</h2><p>Use: <strong>define → contain → collect evidence → identify causes → choose action → implement → verify effectiveness</strong>.</p><div class="cards"><div class="card"><div class="card-title">5 Why</div><div class="card-desc">Explore causes beyond the visible symptom.</div></div><div class="card"><div class="card-title">Fishbone / 6M</div><div class="card-desc">Man, Machine, Method, Material, Measurement, Environment.</div></div><div class="card"><div class="card-title">Pareto</div><div class="card-desc">Focus on the vital few causes with the largest impact.</div></div><div class="card"><div class="card-title">Trend analysis</div><div class="card-desc">Detect deterioration or improvement over time.</div></div></div></div>
+<div class="section" id="s7-2"><h2><span class="sec-emoji">🛠️</span> RCA &amp; CAPA</h2><div class="table-wrap"><table><tr><th>Level</th><th>Question</th><th>Example</th></tr><tr><td>Symptom</td><td>What happened?</td><td>Repeated dimensional rework.</td></tr><tr><td>Immediate cause</td><td>What directly produced it?</td><td>Incorrect setting-out reference.</td></tr><tr><td>System cause</td><td>Why was the error possible?</td><td>No independent verification.</td></tr><tr><td>Corrective action</td><td>What changes the process?</td><td>Add controlled verification.</td></tr><tr><td>Effectiveness</td><td>Did it work?</td><td>Monitor subsequent work.</td></tr></table></div></div>
+<div class="section" id="s7-3"><h2><span class="sec-emoji">🏗️</span> Design Review &amp; Constructability</h2><p>Advanced supervisors contribute field knowledge to design review: access, sequence, tolerances, installation space, lifting, inspection access, interfaces, temporary works and maintainability.</p><div class="callout tip"><div class="callout-icon">🔍</div><div class="callout-body"><em>Can this be safely and practically built as designed, inspected as required and maintained afterward?</em></div></div></div>
+<div class="section" id="s7-4"><h2><span class="sec-emoji">🎯</span> Risk-Based Supervision</h2><p>Prioritize attention for high-consequence or high-uncertainty work: critical lifts, hidden work, complex interfaces, first-time activities, tight tolerances and milestone-critical tasks.</p></div>
+<div class="section" id="s7-5"><h2><span class="sec-emoji">🏆</span> Expert Leadership</h2><ol class="checklist"><li>Set clear standards and explain why they matter.</li><li>Delegate responsibility with boundaries and escalation triggers.</li><li>Coach at the point of work.</li><li>Use evidence instead of blame.</li><li>Protect safety and quality under schedule pressure.</li><li>Make risks and decisions visible.</li><li>Turn lessons into better methods and controls.</li></ol></div>
+</section>
+
+<section class="panel" id="t8" data-toc='[["s8-1","Practice Scenario"],["s8-2","Readiness Task"],["s8-3","Coordination Task"],["s8-4","Practice MCQ"],["s8-5","Interview Preparation"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">→ Expertise</span></div><div class="panel-eyebrow">Module 08 · Practice</div><h1 class="panel-title">Practice: Run a Site Work Package</h1><p class="panel-subtitle">Apply planning, drawings, safety, resources, quality, coordination and reporting in one realistic scenario.</p></div>
+<div class="section" id="s8-1"><h2><span class="sec-emoji">🏗️</span> Practice Scenario</h2><div class="scenario"><h4>Mechanical equipment installation</h4><p>The team must install equipment on a prepared foundation. The latest drawing is available, but one interface detail is awaiting an RFI response. The foundation survey is complete, anchor-bolt inspection is not released, lifting equipment and riggers are available, and another contractor has stored material inside the planned lifting exclusion zone.</p></div></div>
+<div class="section" id="s8-2"><h2><span class="sec-emoji">1️⃣</span> Readiness Task</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> List the conditions you would verify before allowing the lift and installation to start.</div><textarea placeholder="Write your readiness checks…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Current approved information and resolved RFI; released anchor-bolt inspection; approved lift plan; competent operator/riggers; equipment capacity/status; clear exclusion zone; suitable access/ground; permit/controls; toolbox briefing; communication method; inspected lifting accessories; agreed sequence.</div></div></div>
+<div class="section" id="s8-3"><h2><span class="sec-emoji">2️⃣</span> Coordination Task</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> How would you handle the material stored in the lifting zone?</div><textarea placeholder="Describe your action…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Do not set up the lift in the obstructed zone. Coordinate removal/relocation with the responsible contractor, re-check the exclusion area, brief the crew and record the constraint if it affects the schedule.</div></div></div>
+<div class="section" id="s8-4"><h2><span class="sec-emoji">3️⃣</span> Practice MCQ</h2><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Anchor-bolt inspection is not released but the crew is ready. What should you do?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Install anyway</li><li class="mcq-opt"><span class="opt-letter">B</span> Hold the affected activity, coordinate inspection/release and resequence ready work if possible</li><li class="mcq-opt"><span class="opt-letter">C</span> Sign the inspection yourself</li><li class="mcq-opt"><span class="opt-letter">D</span> Remove the inspection requirement</li></ul><div class="mcq-feedback" data-ok="Correct — protect the inspection gate and use resequencing to reduce lost time." data-bad="Do not bypass the release. Coordinate the inspection and resequence compliant work."></div></div></div>
+<div class="section" id="s8-5"><h2><span class="sec-emoji">🎤</span> Interview Preparation</h2><details><summary>How do you start a new work activity?</summary><div>Confirm scope, latest information, prerequisites, method/risk controls, permits, resources, competence, work-front readiness, inspection points and crew briefing.</div></details><details><summary>How do you handle schedule pressure?</summary><div>Identify the cause, protect safety/quality controls, find compliant recovery options and escalate early with evidence.</div></details><details><summary>What if the drawing is unclear?</summary><div>Do not guess. Raise an RFI/technical query, control the affected work and communicate the written response.</div></details><details><summary>How do you manage subcontractors?</summary><div>Set clear scope and standards, coordinate interfaces, verify controls, monitor work objectively and escalate through agreed processes.</div></details><details><summary>What makes a Site Supervisor effective?</summary><div>Planning discipline, technical understanding, safety leadership, quality awareness, communication, resource control and early problem-solving.</div></details></div>
+</section>
+
+<section class="panel" id="t9" data-toc='[["s9-1","Assessment Instructions"],["s9-2","Coverage"],["s9-3","Assessment Security"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag expert">Expertise</span></div><div class="panel-eyebrow">Module 09 · Assessment</div><h1 class="panel-title">Site Supervisor — 50-Question Assessment</h1><p class="panel-subtitle">Assess the complete role from basic supervision through expert planning, safety, quality, coordination, data and leadership.</p></div>
+<div class="section" id="s9-1"><h2><span class="sec-emoji">🎯</span> Assessment Instructions</h2><div class="cb-assess-intro"><h3>Ready to assess?</h3><p>The assessment follows the reference interaction model: one question at a time, shuffled questions/options, timed fullscreen mode, review marking and automatic scoring.</p><ul><li><strong>50 questions</strong>, Basic → Expertise.</li><li><strong>60-minute timer</strong> with automatic submission.</li><li>Questions and options are shuffled on every attempt.</li><li>Navigate freely and mark questions for review.</li><li>Three proctoring warnings for tab/window switching or leaving fullscreen trigger automatic submission.</li><li>Copy, cut, context menu and common print/source shortcuts are blocked during the assessment.</li></ul><button class="cb-start" id="cbAssessStart">Start 50-Question Assessment →</button></div></div>
+<div class="section" id="s9-2"><h2><span class="sec-emoji">🧩</span> Coverage</h2><div class="table-wrap"><table><tr><th>Level</th><th>Coverage</th></tr><tr><td>Basic</td><td>Role, responsibilities, readiness, safety, documentation and communication.</td></tr><tr><td>Intermediate</td><td>Planning, drawings, resources, coordination, inspections, quality and progress.</td></tr><tr><td>Advanced</td><td>RCA/CAPA, KPIs, Excel/ERP, troubleshooting, changes, escalation and trends.</td></tr><tr><td>Expertise</td><td>Integrated decisions, risk-based supervision, leadership, constructability and close-out.</td></tr></table></div></div>
+<div class="section" id="s9-3"><h2><span class="sec-emoji">🔒</span> Assessment Security</h2><p>The correct answer is not stored as a visible answer index. Each option is checked against an internal hash. The question bank is frozen at runtime, options are shuffled per attempt, fullscreen/focus/tab switching is monitored, and common copy/print/source shortcuts are blocked during the assessment.</p><p class="small-note">These are client-side anti-manipulation measures; no browser-only assessment can be made absolutely tamper-proof without server-side validation. The screenshot-action warning from the provided reference is also displayed when a PrintScreen action is detected.</p></div>
+</section>
+
+</main></div>
+
+<script>
+(function(){
+  const tabs=[...document.querySelectorAll('.tab')],panels=[...document.querySelectorAll('.panel')],tocEl=document.getElementById('toc'),progress=document.getElementById('progressText');
+  function buildToc(panel){tocEl.innerHTML='';JSON.parse(panel.dataset.toc||'[]').forEach(([id,label])=>{const li=document.createElement('li'),a=document.createElement('a');a.href='#'+id;a.textContent=label;a.dataset.target=id;li.appendChild(a);tocEl.appendChild(li);});}
+  function activate(i){tabs.forEach((t,n)=>{const on=n===i;t.classList.toggle('active',on);t.setAttribute('aria-selected',on?'true':'false')});panels.forEach((p,n)=>p.classList.toggle('active',n===i));progress.textContent=`Tab ${i+1} of ${tabs.length}`;buildToc(panels[i]);window.scrollTo({top:0,behavior:'smooth'});setTimeout(spy,50);}
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{const a=e.target.closest('.toc-list a');if(!a)return;e.preventDefault();const el=document.getElementById(a.dataset.target);if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-135,behavior:'smooth'});});
+  let tk=false;function spy(){const ap=document.querySelector('.panel.active');if(!ap)return;let cur=null;ap.querySelectorAll('.section').forEach(s=>{if(s.getBoundingClientRect().top-180<0)cur=s.id});if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));tk=false;}
+  window.addEventListener('scroll',()=>{if(!tk){requestAnimationFrame(spy);tk=true}},{passive:true});window.resetProgress=()=>activate(0);activate(0);
+})();
+(function(){
+  document.querySelectorAll('.mcq').forEach(m=>{const ans=+m.dataset.answer,opts=m.querySelectorAll('.mcq-opt'),fb=m.querySelector('.mcq-feedback');opts.forEach((o,i)=>{o.tabIndex=0;o.setAttribute('role','button');const go=()=>{if(m.classList.contains('answered'))return;m.classList.add('answered');const r=i===ans;m.dataset.correct=r?'1':'0';opts[ans].classList.add('correct');if(!r)o.classList.add('incorrect');fb.className='mcq-feedback '+(r?'ok':'bad');fb.textContent=r?fb.dataset.ok:fb.dataset.bad;};o.addEventListener('click',go);o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});});});
+  document.querySelectorAll('.saq-toggle').forEach(b=>b.addEventListener('click',()=>{const s=b.nextElementSibling.classList.toggle('show');b.textContent=s?'Hide model answer':'Show model answer';}));
+})();
+(function(){
+  const ROLE="Site Supervisor",QUESTION_BANK=[{"id": "site_supervisor_role-01", "q": "What is the primary purpose of a Site Supervisor?", "options": ["To coordinate and control safe, quality-compliant work at site so planned activities are executed correctly and efficiently", "To prepare company payroll", "To replace the design engineer for every design decision", "To purchase all project materials personally"], "k": "xbvzxrqbqw", "difficulty": "Basic", "xe": "EnN+URZREjBEAwwGEzYAGgJFERkHBQoAKwFPDRVdQl4lNkkYElhTDUJTABoRMFMWHwsGBAYfAxc7UgkFAEFUETYrSFsXQFsMX1MeHAwzFlUTCh0EDRoBEysbAQtFXVVeIz9IFEJHUwVUBxBYRS4GFBwMBg9FUx0XLB0aHgZIQxEyPUkYEkZdBEMWGgdL"}, {"id": "site_supervisor_role-02", "q": "Before starting a site activity, which combination should a supervisor confirm first?", "options": ["Latest approved drawings/specifications, method statement, permits and required resources", "Only yesterday's progress report", "Only the worker attendance sheet", "Only the material invoice"], "k": "c2ogci1do6", "difficulty": "Basic", "xe": "BDxfU0JHWgxEHw1UFisSBwRFFAQGHk8RKgAdCQtZEFMjI19XFFFWQ1gdDxsXMhIBGQocVggdC1IrGgpMBkJeRiE8QUtCRlcSRBobEQF/FRoCRQYeCAdPEzwGBhoMWUkc"}, {"id": "site_supervisor_role-03", "q": "Which statement best describes site supervision?", "options": ["Directing, coordinating, checking and recording field work against approved requirements", "Watching workers without checking requirements", "Only measuring completed quantities", "Only reporting delays after they happen"], "k": "1km9nmodsco", "difficulty": "Basic", "xe": "ACZdXRBCWxBYHAdUDCxTFBMRGwAMUwwdMQYdAwkNX1VzNlVdAUFGCl4dRVQLMAdVAAQBBQAFClIwEBwJF1tRRzo8QxY="}, {"id": "site_supervisor_role-04", "q": "Which document normally explains the planned sequence and controls for carrying out a specific activity?", "options": ["Method statement", "Salary register", "Purchase order only", "Organization chart"], "k": "go1bwq01wr", "difficulty": "Basic", "xe": "EnNAXRZcXQcRAB0VEToeEB4RUhMRAwMTNhwcTA1CRxQnO0gYFVtACBEEABgJfxEQUBUXBA8cHR86FkNMDENTWCY3RFYFFEEGQAYMGgY6X1UCAAEZHAEMFyxSDgIBDVNbPSdfVw5HHA=="}, {"id": "site_supervisor_role-05", "q": "Why must a supervisor verify the drawing revision before work starts?", "options": ["To avoid executing work from superseded information", "To make the drawing look newer", "To reduce toolbox talks", "To avoid recording measurements"], "k": "1hiw3laryzu", "difficulty": "Basic", "xe": "ATZbURFdXQ0REAYaES0cGVAVABMfFgEGLFIJBQBBVBUkPF9TQlJADFxTCxEMMRRVEgQBEw1TABx/HQ0fCkFVQTZzX10TQVsRVB4MGhEsXQ=="}, {"id": "site_supervisor_role-06", "q": "Which is the best example of work allocation?", "options": ["Assigning qualified people and equipment to activities according to priority, location and workload", "Giving every worker the same task regardless of competence", "Assigning tasks only by seniority", "Waiting until the shift ends to allocate work"], "k": "1h4afzfca64", "difficulty": "Basic", "xe": "FDxCXEJVXg9eEAgADDAdVRMKHAUAFwoALFIMAwhdVUI2PU5dThRABkIcHAYGOgBZUBUAHwYBBgY2FxxMBENUFiA6WV1CV10NQgcbFQwxBwZe"}, {"id": "site_supervisor_role-07", "q": "A toolbox talk is primarily used to:", "options": ["Communicate task hazards, controls, roles and safe working expectations before work", "Approve project invoices", "Replace all formal safety procedures", "Record final quantities only"], "k": "wrbqdzz1", "difficulty": "Basic", "xe": "BzxCVABbSkNFEgUfFn8SGRkCHFYdGwpSPAAKG0VCXhc7MldZEFBBQ1AdDVQGMB0BAgoeBUkVAAB/BgcJRURdWjY3RFkWURIXUAACWg=="}, {"id": "site_supervisor_role-08", "q": "If a worker identifies an unsafe condition, the supervisor should first:", "options": ["Control or stop the affected activity as needed, make the area safe and report/escalate the issue", "Tell the worker to continue carefully", "Ignore it if the work is behind schedule", "Ask another worker to accept the risk"], "k": "1efbprmmnry", "difficulty": "Basic", "xe": "ADJLXRZNEhdQGAwHRS8BHB8XGwIQSE8GNxdPHxBdVUolOl5XEBRfFkIHSRcKMQcHHwlSAgEWTxo+CA4eAQ1SXTU8X11CWl0RXBIFVBIwAR5QFxcFHB4KAXE="}, {"id": "site_supervisor_role-09", "q": "What is a permit-to-work system intended to provide?", "options": ["Formal authorization and defined controls for specified higher-risk work", "Permission to skip PPE", "A replacement for a method statement in every situation", "A material delivery receipt"], "k": "1lq6rhiw4zm", "difficulty": "Basic", "xe": "AzZfVQtAQUNUAB0VBzMaBhhFEwMdGwAANggOGAxCXhVzI19dAVVHF1gcBwdJfwEQAxUdGBoaDRszGxsFAF4QWD03DVsNWlYKRRoGGhZ/FRoCRREZBwcdHTMeCghFWl9LOH0="}, {"id": "site_supervisor_role-10", "q": "Which PPE principle is correct?", "options": ["PPE is selected for the hazards of the task and used together with higher-level controls", "PPE removes the hazard completely", "All tasks require identical PPE", "PPE is optional when the schedule is tight"], "k": "1pvygjjycbp", "difficulty": "Basic", "xe": "AwNoGAtHEhdZFkkYBCwHVRwMHBNJHAlSOxcJCQteVBAyPUkYD0FBFxEeCAAGN1MBGABSAggABFI3ExUNF0lCHg=="}, {"id": "site_supervisor_role-11", "q": "What is the supervisor's role in housekeeping?", "options": ["Keep access, work areas, storage and waste controlled so they do not create hazards or obstruct work", "Leave cleanup until project completion", "Only clean the office", "Ask workers to hide waste from inspections"], "k": "2aodqr0une1", "difficulty": "Basic", "xe": "FDxCXEJcXRZCFgIRAC8aGxdFAQMZAwAAKwFPHwRLVEUqfw1IEFtWFlIHAAIMKwpZUAQRFQwAHFI+HAtMFFhQXTonVBY="}, {"id": "site_supervisor_role-12", "q": "Which record is most useful for tracking what happened during a shift?", "options": ["Daily site report", "Company holiday list", "Personal notebook with no date", "Old tender advertisement"], "k": "up2ws9qymh", "difficulty": "Basic", "xe": "EnNJWRZRVkNVEgAYHH8BEAAKAAJJAx0dKRsLCRYNXlA5Nk5MC0JXQ1QFABAAMRAQUAoUVggQGxspGxsFAF4dEiE2XlcXRlEGQl9JHRYsBhADRRMYDVMfADAVHQkWXh8="}, {"id": "site_supervisor_role-13", "q": "A supervisor receives material without the required identification or documentation. What is the best action?", "options": ["Hold the material from uncontrolled use and verify its status before release", "Install it immediately", "Remove the labels", "Assume the supplier sent the correct material"], "k": "266ayydbj4q", "difficulty": "Basic", "xe": "Bj1bXRBdVApUF0kZBCsWBxkEHlYaGwAHMxZPAgpZEVY9J0hKQlddDUUBBhgJOhdVBwoAHUkGAQY2Hk8FAUhfRzonVBgDWlZDUBAKERUrEhsTAFIXGxZPFywGDg4JREJbNjcD"}, {"id": "site_supervisor_role-14", "q": "What is a site inspection checklist mainly used for?", "options": ["To consistently verify planned requirements and record observations", "To replace drawings", "To approve salaries", "To eliminate the need for competent supervision"], "k": "1b2jvjkmlkj", "difficulty": "Basic", "xe": "EDtIWwlYWxBFAEkdCC8BGgYAUhUGHRwbLAYKAgZUEVU9Nw1IEFtEClUWSRETNhcQHgYXVh0bDgZ/AAodEERDUTdzTlAHV1kQEQQMBgB/AxACAx0EBBYLXA=="}, {"id": "site_supervisor_role-15", "q": "Which communication practice is strongest when giving a critical instruction?", "options": ["State the requirement clearly, confirm understanding and record or escalate it when needed", "Give the instruction once while walking away", "Use ambiguous language to save time", "Tell only one worker and assume everyone knows"], "k": "mqmx2a4i1f", "difficulty": "Basic", "xe": "ED9IWRAUUQxcHhwaDDwSARkKHFYZHxoBfxEAAgNEQ1gyJ0RXDBRCEVQFDBoRLFMYGRYHGA0WHQErEwEIDENWRn0="}, {"id": "site_supervisor_role-16", "q": "What is the main difference between planned and actual progress?", "options": ["Planned progress is the target baseline; actual progress is what has been physically achieved", "They always mean the same thing", "Actual progress is only the amount invoiced", "Planned progress is measured after completion"], "k": "v5uy8u664n", "difficulty": "Intermediate", "xe": "BztIGAFbXxNQAQAHCjFTHBQAHAIAFQYXLFIZDRdEUFgwNg1ZDFASEEQDGRsXKwBVEwoABAwQGxspF08cCUxfWDo9ShY="}, {"id": "site_supervisor_role-17", "q": "If a task is behind schedule, the supervisor should first:", "options": ["Identify the cause and affected activities, then develop a practical recovery action with the responsible team", "Increase working hours immediately without analysis", "Hide the delay in the report", "Move the deadline without approval"], "k": "2fmmdhdojyd", "difficulty": "Intermediate", "xe": "ATZOVxRRQBoRAAEbEDMXVRIAUhQIAAoWfx0BTAZMREQ2fw1bDVpBF0MSABoRLF9VFAACEwcXChw8GwofRUxfU3MyXUgQW0QGVVMIFxE2HBsDSw=="}, {"id": "site_supervisor_role-18", "q": "What does resource allocation include on a construction site?", "options": ["People, materials, tools, equipment, access and time assigned to planned activities", "Only labor attendance", "Only materials", "Only the project budget"], "k": "16navs0es9j", "difficulty": "Intermediate", "xe": "FitIWxdAWwxfUw0RFTodEQNFHRhJEAAdLRYGAgRZVFxzMltZC1hTAVgfAAAcfxwTUAQeGkkBCgMqGx0JAQ1DXSA8WEoBUUFN"}, {"id": "site_supervisor_role-19", "q": "Why is coordination between trades important?", "options": ["Because one trade's work, access or sequence can affect another trade's productivity, safety and quality", "Because every trade works independently", "Because it eliminates the need for drawings", "Because it replaces scheduling"], "k": "zbusqvi1pb", "difficulty": "Intermediate", "xe": "Gj1ZXRBSUwBUAEkVFzpTFh8IHxkHUxwdKgAMCRYNXl9zN0hUA00eQ0MWHhsXNFMUHgFSAwcADhQ6UgwDC0lYTTo8Q0tM"}, {"id": "site_supervisor_role-20", "q": "What should a supervisor do when two crews need the same access route at the same time?", "options": ["Coordinate the sequence or access arrangement using the project plan and communicate the agreed control", "Allow both crews to compete for the route", "Close the route permanently", "Ignore the conflict"], "k": "1dzx7d9e", "difficulty": "Intermediate", "xe": "Gj1ZXRBSUwBUUwobCzkfHBMRAVYbFh4HNgAKTAZCXUI3OkNZFlFWQ0IWGAEAMRAcHgJSFwcXTxEzFw4eRU5dXT4mQ1EBVUYKXh1H"}, {"id": "site_supervisor_role-21", "q": "Which item is most important when reviewing a construction drawing for field execution?", "options": ["Dimensions, levels, locations, details, notes, references and the current approved revision", "Only the drawing title", "Only the color of lines", "Only the sheet size"], "k": "1rcrx4dqrm5", "difficulty": "Intermediate", "xe": "EnNLUQdYVkNDFh8dAChTGxUAFgVJEgMefxsBCgpfX1AnOkJWQkBaAkVTChsLKwEaHBZSBgEKHBs8EwNMDENBRTI/QVkWXV0NHw=="}, {"id": "site_supervisor_role-22", "q": "If a drawing detail is unclear and could affect installation, the supervisor should:", "options": ["Raise an RFI/technical query through the approved process before proceeding with the affected work", "Invent a detail based on experience", "Use an old drawing", "Ask a worker to decide"], "k": "f0nh22o0bp", "difficulty": "Intermediate", "xe": "Bj1OVAdVQENFFgocCzYQFBxFABMYBgYAOh8KAhFeEkE7PFhUBhRQBhEQBRUXNhUcFQFSAgEBAAc4Gk8PCkNGQDw/QV0GFFEMXB4cGgw8EgEZChxY"}, {"id": "site_supervisor_role-23", "q": "What is the purpose of a method statement and risk assessment working together?", "options": ["The method statement describes the work approach while the risk assessment identifies hazards and controls for that work", "They are two names for the same payroll document", "The risk assessment replaces the work sequence", "The method statement is only for procurement"], "k": "3ofm83h1d3", "difficulty": "Intermediate", "xe": "BztIGBZDXUNVHAoBCDodAQNFERkHHQoRK1IKFABOR0c6PEMYEUBXE0JTHh0RN1MHGRYZVgocAQYtHQMfSw=="}, {"id": "site_supervisor_role-24", "q": "Which is a leading safety indicator?", "options": ["Percentage of planned toolbox talks completed", "Number of injuries already recorded", "Number of lost-time cases after an incident", "Total compensation paid"], "k": "20yg52pd6kb", "difficulty": "Intermediate", "xe": "HzZMXAtaVUNYHQ0dBj4HGgIWUhsMEhwHLRdPHBdCU1cnOltdQlddDUUBBhgWfxEQFgoAE0kbDgAyUgAPBlhAR30="}, {"id": "site_supervisor_role-25", "q": "Which is a lagging safety indicator?", "options": ["Recordable incidents or lost-time injuries", "Safety observations completed", "Toolbox talk completion", "Pre-task inspection completion"], "k": "3hieq5sq9c", "difficulty": "Intermediate", "xe": "HzJKXwtaVUNYHQ0dBj4HGgIWUhIMAAwANhAKTApYRlY8PkhLQkBaAkVTARUTOlMUHBcXFw0KTx08ERoeF0hWGw=="}, {"id": "site_supervisor_role-26", "q": "A lifting operation is planned. Which supervisor action is most appropriate?", "options": ["Confirm the lift plan, competent personnel, equipment status, exclusion zone and required controls before lifting", "Start lifting first and complete documents later", "Let any available worker operate the equipment", "Remove the exclusion zone to improve access"], "k": "13w0cmsbwe4", "difficulty": "Intermediate", "xe": "HzpLTAtaVUNYAEkXCjEHBx8JHhMNUxsaLR0aCw0NQloyPUNRDFMeQ1IcBAQAKxYbEwBeVgwCGhsvHwoCEQ1BQzonTFoLWFsXSFMIGgF/Fg0TCQcFABwBUjwdARgXQl5FfQ=="}, {"id": "site_supervisor_role-27", "q": "Why should access and work fronts be planned?", "options": ["To ensure people, materials and equipment can reach the work safely without creating conflicts or unnecessary delays", "Only to improve photographs", "To avoid using drawings", "Only to reduce office work"], "k": "k6niogqhy1", "difficulty": "Intermediate", "xe": "AzxCSkJVUQBUABpUFTMSGx4MHBFJEgkUOhEbH0VeU1E2J1QUQkRADFUGCgAMKRoBCUUTGA1THBcuBwoCBkRcUH0="}, {"id": "site_supervisor_role-28", "q": "What does quality at site mean for a supervisor?", "options": ["Executing work to approved drawings, specifications, method statements and acceptance criteria and preserving evidence", "Finishing quickly regardless of requirements", "Leaving all quality decisions to the client", "Checking only at project handover"], "k": "pjw7jr8a44", "difficulty": "Intermediate", "xe": "AiZMVAtAS0NYAEkWEDYfAVAMHAIGUwsTNh4WTABVV1smJ0RXDBRTDVVTHxEXNhUcEwQGHwYdQ1IxHRtMBkVXWzg2SRgNWl4aERIdVBE3FlUVCxZY"}, {"id": "site_supervisor_role-29", "q": "What should happen when a completed activity does not meet an acceptance criterion?", "options": ["Control the nonconforming work, document the condition and follow the approved disposition/correction process", "Cover the defect before inspection", "Release it because rework is inconvenient", "Delete the inspection record"], "k": "1a1bf2i2552", "difficulty": "Intermediate", "xe": "HTxDWw1aVAxDHggaBjpTBxUUBx8bFhxSPB0BGAREXFQ2PVkUQlBdAEQeDBoRPgccHwteVg0aHAIwAQYYDEJcGTI9SRgUUUAKVxoKFRE2HBte"}, {"id": "site_supervisor_role-30", "q": "Which statement about inspection records is correct?", "options": ["Records should identify what was checked, against what requirement, the result, date/location and responsible person as applicable", "Records should contain only opinions", "Unsigned records are always acceptable", "Records can be recreated from memory months later"], "k": "az2wukppj1", "difficulty": "Intermediate", "xe": "ByFMWwdVUA9UUxsRBjABEQNFAgQGBQYWOlIADg9IUEQ6JUgYB0JbB1QdChFFMBVVFgwXGg1TDB0xBh0DCQM="}, {"id": "site_supervisor_role-31", "q": "What is a hold point in field execution?", "options": ["A defined point where work must not proceed until the required inspection or release is completed", "A suggestion to inspect later", "A point where no one needs to be notified", "A payment milestone only"], "k": "95ov0h8xy2", "difficulty": "Intermediate", "xe": "GzxBXEJEXQpfBxpUBC0WVR0EHBIIBwAAJlIMAwtZQV4/c0pZFlFBTQ=="}, {"id": "site_supervisor_role-32", "q": "What is a witness point?", "options": ["A defined inspection point where the notified party may witness the activity according to the approved plan", "A point where work must always stop forever", "A material quarantine area", "A payroll approval"], "k": "hy8bz3pvw1", "difficulty": "Intermediate", "xe": "BDpZVgdHQUNBHAAaESxTBQIKBB8NFk8CMxMBAgBJE1s9JUJUFFFfBl8HSQMMKxsaBRFSGAwQCgEsEx0FCVQTQSc8XUgLWlVDRhwbH0U2HREVAxsYAAcKHiZc"}, {"id": "site_supervisor_role-33", "q": "How should a supervisor respond to repeated minor defects?", "options": ["Look for the recurring process cause, involve the responsible team and implement a preventive improvement rather than only fixing each item", "Treat each defect as unrelated forever", "Increase paperwork without changing the process", "Hide the trend"], "k": "26f91ux1zn6", "difficulty": "Advanced", "xe": "ATZdXQNAVwcRFwwSADwHBlAWGxEHEgNSPlIfHgpOVkAgc1pdA19cBkIASQANPgdVAw0dAwUXTxA6Ug4IAV9WQCA2SRgRTUEXVB4IAAw8EhkcHFw="}, {"id": "site_supervisor_role-34", "q": "What is root-cause analysis intended to identify?", "options": ["The underlying cause(s) that allowed a problem to occur or recur", "The person to blame", "The most recent person who touched the work", "Only the visible symptom"], "k": "1dvlhlg2uri", "difficulty": "Advanced", "xe": "ARBsGBFRVwhCUwoVECwWBlARGhcdUwwTMVINCUVOXFonIUJUDlFWQ0IcSQYAPAYHAgAcFQxTBgF/HgofFg1fXTg2QUFM"}, {"id": "site_supervisor_role-35", "q": "Which is a strong corrective action?", "options": ["Change the process, control or condition that caused the nonconformance and verify the change works", "Tell the worker to be more careful", "Repair the item and close the issue immediately", "Add a warning poster only"], "k": "16qzlicsez4", "difficulty": "Advanced", "xe": "EDxfSgdXRgpHFkkVBisaGh5FExINAQoBLBccTAZMRkY2IA1ZDFASBlcVDBcRNgUQHgABBUVTAR0rUgUZFlkTQTs2DVEPWVcHWBIdEUU7FhMVBgZY"}, {"id": "site_supervisor_role-36", "q": "A supervisor discovers that a measuring instrument is past its calibration due date. What is the best immediate action?", "options": ["Remove it from use, assess affected measurements and arrange calibrated replacement/reverification", "Continue using it for non-critical work without review", "Change the due date on the label", "Discard all records automatically"], "k": "1pw4mggd60j", "difficulty": "Advanced", "xe": "BztIGAtaQRdDBgQRCytTBgQEBgMaUw4cO1IfAxZeWlQ/Ng1RD0RTAEVTBhpFLwEQBgwdAxpTAhc+ARoeAEBWWCcgDVUXR0ZDUxZJFwoxBwcfCR4TDV0="}, {"id": "site_supervisor_role-37", "q": "What does first-pass yield indicate?", "options": ["The proportion of units or work items accepted without rework at the first inspection", "The number of workers on the first shift", "The number of drawings issued", "The percentage of materials delivered"], "k": "u4j8jghi3w", "difficulty": "Advanced", "xe": "FTpfSxYZQgJCAEkNDDofEVAMAVYIUxoBOhQaAEVEXVM6MExMDUYSDFdTGQYKPBYGA0UXEA8WDAY2BAoCAF5AFzI9SRgQUUUMQxhH"}, {"id": "site_supervisor_role-38", "q": "A project has 200 planned activities and 180 are complete. What is the simple completion ratio?", "options": ["90%", "80%", "95%", "110%"], "k": "1c2rpmkiqdp", "difficulty": "Advanced", "xe": "YmsdGKGDElEBQ0m38n9CRUBFT1ZQQ0pc"}, {"id": "site_supervisor_role-39", "q": "Which Excel/ERP practice best supports site control?", "options": ["Maintain consistent activity IDs, dates, responsible persons, status, planned/actual quantities and issue notes", "Use different spellings for the same activity every day", "Delete old entries after reporting", "Track only total project percentage"], "k": "1sxj5gcjrl4", "difficulty": "Advanced", "xe": "EDxDSwtHRgZfB0kHES0GFgQQABMNUwsTKxNPCQtMUVU2IA1KB1hbAlMfDFQRLRIWGwwcEUVTCRszBgoeDENUGTI9SRgQUUIMQwcAGgJx"}, {"id": "site_supervisor_role-40", "q": "What is a useful purpose of a daily progress dashboard?", "options": ["To show current status, planned versus actual progress, constraints and priority actions", "To replace all engineering drawings", "To hide late activities", "To approve all design changes automatically"], "k": "2c9rk8nr6q", "difficulty": "Advanced", "xe": "EnNKVw1QEgdQAAEWCj4BEVAWBwYZHB0GLFILCQZER1k8PV4UQlpdFxEZHAcRfwMHFRYXGB0SGxswHEE="}, {"id": "site_supervisor_role-41", "q": "When a change to site work is requested, the supervisor should:", "options": ["Confirm the change is technically and contractually authorized, update controlled information and brief the affected team", "Implement it verbally without records", "Use an obsolete drawing to document it", "Ask workers to decide whether it is acceptable"], "k": "8bqoz2xj3g", "difficulty": "Advanced", "xe": "EDtMVgVRQUNfFgwQRT4GARgKAB8TEhsbMBxDTAFCV0Q+NkNMQlddDUUBBhhFPh0RUAYdGwQGARs8ExsFCkMUUzY1QkoHFFcbVBAcAAwwHVs="}, {"id": "site_supervisor_role-42", "q": "What is an interface register useful for?", "options": ["Tracking dependencies and handoffs between disciplines, areas, contractors or systems", "Tracking employee birthdays", "Replacing the project schedule", "Recording only material prices"], "k": "1xtszqy4hyv", "difficulty": "Advanced", "xe": "Gj1ZXRBSUwBUAEkVFzpTEBEWGxMbUxsdfxEAAhFfW15zJEVdDBRABkIDBhoWNhEcHAwGHwwAQ1IvAAoeAFxBWyA6WV0RFFMNVVMaAAQrBgZQBAATSQUGATYQAwlL"}, {"id": "site_supervisor_role-43", "q": "Which escalation is most appropriate for a serious unresolved site constraint?", "options": ["Escalate early with facts, impact, responsible parties and a recommended action", "Wait until the deadline passes", "Escalate only by saying the project is bad", "Hide the constraint until management asks"], "k": "1wmhn18t6of", "difficulty": "Advanced", "xe": "FjVLXQFAWxVUUwwHBj4fFAQMHRhJFAYEOgFPCABOXUA6PEMVD1VZBkMASRUGKxoaHgQQGgxTBhw5HR0BBFldXD1zSFkQWEtN"}, {"id": "site_supervisor_role-44", "q": "What is the best way to handle a conflict between production pressure and a mandatory safety control?", "options": ["Do not bypass the safety control; escalate the production impact and find a compliant recovery plan", "Bypass the control for one shift", "Ask the least experienced worker to accept the risk", "Record the control as complete without performing it"], "k": "100hdi97iqn", "difficulty": "Advanced", "xe": "ADJLXRZNEgBeHR0GCjMAVREXF1YHHBtSMAIbBQpDVVhzMUhbA0FBBhEcD1QWPBsQFBAeE0kDHRcsARoeAAM="}, {"id": "site_supervisor_role-45", "q": "A senior supervisor reviews a trend showing increasing rework in one crew. What is the strongest next step?", "options": ["Analyse defect types and process conditions, identify the dominant cause, implement targeted controls and monitor the trend", "Replace the entire crew without analysis", "Increase final inspection only", "Stop reporting rework"], "k": "23fufwprcof", "difficulty": "Expertise", "xe": "ByFIVgYZUAJCFg1UDDEHEAITFxgdGgAcfxscTAhCRlBzNkteB1dGCkcWSQMNOh1VGRFSAggBCBcrAU8YDUgUUTw+RFYDWkZDUhIcBwBx"}, {"id": "site_supervisor_role-46", "q": "Which KPI combination gives a balanced view of site performance?", "options": ["Safety leading/lagging indicators, schedule variance, productivity, rework/NCRs and resource constraints", "Only hours worked", "Only percentage complete", "Only number of meetings"], "k": "2bespzflhcn", "difficulty": "Expertise", "xe": "EnNPWQ5VXABUF0k/NRZTBhURUhUGBQoALFIcDQNIQE9/c15bClFWFl0WRVQVLRwRBQYGHx8aGwtzUh4ZBEFdQipzTFYGFFEMXwAdBgQ2HQEDSw=="}, {"id": "site_supervisor_role-47", "q": "What is the most useful content for a management escalation report?", "options": ["Evidence, current status, impact, root/likely cause, options, owner and recommended decision", "Only a complaint", "Only raw photographs", "Only a percentage with no context"], "k": "1tmlc52eaeg", "difficulty": "Expertise", "xe": "HjJDWQVRXwZfB0kaADoXBlAGHRgKGhwXfxcZBQFIWlQ2c0xWBhRWBlIaGh0KMV4HFQQWD0kaARQwAAINEURbWX0="}, {"id": "site_supervisor_role-48", "q": "How should a supervisor develop team capability over time?", "options": ["Coach workers, clarify standards, observe performance, provide feedback and close competence gaps", "Give instructions only when problems occur", "Keep all knowledge with the supervisor", "Avoid delegating any responsibility"], "k": "1iplucyh6o7", "difficulty": "Expertise", "xe": "EDJdWQBdXgpFCkkTFzAEBlARGgQGBggafwEbHhBOQE0hNkkYAVtTAFkaBxNJfxUQFQEQFwoYTxMxFk8PCkNASjw/QV0GFFYGXRYOFRE2HBte"}, {"id": "site_supervisor_role-49", "q": "What distinguishes an expert Site Supervisor?", "options": ["They integrate safety, quality, schedule, resources, technical requirements, coordination and risk into timely field decisions", "They personally perform every task", "They focus only on paperwork", "They avoid escalating problems"], "k": "7luhabrkm0", "difficulty": "Expertise", "xe": "FitdXRBAEhBEAwwGEzYAHB8LUh8aUwYcKxcIHgRZUV1zMEJWFkZdDxESBxBFOxYWGRYbGQdeAhM0GwELSQ1aVidzXlEPRF4aER4GBgB/GhsDFRcVHRoAHHE="}, {"id": "site_supervisor_role-50", "q": "If two schedule activities have a direct dependency, the downstream activity should normally:", "options": ["Start only when the prerequisite work and required release/inputs are available", "Start regardless of prerequisite status", "Be marked complete in advance", "Be assigned to more people without checking readiness"], "k": "1lr6wasyq35", "difficulty": "Expertise", "xe": "FzZdXQxQVw1SCkkYCjgaFlAVABMfFgEGLFIJDQleUBAjIUJfEFFBEBESBxBFPgUaGQETFAUWTwA6BQAeDgM="}],_S="SS-8b42c1",_D=20261;
+  const _h=(str,seed)=>{let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0,ch;i<str.length;i++){ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507);h1^=Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507);h2^=Math.imul(h1^(h1>>>13),3266489909);return(4294967296*(2097151&h2)+(h1>>>0)).toString(36)};
+  const isOk=(it,i)=>Number.isInteger(i)&&i>=0&&i<it.options.length&&_h(_S+it.id+'|'+it.options[i],_D)===it.k;
+  const corIdx=it=>it.options.findIndex((o,i)=>isOk(it,i));
+  const xp=it=>{try{const b=atob(it.xe||''),k=_S+it.id,u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i)^(k.charCodeAt(i%k.length)&255);return new TextDecoder().decode(u)}catch(e){return''}};
+  (function deepFreeze(o){Object.freeze(o);Object.values(o).forEach(v=>{if(v&&typeof v==='object'&&!Object.isFrozen(v))deepFreeze(v)})})(QUESTION_BANK);
+  const EXAM_MINUTES=60,EXAM_SECONDS=3600,EXAM_COUNT=QUESTION_BANK.length,LS_KEY='careerBuddyAssessment:'+ROLE;
+  let items=[],answers={},marked={},cur=0,remaining=EXAM_SECONDS,timerId=null,examOn=false,warns=0,proctorOn=false,lastWarn=0;
+  const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])),fmt=t=>{const m=Math.floor(t/60),s=t%60;return(m<10?'0':'')+m+':'+(s<10?'0':'')+s};
+  const css=`.cb-exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}.cb-exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}.cb-exam-top .et-title{font-size:16px;font-weight:800}.cb-exam-top .et-sub{font-size:12px;color:#cdd5e5}.cb-exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}.cb-exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:cbpulse 1s infinite}@keyframes cbpulse{50%{opacity:.5}}.cb-exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}.cb-exam-q-pane{padding:28px 36px;overflow:auto}.cb-exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}.cb-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}.cb-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}.cb-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px}.cb-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}.cb-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}.cb-opt:hover{border-color:#14213D;background:#f9f9ff}.cb-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}.cb-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}.cb-opt.sel .k{background:#14213D;color:#fff}.cb-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}.cb-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}.cb-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}.cb-btn.nav:disabled{opacity:.4;cursor:not-allowed}.cb-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}.cb-btn.mark.on{background:#FCA311;color:#14213D}.cb-btn.submit{background:#FCA311;color:#14213D}.cb-btn.primary{background:#14213D;color:#fff}.cb-side-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}.cb-count{font-size:13px;color:#4a5568;font-weight:600}.cb-count b{color:#14213D}.cb-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.cb-pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}.cb-pal.answered{background:#14213D;color:#fff;border-color:#14213D}.cb-pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}.cb-pal.cur{outline:2px solid #14213D;outline-offset:1px}.cb-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}.cb-legend span{display:inline-flex;align-items:center;gap:8px}.cb-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}.cb-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}.cb-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}.cb-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}.cb-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}.cb-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}.cb-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}.cb-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}.cb-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}.cb-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}.cb-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}.cb-rev .r.ok{border-left-color:#38a169}.cb-rev .r.no{border-left-color:#e53e3e}.cb-rev .rq{font-weight:700;margin-bottom:6px}.cb-rev .ra{font-size:13px;margin:2px 0}.cb-rev .ra.wrong{color:#c53030}.cb-rev .ra.cor{color:#276749}.cb-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}.cb-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px}.cb-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px}.cb-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}.cb-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}.cb-confirm .row{display:flex;gap:10px;justify-content:flex-end}.cb-cover{position:fixed;inset:0;z-index:100002;background:rgba(11,21,38,.97);color:#fff;display:none;flex-direction:column;gap:14px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;padding:24px}.cb-cover .cb-warning-icon{font-size:42px;line-height:1}.cb-cover .cb-warning-title{font-size:30px;font-weight:800;line-height:1.2}.cb-cover .cb-warning-msg{font-size:18px;font-weight:500;line-height:1.5;max-width:650px;color:#e5eaf2}.cb-cover .cb-warning-count{font-size:22px;font-weight:800;margin-top:4px}.cb-cover .cb-resume{margin-top:10px;background:#3182ce;color:#fff;border:none;border-radius:9px;padding:15px 28px;font-size:17px;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(49,130,206,.28)}.cb-cover .cb-resume:hover{background:#2b6cb0}@media(max-width:820px){.cb-exam-main{grid-template-columns:1fr}.cb-exam-side{border-left:none;border-top:1px solid #e2e8f0}.cb-exam-q-pane{padding:22px 18px}}`;
+  function injectCss(){if(document.getElementById('cbExamCss'))return;const s=document.createElement('style');s.id='cbExamCss';s.textContent=css;document.head.appendChild(s)}
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function buildAttempt(){const recent=JSON.parse(localStorage.getItem(LS_KEY+'_attempts')||'[]');let selected=[],sig='';for(let tries=0;tries<25;tries++){selected=shuffle(QUESTION_BANK.slice()).slice(0,EXAM_COUNT);sig=selected.map(x=>x.id).sort().join('|');if(!recent.includes(sig))break}recent.unshift(sig);try{localStorage.setItem(LS_KEY+'_attempts',JSON.stringify(recent.slice(0,20)))}catch(e){}return selected.map(q=>{const c=JSON.parse(JSON.stringify(q));const pairs=c.options.map((o,i)=>({o,i}));shuffle(pairs);c.options=pairs.map(x=>x.o);return c})}
+  function confirmBox(title,msg,okLabel){return new Promise(resolve=>{injectCss();const d=document.createElement('div');d.className='cb-confirm';d.innerHTML=`<div class="box"><h3>${esc(title)}</h3><p>${esc(msg)}</p><div class="row"><button class="cb-btn nav" data-a="0">Cancel</button><button class="cb-btn primary" data-a="1">${esc(okLabel||'Confirm')}</button></div></div>`;document.body.appendChild(d);d.addEventListener('click',e=>{if(e.target===d){d.remove();resolve(false);return}const b=e.target.closest('[data-a]');if(!b)return;d.remove();resolve(b.dataset.a==='1')})})}
+  function startEntry(){showSplash()}
+  function showSplash(){injectCss();const sp=document.createElement('div');sp.className='cb-splash';sp.innerHTML=`<div class="card"><h2>🎯 ${esc(ROLE)} — Assessment</h2><p>Timed, full-screen assessment covering the complete role.</p><ul><li><b>${EXAM_COUNT} questions</b></li><li><b>${EXAM_MINUTES}-minute</b> timer</li><li>Navigate and mark questions for review</li><li>Questions/options shuffle every attempt</li></ul><p style="font-weight:700;color:#14213D">Assessment rules</p><ul><li>Fullscreen is required.</li><li>Do not switch tabs/windows or exit fullscreen.</li><li>Three warnings trigger automatic submission.</li><li>Copy, cut, right-click and common print/source shortcuts are blocked.</li></ul><button class="cb-btn primary" id="cbExamBegin" style="width:100%;padding:14px">Start Assessment →</button></div>`;document.body.appendChild(sp);document.getElementById('cbExamBegin').addEventListener('click',()=>{if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});sp.remove();enterExam()})}
+  function enterExam(){injectCss();items=buildAttempt();answers=Object.create(null);marked=Object.create(null);cur=0;remaining=EXAM_SECONDS;examOn=true;document.body.style.overflow='hidden';const ov=document.createElement('div');ov.className='cb-exam-overlay';ov.id='cbExamOverlay';ov.innerHTML=`<div class="cb-exam-top"><div><div class="et-title">${esc(ROLE)} — Assessment</div><div class="et-sub">${EXAM_COUNT} questions · ${EXAM_MINUTES}-minute timer · one attempt</div></div><div class="cb-exam-timer" id="cbExamTimer">${fmt(remaining)}</div></div><div class="cb-exam-main"><div class="cb-exam-q-pane" id="cbExamQ"></div><div class="cb-exam-side"><div class="cb-count">Answered <b id="cbExamAnsN">0</b> / ${EXAM_COUNT}</div><h4 class="cb-side-title">Question palette</h4><div class="cb-palette" id="cbExamPal"></div><div class="cb-legend"><span><i style="background:#14213D;border-color:#14213D"></i> Answered</span><span><i style="background:#FCA311;border-color:#FCA311"></i> Marked</span><span><i></i> Not answered</span></div><button class="cb-btn submit" id="cbExamSubmit" style="width:100%">Submit Assessment</button></div></div>`;document.body.appendChild(ov);buildPalette();renderQ();timerId=setInterval(tick,1000);window.addEventListener('beforeunload',beforeUnload);startProctor();document.getElementById('cbExamSubmit').addEventListener('click',()=>submitExam(false))}
+  function beforeUnload(e){if(examOn){e.preventDefault();e.returnValue=''}}
+  function tick(){remaining--;const el=document.getElementById('cbExamTimer');if(el){el.textContent=fmt(Math.max(remaining,0));if(remaining<=300)el.classList.add('warn')}if(remaining<=0)submitExam(true)}
+  function buildPalette(){const pal=document.getElementById('cbExamPal');pal.innerHTML='';items.forEach((it,n)=>{const b=document.createElement('button');b.className='cb-pal';b.textContent=n+1;b.dataset.n=n;b.addEventListener('click',()=>{cur=n;renderQ()});pal.appendChild(b)});refreshPalette()}
+  function refreshPalette(){document.querySelectorAll('#cbExamPal .cb-pal').forEach(b=>{const n=+b.dataset.n,id=items[n].id;b.classList.toggle('answered',id in answers);b.classList.toggle('marked',!!marked[id]);b.classList.toggle('cur',n===cur)});const el=document.getElementById('cbExamAnsN');if(el)el.textContent=Object.keys(answers).length}
+  function renderQ(){const it=items[cur],id=it.id,pane=document.getElementById('cbExamQ');pane.innerHTML=`<div class="cb-qnum">Question ${cur+1} of ${items.length}</div><div class="cb-qtext">${esc(it.q)}<span class="diff">${esc(it.difficulty)}</span></div><div class="cb-opts">${it.options.map((o,i)=>`<div class="cb-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${esc(o)}</span></div>`).join('')}</div><div class="cb-actions"><button class="cb-btn nav" id="cbPrev" ${cur===0?'disabled':''}>← Previous</button><button class="cb-btn mark${marked[id]?' on':''}" id="cbMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button><button class="cb-btn nav" id="cbNext" ${cur===items.length-1?'disabled':''}>Next →</button></div>`;pane.querySelectorAll('.cb-opt').forEach(el=>el.addEventListener('click',()=>{if(!examOn)return;const v=+el.dataset.i;if(!Number.isInteger(v)||v<0||v>=it.options.length)return;answers[id]=v;pane.querySelectorAll('.cb-opt').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');refreshPalette()}));document.getElementById('cbPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ()}});document.getElementById('cbNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ()}});document.getElementById('cbMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ()});refreshPalette()}
+  async function submitExam(auto){if(!examOn)return;const unanswered=items.length-Object.keys(answers).length;if(!auto){const ok=await confirmBox('Submit assessment?',unanswered?`You have ${unanswered} unanswered question(s). Once submitted, you cannot change your answers.`:'Once submitted, you cannot change your answers.','Submit Assessment');if(!ok)return}examOn=false;clearInterval(timerId);window.removeEventListener('beforeunload',beforeUnload);stopProctor();const score=items.reduce((n,it)=>n+(isOk(it,answers[it.id])?1:0),0);saveScore(score,items.length);showResults(score)}
+  function saveScore(score,total){const a=JSON.parse(localStorage.getItem(LS_KEY)||'[]');a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,EXAM_COUNT)))}catch(e){}}
+  function showResults(score){const total=items.length,pct=Math.round(score/total*100);let msg='Keep practicing — review missed questions and try again.';if(pct>=85)msg='Outstanding — strong command of the Site Supervisor role.';else if(pct>=65)msg='Solid performance. Review harder areas and try again.';else if(pct>=50)msg='Borderline — revisit the course and retake the assessment.';const rev=items.map((it,n)=>{const ca=corIdx(it),ex=xp(it),you=answers[it.id],attempted=you!=null,your=attempted?String.fromCharCode(65+you)+'. '+esc(it.options[you]):'<i>Not answered</i>',cor=String.fromCharCode(65+ca)+'. '+esc(it.options[ca]);return `<div class="r ${attempted&&you===ca?'ok':'no'}"><div class="rq">Q${n+1}. ${esc(it.q)}</div><div class="ra ${attempted&&you===ca?'cor':'wrong'}">Your answer: ${your}</div>${attempted&&you!==ca?`<div class="ra cor">Correct: ${cor}</div>`:''}${ex?`<div class="rx">${esc(ex)}</div>`:''}</div>`}).join('');const ov=document.getElementById('cbExamOverlay');ov.innerHTML=`<div class="cb-exam-top"><div class="et-title">Result — ${esc(ROLE)} Assessment</div><button class="cb-btn" id="cbClose" style="background:rgba(255,255,255,.15);color:#fff">✕ Close</button></div><div class="cb-exam-q-pane" style="flex:1"><div class="cb-result"><div class="cb-score">${score} / ${total}</div><div class="cb-rmsg">${pct}% correct — ${msg}</div><div style="margin-top:16px"><button class="cb-btn primary" id="cbRetry">↻ Take another assessment</button></div><div class="cb-rev">${rev}</div></div></div>`;document.getElementById('cbRetry').addEventListener('click',()=>{ov.remove();enterExam()});document.getElementById('cbClose').addEventListener('click',()=>closeExam())}
+  function closeExam(){stopProctor();const ov=document.getElementById('cbExamOverlay');if(ov)ov.remove();document.body.style.overflow='';if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}
+  function warning(title,msg){if(!proctorOn||!examOn)return;const now=Date.now();if(now-lastWarn<1200)return;lastWarn=now;warns++;const cover=document.getElementById('cbExamCover')||document.createElement('div');cover.className='cb-cover';cover.id='cbExamCover';cover.style.display='flex';cover.innerHTML=`<div class="cb-warning-icon">⚠️</div><div class="cb-warning-title">${esc(title)}</div><div class="cb-warning-msg">${esc(msg)}</div><div class="cb-warning-count">Warning ${warns} of 3</div><button class="cb-resume" id="cbResume">Return to assessment</button>`;document.body.appendChild(cover);document.getElementById('cbResume').onclick=()=>{cover.style.display='none';if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});if(warns>=3)submitExam(true)};if(warns>=3)setTimeout(()=>submitExam(true),500)}
+  function visHandler(){if(document.hidden)warning('Tab or window switch detected','Please stay on the assessment screen.')}
+  function fsHandler(){if(examOn&&!document.fullscreenElement)warning('Fullscreen exited','The assessment must remain in fullscreen mode.')}
+  function blurHandler(){if(examOn)warning('Focus changed','Please keep the assessment window active.')}
+  function blockEvt(e){if(examOn){e.preventDefault();warning('Action blocked','Copy, cut and right-click are disabled during the assessment.')}}
+  function keyGuard(e){if(!examOn)return;const k=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&['c','x','p','s','u'].includes(k)){e.preventDefault();warning('Shortcut blocked','Copy, print, save and source shortcuts are disabled.')}if(k==='f12'){e.preventDefault();warning('Developer tools shortcut blocked','This action is disabled during the assessment.')}}
+  function printGuard(e){if(examOn&&e.key==='PrintScreen'){e.preventDefault();warning('Screenshot action blocked','Screenshot capture is restricted during the assessment.')}}
+  function startProctor(){warns=0;lastWarn=0;proctorOn=true;document.addEventListener('visibilitychange',visHandler);document.addEventListener('fullscreenchange',fsHandler);window.addEventListener('blur',blurHandler);document.addEventListener('contextmenu',blockEvt,true);document.addEventListener('copy',blockEvt,true);document.addEventListener('cut',blockEvt,true);document.addEventListener('keydown',keyGuard,true);document.addEventListener('keyup',printGuard,true)}
+  function stopProctor(){proctorOn=false;document.removeEventListener('visibilitychange',visHandler);document.removeEventListener('fullscreenchange',fsHandler);window.removeEventListener('blur',blurHandler);document.removeEventListener('contextmenu',blockEvt,true);document.removeEventListener('copy',blockEvt,true);document.removeEventListener('cut',blockEvt,true);document.removeEventListener('keydown',keyGuard,true);document.removeEventListener('keyup',printGuard,true);const c=document.getElementById('cbExamCover');if(c)c.remove()}
+  document.addEventListener('click',e=>{const b=e.target.closest('#cbAssessStart');if(b){e.preventDefault();startEntry();}},true);window.addEventListener('keydown',e=>{if(e.key==='Escape'&&examOn)e.preventDefault()});
+})();
+</script><style id="cb-tabbar">/* Module nav bar, same on every page (APM course style): navy scrollbar 10px below the buttons, 5px between buttons. :not(#_) only raises specificity. */.tabbar:not(#_),.tabs:not(#_),.tab-bar:not(#_){gap:5px!important;padding-top:5px!important;padding-bottom:10px!important;padding-left:24px!important;padding-right:24px!important;scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.tabbar:not(#_)>*,.tabs:not(#_)>*,.tab-bar:not(#_)>*{margin-top:0!important;margin-bottom:0!important;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif!important;font-size:13.5px!important;font-weight:500!important;line-height:normal!important;padding:11px 16px!important;border:0!important;border-radius:8px!important;color:#4a5568!important;background:transparent!important;white-space:nowrap!important;flex-shrink:0!important}.tabbar:not(#_)>*:hover,.tabs:not(#_)>*:hover,.tab-bar:not(#_)>*:hover{color:#14213d!important;background:#eef1f6!important}.tabbar:not(#_)>.active,.tabbar:not(#_)>.on,.tabbar:not(#_)>[aria-selected="true"],.tabs:not(#_)>.active,.tabs:not(#_)>.on,.tabs:not(#_)>[aria-selected="true"],.tab-bar:not(#_)>.active,.tab-bar:not(#_)>.on,.tab-bar:not(#_)>[aria-selected="true"]{font-weight:700!important;color:#fff!important;background:#14213d!important}.tabbar:not(#_)::-webkit-scrollbar,.tabs:not(#_)::-webkit-scrollbar,.tab-bar:not(#_)::-webkit-scrollbar{display:block!important;height:8px}.tabbar:not(#_)::-webkit-scrollbar-thumb,.tabs:not(#_)::-webkit-scrollbar-thumb,.tab-bar:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar:not(#_)::-webkit-scrollbar-track,.tabs:not(#_)::-webkit-scrollbar-track,.tab-bar:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* "On this page" sidebar: same navy scrollbar */.toc:not(#_),.side:not(#_),.sidebar:not(#_),.sidenav:not(#_){scrollbar-width:thin!important;scrollbar-color:#14213d #e9edf4!important}.toc:not(#_)::-webkit-scrollbar,.side:not(#_)::-webkit-scrollbar,.sidebar:not(#_)::-webkit-scrollbar,.sidenav:not(#_)::-webkit-scrollbar{width:8px}.toc:not(#_)::-webkit-scrollbar-thumb,.side:not(#_)::-webkit-scrollbar-thumb,.sidebar:not(#_)::-webkit-scrollbar-thumb,.sidenav:not(#_)::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.toc:not(#_)::-webkit-scrollbar-track,.side:not(#_)::-webkit-scrollbar-track,.sidebar:not(#_)::-webkit-scrollbar-track,.sidenav:not(#_)::-webkit-scrollbar-track{background:#e9edf4!important;border-radius:8px}/* No "Tab X of Y" progress pill */.progress-pill:not(#_),#progressPill:not(#_),span:has(>#progressText):not(#_),#progressText:not(#_),span:has(>#pt):not(#_),#pt:not(#_),#ptxt:not(#_){display:none!important}</style><script id="cb-shot-guard">
+/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn,#cbAssessStart,#startAssessment';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.').catch(function(){});}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    function onKeyDown(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    }
+    function onKeyUp(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    }
+    function hook(w){try{if(w.__cbShot)return;w.__cbShot=1;w.addEventListener('keydown',onKeyDown,true);w.addEventListener('keyup',onKeyUp,true);}catch(_){}}
+    hook(window);
+    [].forEach.call(document.querySelectorAll('iframe'),function(f){hook(f.contentWindow);f.addEventListener('load',function(){hook(f.contentWindow);});});
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){setTimeout(function(){var a=document.activeElement;if(a&&a.tagName==='IFRAME'&&document.hasFocus&&!document.hidden)return;show('The assessment is hidden while another window is active.',0);},0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&](assess=1|mode=exam)(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script><script id="cb-exam-cancel">/* Assessment tab (opened with ?assess=1 / ?mode=exam): Cancel on the rules screen and Close on the results close this tab
+   and return to the course tab; the tab also closes by itself 30 seconds after the results appear. */
+(function(){
+  if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
+  var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton,#begin,#exStart';
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX,#cbClose2,#exDone,#close'; // #examExit is the in-test Close (exam top bar), not a results button
+  var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
+  function leave(rules,home){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    // A tab the browser will not let a script close (opened directly): hide the rules screen, or go to Skill Up.
+    setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
+  }
+  function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  function countdown(){
+    var done=resultsShown();
+    if(done&&!timer){
+      left=AUTO_CLOSE;
+      note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
+      note.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483645;background:#14213d;color:#fff;font:600 14px system-ui,sans-serif;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.25)';
+      document.body.appendChild(note);
+      var tick=function(){note.textContent='This tab will close in '+left+'s and return to the course';if(left--<=0){clearInterval(timer);leave(null,true);}};
+      tick();timer=setInterval(tick,1000);
+    }else if(!done&&timer){clearInterval(timer);timer=null;if(note)note.remove();} // another attempt started
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbCancel)return; doc.__cbCancel=1; docs.push(doc);
+    doc.addEventListener('click',function(e){
+      if(!e.target.closest)return;
+      if(e.target.closest(RESULT_CLOSE)||(e.target.closest('#closeFinalAssessment')&&resultsShown())){setTimeout(function(){leave(null,true);},0);return;}
+      var c=e.target.closest(CANCEL); if(!c)return;
+      var rules=c.classList.contains('cb-exam-cancel')?(c.closest('[class*="splash"],[class*="modal"],[class*="overlay"]')||null):null;
+      setTimeout(function(){leave(rules);},0);
+    },true);
+    function add(){
+      countdown();
+      var b=doc.querySelector(BEGIN); if(!b||b.__cbc)return; b.__cbc=1;
+      var box=b.closest('.card,[class*="splash"],[class*="modal"],[class*="dialog"]')||b.parentElement;
+      if(box.querySelector(CANCEL)||[].some.call(box.querySelectorAll('button'),function(x){return x.textContent.trim()==='Cancel';}))return;
+      // This rules screen has no Cancel: add one beside (or under) the start button.
+      var c=doc.createElement('button'); c.type='button'; c.className=b.className+' cb-exam-cancel'; c.textContent='Cancel';
+      c.style.cssText='background:#fff;color:#14213d;border:1px solid #cbd5e1;box-shadow:none';
+      var flex=/flex/.test((doc.defaultView||window).getComputedStyle(b.parentElement).display);
+      if(flex){c.style.cssText+=';flex:0 0 auto;width:auto;margin:0 10px 0 0';b.parentNode.insertBefore(c,b);}
+      else{c.style.cssText+=';display:block;width:100%;margin-top:10px';b.parentNode.insertBefore(c,b.nextSibling);}
+    }
+    add(); new MutationObserver(add).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script></body></html>
