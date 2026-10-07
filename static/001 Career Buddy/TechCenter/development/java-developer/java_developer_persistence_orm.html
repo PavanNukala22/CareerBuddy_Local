@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Persistence & ORM — Java Developer Learning Module</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Noto+Sans+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#d9730d 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans',system-ui,sans-serif;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans',system-ui,sans-serif;font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'Noto Sans',system-ui,sans-serif;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'Noto Sans',system-ui,sans-serif;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'Noto Sans',system-ui,sans-serif;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'Noto Sans',system-ui,sans-serif;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'Noto Sans',system-ui,sans-serif;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'Noto Sans',system-ui,sans-serif;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+
+/* ============= Module additions (same visual language) ============= */
+.table-wrap{overflow-x:auto;margin:16px 0;-webkit-overflow-scrolling:touch}
+.table-wrap table{margin:0;min-width:560px}
+.formula{display:inline-block;font-size:12.5px;background:var(--bg-code);border:1px solid var(--line);padding:2px 8px;border-radius:4px;color:#14213D;font-weight:500}
+.saq-toggle{margin-top:10px}
+.mcq-opt:focus-visible,.btn:focus-visible,.tab:focus-visible,.assess-start-btn:focus-visible,.saq textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.example{border:1px solid var(--line);border-left:4px solid var(--orange);border-radius:var(--radius);padding:14px 18px;margin:16px 0;background:#fffdf9}
+.example-title{font-weight:700;font-size:13px;color:#a85a08;margin-bottom:6px;letter-spacing:.02em}
+.example p,.example ul{margin:6px 0;font-size:14.5px}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.expert{background:#14213D;color:#fff}
+.term{display:grid;grid-template-columns:190px 1fr;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.term:last-child{border-bottom:none}
+details{border:1px solid var(--line);border-radius:var(--radius);margin:10px 0;background:#fff}
+summary{cursor:pointer;padding:11px 16px;font-weight:600;font-size:15px}details[open] summary{border-bottom:1px solid var(--line)}details>div{padding:10px 16px 12px;font-size:14.5px;line-height:1.6;color:#3a3833}
+.term b{color:#14213D}
+.terms{border:1px solid var(--line);border-radius:var(--radius);padding:4px 16px;margin:16px 0;background:#fff}
+@media (max-width:720px){
+  .header-top{padding:12px 16px;flex-wrap:wrap}
+  .brand{font-size:14px;line-height:1.35}
+  .brand-sub{display:block;margin-left:0}
+  .panel-title{font-size:30px}
+  .section h2{font-size:22px}
+  .assess-modal-box{padding:0 18px 40px}
+  .term{grid-template-columns:1fr;gap:2px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+<style>
+/* CareerBuddy: nav + scrollbar parity with dpm_portfolio_strategy */
+/* -- Unify typography: Outfit everywhere (CareerBuddy) -- */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,dl,dt,dd,td,th,div,section,article,header,footer,nav,aside,main,label,button,input,select,textarea,blockquote,figcaption,small,strong,b,em,i{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
+.material-symbols-outlined,.material-icons{font-family:'Material Symbols Outlined','Material Icons' !important}
+code,pre,kbd,samp,tt,.mono,[class*="mono"],[class*="Mono"],[class*="code"],[class*="Code"],[class*="tok"],[class*="hljs"]{font-family:'Noto Sans Mono',ui-monospace,SFMono-Regular,Consolas,monospace}
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+
+/* ===== Nav / scrollbar parity with reference ===== */
+html{scroll-behavior:auto}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+.tabbar{scrollbar-width:none !important}
+.tabbar::-webkit-scrollbar{display:none !important}
+.toc{scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+.toc-list a.active{color:#fff;background:#16233f;border-left-color:transparent;font-weight:600;border-radius:12px;padding:10px 14px}
+.section{scroll-margin-top:140px}
+.tab .tab-done{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--green);color:#fff;font-size:10px;font-weight:700;margin-left:2px}
+:focus-visible{outline:2px solid #FCA311;outline-offset:2px}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header"><div class="header-top"><div class="brand"><div class="brand-mark">QL</div><span>Java Developer | Persistence &amp; ORM<span class="brand-sub"> · Hibernate/JPA, JDBC, PostgreSQL, Oracle DB</span></span></div><div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 6</span></span><button class="btn" onclick="resetProgress()" title="Reset to first tab"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9"/><path d="M2 4v3.5h3.5"/></svg>
+        Reset</button></div></div><nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Foundations</button><button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> JDBC</button><button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> JPA & Hibernate</button><button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> PostgreSQL & Oracle</button><button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> Practice</button><button class="tab" data-tab="t6" role="tab"><span class="tab-num">06</span> Assessment</button></nav></header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside><main class="main"><section class="panel active" id="t1" data-toc='[["s1-1", "What is Persistence?"], ["s1-2", "What is ORM? The Impedance Mismatch"], ["s1-3", "Types \u2014 The Java Persistence Stack"], ["s1-4", "Key Terms (What is What)"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag fresher">→ Fresher-friendly</span></div><div class="panel-eyebrow">Module 01 · Foundations</div><h1 class="panel-title">Persistence & ORM Foundations</h1><p class="panel-subtitle">Start from zero: what persistence and ORM are, the types of tools in the Java stack and the key vocabulary.</p></div><div class="section" id="s1-1"><h2><span class="sec-emoji">🗄️</span> What is Persistence?</h2><p><strong>Persistence</strong> means keeping data alive after the program stops. Java objects live in memory (heap) and vanish on shutdown; a <strong>database</strong> stores them on disk. A <strong>persistence layer</strong> is the part of your application that saves and loads objects.</p><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft)">💾</div><div class="card-title">Save</div><div class="card-desc">Write objects as rows (INSERT/UPDATE).</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🔍</div><div class="card-title">Load</div><div class="card-desc">Read rows back as objects (SELECT).</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🔁</div><div class="card-title">Transact</div><div class="card-desc">Group changes so they all succeed or all fail.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🧱</div><div class="card-title">Map</div><div class="card-desc">Translate between objects and tables.</div></div></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Rule of thumb: <strong>JDBC</strong> = you write SQL and map results by hand. <strong>ORM (JPA/Hibernate)</strong> = you work with objects and the framework writes SQL for you.</div></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">⚖️</span> What is ORM? The Impedance Mismatch</h2><p><strong>ORM (Object-Relational Mapping)</strong> automatically maps Java classes to tables, fields to columns and object references to foreign keys. It exists because objects and tables model data differently:</p><div class="table-wrap"><table><tr><th>Concept</th><th>Object world</th><th>Relational world</th></tr><tr><td>Identity</td><td><code>==</code> / <code>equals()</code></td><td>Primary key</td></tr><tr><td>Relationships</td><td>Object references, collections</td><td>Foreign keys, join tables</td></tr><tr><td>Inheritance</td><td>Class hierarchies</td><td>No native support (needs a strategy)</td></tr><tr><td>Types</td><td>Rich types, enums, nested objects</td><td>Fixed column types</td></tr><tr><td>Navigation</td><td><code>order.getCustomer()</code></td><td>JOIN queries</td></tr></table></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">🧩</span> Types — The Java Persistence Stack</h2><div class="table-wrap"><table><tr><th>Layer</th><th>What it is</th><th>Level of abstraction</th></tr><tr><td><b>JDBC</b></td><td>Low-level API in <code>java.sql</code>; send SQL, read <code>ResultSet</code></td><td>Lowest</td></tr><tr><td><b>SQL mappers</b></td><td>MyBatis, jOOQ, Spring <code>JdbcTemplate</code> — you keep the SQL, they reduce boilerplate</td><td>Low–mid</td></tr><tr><td><b>JPA</b></td><td>Jakarta Persistence — a <em>specification</em> (annotations + <code>EntityManager</code> API). Not runnable by itself</td><td>High</td></tr><tr><td><b>Hibernate</b></td><td>The most popular JPA <em>implementation</em> (also has native features)</td><td>High</td></tr><tr><td><b>Spring Data JPA</b></td><td>Generates repositories on top of JPA/Hibernate</td><td>Highest</td></tr></table></div><h3>Databases covered in this module</h3><div class="table-wrap"><table><tr><th>Database</th><th>Type</th><th>Known for</th></tr><tr><td>PostgreSQL</td><td>Open-source object-relational DB</td><td>Standards compliance, JSONB, extensions, MVCC</td></tr><tr><td>Oracle DB</td><td>Commercial enterprise RDBMS</td><td>PL/SQL, RAC clustering, partitioning, enterprise tooling</td></tr></table></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Package names: JPA 2.x uses <code>javax.persistence.*</code>; Jakarta Persistence 3+ (Spring Boot 3, Hibernate 6) uses <code>jakarta.persistence.*</code>.</div></div></div><div class="section" id="s1-4"><h2><span class="sec-emoji">📖</span> Key Terms (What is What)</h2><div class="terms"><div class="term"><b>Entity</b><span>A Java class mapped to a table (<code>@Entity</code>).</span></div><div class="term"><b>Persistence context</b><span>The first-level cache/“workspace” of managed entities inside one <code>EntityManager</code>.</span></div><div class="term"><b>Dialect</b><span>Hibernate’s adapter for a specific database’s SQL flavour.</span></div><div class="term"><b>Transaction</b><span>A unit of work with ACID guarantees.</span></div><div class="term"><b>Connection pool</b><span>A reusable set of open DB connections (e.g. HikariCP).</span></div><div class="term"><b>DTO</b><span>Plain object used to carry data, not managed by the ORM.</span></div><div class="term"><b>Lazy / Eager</b><span>Load related data on demand / immediately.</span></div><div class="term"><b>N+1 problem</b><span>1 query for a list + N extra queries for each item’s relation.</span></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which of these is a <em>specification</em>, not an implementation?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Hibernate</li><li class="mcq-opt"><span class="opt-letter">B</span> JPA</li><li class="mcq-opt"><span class="opt-letter">C</span> HikariCP</li><li class="mcq-opt"><span class="opt-letter">D</span> PostgreSQL JDBC driver</li></ul><div class="mcq-feedback" data-ok="Correct — JPA defines the API; Hibernate implements it." data-bad="Not quite. JPA is the specification; Hibernate is one implementation."></div></div></div></section><section class="panel" id="t2" data-toc='[["s2-1", "What is JDBC?"], ["s2-2", "Your First Query"], ["s2-3", "Transactions, Batching &amp; Pooling"], ["s2-4", "Expert Notes &amp; Check"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">→ Intermediate</span></div><div class="panel-eyebrow">Module 02 · JDBC</div><h1 class="panel-title">JDBC — Java Database Connectivity</h1><p class="panel-subtitle">Talk to the database directly: connections, SQL, transactions, batching and pooling.</p></div><div class="section" id="s2-1"><h2><span class="sec-emoji">🔌</span> What is JDBC?</h2><p><strong>JDBC (Java Database Connectivity)</strong> is the standard Java API for talking to relational databases. You add a vendor <strong>driver</strong> (a JAR) and write the same code for any database; only the URL and driver change.</p><div class="table-wrap"><table><tr><th>Core type</th><th>Role</th></tr><tr><td><code>DriverManager</code> / <code>DataSource</code></td><td>Obtains a <code>Connection</code></td></tr><tr><td><code>Connection</code></td><td>Session with the database; controls transactions</td></tr><tr><td><code>Statement</code> / <code>PreparedStatement</code></td><td>Sends SQL; the prepared version takes parameters safely</td></tr><tr><td><code>CallableStatement</code></td><td>Calls stored procedures/functions</td></tr><tr><td><code>ResultSet</code></td><td>Cursor over returned rows</td></tr></table></div><h3>Driver types</h3><p>Type 1 (JDBC-ODBC bridge, removed), Type 2 (native API), Type 3 (middleware), <strong>Type 4 (pure Java, direct to DB — what you use today)</strong>.</p></div><div class="section" id="s2-2"><h2><span class="sec-emoji">▶️</span> Your First Query</h2><pre><span class="pre-lang">java</span><code>String url  = &quot;jdbc:postgresql://localhost:5432/shop&quot;;   // Oracle: jdbc:oracle:thin:@//host:1521/ORCLPDB1
+String sql  = &quot;SELECT id, name, price FROM product WHERE price &gt; ?&quot;;
+
+try (Connection con = DriverManager.getConnection(url, &quot;app&quot;, &quot;secret&quot;);
+     PreparedStatement ps = con.prepareStatement(sql)) {
+    ps.setBigDecimal(1, new BigDecimal(&quot;100&quot;));
+    try (ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) {
+            System.out.println(rs.getLong(&quot;id&quot;) + &quot; &quot; + rs.getString(&quot;name&quot;));
+        }
+    }
+}  // try-with-resources closes everything, even on exceptions</code></pre><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><strong>Never</strong> build SQL by concatenating user input (<code>"... WHERE name='" + input + "'"</code>). That is <strong>SQL injection</strong>. Always use <code>PreparedStatement</code> placeholders.</div></div></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🔄</span> Transactions, Batching & Pooling</h2><pre><span class="pre-lang">java</span><code>con.setAutoCommit(false);                 // start a manual transaction
+try {
+    debit.executeUpdate();
+    credit.executeUpdate();
+    con.commit();                         // both succeed
+} catch (SQLException e) {
+    con.rollback();                       // or neither does
+    throw e;
+}
+
+// Batch: one network round-trip for many rows
+for (Product p : products) { ps.setString(1, p.name()); ps.addBatch(); }
+ps.executeBatch();</code></pre><p><strong>Connection pooling:</strong> opening a connection is expensive (network + auth). A pool such as <strong>HikariCP</strong> keeps connections open and lends them out.</p><pre><span class="pre-lang">java</span><code>HikariConfig cfg = new HikariConfig();
+cfg.setJdbcUrl(url); cfg.setUsername(&quot;app&quot;); cfg.setPassword(&quot;secret&quot;);
+cfg.setMaximumPoolSize(10);               // start small; size by DB cores, not by user count
+DataSource ds = new HikariDataSource(cfg);</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Close a pooled connection with <code>close()</code> — it returns to the pool, it is not really closed. Leaked connections are a classic production outage.</div></div></div><div class="section" id="s2-4"><h2><span class="sec-emoji">🎓</span> Expert Notes & Check</h2><ul><li><strong>Fetch size:</strong> <code>ps.setFetchSize(500)</code> streams large results; PostgreSQL needs autocommit off for cursor-based fetching.</li><li><strong>Generated keys:</strong> <code>prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)</code>; on Oracle name the column: <code>new String[]{"ID"}</code>.</li><li><strong>Batch rewriting:</strong> PostgreSQL <code>reWriteBatchedInserts=true</code> speeds up batch inserts.</li><li><strong>Timeouts:</strong> set <code>setQueryTimeout</code> and pool connection timeouts to avoid hangs.</li></ul><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Why use <code>PreparedStatement</code>?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> It is always faster to type</li><li class="mcq-opt"><span class="opt-letter">B</span> Prevents SQL injection and allows plan reuse</li><li class="mcq-opt"><span class="opt-letter">C</span> It removes the need for a driver</li><li class="mcq-opt"><span class="opt-letter">D</span> It disables transactions</li></ul><div class="mcq-feedback" data-ok="Correct — bound parameters are data, never SQL." data-bad="Not quite. Bound parameters prevent injection and allow statement reuse."></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> What happens when you call <code>close()</code> on a HikariCP connection?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> The TCP socket is closed</li><li class="mcq-opt"><span class="opt-letter">B</span> It returns to the pool</li><li class="mcq-opt"><span class="opt-letter">C</span> The database shuts down</li><li class="mcq-opt"><span class="opt-letter">D</span> Nothing, it leaks</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — pooled connections are proxies that return to the pool."></div></div></div></section><section class="panel" id="t3" data-toc='[["s3-1", "What are JPA and Hibernate?"], ["s3-2", "Mapping Entities"], ["s3-3", "Relationships"], ["s3-4", "Entity Lifecycle &amp; Persistence Context"], ["s3-5", "Querying: JPQL, Criteria, Native, Spring Data"], ["s3-6", "Expert: Fetching, N+1, Caching &amp; Locking"]]'><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">→ Advanced</span></div><div class="panel-eyebrow">Module 03 · JPA & Hibernate</div><h1 class="panel-title">JPA & Hibernate</h1><p class="panel-subtitle">Map objects to tables, manage lifecycle, query, and avoid the classic performance traps.</p></div><div class="section" id="s3-1"><h2><span class="sec-emoji">🏛️</span> What are JPA and Hibernate?</h2><p><strong>JPA</strong> standardises ORM in Java: annotations for mapping, <code>EntityManager</code> for operations, <strong>JPQL</strong> for queries. <strong>Hibernate</strong> is the engine that turns these into SQL for your database through its <strong>dialect</strong>.</p><div class="table-wrap"><table><tr><th>Component</th><th>Meaning</th></tr><tr><td><code>EntityManagerFactory</code></td><td>Heavy, built once per app; holds mappings and pools</td></tr><tr><td><code>EntityManager</code> (≈ Hibernate <code>Session</code>)</td><td>Light, per unit of work; owns the persistence context</td></tr><tr><td><code>EntityTransaction</code></td><td>Transaction boundary (Spring uses <code>@Transactional</code>)</td></tr><tr><td><code>persistence.xml</code> / <code>application.yml</code></td><td>Configuration</td></tr></table></div></div><div class="section" id="s3-2"><h2><span class="sec-emoji">📦</span> Mapping Entities</h2><pre><span class="pre-lang">java</span><code>@Entity @Table(name = &quot;product&quot;)
+public class Product {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)   // PostgreSQL; Oracle 12c+ also supports IDENTITY
+    private Long id;
+
+    @Column(nullable = false, length = 120)
+    private String name;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal price;
+
+    @Enumerated(EnumType.STRING)          // never ORDINAL — reordering the enum corrupts data
+    private Status status;
+
+    @Version private Long version;        // optimistic locking
+    protected Product() {}                // JPA needs a no-arg constructor
+}</code></pre><h3>ID generation strategies</h3><div class="table-wrap"><table><tr><th>Strategy</th><th>How</th><th>Best for</th></tr><tr><td>IDENTITY</td><td>DB auto-increment column</td><td>PostgreSQL/Oracle 12c+; disables insert batching</td></tr><tr><td>SEQUENCE</td><td>DB sequence (<code>allocationSize</code> pre-fetches IDs)</td><td>Best performance; default choice</td></tr><tr><td>TABLE</td><td>Counter table</td><td>Rarely; portability only</td></tr><tr><td>UUID</td><td>Generated in Java</td><td>Distributed systems</td></tr></table></div></div><div class="section" id="s3-3"><h2><span class="sec-emoji">🔗</span> Relationships</h2><div class="table-wrap"><table><tr><th>Type</th><th>Annotation</th><th>Example</th></tr><tr><td>One-to-One</td><td><code>@OneToOne</code></td><td>User ↔ Profile</td></tr><tr><td>One-to-Many / Many-to-One</td><td><code>@OneToMany</code> / <code>@ManyToOne</code></td><td>Order ↔ OrderLine</td></tr><tr><td>Many-to-Many</td><td><code>@ManyToMany</code> + join table</td><td>Student ↔ Course</td></tr></table></div><pre><span class="pre-lang">java</span><code>@Entity class Order {
+    @Id @GeneratedValue Long id;
+    @OneToMany(mappedBy = &quot;order&quot;, cascade = CascadeType.ALL, orphanRemoval = true)
+    List&lt;OrderLine&gt; lines = new ArrayList&lt;&gt;();
+    void add(OrderLine l) { lines.add(l); l.setOrder(this); }   // keep both sides in sync
+}
+@Entity class OrderLine {
+    @Id @GeneratedValue Long id;
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = &quot;order_id&quot;)
+    Order order;                                                 // owning side = holds the FK
+}</code></pre><p><strong>Inheritance strategies:</strong> <code>SINGLE_TABLE</code> (fast, nullable columns), <code>JOINED</code> (normalised, joins), <code>TABLE_PER_CLASS</code> (unions, rarely good).</p></div><div class="section" id="s3-4"><h2><span class="sec-emoji">🔁</span> Entity Lifecycle & Persistence Context</h2><div class="pill-row"><span class="pill">New / Transient</span><span class="pill">→ persist()</span><span class="pill">Managed</span><span class="pill">→ detach / close</span><span class="pill">Detached</span><span class="pill">→ remove()</span><span class="pill">Removed</span></div><pre><span class="pre-lang">java</span><code>em.getTransaction().begin();
+Product p = em.find(Product.class, 1L);   // SELECT, now MANAGED
+p.setPrice(new BigDecimal(&quot;499&quot;));        // no save() needed
+em.getTransaction().commit();             // dirty checking → UPDATE issued automatically</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">The <strong>first-level cache</strong> returns the same instance for the same ID within one persistence context. <strong>Flush</strong> = sync changes to DB; <strong>commit</strong> = make them permanent.</div></div></div><div class="section" id="s3-5"><h2><span class="sec-emoji">🔎</span> Querying: JPQL, Criteria, Native, Spring Data</h2><pre><span class="pre-lang">java</span><code>// JPQL — queries entities, not tables
+List&lt;Product&gt; list = em.createQuery(
+    &quot;select p from Product p where p.price &gt; :min order by p.name&quot;, Product.class)
+    .setParameter(&quot;min&quot;, BigDecimal.TEN).setMaxResults(20).getResultList();
+
+// Native SQL when you need DB-specific features
+em.createNativeQuery(&quot;select * from product where data @&gt; &#x27;{\&quot;tag\&quot;:\&quot;new\&quot;}&#x27;&quot;, Product.class);
+
+// Spring Data JPA
+interface ProductRepo extends JpaRepository&lt;Product, Long&gt; {
+    List&lt;Product&gt; findByPriceGreaterThanOrderByName(BigDecimal min);
+    @Query(&quot;select new com.shop.ProductDto(p.id, p.name) from Product p&quot;)
+    List&lt;ProductDto&gt; summaries();                     // DTO projection: loads only what you need
+}</code></pre></div><div class="section" id="s3-6"><h2><span class="sec-emoji">🚀</span> Expert: Fetching, N+1, Caching & Locking</h2><h3>The N+1 problem</h3><pre><span class="pre-lang">java</span><code>// BAD: 1 query for orders + N queries for each order.getLines()
+orderRepo.findAll().forEach(o -&gt; o.getLines().size());
+
+// FIX 1: fetch join          FIX 2: entity graph          FIX 3: batch fetching
+@Query(&quot;select distinct o from Order o join fetch o.lines&quot;)
+List&lt;Order&gt; withLines();
+@EntityGraph(attributePaths = &quot;lines&quot;) List&lt;Order&gt; findAll();
+// application.yml → spring.jpa.properties.hibernate.default_batch_fetch_size: 50</code></pre><div class="table-wrap"><table><tr><th>Topic</th><th>Key points</th></tr><tr><td>Fetch type</td><td><code>@ManyToOne/@OneToOne</code> default EAGER — set LAZY explicitly; <code>@OneToMany</code> default LAZY</td></tr><tr><td>LazyInitializationException</td><td>Accessing a lazy relation after the session closed; fix with fetch join/DTO, not <code>open-in-view</code> hacks</td></tr><tr><td>L2 cache</td><td>Shared across sessions (Ehcache/Infinispan); good for read-mostly reference data</td></tr><tr><td>Optimistic lock</td><td><code>@Version</code>; conflict → <code>OptimisticLockException</code>; best for web apps</td></tr><tr><td>Pessimistic lock</td><td><code>LockModeType.PESSIMISTIC_WRITE</code> → <code>SELECT … FOR UPDATE</code>; use for hot rows</td></tr><tr><td>Batching</td><td><code>hibernate.jdbc.batch_size=50</code>, <code>order_inserts=true</code>; needs SEQUENCE ids</td></tr><tr><td>equals/hashCode</td><td>Base on a business key or ID carefully; avoid Lombok <code>@Data</code> on entities</td></tr></table></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which is the best fix for a lazy-loaded collection causing N+1 on a list screen?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Switch everything to EAGER</li><li class="mcq-opt"><span class="opt-letter">B</span> Fetch join / entity graph / batch fetching</li><li class="mcq-opt"><span class="opt-letter">C</span> Call getLines() in a loop</li><li class="mcq-opt"><span class="opt-letter">D</span> Disable transactions</li></ul><div class="mcq-feedback" data-ok="Correct — fetch only what the use-case needs." data-bad="Not quite. EAGER globally causes bigger problems; fetch per use-case."></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> What triggers an automatic UPDATE for a managed entity?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Calling save() twice</li><li class="mcq-opt"><span class="opt-letter">B</span> Dirty checking at flush/commit</li><li class="mcq-opt"><span class="opt-letter">C</span> Calling merge() on a new entity</li><li class="mcq-opt"><span class="opt-letter">D</span> Using JPQL only</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — Hibernate compares snapshots (dirty checking) at flush."></div></div></div></section><section class="panel" id="t4" data-toc='[["s4-1", "What are PostgreSQL and Oracle?"], ["s4-2", "Connecting from Java / Spring Boot"], ["s4-3", "SQL Differences You Must Know"], ["s4-4", "Indexes, Plans &amp; Tuning"]]'><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">→ Advanced</span></div><div class="panel-eyebrow">Module 04 · PostgreSQL & Oracle</div><h1 class="panel-title">PostgreSQL & Oracle DB</h1><p class="panel-subtitle">Understand both databases, their SQL differences, indexing and how to configure them from Java.</p></div><div class="section" id="s4-1"><h2><span class="sec-emoji">🐘</span> What are PostgreSQL and Oracle?</h2><div class="table-wrap"><table><tr><th></th><th>PostgreSQL</th><th>Oracle Database</th></tr><tr><td>License</td><td>Open source (PostgreSQL License)</td><td>Commercial (XE edition is free, limited)</td></tr><tr><td>Architecture</td><td>Process-per-connection, MVCC with VACUUM</td><td>Instance + SGA/PGA, undo-based MVCC, RAC clustering</td></tr><tr><td>Procedural language</td><td>PL/pgSQL (+ Python, etc.)</td><td>PL/SQL (packages, very mature)</td></tr><tr><td>Standout features</td><td>JSONB, arrays, extensions (PostGIS), partial/GIN indexes</td><td>Partitioning, Flashback, Data Guard, advanced security</td></tr><tr><td>JDBC driver</td><td><code>org.postgresql:postgresql</code></td><td><code>com.oracle.database.jdbc:ojdbc11</code></td></tr><tr><td>Hibernate dialect</td><td><code>PostgreSQLDialect</code></td><td><code>OracleDialect</code></td></tr></table></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">In Hibernate 6 the dialect is usually auto-detected; older versions need <code>hibernate.dialect</code> set explicitly.</div></div></div><div class="section" id="s4-2"><h2><span class="sec-emoji">⚙️</span> Connecting from Java / Spring Boot</h2><pre><span class="pre-lang">yaml</span><code># PostgreSQL
+spring.datasource.url: jdbc:postgresql://localhost:5432/shop
+spring.datasource.username: app
+spring.jpa.hibernate.ddl-auto: validate      # use Flyway/Liquibase for schema changes; avoid &quot;update&quot; in prod
+
+# Oracle (service name style)
+spring.datasource.url: jdbc:oracle:thin:@//dbhost:1521/ORCLPDB1
+spring.datasource.driver-class-name: oracle.jdbc.OracleDriver</code></pre></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🔀</span> SQL Differences You Must Know</h2><div class="table-wrap"><table><tr><th>Task</th><th>PostgreSQL</th><th>Oracle</th></tr><tr><td>Auto IDs</td><td><code>GENERATED ALWAYS AS IDENTITY</code>, <code>SERIAL</code></td><td><code>GENERATED AS IDENTITY</code> (12c+), sequences + <code>seq.NEXTVAL</code></td></tr><tr><td>Pagination</td><td><code>LIMIT 10 OFFSET 20</code></td><td><code>OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY</code> (12c+); old: <code>ROWNUM</code></td></tr><tr><td>Text type</td><td><code>text</code>, <code>varchar(n)</code></td><td><code>VARCHAR2(n)</code>, <code>CLOB</code></td></tr><tr><td>Numbers</td><td><code>integer, numeric(p,s)</code></td><td><code>NUMBER(p,s)</code></td></tr><tr><td>Booleans</td><td>Native <code>boolean</code></td><td>Native only from 23ai; earlier use <code>NUMBER(1)</code></td></tr><tr><td>Empty string</td><td>Distinct from NULL</td><td><strong>Treated as NULL</strong></td></tr><tr><td>Current time</td><td><code>now()</code></td><td><code>SYSDATE</code> / <code>SYSTIMESTAMP</code></td></tr><tr><td>Dummy table</td><td>Not needed: <code>SELECT 1</code></td><td><code>SELECT 1 FROM DUAL</code> (optional from 23ai)</td></tr><tr><td>Upsert</td><td><code>INSERT … ON CONFLICT DO UPDATE</code></td><td><code>MERGE INTO …</code></td></tr><tr><td>JSON</td><td><code>jsonb</code> + GIN index</td><td><code>JSON</code> type / <code>JSON_VALUE</code> (21c+)</td></tr></table></div><div class="example"><div class="example-title">EXAMPLE · Pagination in both databases</div><pre><span class="pre-lang">sql</span><code>-- PostgreSQL
+SELECT * FROM product ORDER BY id LIMIT 10 OFFSET 20;
+-- Oracle 12c+
+SELECT * FROM product ORDER BY id OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY;</code></pre></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">With JPQL, <code>setFirstResult/setMaxResults</code> makes Hibernate generate the right syntax for each database — one reason to prefer JPQL over native SQL.</div></div></div><div class="section" id="s4-4"><h2><span class="sec-emoji">📈</span> Indexes, Plans & Tuning</h2><ul><li><strong>Index</strong> = sorted lookup structure. Index foreign keys and columns used in <code>WHERE</code>/<code>JOIN</code>/<code>ORDER BY</code>.</li><li><strong>Read the plan:</strong> PostgreSQL <code>EXPLAIN (ANALYZE, BUFFERS)</code>; Oracle <code>EXPLAIN PLAN</code> / <code>DBMS_XPLAN.DISPLAY</code>. Watch for full table scans on large tables.</li><li><strong>PostgreSQL index types:</strong> B-tree (default), Hash, GIN (JSONB/arrays/full-text), GiST (geo), BRIN (huge ordered tables), partial indexes.</li><li><strong>Oracle index types:</strong> B-tree, bitmap (low cardinality, read-heavy), function-based, reverse key.</li><li><strong>Isolation defaults:</strong> PostgreSQL and Oracle both default to READ COMMITTED.</li><li><strong>Plan reuse:</strong> parameterised queries let both databases reuse plans — another reason to avoid string concatenation.</li></ul><pre><span class="pre-lang">sql</span><code>CREATE INDEX idx_order_customer ON orders (customer_id);
+CREATE INDEX idx_prod_tags ON product USING GIN (data);          -- PostgreSQL JSONB
+EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM orders WHERE customer_id = 42;</code></pre><div class="mcq" data-answer="0"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which statement about Oracle is true?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Empty string equals NULL</li><li class="mcq-opt"><span class="opt-letter">B</span> LIMIT is the standard pagination keyword</li><li class="mcq-opt"><span class="opt-letter">C</span> JSONB is a native type</li><li class="mcq-opt"><span class="opt-letter">D</span> It has no sequences</li></ul><div class="mcq-feedback" data-ok="Correct — Oracle treats &#x27;&#x27; as NULL." data-bad="Not quite. Oracle treats an empty string as NULL."></div></div></div></section><section class="panel" id="t5" data-toc='[["s5-1", "Scenario: ShopKart Order Service"], ["s5-2", "Tasks"], ["s5-3", "Quick Checks"]]'><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 05 · Practice</div><h1 class="panel-title">Practice: Fix the ShopKart Order Service</h1><p class="panel-subtitle">Apply everything to a realistic performance and design problem.</p></div><div class="quiz-progress"><span class="quiz-score">0 / 0 correct</span><div class="quiz-bar-track"><div class="quiz-bar-fill"></div></div><button class="btn quiz-reset-btn">↻ Reset answers</button></div><div class="section" id="s5-1"><h2><span class="sec-emoji">🛒</span> Scenario: ShopKart Order Service</h2><p><strong>ShopKart</strong> is a Spring Boot service with <code>Customer</code>, <code>Order</code> and <code>OrderLine</code> tables. It runs PostgreSQL in development and Oracle in production. The orders list page takes 8 seconds and logs 1,200 SQL statements per request.</p></div><div class="section" id="s5-2"><h2><span class="sec-emoji">📝</span> Tasks</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Task 1 · Diagnose: why 1,200 statements for one page, and how do you confirm it?</div><textarea placeholder="Write your answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Classic <strong>N+1</strong>: one query loads orders, then lazy collections/associations (<code>lines</code>, <code>customer</code>) load per row. Confirm with <code>org.hibernate.SQL</code> logging, Hibernate statistics, or a tool like datasource-proxy; assert the statement count in tests.</div></div><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Task 2 · Fix it without making relations EAGER.</div><textarea placeholder="Write your answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Use a fetch join or <code>@EntityGraph</code> for the list use-case, or better a <strong>DTO projection</strong> with only the columns the screen needs. For collections add <code>default_batch_fetch_size</code>. Do not fetch-join a collection together with <code>setMaxResults</code> (in-memory pagination) — page the IDs first, then fetch.</div></div><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Task 3 · Write an entity mapping for <code>Order</code> that works on both PostgreSQL and Oracle.</div><textarea placeholder="Write your answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Use <code>@GeneratedValue(strategy = SEQUENCE)</code> with a named <code>@SequenceGenerator</code> (both DBs support sequences), <code>BigDecimal</code> for money, <code>@Enumerated(STRING)</code>, avoid relying on native boolean columns, and paginate through JPQL instead of native <code>LIMIT</code>.</div></div><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Task 4 · Two users edit the same order at the same time. Prevent lost updates.</div><textarea placeholder="Write your answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Add <code>@Version</code> for <strong>optimistic locking</strong>; catch <code>OptimisticLockException</code> and ask the user to reload/merge. Use <code>PESSIMISTIC_WRITE</code> only for hot rows like stock counters.</div></div><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Task 5 · Bulk-import 100,000 order lines quickly.</div><textarea placeholder="Write your answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Use SEQUENCE ids with <code>allocationSize=50</code>, <code>hibernate.jdbc.batch_size=50</code>, <code>order_inserts=true</code>; <code>flush()</code> and <code>clear()</code> the persistence context every batch; on PostgreSQL add <code>reWriteBatchedInserts=true</code>; or use plain JDBC batch / <code>COPY</code> for maximum speed.</div></div></div><div class="section" id="s5-3"><h2><span class="sec-emoji">✅</span> Quick Checks</h2><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Entities are processed in a huge loop and memory keeps growing. What helps?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Increase heap only</li><li class="mcq-opt"><span class="opt-letter">B</span> flush() then clear() the EntityManager in batches</li><li class="mcq-opt"><span class="opt-letter">C</span> Switch to EAGER</li><li class="mcq-opt"><span class="opt-letter">D</span> Disable the pool</li></ul><div class="mcq-feedback" data-ok="Correct — the persistence context holds every managed entity." data-bad="Not quite. The first-level cache grows unless you clear it."></div></div><div class="mcq" data-answer="2"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which Hibernate setup is safest for production schema management?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> create-drop</li><li class="mcq-opt"><span class="opt-letter">B</span> update</li><li class="mcq-opt"><span class="opt-letter">C</span> validate with Flyway/Liquibase migrations</li><li class="mcq-opt"><span class="opt-letter">D</span> none and manual edits</li></ul><div class="mcq-feedback" data-ok="Correct — versioned migrations plus validation." data-bad="Not quite. Use migrations and validate the mapping."></div></div></div></section><section class="panel" id="t6" data-toc='[["sA-1","Take the Assessment"]]'><div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag expert">→ Expert</span></div><p class="panel-eyebrow">Module 06</p><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">Test yourself on JDBC, JPA/Hibernate, PostgreSQL and Oracle — from basic to expert.</p></div><div class="section" id="sA-1"><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div><div class="assess-intro-text">Full-screen, timed assessment with a question palette and review of every answer at the end.</div><ul class="assess-intro-list"><li><strong>50 questions</strong> per attempt, shuffled with randomized option order</li><li><strong>60-minute</strong> timer with warning state and automatic submission</li><li>Question palette, Previous/Next, Mark for Review</li><li>Full-screen and tab-switch monitoring — <strong>3 warnings</strong> auto-submit the assessment</li><li>Copy, cut, right-click and print/screenshot shortcuts are blocked during the attempt</li><li>Retry generates a new randomized attempt</li></ul><button class="assess-start-btn" id="assessStartBtn">▶ Start Assessment</button></div></div></section></main></div>
+<script>
+
+/* Tabs, dynamic TOC, scroll-spy, progress pill */
+(function(){
+  const tabs=document.querySelectorAll('.tab'),panels=document.querySelectorAll('.panel'),tocEl=document.getElementById('toc'),total=tabs.length,pt=document.getElementById('progressText');
+  function buildToc(panel){const data=JSON.parse(panel.getAttribute('data-toc')||'[]');tocEl.innerHTML=data.map(([id,l])=>`<li><a href="#${id}" data-target="${id}">${l}</a></li>`).join('');const f=tocEl.querySelector('a');if(f)f.classList.add('active');}
+  function activate(i){tabs.forEach((t,k)=>{t.classList.toggle('active',k===i);t.setAttribute('aria-selected',k===i)});panels.forEach((p,k)=>p.classList.toggle('active',k===i));buildToc(panels[i]);pt.textContent=`Tab ${i+1} of ${total}`;window.scrollTo({top:0,behavior:'instant'});tabs[i].scrollIntoView({block:'nearest',inline:'nearest'});}
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{const a=e.target.closest('.toc-list a');if(!a)return;e.preventDefault();const el=document.getElementById(a.dataset.target);if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});});
+  let tk=false;function spy(){const ap=document.querySelector('.panel.active');if(!ap)return;let cur=null;ap.querySelectorAll('.section').forEach(s=>{if(s.getBoundingClientRect().top-180<0)cur=s.id});if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));tk=false;}
+  window.addEventListener('scroll',()=>{if(!tk){requestAnimationFrame(spy);tk=true}},{passive:true});
+  window.resetProgress=()=>activate(0);activate(0);
+})();
+/* Inline MCQs, per-panel score, model answers */
+(function(){
+  function update(panel){const bar=panel.querySelector('.quiz-progress');if(!bar||bar.id)return;const all=panel.querySelectorAll('.mcq').length,done=panel.querySelectorAll('.mcq.answered').length,okc=panel.querySelectorAll('.mcq.answered[data-correct="1"]').length;bar.querySelector('.quiz-score').textContent=`${okc} / ${all} correct`;bar.querySelector('.quiz-bar-fill').style.width=(all?done/all*100:0)+'%';}
+  document.querySelectorAll('.mcq').forEach(m=>{const ans=+m.dataset.answer,opts=m.querySelectorAll('.mcq-opt'),fb=m.querySelector('.mcq-feedback');
+    opts.forEach((o,i)=>{o.tabIndex=0;o.setAttribute('role','button');const go=()=>{if(m.classList.contains('answered'))return;m.classList.add('answered');const r=i===ans;m.dataset.correct=r?'1':'0';opts[ans].classList.add('correct');if(!r)o.classList.add('incorrect');fb.className='mcq-feedback '+(r?'ok':'bad');fb.textContent=r?fb.dataset.ok:fb.dataset.bad;update(m.closest('.panel'));};
+      o.addEventListener('click',go);o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});});});
+  document.querySelectorAll('.panel').forEach(p=>{update(p);const rb=p.querySelector('.quiz-reset-btn');if(rb)rb.addEventListener('click',()=>{p.querySelectorAll('.mcq').forEach(m=>{m.classList.remove('answered');delete m.dataset.correct;m.querySelectorAll('.mcq-opt').forEach(o=>o.classList.remove('correct','incorrect'));const fb=m.querySelector('.mcq-feedback');fb.className='mcq-feedback';fb.textContent='';});p.querySelectorAll('.saq textarea').forEach(t=>t.value='');p.querySelectorAll('.saq-model').forEach(x=>x.classList.remove('show'));p.querySelectorAll('.saq-toggle').forEach(b=>b.textContent='Show model answer');update(p);});});
+  document.querySelectorAll('.saq-toggle').forEach(b=>b.addEventListener('click',()=>{const s=b.nextElementSibling.classList.toggle('show');b.textContent=s?'Hide model answer':'Show model answer';}));
+})();
+/* Assessment — timed, full-screen, proctored (rules & security aligned with refer_assessment.html) */
+(function(){
+  const ROLE = "Persistence & ORM";
+  const BANK = [{"q": "Which API is lowest-level for DB access in Java?", "options": ["Hibernate", "JDBC", "Spring Data JPA", "JPQL"], "answer": 1}, {"q": "JPA is…", "options": ["A database", "A specification", "A connection pool", "A driver"], "answer": 1}, {"q": "Which prevents SQL injection?", "options": ["String concatenation", "PreparedStatement parameters", "Statement.execute", "Disabling commit"], "answer": 1}, {"q": "Which type of JDBC driver is used today?", "options": ["Type 1", "Type 2", "Type 3", "Type 4"], "answer": 3}, {"q": "What does a connection pool provide?", "options": ["Faster SQL parsing", "Reuse of open connections", "Automatic indexes", "Schema migrations"], "answer": 1}, {"q": "Which annotation marks the owning side of a relation with the foreign key?", "options": ["mappedBy", "@JoinColumn", "@Version", "@Transient"], "answer": 1}, {"q": "Why use @Enumerated(EnumType.STRING)?", "options": ["Smaller storage", "Safe if enum order changes", "Required by JPA", "Faster queries"], "answer": 1}, {"q": "Managed entity state change is saved by…", "options": ["Dirty checking at flush", "Calling toString()", "Closing the pool", "Native queries only"], "answer": 0}, {"q": "Default fetch type for @ManyToOne is…", "options": ["LAZY", "EAGER", "NONE", "BATCH"], "answer": 1}, {"q": "Best fix for N+1 on a list screen?", "options": ["Global EAGER", "Fetch join / entity graph / DTO projection", "More RAM", "Remove indexes"], "answer": 1}, {"q": "Which locking uses a @Version column?", "options": ["Pessimistic", "Optimistic", "Table lock", "Advisory lock"], "answer": 1}, {"q": "Oracle treats an empty string as…", "options": ["Empty string", "NULL", "Space", "Error"], "answer": 1}, {"q": "Which pagination is valid on PostgreSQL?", "options": ["ROWNUM &lt;= 10", "LIMIT 10 OFFSET 20", "TOP 10", "FETCH DUAL"], "answer": 1}, {"q": "Which ID strategy allows Hibernate insert batching?", "options": ["IDENTITY", "SEQUENCE", "None", "Manual SQL only"], "answer": 1}, {"q": "Best way to manage production schema changes?", "options": ["ddl-auto=update", "Flyway/Liquibase migrations", "Manual edits", "create-drop"], "answer": 1}, {"q": "Which PostgreSQL index suits JSONB containment queries?", "options": ["Hash", "GIN", "Bitmap", "Reverse key"], "answer": 1}, {"q": "Which JDBC interface is used to run a parameterized SQL statement?", "options": ["Statement", "PreparedStatement", "ResultSetMetaData", "DriverManager"], "answer": 1}, {"q": "What does `setAutoCommit(false)` enable?", "options": ["Faster reads", "Manual transaction control", "Connection pooling", "Lazy loading"], "answer": 1}, {"q": "Which resources should be closed in JDBC code?", "options": ["Only Connection", "Only ResultSet", "ResultSet, Statement and Connection", "None, GC handles it"], "answer": 2}, {"q": "Best way to close JDBC resources safely?", "options": ["finally with nulls", "try-with-resources", "System.gc()", "Ignore exceptions"], "answer": 1}, {"q": "Why use a connection pool such as HikariCP?", "options": ["To avoid SQL", "To reuse expensive connections", "To cache entities", "To generate keys"], "answer": 1}, {"q": "`PreparedStatement.addBatch()` is used to…", "options": ["Cache queries", "Send many statements in one round trip", "Open transactions", "Create savepoints"], "answer": 1}, {"q": "Which JPA annotation marks a class as a persistent entity?", "options": ["@Table", "@Entity", "@Component", "@Embeddable"], "answer": 1}, {"q": "What is required of every JPA entity?", "options": ["A @Version field", "A primary key (@Id)", "A @Table annotation", "An interface"], "answer": 1}, {"q": "Default fetch type of `@ManyToOne`?", "options": ["LAZY", "EAGER", "BATCH", "None"], "answer": 1}, {"q": "Default fetch type of `@OneToMany`?", "options": ["EAGER", "LAZY", "JOIN", "SUBSELECT"], "answer": 1}, {"q": "Which entity state means managed and tracked by the persistence context?", "options": ["Transient", "Persistent (managed)", "Detached", "Removed only"], "answer": 1}, {"q": "A `LazyInitializationException` usually means…", "options": ["A bad SQL", "Lazy data accessed outside an open session", "Deadlock", "A missing driver"], "answer": 1}, {"q": "`@Enumerated(EnumType.STRING)` is preferred over ORDINAL because…", "options": ["It is slower", "Reordering the enum doesn't corrupt data", "It needs no column", "It is required"], "answer": 1}, {"q": "Which mapping stores the foreign key on the 'many' side?", "options": ["@OneToMany(mappedBy=...) inverse side", "@ManyToOne owning side", "@ElementCollection", "@Embedded"], "answer": 1}, {"q": "What does `mappedBy` indicate?", "options": ["The owning side", "The inverse (non-owning) side", "A join table", "A sequence"], "answer": 1}, {"q": "`CascadeType.REMOVE` on a parent means…", "options": ["Parent kept on child delete", "Deleting parent deletes children", "Children detached", "Nothing"], "answer": 1}, {"q": "`orphanRemoval = true` does what?", "options": ["Deletes children removed from the collection", "Blocks deletes", "Makes fetch eager", "Adds a version"], "answer": 0}, {"q": "Which solves the N+1 select problem?", "options": ["More EAGER", "Fetch join or @EntityGraph", "Bigger pool", "Native queries only"], "answer": 1}, {"q": "JPQL queries operate on…", "options": ["Tables and columns", "Entities and their fields", "Indexes", "Views only"], "answer": 1}, {"q": "Which method persists a new entity?", "options": ["em.find()", "em.persist()", "em.detach()", "em.refresh()"], "answer": 1}, {"q": "`em.merge(detached)` returns…", "options": ["The same detached instance", "A managed copy", "Void", "A proxy-free DTO"], "answer": 1}, {"q": "What does `em.flush()` do?", "options": ["Clears the cache", "Synchronizes pending changes to the DB", "Commits the transaction", "Closes the session"], "answer": 1}, {"q": "First-level cache scope in Hibernate?", "options": ["Application-wide", "Per EntityManager/Session", "Per JVM cluster", "Per table"], "answer": 1}, {"q": "Second-level cache is shared across…", "options": ["One session", "Sessions of a SessionFactory", "One request only", "Nothing"], "answer": 1}, {"q": "`@Version` enables which strategy?", "options": ["Pessimistic locking", "Optimistic locking", "Table locking", "No locking"], "answer": 1}, {"q": "`LockModeType.PESSIMISTIC_WRITE` typically issues…", "options": ["SELECT … FOR UPDATE", "A plain SELECT", "ALTER TABLE", "COMMIT"], "answer": 0}, {"q": "Which ID strategy suits Oracle best?", "options": ["IDENTITY on old versions", "SEQUENCE", "AUTO_INCREMENT", "UUID only"], "answer": 1}, {"q": "PostgreSQL pagination keyword?", "options": ["ROWNUM", "LIMIT/OFFSET", "TOP", "FETCH only"], "answer": 1}, {"q": "Oracle's classic row limit pseudo-column?", "options": ["LIMIT", "ROWNUM", "TOP", "ROWID only"], "answer": 1}, {"q": "Which index type is the default in PostgreSQL?", "options": ["Hash", "B-tree", "Bitmap", "GiST"], "answer": 1}, {"q": "Which PostgreSQL type stores binary JSON with indexing support?", "options": ["JSON", "JSONB", "TEXT", "XML"], "answer": 1}, {"q": "`EXPLAIN ANALYZE` in PostgreSQL shows…", "options": ["Only the plan estimate", "The plan with actual run times", "Table DDL", "Locks"], "answer": 1}, {"q": "Oracle `VARCHAR2` vs PostgreSQL equivalent?", "options": ["VARCHAR/TEXT", "NUMBER", "CLOB only", "CHAR only"], "answer": 0}, {"q": "Which isolation level prevents dirty reads but allows non-repeatable reads?", "options": ["READ UNCOMMITTED", "READ COMMITTED", "REPEATABLE READ", "SERIALIZABLE"], "answer": 1}];
+  const ATTEMPT_Q = Math.min(50, BANK.length);
+  const EXAM_SECONDS = Math.ceil(ATTEMPT_Q * 1.2) * 60;
+  const WARN_AT = Math.min(300, Math.floor(EXAM_SECONDS * 0.25));
+  const MAX_WARNS = 3;
+  const LS_KEY = 'javaDevAssessment:' + ROLE;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false, warns=0, proctorOn=false, lastWarn=0;
+  const esc = s => String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const fmt = t => {const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s};
+  const css = `
+  .cb-exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .cb-exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .cb-exam-top .et-title{font-size:16px;font-weight:800}.cb-exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .cb-exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .cb-exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:cbpulse 1s infinite}@keyframes cbpulse{50%{opacity:.5}}
+  .cb-exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .cb-exam-q-pane{padding:28px 36px;overflow:auto}
+  .cb-exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .cb-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .cb-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .cb-qtext code,.cb-opt code,.cb-rev code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em;background:#eef1f8;padding:1px 6px;border-radius:5px}
+  .cb-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .cb-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .cb-opt:hover{border-color:#14213D;background:#f9f9ff}.cb-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .cb-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .cb-opt.sel .k{background:#14213D;color:#fff}
+  .cb-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .cb-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .cb-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}.cb-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .cb-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}.cb-btn.mark.on{background:#FCA311;color:#14213D}
+  .cb-btn.submit{background:#FCA311;color:#14213D}.cb-btn.primary{background:#14213D;color:#fff}
+  .cb-count{font-size:14px;color:#475569}.cb-side-title{margin:0;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:#64748b}
+  .cb-palette{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+  .cb-pal{height:36px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;font-weight:700;font-size:13px;cursor:pointer;color:#14213D;font-family:inherit}
+  .cb-pal.answered{background:#14213D;border-color:#14213D;color:#fff}.cb-pal.marked{background:#FCA311;border-color:#FCA311;color:#14213D}.cb-pal.cur{outline:2px solid #FCA311;outline-offset:2px}
+  .cb-legend{display:flex;flex-direction:column;gap:5px;font-size:12px;color:#475569}.cb-legend i{display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid #cbd5e1;margin-right:7px;vertical-align:-2px;background:#fff}
+  .cb-splash{position:fixed;inset:0;z-index:99998;background:rgba(20,33,61,.55);display:flex;align-items:center;justify-content:center;padding:20px;font-family:'Noto Sans',system-ui,sans-serif}
+  .cb-splash .card{background:#fff;border-radius:16px;max-width:600px;width:100%;max-height:92vh;overflow:auto;padding:28px 30px;color:#161c27;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .cb-splash h2{margin:0 0 8px;font-size:22px}.cb-splash p{margin:8px 0;color:#475569;font-size:14.5px}.cb-splash ul{margin:6px 0 14px;padding-left:20px;color:#334155;font-size:14.5px;line-height:1.7}
+  .cb-cover{position:fixed;inset:0;z-index:100001;background:rgba(20,33,61,.96);color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:30px;font-family:'Noto Sans',system-ui,sans-serif}
+  .cb-cover>div{font-size:26px;font-weight:800}.cb-cover small{font-size:14px;color:#cdd5e5;max-width:460px}
+  .cb-confirm{position:fixed;inset:0;z-index:100000;background:rgba(20,33,61,.55);display:flex;align-items:center;justify-content:center;padding:20px;font-family:'Noto Sans',system-ui,sans-serif}
+  .cb-confirm .box{background:#fff;border-radius:14px;padding:24px;max-width:420px;width:100%;color:#161c27}.cb-confirm h3{margin:0 0 8px}.cb-confirm p{margin:0 0 18px;color:#475569;font-size:14.5px}.cb-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .cb-result{max-width:820px;margin:0 auto}.cb-score{font-size:44px;font-weight:800;text-align:center;margin-top:10px}.cb-rmsg{text-align:center;color:#475569;margin-top:4px}
+  .cb-result .cb-btn.primary{display:block;margin:0 auto}
+  .cb-rev{margin-top:24px;display:flex;flex-direction:column;gap:12px}.cb-rev .r{background:#fff;border:1px solid #e2e8f0;border-left:5px solid #e53e3e;border-radius:10px;padding:14px 16px}.cb-rev .r.ok{border-left-color:#16a34a}
+  .cb-rev .rq{font-weight:700;margin-bottom:6px}.cb-rev .ra{font-size:14px}.cb-rev .ra.wrong{color:#b91c1c}.cb-rev .ra.cor{color:#166534}.cb-rev .rx{font-size:13px;color:#64748b;margin-top:6px}
+  @media(max-width:820px){.cb-exam-main{grid-template-columns:1fr}.cb-exam-side{border-left:none;border-top:1px solid #e2e8f0}.cb-exam-q-pane{padding:22px 18px}.cb-exam-top{padding:10px 14px}}
+  `;
+  function injectCss(){if(document.getElementById('cbExamCss'))return;const s=document.createElement('style');s.id='cbExamCss';s.textContent=css;document.head.appendChild(s)}
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function buildAttempt(){
+    let selected=[];
+    if(BANK.length>ATTEMPT_Q){
+      let recent=[];try{recent=JSON.parse(localStorage.getItem(LS_KEY+'_attempts')||'[]')}catch(e){}
+      let sig='';
+      for(let t=0;t<25;t++){selected=shuffle(BANK.map((q,i)=>i)).slice(0,ATTEMPT_Q);sig=selected.slice().sort((a,b)=>a-b).join('|');if(!recent.includes(sig))break}
+      recent.unshift(sig);try{localStorage.setItem(LS_KEY+'_attempts',JSON.stringify(recent.slice(0,20)))}catch(e){}
+    } else selected=shuffle(BANK.map((q,i)=>i));
+    return selected.map(n=>{const src=BANK[n];const pairs=src.options.map((o,i)=>({o,i}));shuffle(pairs);
+      return {id:'q'+n,q:src.q,options:pairs.map(p=>p.o),answer:pairs.findIndex(p=>p.i===src.answer),why:src.why||'',lvl:src.lvl||''}});
+  }
+  function confirmBox(title,msg,okLabel){return new Promise(resolve=>{injectCss();const d=document.createElement('div');d.className='cb-confirm';d.innerHTML=`<div class="box"><h3>${esc(title)}</h3><p>${esc(msg)}</p><div class="row"><button class="cb-btn nav" data-a="0">Cancel</button><button class="cb-btn primary" data-a="1">${esc(okLabel||'Confirm')}</button></div></div>`;document.body.appendChild(d);d.addEventListener('click',e=>{if(e.target===d){d.remove();resolve(false);return}const b=e.target.closest('[data-a]');if(!b)return;d.remove();resolve(b.dataset.a==='1')})})}
+  function requestFs(){const el=document.documentElement;try{if(el.requestFullscreen)el.requestFullscreen().catch(()=>{})}catch(e){}}
+  function showSplash(){injectCss();const sp=document.createElement('div');sp.className='cb-splash';sp.id='cbExamSplash';
+    sp.innerHTML=`<div class="card"><h2>🎯 ${esc(ROLE)} — Assessment</h2><p>A timed, full-screen assessment based on this course.</p><ul><li><b>${ATTEMPT_Q} questions</b> per attempt</li><li><b>${Math.round(EXAM_SECONDS/60)}-minute</b> timer — the assessment auto-submits when time is up</li><li>Navigate freely, answer questions, and <b>mark questions for review</b></li><li>Questions and answer options are shuffled on every attempt</li></ul><p style="font-weight:700;color:#14213D;margin-bottom:6px">Assessment rules</p><ul style="margin-top:0"><li>The assessment runs in <b>fullscreen</b>.</li><li>Do not switch tabs/windows or exit fullscreen.</li><li><b>${MAX_WARNS} warnings</b> for tab/window switching or leaving fullscreen will auto-submit the assessment.</li><li>Copy, cut, right-click and common screenshot/print shortcuts are blocked during the assessment.</li></ul><div style="display:flex;gap:10px"><button class="cb-btn nav" id="cbExamCancel">Cancel</button><button class="cb-btn primary" id="cbExamBegin" style="flex:1;padding:14px">Start Assessment →</button></div></div>`;
+    document.body.appendChild(sp);
+    document.getElementById('cbExamCancel').addEventListener('click',()=>sp.remove());
+    document.getElementById('cbExamBegin').addEventListener('click',()=>{requestFs();sp.remove();enterExam()})}
+  function enterExam(){injectCss();items=buildAttempt();answers={};marked={};cur=0;remaining=EXAM_SECONDS;examOn=true;document.body.style.overflow='hidden';
+    const ov=document.createElement('div');ov.className='cb-exam-overlay';ov.id='cbExamOverlay';
+    ov.innerHTML=`<div class="cb-exam-top"><div><div class="et-title">${esc(ROLE)} — Assessment</div><div class="et-sub">${items.length} questions · one attempt</div></div><div class="cb-exam-timer" id="cbExamTimer">${fmt(remaining)}</div></div><div class="cb-exam-main"><div class="cb-exam-q-pane" id="cbExamQ"></div><div class="cb-exam-side"><div class="cb-count">Answered <b id="cbExamAnsN">0</b> / ${items.length}</div><h4 class="cb-side-title">Question palette</h4><div class="cb-palette" id="cbExamPal"></div><div class="cb-legend"><span><i style="background:#14213D;border-color:#14213D"></i> Answered</span><span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span><span><i></i> Not answered</span></div><button class="cb-btn submit" id="cbExamSubmit" style="width:100%">Submit Assessment</button></div></div>`;
+    document.body.appendChild(ov);buildPalette();renderQ();timerId=setInterval(tick,1000);window.addEventListener('beforeunload',beforeUnload);startProctor();
+    document.getElementById('cbExamSubmit').addEventListener('click',()=>submitExam(false))}
+  function beforeUnload(e){if(examOn){e.preventDefault();e.returnValue=''}}
+  function tick(){remaining--;const el=document.getElementById('cbExamTimer');if(el){el.textContent=fmt(Math.max(remaining,0));if(remaining<=WARN_AT)el.classList.add('warn')}if(remaining<=0)submitExam(true)}
+  function buildPalette(){const pal=document.getElementById('cbExamPal');pal.innerHTML='';items.forEach((it,n)=>{const b=document.createElement('button');b.className='cb-pal';b.textContent=n+1;b.dataset.n=n;b.addEventListener('click',()=>{cur=n;renderQ()});pal.appendChild(b)});refreshPalette()}
+  function refreshPalette(){document.querySelectorAll('#cbExamPal .cb-pal').forEach(b=>{const n=+b.dataset.n,id=items[n].id;b.classList.toggle('answered',id in answers);b.classList.toggle('marked',!!marked[id]);b.classList.toggle('cur',n===cur)});const el=document.getElementById('cbExamAnsN');if(el)el.textContent=Object.keys(answers).length}
+  function renderQ(){const it=items[cur],id=it.id,pane=document.getElementById('cbExamQ');
+    pane.innerHTML=`<div class="cb-qnum">Question ${cur+1} of ${items.length}</div><div class="cb-qtext">${it.q}</div><div class="cb-opts">${it.options.map((o,i)=>`<div class="cb-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div><div class="cb-actions"><button class="cb-btn nav" id="cbPrev" ${cur===0?'disabled':''}>← Previous</button><button class="cb-btn mark${marked[id]?' on':''}" id="cbMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button><button class="cb-btn nav" id="cbNext" ${cur===items.length-1?'disabled':''}>Next →</button></div>`;
+    pane.querySelectorAll('.cb-opt').forEach(el=>el.addEventListener('click',()=>{answers[id]=+el.dataset.i;pane.querySelectorAll('.cb-opt').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');refreshPalette()}));
+    document.getElementById('cbPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ()}});
+    document.getElementById('cbNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ()}});
+    document.getElementById('cbMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ()});refreshPalette()}
+  async function submitExam(auto){if(!examOn)return;const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){const ok=await confirmBox('Submit assessment?',unanswered?`You have ${unanswered} unanswered question(s). Once submitted, you cannot change your answers.`:'Once submitted, you cannot change your answers.','Submit Assessment');if(!ok||!examOn)return}
+    examOn=false;clearInterval(timerId);window.removeEventListener('beforeunload',beforeUnload);stopProctor();
+    const score=items.reduce((n,it)=>n+(answers[it.id]===it.answer?1:0),0);saveScore(score,items.length);showResults(score)}
+  function saveScore(score,total){let a=[];try{a=JSON.parse(localStorage.getItem(LS_KEY)||'[]')}catch(e){}a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)))}catch(e){}}
+  function showResults(score){const total=items.length,pct=Math.round(score/total*100);let msg='Keep practising — review the questions you missed and try again.';
+    if(pct>=85)msg='Outstanding — strong command of this course.';else if(pct>=65)msg='Solid performance. Review the harder areas and try another attempt.';else if(pct>=50)msg='Borderline — revisit the modules and retake the assessment.';
+    const rev=items.map((it,n)=>{const you=answers[it.id],attempted=you!=null,ok=attempted&&you===it.answer;
+      const your=attempted?String.fromCharCode(65+you)+'. '+it.options[you]:'<i>Not answered</i>';const cor=String.fromCharCode(65+it.answer)+'. '+it.options[it.answer];
+      return `<div class="r ${ok?'ok':'no'}"><div class="rq">Q${n+1}. ${it.q}</div><div class="ra ${ok?'cor':'wrong'}">Your answer: ${your}</div>${ok?'':`<div class="ra cor">Correct: ${cor}</div>`}${it.why?`<div class="rx">${it.why}</div>`:''}</div>`}).join('');
+    const ov=document.getElementById('cbExamOverlay');
+    ov.innerHTML=`<div class="cb-exam-top"><div class="et-title">Result — ${esc(ROLE)} Assessment</div><button class="cb-btn" id="cbClose" style="background:rgba(255,255,255,.15);color:#fff">✕ Close</button></div><div class="cb-exam-q-pane" style="flex:1"><div class="cb-result"><div class="cb-score">${score} / ${total}</div><div class="cb-rmsg">${pct}% correct — ${msg}</div><div style="margin-top:16px"><button class="cb-btn primary" id="cbRetry">↻ Take another assessment</button></div><div class="cb-rev">${rev}</div></div></div>`;
+    document.getElementById('cbRetry').addEventListener('click',()=>{ov.remove();requestFs();enterExam()});
+    document.getElementById('cbClose').addEventListener('click',()=>closeExam())}
+  function closeExam(){stopProctor();const ov=document.getElementById('cbExamOverlay');if(ov)ov.remove();document.body.style.overflow='';if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}
+  /* ---- proctoring ---- */
+  function warning(title,msg){if(!proctorOn||!examOn)return;const now=Date.now();if(now-lastWarn<1200)return;lastWarn=now;warns++;
+    const cover=document.getElementById('cbExamCover')||document.createElement('div');cover.className='cb-cover';cover.id='cbExamCover';cover.style.display='flex';
+    cover.innerHTML=`<div>⚠️ ${esc(title)}</div><small>${esc(msg)}</small><small>Warning ${Math.min(warns,MAX_WARNS)} of ${MAX_WARNS}</small><button class="cb-btn primary" id="cbResume">Return to assessment</button>`;
+    document.body.appendChild(cover);
+    document.getElementById('cbResume').onclick=()=>{cover.style.display='none';requestFs();if(warns>=MAX_WARNS)submitExam(true)};
+    if(warns>=MAX_WARNS)setTimeout(()=>submitExam(true),500)}
+  function visHandler(){if(document.hidden)warning('Tab or window switch detected','Please stay on the assessment screen. Repeated violations will submit the assessment automatically.')}
+  function fsHandler(){if(examOn&&!document.fullscreenElement)warning('Fullscreen exited','The assessment must remain in fullscreen mode.')}
+  function blurHandler(){if(examOn)warning('Focus changed','Please keep the assessment window active.')}
+  function blockEvt(e){if(examOn){e.preventDefault();warning('Action blocked','Copy, cut and right-click are disabled during the assessment.')}}
+  function keyGuard(e){if(!examOn)return;const k=(e.key||'').toLowerCase();
+    if((e.ctrlKey||e.metaKey)&&['c','x','p','s','u'].includes(k)){e.preventDefault();warning('Shortcut blocked','This assessment disables copy, print, save and source shortcuts.')}
+    if(k==='f12'){e.preventDefault();warning('Developer tools shortcut blocked','This action is disabled during the assessment.')}}
+  function printGuard(e){if(examOn&&e.key==='PrintScreen'){e.preventDefault();warning('Screenshot action blocked','Screenshot capture is restricted during the assessment.')}}
+  function startProctor(){warns=0;lastWarn=0;proctorOn=true;document.addEventListener('visibilitychange',visHandler);document.addEventListener('fullscreenchange',fsHandler);window.addEventListener('blur',blurHandler);document.addEventListener('contextmenu',blockEvt,true);document.addEventListener('copy',blockEvt,true);document.addEventListener('cut',blockEvt,true);document.addEventListener('keydown',keyGuard,true);document.addEventListener('keyup',printGuard,true)}
+  function stopProctor(){proctorOn=false;document.removeEventListener('visibilitychange',visHandler);document.removeEventListener('fullscreenchange',fsHandler);window.removeEventListener('blur',blurHandler);document.removeEventListener('contextmenu',blockEvt,true);document.removeEventListener('copy',blockEvt,true);document.removeEventListener('cut',blockEvt,true);document.removeEventListener('keydown',keyGuard,true);document.removeEventListener('keyup',printGuard,true);const c=document.getElementById('cbExamCover');if(c)c.remove()}
+  document.addEventListener('click',function(e){const b=e.target.closest('#assessStartBtn');if(b){e.preventDefault();showSplash()}},true);
+  window.addEventListener('keydown',e=>{if(e.key==='Escape'&&examOn)e.preventDefault()});
+})();
+
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body></html>

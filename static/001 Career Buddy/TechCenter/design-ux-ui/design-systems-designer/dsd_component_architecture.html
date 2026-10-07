@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Component Architecture & Modular Design — Design Systems Designer Learning Module</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#d9730d 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans',system-ui,sans-serif;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans',system-ui,sans-serif;font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'Noto Sans',system-ui,sans-serif;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'Noto Sans',system-ui,sans-serif;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'Noto Sans',system-ui,sans-serif;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'Noto Sans',system-ui,sans-serif;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'Noto Sans',system-ui,sans-serif;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'Noto Sans',system-ui,sans-serif;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+
+/* ============= Module additions (same visual language) ============= */
+.table-wrap{overflow-x:auto;margin:16px 0;-webkit-overflow-scrolling:touch}
+.table-wrap table{margin:0;min-width:560px}
+.formula{display:inline-block;font-size:12.5px;background:var(--bg-code);border:1px solid var(--line);padding:2px 8px;border-radius:4px;color:#14213D;font-weight:500}
+.saq-toggle{margin-top:10px}
+.mcq-opt:focus-visible,.btn:focus-visible,.tab:focus-visible,.assess-start-btn:focus-visible,.saq textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.example{border:1px solid var(--line);border-left:4px solid var(--orange);border-radius:var(--radius);padding:14px 18px;margin:16px 0;background:#fffdf9}
+.example-title{font-weight:700;font-size:13px;color:#a85a08;margin-bottom:6px;letter-spacing:.02em}
+.example p,.example ul{margin:6px 0;font-size:14.5px}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.expert{background:#14213D;color:#fff}
+.term{display:grid;grid-template-columns:190px 1fr;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.term:last-child{border-bottom:none}
+details{border:1px solid var(--line);border-radius:var(--radius);margin:10px 0;background:#fff}
+summary{cursor:pointer;padding:11px 16px;font-weight:600;font-size:15px}details[open] summary{border-bottom:1px solid var(--line)}details>div{padding:10px 16px 12px;font-size:14.5px;line-height:1.6;color:#3a3833}
+.term b{color:#14213D}
+.terms{border:1px solid var(--line);border-radius:var(--radius);padding:4px 16px;margin:16px 0;background:#fff}
+@media (max-width:720px){
+  .header-top{padding:12px 16px;flex-wrap:wrap}
+  .brand{font-size:14px;line-height:1.35}
+  .brand-sub{display:block;margin-left:0}
+  .panel-title{font-size:30px}
+  .section h2{font-size:22px}
+  .assess-modal-box{padding:0 18px 40px}
+  .term{grid-template-columns:1fr;gap:2px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+<style>
+/* Noto Sans everywhere */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,td,th,div,section,header,nav,aside,main,label,button,input,textarea,small,strong,b,em,i,code,pre,svg text{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif !important}
+</style>
+<style id="cb-assess-intro-css">
+.cb-assess-intro{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg,12px);padding:28px 30px;box-shadow:var(--shadow-sm,0 1px 3px rgba(0,0,0,.06));margin-top:18px}
+.cb-assess-intro h3{margin:0 0 8px;font-size:20px;font-weight:600}
+.cb-assess-intro p{margin:6px 0;color:var(--ink-soft);font-size:14px}
+.cb-assess-intro ul{margin:12px 0 18px 18px;color:var(--ink-soft);font-size:13.5px;line-height:1.8}
+.cb-start{border:0;background:var(--accent,#14213d);color:#fff;border-radius:9px;padding:12px 20px;font:700 14px 'Noto Sans',system-ui,sans-serif;cursor:pointer}
+.cb-start:hover{opacity:.9}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-top">
+    <div class="brand"><div class="brand-mark">CA</div><span>Design / UX/UI | Design Systems Designer<span class="brand-sub"> · Component Architecture & Modular Design</span></span></div>
+    <div class="header-actions">
+      <span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 8</span></span>
+      <button class="btn" onclick="resetProgress()" title="Reset to first tab"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9"/><path d="M2 4v3.5h3.5"/></svg> Reset</button>
+    </div>
+  </div>
+  <nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Foundations</button><button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> Advanced Auto Layout</button><button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> Variants & Properties</button><button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> Composition & Slots</button><button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> Scaling the Library</button><button class="tab" data-tab="t6" role="tab"><span class="tab-num">06</span> Interview Preparation</button><button class="tab" data-tab="t7" role="tab"><span class="tab-num">07</span> Practice</button><button class="tab" data-tab="t8" role="tab"><span class="tab-num">08</span> Assessment</button></nav>
+</header>
+<div class="layout">
+  <aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside>
+  <main class="main">
+    <section class="panel active" id="t1" data-toc='[["s1-1", "What is a Component?"], ["s1-2", "Types of Components"], ["s1-3", "Principles of Modular Design"], ["s1-4", "Key Terms"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag fresher">→ Fresher-friendly</span></div><div class="panel-eyebrow">Module 01 · Foundations</div><h1 class="panel-title">What is Component Architecture?</h1><p class="panel-subtitle">Start from zero: what a component is, why modular design scales, and the vocabulary of component systems.</p></div>
+      <div class="section" id="s1-1"><h2><span class="sec-emoji">🧭</span> What is a Component?</h2><p>A <strong>component</strong> is a reusable UI building block — button, input, card, modal — defined once with all its variations and states. <strong>Component architecture</strong> is how components are structured, composed and configured so a whole product can be built from a small, reliable set of parts.</p><div class="compare"><div class="compare-col"><h4>🔴 Ad-hoc design</h4><p style="font-size:14px;color:var(--ink-soft);margin:0">Every designer draws their own button. 14 slightly different buttons ship; changing one style means hunting through files.</p></div><div class="compare-col"><h4>🟢 Modular system</h4><p style="font-size:14px;color:var(--ink-soft);margin:0">One Button component with variants and properties. Update the master; every instance updates.</p></div></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">🗂️</span> Types of Components</h2><div class="table-wrap"><table><tr><th>Type</th><th>Description</th><th>Examples</th></tr><tr><td><strong>Primitives / atoms</strong></td><td>Smallest building blocks</td><td>Icon, text, divider, avatar</td></tr><tr><td><strong>Basic components</strong></td><td>Single-purpose controls</td><td>Button, input, checkbox, badge</td></tr><tr><td><strong>Composite components</strong></td><td>Built from basic components</td><td>Search field, list item, card</td></tr><tr><td><strong>Patterns</strong></td><td>Recurring solutions combining components</td><td>Form with validation, empty state</td></tr><tr><td><strong>Templates / layouts</strong></td><td>Page-level structure</td><td>Dashboard layout, settings page</td></tr><tr><td><strong>Local / product components</strong></td><td>Specific to one product, not in core system</td><td>Trading order ticket</td></tr></table></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">🧱</span> Principles of Modular Design</h2><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#14213D">🎯</div><div class="card-title">Single responsibility</div><div class="card-desc">Each component does one job well.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🧩</div><div class="card-title">Composable</div><div class="card-desc">Small parts combine into bigger ones.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">⚙️</div><div class="card-title">Configurable</div><div class="card-desc">Props/properties instead of copies.</div></div><div class="card"><div class="card-icon" style="background:var(--pink-soft);color:#8c1a63">🔒</div><div class="card-title">Encapsulated</div><div class="card-desc">Internal details hidden; clear API.</div></div><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#14213D">📏</div><div class="card-title">Token-driven</div><div class="card-desc">Values come from tokens, not raw numbers.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">♿</div><div class="card-title">Accessible by default</div><div class="card-desc">States and semantics built in.</div></div></div></div><div class="section" id="s1-4"><h2><span class="sec-emoji">📖</span> Key Terms</h2><div class="terms"><div class="term"><b>Main component</b><span>The master definition in Figma.</span></div><div class="term"><b>Instance</b><span>A copy linked to the main component.</span></div><div class="term"><b>Variant</b><span>A version of a component defined by property values (size=lg, state=hover).</span></div><div class="term"><b>Component property</b><span>A configurable option: text, boolean, instance swap, variant.</span></div><div class="term"><b>Slot</b><span>An area where any content can be placed (via instance swap or native slot features).</span></div><div class="term"><b>Override</b><span>A change on an instance (text, colour) that persists through updates.</span></div><div class="term"><b>Detaching</b><span>Breaking the link to the main — avoid in system usage.</span></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> A search field made of an input + icon button is a…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Primitive</li><li class="mcq-opt"><span class="opt-letter">B</span> Composite component</li><li class="mcq-opt"><span class="opt-letter">C</span> Template</li><li class="mcq-opt"><span class="opt-letter">D</span> Token</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — it combines basic components: composite."></div></div></div>
+    </section>
+    <section class="panel" id="t2" data-toc='[["s2-1", "Auto Layout Settings"], ["s2-2", "Nesting Patterns"], ["s2-3", "Stress-Testing Layouts"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">→ Intermediate</span></div><div class="panel-eyebrow">Module 02 · Auto Layout</div><h1 class="panel-title">Advanced Figma Auto Layout</h1><p class="panel-subtitle">Build components that resize, wrap and reflow like real code.</p></div>
+      <div class="section" id="s2-1"><h2><span class="sec-emoji">📐</span> Auto Layout Settings</h2><div class="table-wrap"><table><tr><th>Setting</th><th>What it does</th><th>CSS equivalent</th></tr><tr><td>Direction</td><td>Horizontal, vertical or wrap</td><td>flex-direction, flex-wrap</td></tr><tr><td>Gap</td><td>Space between children (or auto = space-between)</td><td>gap, justify-content: space-between</td></tr><tr><td>Padding</td><td>Inner spacing (can be per side)</td><td>padding</td></tr><tr><td>Alignment</td><td>Position of children</td><td>align-items, justify-content</td></tr><tr><td>Hug / Fill / Fixed</td><td>Sizing behaviour</td><td>width: fit-content / flex: 1 / fixed px</td></tr><tr><td>Min / max width & height</td><td>Resizing limits</td><td>min-width, max-width</td></tr><tr><td>Absolute position</td><td>Child ignores layout</td><td>position: absolute</td></tr><tr><td>Canvas stacking</td><td>First on top or last on top</td><td>z-order</td></tr></table></div></div><div class="section" id="s2-2"><h2><span class="sec-emoji">🧩</span> Nesting Patterns</h2><div class="example"><div class="example-title">EXAMPLE · List item component</div><ul><li>Outer frame: horizontal, padding 12/16, gap 12, fill width.</li><li>Leading slot: avatar or icon (hug).</li><li>Text stack: vertical, gap 2, <strong>fill</strong> width so long text wraps and pushes trailing content correctly.</li><li>Trailing slot: badge, chevron or toggle (hug).</li><li>Min height 56 px for touch targets.</li></ul></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Use <strong>wrap</strong> for chip groups and tag lists, and <strong>max width</strong> on text to keep line lengths readable.</div></div></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🧪</span> Stress-Testing Layouts</h2><div class="table-wrap"><table><tr><th>Test</th><th>What to check</th></tr><tr><td>Long text (3× expected)</td><td>Wrapping, truncation, no overlap</td></tr><tr><td>Empty optional content</td><td>Gaps collapse when an element is hidden</td></tr><tr><td>Large text (200%)</td><td>Height grows; nothing clipped</td></tr><tr><td>Narrow &amp; wide containers</td><td>Fill/hug behaviour, min/max limits</td></tr><tr><td>Localisation (German, Hindi)</td><td>Longer words and taller scripts</td></tr><tr><td>RTL</td><td>Mirroring of leading/trailing slots</td></tr></table></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Text inside a list item should usually be…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Fixed width</li><li class="mcq-opt"><span class="opt-letter">B</span> Fill container width so it wraps and pushes trailing items</li><li class="mcq-opt"><span class="opt-letter">C</span> Absolute positioned</li><li class="mcq-opt"><span class="opt-letter">D</span> Hug only</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — fill width lets it wrap properly."></div></div></div>
+    </section>
+    <section class="panel" id="t3" data-toc='[["s3-1", "Types of Component Properties"], ["s3-2", "Avoiding Variant Explosion"], ["s3-3", "Design API = Code API"], ["s3-4", "Check Yourself"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span></div><div class="panel-eyebrow">Module 03 · Variants & Properties</div><h1 class="panel-title">Variants, Component Properties & Slots</h1><p class="panel-subtitle">Design clean component APIs that are easy to use and map directly to code props.</p></div>
+      <div class="section" id="s3-1"><h2><span class="sec-emoji">🎛️</span> Types of Component Properties</h2><div class="table-wrap"><table><tr><th>Property type</th><th>Use</th><th>Example</th></tr><tr><td><strong>Variant</strong></td><td>Visual versions and states</td><td>Size: sm/md/lg · State: default/hover/pressed/disabled</td></tr><tr><td><strong>Boolean</strong></td><td>Show/hide a layer</td><td>Show icon: true/false</td></tr><tr><td><strong>Text</strong></td><td>Editable text exposed at top level</td><td>Label: "Save changes"</td></tr><tr><td><strong>Instance swap</strong></td><td>Swap a nested component</td><td>Icon: ic_search / ic_close</td></tr><tr><td><strong>Nested instance props</strong></td><td>Expose child properties on the parent</td><td>Card exposes its Button label</td></tr><tr><td><strong>Slot (native / via swap)</strong></td><td>Flexible content region</td><td>Modal body accepts any content</td></tr></table></div></div><div class="section" id="s3-2"><h2><span class="sec-emoji">🧮</span> Avoiding Variant Explosion</h2><div class="example"><div class="example-title">EXAMPLE · Button</div><p>Size (3) × Type (4) × State (5) × Icon left (2) × Icon right (2) = <strong>240 variants</strong>. Instead: variants only for Size, Type and State (60), and <strong>boolean + instance-swap</strong> properties for icons. Hover/pressed can be handled with interactive components.</p></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Rule of thumb: use <strong>variants</strong> for visual changes that need different layers or styles; use <strong>booleans, text and instance swaps</strong> for content toggles.</div></div></div><div class="section" id="s3-3"><h2><span class="sec-emoji">🔗</span> Design API = Code API</h2><div class="table-wrap"><table><tr><th>Figma property</th><th>React prop</th></tr><tr><td>Type = Primary</td><td>variant="primary"</td></tr><tr><td>Size = md</td><td>size="md"</td></tr><tr><td>Show leading icon (boolean) + Icon (swap)</td><td>leadingIcon={&lt;SearchIcon /&gt;}</td></tr><tr><td>Label (text)</td><td>children / label</td></tr><tr><td>State = Disabled</td><td>disabled={true}</td></tr><tr><td>State = Loading</td><td>loading={true}</td></tr></table></div><pre><span class="pre-lang">react</span><code>&lt;Button variant=&quot;primary&quot; size=&quot;md&quot; leadingIcon={&lt;SearchIcon /&gt;} loading={false}&gt;
+  Search
+&lt;/Button&gt;</code></pre><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Agree property names with engineering. If Figma says "Type" and code says "variant", designers and developers misunderstand each other.</div></div></div><div class="section" id="s3-4"><h2><span class="sec-emoji">🧠</span> Check Yourself</h2><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Showing or hiding a trailing icon is best handled by…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Duplicating all variants</li><li class="mcq-opt"><span class="opt-letter">B</span> A boolean property (plus instance swap for the icon)</li><li class="mcq-opt"><span class="opt-letter">C</span> Detaching</li><li class="mcq-opt"><span class="opt-letter">D</span> A new component</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — use a boolean and instance swap."></div></div></div>
+    </section>
+    <section class="panel" id="t4" data-toc='[["s4-1", "Configuration vs Composition"], ["s4-2", "Slot Patterns in Figma"], ["s4-3", "Edge-Case Handling in Components"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">→ Advanced</span></div><div class="panel-eyebrow">Module 04 · Composition</div><h1 class="panel-title">Composition Patterns & Slots</h1><p class="panel-subtitle">Build flexible components through composition instead of endless configuration.</p></div>
+      <div class="section" id="s4-1"><h2><span class="sec-emoji">🧩</span> Configuration vs Composition</h2><div class="compare"><div class="compare-col"><h4>⚙️ Configuration</h4><p style="font-size:14px;color:var(--ink-soft);margin:0">One component with many props: <span class="formula">&lt;Card title image footer badge actions …&gt;</span>. Easy at first, rigid and bloated later.</p></div><div class="compare-col"><h4>🧱 Composition</h4><p style="font-size:14px;color:var(--ink-soft);margin:0">Small parts assembled: <span class="formula">&lt;Card&gt;&lt;Card.Media/&gt;&lt;Card.Header/&gt;&lt;Card.Body/&gt;&lt;Card.Footer/&gt;&lt;/Card&gt;</span>. Flexible and predictable.</p></div></div></div><div class="section" id="s4-2"><h2><span class="sec-emoji">🗂️</span> Slot Patterns in Figma</h2><div class="table-wrap"><table><tr><th>Pattern</th><th>How</th><th>Use</th></tr><tr><td><strong>Placeholder swap</strong></td><td>Empty "Slot" component swapped for content</td><td>Modal body, card content</td></tr><tr><td><strong>Native slots</strong></td><td>Figma's slot feature where available</td><td>Free-form content areas</td></tr><tr><td><strong>Preferred instances</strong></td><td>Curated list in instance swap</td><td>Allowed icons or footers</td></tr><tr><td><strong>Sub-components</strong></td><td>Card.Header, Card.Footer as separate components</td><td>Composable building blocks</td></tr></table></div></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🧷</span> Edge-Case Handling in Components</h2><div class="table-wrap"><table><tr><th>Edge case</th><th>Component behaviour</th></tr><tr><td>Very long label</td><td>Wrap to 2 lines or truncate with tooltip (document which)</td></tr><tr><td>Missing image</td><td>Fallback placeholder with initials or icon</td></tr><tr><td>No actions</td><td>Footer collapses, spacing adjusts</td></tr><tr><td>Loading</td><td>Skeleton variant of the component</td></tr><tr><td>Error</td><td>Error variant with message slot</td></tr><tr><td>Disabled + tooltip</td><td>Explain why disabled</td></tr><tr><td>Overflow (many tags)</td><td>"+3" overflow chip</td></tr></table></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Why prefer composition for a Card?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Fewer files</li><li class="mcq-opt"><span class="opt-letter">B</span> Flexible, predictable assembly without dozens of props</li><li class="mcq-opt"><span class="opt-letter">C</span> Faster rendering always</li><li class="mcq-opt"><span class="opt-letter">D</span> Required by Figma</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — composition gives flexibility without prop bloat."></div></div></div>
+    </section>
+    <section class="panel" id="t5" data-toc='[["s5-1", "Library Structure"], ["s5-2", "Quality Checklist for a Component"], ["s5-3", "Measuring Adoption"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag adv">Advanced</span></div><div class="panel-eyebrow">Module 05 · Scaling</div><h1 class="panel-title">Scaling a Component Library</h1><p class="panel-subtitle">Organise, test and evolve a large component library across teams.</p></div>
+      <div class="section" id="s5-1"><h2><span class="sec-emoji">🗄️</span> Library Structure</h2><div class="table-wrap"><table><tr><th>Layer</th><th>Content</th></tr><tr><td>Foundations library</td><td>Tokens/variables, styles, icons, grids</td></tr><tr><td>Core components</td><td>Buttons, inputs, navigation, overlays</td></tr><tr><td>Patterns</td><td>Forms, tables, empty states</td></tr><tr><td>Product libraries</td><td>Domain components built on core</td></tr><tr><td>Templates</td><td>Page layouts and flows</td></tr></table></div><ul><li>Use clear page and naming structure: <span class="formula">Button / Primary / Medium</span>.</li><li>Hide internal building blocks with a leading "." or "_".</li><li>Publish with descriptions and links to documentation.</li></ul></div><div class="section" id="s5-2"><h2><span class="sec-emoji">🧪</span> Quality Checklist for a Component</h2><ul><li>All variants and states (default, hover, focus, pressed, disabled, loading, error).</li><li>Built with auto layout and token variables only.</li><li>Stress-tested for long text, empty content, RTL, 200% text.</li><li>Accessible: contrast, focus indicator, target size, labels.</li><li>Properties named like code props.</li><li>Documented usage, do/don't, anatomy and accessibility notes.</li></ul></div><div class="section" id="s5-3"><h2><span class="sec-emoji">📈</span> Measuring Adoption</h2><div class="table-wrap"><table><tr><th>Metric</th><th>How</th></tr><tr><td>Component coverage</td><td>% of product screens built with library components (Figma library analytics)</td></tr><tr><td>Detach rate</td><td>How often instances are detached — high means gaps in the system</td></tr><tr><td>Code adoption</td><td>Imports of system components vs custom ones</td></tr><tr><td>Contribution rate</td><td>Proposals and PRs from product teams</td></tr></table></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> A high detach rate on the Card component suggests…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Everything is fine</li><li class="mcq-opt"><span class="opt-letter">B</span> The component doesn't meet real needs — investigate gaps</li><li class="mcq-opt"><span class="opt-letter">C</span> Designers are lazy</li><li class="mcq-opt"><span class="opt-letter">D</span> Delete the card</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — detaching signals missing flexibility."></div></div></div>
+    </section>
+    <section class="panel" id="t6" data-toc='[["s6-1", "Component Fundamentals"], ["s6-2", "Variants & Auto Layout"], ["s6-3", "Scaling & Edge Cases"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 06 · Interview Preparation</div><h1 class="panel-title">Interview Preparation</h1><p class="panel-subtitle">Click a question to reveal a model answer.</p></div>
+      <div class="section" id="s6-1"><h2><span class="sec-emoji">🧱</span> Component Fundamentals</h2><details><summary>What makes a good component?</summary><div>Single responsibility, composable, configured via clear properties, token-driven, accessible by default, stress-tested and documented.</div></details><details><summary>Primitive vs composite components?</summary><div>Primitives are the smallest parts (icon, text); composites combine basic components (search field = input + button).</div></details><details><summary>When should something become a system component?</summary><div>When it is used in multiple products or places, solves a common need, and is stable enough to maintain; otherwise keep it local.</div></details><details><summary>Why avoid detaching instances?</summary><div>Detached copies stop receiving updates, creating inconsistency and hidden debt.</div></details></div><div class="section" id="s6-2"><h2><span class="sec-emoji">🎛️</span> Variants & Auto Layout</h2><details><summary>How do you avoid variant explosion?</summary><div>Use variants only for visual changes needing different structure/styles; use boolean, text and instance-swap properties for content toggles; use interactive components for hover/pressed.</div></details><details><summary>Hug vs fill vs fixed?</summary><div>Hug sizes to content, fill stretches to the parent, fixed keeps an explicit size. Text that should wrap usually uses fill.</div></details><details><summary>How do you stress-test a component?</summary><div>Long and empty content, 200% text size, narrow/wide containers, translations, RTL and every state.</div></details><details><summary>How do Figma properties map to code?</summary><div>Variants map to enum props (size, variant), booleans to boolean props, text to string/children, instance swaps to slot/ReactNode props — with names agreed with engineering.</div></details><details><summary>What are slots?</summary><div>Flexible content regions in a component where designers can place any approved content, avoiding endless configuration props.</div></details></div><div class="section" id="s6-3"><h2><span class="sec-emoji">📈</span> Scaling & Edge Cases</h2><details><summary>Configuration vs composition?</summary><div>Configuration exposes many props on one component; composition assembles sub-components. Composition scales better for complex, varied content.</div></details><details><summary>How do you handle edge cases in components?</summary><div>Define behaviour for long text, missing images, empty slots, loading and error states, overflow and disabled reasons — as variants or documented rules.</div></details><details><summary>How do you measure library health?</summary><div>Coverage, detach rate, code adoption, contribution rate and number of open issues or requests.</div></details><details><summary>How do you structure a large Figma library?</summary><div>Separate foundations, core components, patterns, product libraries and templates; consistent naming; hidden internal parts; descriptions linked to docs.</div></details></div>
+    </section>
+    <section class="panel" id="t7" data-toc='[["s7-1", "Scenario: OpsBoard Admin Data Table"], ["s7-2", "Task 1 \u00b7 Decompose"], ["s7-3", "Task 2 \u00b7 Properties"], ["s7-4", "Task 3 \u00b7 Edge Cases"], ["s7-5", "Task 4 \u00b7 Adoption"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 07 · Practice</div><h1 class="panel-title">Practice: Architect a Data Table Component</h1><p class="panel-subtitle">Design the architecture of a complex, real-feeling component.</p></div>
+      <div class="quiz-progress"><span class="quiz-score">0 / 0 correct</span><div class="quiz-bar-track"><div class="quiz-bar-fill"></div></div><button class="btn quiz-reset-btn">↻ Reset answers</button></div><div class="section" id="s7-1"><h2><span class="sec-emoji">📊</span> Scenario: OpsBoard Admin Data Table</h2><p><strong>OpsBoard</strong> needs one data table for orders, users and invoices: sorting, selection, inline status badges, row actions, pagination, loading/empty/error states, and compact/comfortable density. Today each team builds its own table.</p></div><div class="section" id="s7-2"><h2><span class="sec-emoji">1️⃣</span> Task 1 · Decompose</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Break the table into sub-components.</div><textarea placeholder="Components…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Table (container) → Toolbar (search, filters, bulk actions) → Header row → Header cell (sortable, sort direction) → Body row (selectable, hover, selected) → Cell types (text, number, badge, avatar+text, actions menu) → Pagination → State views (loading skeleton rows, empty, error).</div></div></div><div class="section" id="s7-3"><h2><span class="sec-emoji">2️⃣</span> Task 2 · Properties</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Define properties for the Header cell.</div><textarea placeholder="Variants… Booleans… Text… Swaps…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Variants: Sort = none/asc/desc; Align = left/right; State = default/hover/focus. Boolean: sortable, show info icon. Text: label. Swap: info tooltip icon. Code: &lt;HeaderCell sortable sort="asc" align="right"&gt;Amount&lt;/HeaderCell&gt;.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Density (compact/comfortable) is best handled by…</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Duplicating the whole table</li><li class="mcq-opt"><span class="opt-letter">B</span> A density token mode or one variant property controlling row height and padding tokens</li><li class="mcq-opt"><span class="opt-letter">C</span> Different components per team</li><li class="mcq-opt"><span class="opt-letter">D</span> Manual resizing</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — use density tokens/mode."></div></div></div><div class="section" id="s7-4"><h2><span class="sec-emoji">3️⃣</span> Task 3 · Edge Cases</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> List 5 edge cases and how the table handles them.</div><textarea placeholder="Edge → behaviour"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Long customer names → truncate with tooltip; 0 rows → empty state with "Clear filters"; 10,000 rows → pagination/virtualisation; loading → 8 skeleton rows; numeric columns → right-aligned tabular figures; failed load → error row with Retry; narrow screens → horizontal scroll with sticky first column.</div></div></div><div class="section" id="s7-5"><h2><span class="sec-emoji">4️⃣</span> Task 4 · Adoption</h2><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> After release, the Orders team detaches the table often. First step?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Ban detaching</li><li class="mcq-opt"><span class="opt-letter">B</span> Interview the team, find missing needs, and add them as properties or slots</li><li class="mcq-opt"><span class="opt-letter">C</span> Ignore</li><li class="mcq-opt"><span class="opt-letter">D</span> Delete the component</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — understand the gap first."></div></div></div>
+    </section>
+    <section class="panel" id="t8" data-toc='[["sA-1","Take the Assessment"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag expert">→ Expert</span></div><p class="panel-eyebrow">Module 08</p><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">Test yourself on Component Architecture &amp; Modular Design — from basic to expert.</p></div>
+      <div class="section" id="sA-1"><div class="cb-assess-intro"><h3>Test what you've learned</h3><p>Full-screen, timed assessment on Component Architecture &amp; Modular Design.</p><ul><li><strong>50 multiple-choice questions</strong> — concepts and scenarios, basic to expert</li><li><strong>60-minute</strong> timer with warning state and automatic submission</li><li>Question palette, Previous/Next, Mark for Review</li><li>Full-screen and tab-switch warnings — <strong>3 warnings auto-submit</strong></li><li>Copy, cut, right-click and screenshot/print shortcuts are blocked</li><li>Questions and options are shuffled on every attempt</li></ul><button class="cb-start" id="cbAssessStart">▶ Start Assessment</button></div></div>
+</section>
+  </main>
+</div>
+<script>
+
+/* Tabs, dynamic TOC, scroll-spy, progress pill */
+(function(){
+  const tabs=document.querySelectorAll('.tab'),panels=document.querySelectorAll('.panel'),tocEl=document.getElementById('toc'),total=tabs.length,pt=document.getElementById('progressText');
+  function buildToc(panel){const data=JSON.parse(panel.getAttribute('data-toc')||'[]');tocEl.innerHTML=data.map(([id,l])=>`<li><a href="#${id}" data-target="${id}">${l}</a></li>`).join('');const f=tocEl.querySelector('a');if(f)f.classList.add('active');}
+  function activate(i){tabs.forEach((t,k)=>{t.classList.toggle('active',k===i);t.setAttribute('aria-selected',k===i)});panels.forEach((p,k)=>p.classList.toggle('active',k===i));buildToc(panels[i]);pt.textContent=`Tab ${i+1} of ${total}`;window.scrollTo({top:0,behavior:'instant'});}
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{const a=e.target.closest('.toc-list a');if(!a)return;e.preventDefault();const el=document.getElementById(a.dataset.target);if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});});
+  let tk=false;function spy(){const ap=document.querySelector('.panel.active');if(!ap)return;let cur=null;ap.querySelectorAll('.section').forEach(s=>{if(s.getBoundingClientRect().top-180<0)cur=s.id});if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));tk=false;}
+  window.addEventListener('scroll',()=>{if(!tk){requestAnimationFrame(spy);tk=true}},{passive:true});
+  window.resetProgress=()=>activate(0);activate(0);
+})();
+/* Inline MCQs, per-panel score, model answers */
+(function(){
+  function update(panel){const bar=panel.querySelector('.quiz-progress');if(!bar||bar.id)return;const all=panel.querySelectorAll('.mcq').length,done=panel.querySelectorAll('.mcq.answered').length,okc=panel.querySelectorAll('.mcq.answered[data-correct="1"]').length;bar.querySelector('.quiz-score').textContent=`${okc} / ${all} correct`;bar.querySelector('.quiz-bar-fill').style.width=(all?done/all*100:0)+'%';}
+  document.querySelectorAll('.mcq').forEach(m=>{const ans=+m.dataset.answer,opts=m.querySelectorAll('.mcq-opt'),fb=m.querySelector('.mcq-feedback');
+    opts.forEach((o,i)=>{o.tabIndex=0;o.setAttribute('role','button');const go=()=>{if(m.classList.contains('answered'))return;m.classList.add('answered');const r=i===ans;m.dataset.correct=r?'1':'0';opts[ans].classList.add('correct');if(!r)o.classList.add('incorrect');fb.className='mcq-feedback '+(r?'ok':'bad');fb.textContent=r?fb.dataset.ok:fb.dataset.bad;update(m.closest('.panel'));};
+      o.addEventListener('click',go);o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});});});
+  document.querySelectorAll('.panel').forEach(p=>{update(p);const rb=p.querySelector('.quiz-reset-btn');if(rb)rb.addEventListener('click',()=>{p.querySelectorAll('.mcq').forEach(m=>{m.classList.remove('answered');delete m.dataset.correct;m.querySelectorAll('.mcq-opt').forEach(o=>o.classList.remove('correct','incorrect'));const fb=m.querySelector('.mcq-feedback');fb.className='mcq-feedback';fb.textContent='';});p.querySelectorAll('.saq textarea').forEach(t=>t.value='');p.querySelectorAll('.saq-model').forEach(x=>x.classList.remove('show'));p.querySelectorAll('.saq-toggle').forEach(b=>b.textContent='Show model answer');update(p);});});
+  document.querySelectorAll('.saq-toggle').forEach(b=>b.addEventListener('click',()=>{const s=b.nextElementSibling.classList.toggle('show');b.textContent=s?'Hide model answer':'Show model answer';}));
+})();
+
+/* Assessment — timed full-screen exam with rules & security */
+(function(){
+  const ROLE = "Design Systems Designer \u2014 Component Architecture & Modular Design";
+  const QUESTION_BANK = [{"id": "dsd_component_architecture-01", "q": "What is a UI component?", "options": ["A reusable building block defined once with its variations and states", "A user persona", "A colour token", "A database table"], "answer": 0, "difficulty": "", "explanation": "Components are reusable parts like buttons and cards."}, {"id": "dsd_component_architecture-02", "q": "A main component's copy linked to it is called\u2026", "options": ["A token", "An instance", "A style", "A variant"], "answer": 1, "difficulty": "", "explanation": "Instances update when the main component changes."}, {"id": "dsd_component_architecture-03", "q": "Detaching an instance\u2026", "options": ["Breaks its link so it stops receiving updates", "Adds variants", "Improves performance", "Publishes it"], "answer": 0, "difficulty": "", "explanation": "Detached copies create inconsistency and hidden debt."}, {"id": "dsd_component_architecture-04", "q": "An icon is an example of a\u2026", "options": ["Template", "Primitive / atom", "Pattern", "Page"], "answer": 1, "difficulty": "", "explanation": "Primitives are the smallest building blocks."}, {"id": "dsd_component_architecture-05", "q": "A search field (input + button) is a\u2026", "options": ["Primitive", "Template", "Token", "Composite component"], "answer": 3, "difficulty": "", "explanation": "Composites combine basic components."}, {"id": "dsd_component_architecture-06", "q": "A form with validation and an error summary is best described as a\u2026", "options": ["Token", "Pattern", "Primitive", "Instance"], "answer": 1, "difficulty": "", "explanation": "Patterns are recurring solutions combining components."}, {"id": "dsd_component_architecture-07", "q": "Single responsibility for components means\u2026", "options": ["One designer owns everything", "One colour", "Each component does one job well", "One variant only"], "answer": 2, "difficulty": "", "explanation": "Focused components are easier to reuse and maintain."}, {"id": "dsd_component_architecture-08", "q": "Figma auto layout is most similar to\u2026", "options": ["HTML tables", "SVG paths", "CSS Flexbox", "CSS float"], "answer": 2, "difficulty": "", "explanation": "Direction, gap, padding and alignment map to flex properties."}, {"id": "dsd_component_architecture-09", "q": "Auto layout 'hug contents' means\u2026", "options": ["It fills the parent", "It has a fixed size", "The frame sizes itself to its content", "It is absolutely positioned"], "answer": 2, "difficulty": "", "explanation": "Hug \u2248 fit-content."}, {"id": "dsd_component_architecture-10", "q": "Auto layout 'fill container' means\u2026", "options": ["It shrinks to content", "It overlaps siblings", "It is hidden", "The element stretches to fill available space"], "answer": 3, "difficulty": "", "explanation": "Fill \u2248 flex: 1 / width: 100%."}, {"id": "dsd_component_architecture-11", "q": "Auto layout 'gap: auto' behaves like\u2026", "options": ["position: absolute", "margin: auto on all sides", "gap: 0", "justify-content: space-between"], "answer": 3, "difficulty": "", "explanation": "Items are pushed apart evenly."}, {"id": "dsd_component_architecture-12", "q": "Absolute position inside auto layout is best for\u2026", "options": ["Lists", "All children", "Text blocks", "Overlays like badges"], "answer": 3, "difficulty": "", "explanation": "Absolute children ignore layout flow."}, {"id": "dsd_component_architecture-13", "q": "Text inside a list item should usually\u2026", "options": ["Fill the width so it wraps and pushes trailing content", "Hug only", "Be absolute", "Be fixed width"], "answer": 0, "difficulty": "", "explanation": "Fill width prevents overlap with trailing elements."}, {"id": "dsd_component_architecture-14", "q": "Min/max width on auto layout frames help\u2026", "options": ["Add variants", "Keep layouts robust with long or short content", "Export assets", "Change colours"], "answer": 1, "difficulty": "", "explanation": "Constraints prevent extreme stretching or squashing."}, {"id": "dsd_component_architecture-15", "q": "Which property type shows or hides a layer?", "options": ["Instance swap", "Boolean", "Text", "Variant"], "answer": 1, "difficulty": "", "explanation": "Booleans toggle visibility."}, {"id": "dsd_component_architecture-16", "q": "Which property type swaps a nested icon?", "options": ["Instance swap", "Boolean", "Text", "Variant"], "answer": 0, "difficulty": "", "explanation": "Instance swap replaces a nested component."}, {"id": "dsd_component_architecture-17", "q": "Which property type exposes editable label text?", "options": ["Text property", "Variant", "Boolean", "Instance swap"], "answer": 0, "difficulty": "", "explanation": "Text properties surface editable strings at the top level."}, {"id": "dsd_component_architecture-18", "q": "Variants are best used for\u2026", "options": ["Every content toggle", "Swapping icons", "Changing labels", "Visual versions and states needing different structure or styles"], "answer": 3, "difficulty": "", "explanation": "Content toggles belong in booleans/text/swaps."}, {"id": "dsd_component_architecture-19", "q": "Variant explosion is\u2026", "options": ["Too many property combinations turned into variants", "Using auto layout", "Having docs", "Using tokens"], "answer": 0, "difficulty": "", "explanation": "E.g. 240 button variants instead of 60 plus properties."}, {"id": "dsd_component_architecture-20", "q": "A button with Size(3) \u00d7 Type(4) \u00d7 State(5) has how many variants?", "options": ["60", "240", "12", "20"], "answer": 0, "difficulty": "", "explanation": "3 \u00d7 4 \u00d7 5 = 60."}, {"id": "dsd_component_architecture-21", "q": "Hover and pressed states are efficiently handled with\u2026", "options": ["Screenshots", "Detached frames", "Interactive components", "Separate files"], "answer": 2, "difficulty": "", "explanation": "Interactive components switch variants on interaction."}, {"id": "dsd_component_architecture-22", "q": "Exposing nested instance properties lets you\u2026", "options": ["Edit a child's properties from the parent instance", "Rename the file", "Export SVG", "Delete the child"], "answer": 0, "difficulty": "", "explanation": "It simplifies configuring complex components."}, {"id": "dsd_component_architecture-23", "q": "Figma property names should\u2026", "options": ["Be different from code", "Match code prop names agreed with engineering", "Change each release", "Use emojis"], "answer": 1, "difficulty": "", "explanation": "Shared naming reduces handoff errors."}, {"id": "dsd_component_architecture-24", "q": "Figma Type = Primary usually maps to which React prop?", "options": ["kind=\"red\"", "style=\"1\"", "color=\"blue\"", "variant=\"primary\""], "answer": 3, "difficulty": "", "explanation": "Variant enums map to enum props."}, {"id": "dsd_component_architecture-25", "q": "A boolean 'Show icon' plus instance swap maps in code to\u2026", "options": ["A CSS class only", "A token", "A separate component", "An optional icon prop (e.g. leadingIcon={<Icon/>})"], "answer": 3, "difficulty": "", "explanation": "Slots/ReactNode props carry swappable content."}, {"id": "dsd_component_architecture-26", "q": "A slot is\u2026", "options": ["A flexible content region within a component", "A font", "A breakpoint", "A token tier"], "answer": 0, "difficulty": "", "explanation": "Slots accept approved content without new props."}, {"id": "dsd_component_architecture-27", "q": "Composition means\u2026", "options": ["Using images", "Using one variant", "One component with dozens of props", "Building components from smaller sub-components"], "answer": 3, "difficulty": "", "explanation": "Card.Header, Card.Body, Card.Footer style APIs."}, {"id": "dsd_component_architecture-28", "q": "Configuration-heavy components tend to become\u2026", "options": ["More flexible", "Accessible automatically", "Faster", "Rigid and bloated with props"], "answer": 3, "difficulty": "", "explanation": "Composition scales better for varied content."}, {"id": "dsd_component_architecture-29", "q": "Preferred instances in Figma\u2026", "options": ["Change tokens", "Publish docs", "Curate which components appear in an instance-swap picker", "Delete components"], "answer": 2, "difficulty": "", "explanation": "They guide designers to allowed content."}, {"id": "dsd_component_architecture-30", "q": "A placeholder 'slot' component is typically\u2026", "options": ["A token", "Exported as PNG", "Kept visible in production", "Swapped for real content in each instance"], "answer": 3, "difficulty": "", "explanation": "It marks where flexible content goes."}, {"id": "dsd_component_architecture-31", "q": "Stress-testing a component includes\u2026", "options": ["Changing logos", "Long text, empty content, 200% text, narrow/wide containers, RTL", "Only the default state", "Pricing tests"], "answer": 1, "difficulty": "", "explanation": "Edge content reveals layout bugs."}, {"id": "dsd_component_architecture-32", "q": "Long label behaviour should be\u2026", "options": ["Always overflow", "Defined: wrap to N lines or truncate with tooltip", "Left undefined", "Hidden"], "answer": 1, "difficulty": "", "explanation": "Documented rules prevent inconsistent builds."}, {"id": "dsd_component_architecture-33", "q": "A missing image in a card should show\u2026", "options": ["A fallback placeholder (initials or icon)", "An error dialog", "A broken image icon", "Nothing and collapse randomly"], "answer": 0, "difficulty": "", "explanation": "Fallbacks keep layouts stable."}, {"id": "dsd_component_architecture-34", "q": "A loading version of a card is usually\u2026", "options": ["A skeleton variant", "A red border", "A blank page", "A tooltip"], "answer": 0, "difficulty": "", "explanation": "Skeletons mirror the final layout."}, {"id": "dsd_component_architecture-35", "q": "Overflowing tags in a component should\u2026", "options": ["Shrink text to 6px", "Disappear silently", "Show a '+N' overflow chip", "Overlap other content"], "answer": 2, "difficulty": "", "explanation": "Overflow indicators keep layouts clean."}, {"id": "dsd_component_architecture-36", "q": "Internal building blocks in a Figma library are often hidden by\u2026", "options": ["Deleting them", "Locking the file", "Prefixing names with '.' or '_'", "Making them red"], "answer": 2, "difficulty": "", "explanation": "Hidden components don't appear in the assets panel."}, {"id": "dsd_component_architecture-37", "q": "A high detach rate on a component indicates\u2026", "options": ["Good documentation", "It doesn't meet real needs \u2014 investigate gaps", "Fast performance", "Healthy adoption"], "answer": 1, "difficulty": "", "explanation": "Detaching signals missing flexibility."}, {"id": "dsd_component_architecture-38", "q": "Component coverage measures\u2026", "options": ["Font count", "% of designs/screens built with library components", "Number of colours", "File size"], "answer": 1, "difficulty": "", "explanation": "Coverage indicates adoption."}, {"id": "dsd_component_architecture-39", "q": "A product-specific component used in one app should\u2026", "options": ["Be detached", "Be deleted", "Live in a local/product library unless reused widely", "Always go into core immediately"], "answer": 2, "difficulty": "", "explanation": "Core holds widely reused, stable components."}, {"id": "dsd_component_architecture-40", "q": "Which belongs in a component quality checklist?", "options": ["Lorem ipsum only", "All states, auto layout, tokens only, accessibility, docs", "Detached instances", "Random colours"], "answer": 1, "difficulty": "", "explanation": "Quality checks ensure reliability."}, {"id": "dsd_component_architecture-41", "q": "Why use tokens (variables) inside components?", "options": ["To slow Figma", "So theming and global changes flow through automatically", "To increase variants", "To avoid auto layout"], "answer": 1, "difficulty": "", "explanation": "Components inherit token updates."}, {"id": "dsd_component_architecture-42", "q": "A data table's density setting is best handled by\u2026", "options": ["Manual resizing", "Separate libraries per team", "Duplicating the whole table", "Density tokens/mode controlling row height and padding"], "answer": 3, "difficulty": "", "explanation": "Modes avoid duplicated components."}, {"id": "dsd_component_architecture-43", "q": "Numeric table columns should be\u2026", "options": ["Left-aligned with proportional figures", "Centered randomly", "In italics", "Right-aligned with tabular figures"], "answer": 3, "difficulty": "", "explanation": "Aligned digits are easier to compare."}, {"id": "dsd_component_architecture-44", "q": "Which naming is clearest for Figma components?", "options": ["Button / Primary / Medium", "btn copy 3", "final final", "new button 2"], "answer": 0, "difficulty": "", "explanation": "Structured slash naming organises the assets panel."}, {"id": "dsd_component_architecture-45", "q": "Templates in a design system define\u2026", "options": ["Page-level layouts using components", "Single icons", "Colours", "Tokens"], "answer": 0, "difficulty": "", "explanation": "Templates show how components assemble into pages."}, {"id": "dsd_component_architecture-46", "q": "Accessible-by-default components mean\u2026", "options": ["States, focus, labels, contrast and target size are built in", "Only colours are checked", "Nothing special", "Accessibility is added later by each team"], "answer": 0, "difficulty": "", "explanation": "Teams inherit accessibility automatically."}, {"id": "dsd_component_architecture-47", "q": "When a team requests a new property, first\u2026", "options": ["Detach the component", "Refuse all requests", "Add it immediately", "Understand the use case and check if existing properties or slots cover it"], "answer": 3, "difficulty": "", "explanation": "Avoid unnecessary API growth."}, {"id": "dsd_component_architecture-48", "q": "Disabled + hover state conflict: which wins?", "options": ["Hover", "Disabled (no hover feedback)", "Both equally", "Neither"], "answer": 1, "difficulty": "", "explanation": "Priority rules prevent confusing states."}, {"id": "dsd_component_architecture-49", "q": "Empty optional content in auto layout should\u2026", "options": ["Collapse its gap when hidden", "Leave a blank gap", "Break layout", "Show 'N/A'"], "answer": 0, "difficulty": "", "explanation": "Hidden layers in auto layout remove their space."}, {"id": "dsd_component_architecture-50", "q": "The best predictor that Figma and code components stay aligned is\u2026", "options": ["Different names per platform", "No documentation", "Screenshots only", "Shared structure, naming and properties agreed with engineering"], "answer": 3, "difficulty": "", "explanation": "Matching APIs reduce drift."}];
+  const EXAM_MINUTES = Math.ceil(QUESTION_BANK.length*1.2);
+  const EXAM_SECONDS = EXAM_MINUTES*60;
+  const EXAM_COUNT = QUESTION_BANK.length;
+  const LS_KEY = 'careerBuddyAssessment:' + ROLE;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false, warns=0, proctorOn=false, lastWarn=0;
+  const esc = s => String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const fmt=t=>{const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s};
+  const css=`
+  .cb-exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .cb-exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .cb-exam-top .et-title{font-size:16px;font-weight:800}.cb-exam-top .et-sub{font-size:12px;color:#cdd5e5}.cb-exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}.cb-exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:cbpulse 1s infinite}@keyframes cbpulse{50%{opacity:.5}}
+  .cb-exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}.cb-exam-q-pane{padding:28px 36px;overflow:auto}.cb-exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}.cb-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}.cb-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}.cb-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}.cb-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}.cb-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}.cb-opt:hover{border-color:#14213D;background:#f9f9ff}.cb-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}.cb-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}.cb-opt.sel .k{background:#14213D;color:#fff}.cb-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}.cb-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}.cb-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}.cb-btn.nav:disabled{opacity:.4;cursor:not-allowed}.cb-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}.cb-btn.mark.on{background:#FCA311;color:#14213D}.cb-btn.submit{background:#FCA311;color:#14213D}.cb-btn.primary{background:#14213D;color:#fff}.cb-side-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}.cb-count{font-size:13px;color:#4a5568;font-weight:600}.cb-count b{color:#14213D}.cb-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.cb-pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}.cb-pal.answered{background:#14213D;color:#fff;border-color:#14213D}.cb-pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}.cb-pal.cur{outline:2px solid #14213D;outline-offset:1px}.cb-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}.cb-legend span{display:inline-flex;align-items:center;gap:8px}.cb-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}.cb-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}.cb-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}.cb-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}.cb-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}.cb-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}.cb-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}.cb-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}.cb-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}.cb-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}.cb-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}.cb-rev .r.ok{border-left-color:#38a169}.cb-rev .r.no{border-left-color:#e53e3e}.cb-rev .rq{font-weight:700;margin-bottom:6px}.cb-rev .ra{font-size:13px;margin:2px 0}.cb-rev .ra.wrong{color:#c53030}.cb-rev .ra.cor{color:#276749}.cb-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}.cb-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}.cb-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}.cb-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}.cb-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}.cb-confirm .row{display:flex;gap:10px;justify-content:flex-end}.cb-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}.cb-cover small{font-weight:500;color:#cdd5e5;font-size:14px}.cb-assess-intro{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}.cb-assess-intro h3{margin:0 0 8px;font-size:21px}.cb-assess-intro p{margin:6px 0;color:var(--ink-soft)}.cb-assess-intro ul{margin:12px 0 18px}.cb-start{border:0;background:#14213D;color:#fff;border-radius:9px;padding:12px 18px;font:700 14px inherit;cursor:pointer}.cb-start:hover{opacity:.92}
+  @media(max-width:820px){.cb-exam-main{grid-template-columns:1fr}.cb-exam-side{border-left:none;border-top:1px solid #e2e8f0}.cb-exam-q-pane{padding:22px 18px}.cb-exam-top{padding:10px 14px}}
+  `;
+  function injectCss(){if(document.getElementById('cbExamCss'))return;const s=document.createElement('style');s.id='cbExamCss';s.textContent=css;document.head.appendChild(s)}
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function buildAttempt(){
+    const recent=JSON.parse(localStorage.getItem(LS_KEY+'_attempts')||'[]');
+    let selected=[], sig='';
+    for(let tries=0;tries<25;tries++){
+      selected=shuffle(QUESTION_BANK.slice()).slice(0,EXAM_COUNT);
+      sig=selected.map(x=>x.id).sort().join('|');
+      if(!recent.includes(sig))break;
+    }
+    recent.unshift(sig); try{localStorage.setItem(LS_KEY+'_attempts',JSON.stringify(recent.slice(0,20)))}catch(e){}
+    return selected.map(q=>{const c=JSON.parse(JSON.stringify(q)); const pairs=c.options.map((o,i)=>({o,i}));shuffle(pairs);c.options=pairs.map(x=>x.o);c.answer=pairs.findIndex(x=>x.i===q.answer);return c});
+  }
+  function confirmBox(title,msg,okLabel){return new Promise(resolve=>{injectCss();const d=document.createElement('div');d.className='cb-confirm';d.innerHTML=`<div class="box"><h3>${esc(title)}</h3><p>${esc(msg)}</p><div class="row"><button class="cb-btn nav" data-a="0">Cancel</button><button class="cb-btn primary" data-a="1">${esc(okLabel||'Confirm')}</button></div></div>`;document.body.appendChild(d);d.addEventListener('click',e=>{if(e.target===d){d.remove();resolve(false);return}const b=e.target.closest('[data-a]');if(!b)return;d.remove();resolve(b.dataset.a==='1')})})}
+  function startEntry(){showSplash()}
+  function showSplash(){injectCss();const sp=document.createElement('div');sp.className='cb-splash';sp.id='cbExamSplash';sp.innerHTML=`<div class="card"><h2>🎯 ${esc(ROLE)} — Assessment</h2><p>A timed, full-screen assessment based on this course.</p><ul><li><b>${EXAM_COUNT} questions</b> drawn from this course's question bank</li><li><b>${EXAM_MINUTES}-minute</b> timer — the assessment auto-submits when time is up</li><li>Navigate freely, answer questions, and <b>mark questions for review</b></li><li>Questions and answer options are shuffled on every attempt</li></ul><p style="font-weight:700;color:#14213D;margin-bottom:6px">Assessment rules</p><ul style="margin-top:0"><li>The assessment runs in <b>fullscreen</b>.</li><li>Do not switch tabs/windows or exit fullscreen.</li><li><b>3 warnings</b> for tab/window switching or leaving fullscreen will auto-submit the assessment.</li><li>Copy, cut, right-click and common screenshot/print shortcuts are blocked during the assessment.</li></ul><button class="cb-btn primary" id="cbExamBegin" style="width:100%;padding:14px">Start Assessment →</button></div>`;document.body.appendChild(sp);document.getElementById('cbExamBegin').addEventListener('click',()=>{if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});sp.remove();enterExam()})}
+  function enterExam(){injectCss();items=buildAttempt();answers={};marked={};cur=0;remaining=EXAM_SECONDS;examOn=true;document.body.style.overflow='hidden';const ov=document.createElement('div');ov.className='cb-exam-overlay';ov.id='cbExamOverlay';ov.innerHTML=`<div class="cb-exam-top"><div><div class="et-title">${esc(ROLE)} — Assessment</div><div class="et-sub">${EXAM_COUNT} questions · ${EXAM_MINUTES}-minute timer · one attempt</div></div><div class="cb-exam-timer" id="cbExamTimer">${fmt(remaining)}</div></div><div class="cb-exam-main"><div class="cb-exam-q-pane" id="cbExamQ"></div><div class="cb-exam-side"><div class="cb-count">Answered <b id="cbExamAnsN">0</b> / ${EXAM_COUNT}</div><h4 class="cb-side-title">Question palette</h4><div class="cb-palette" id="cbExamPal"></div><div class="cb-legend"><span><i style="background:#14213D;border-color:#14213D"></i> Answered</span><span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span><span><i></i> Not answered</span></div><button class="cb-btn submit" id="cbExamSubmit" style="width:100%">Submit Assessment</button></div></div>`;document.body.appendChild(ov);buildPalette();renderQ();timerId=setInterval(tick,1000);window.addEventListener('beforeunload',beforeUnload);startProctor();document.getElementById('cbExamSubmit').addEventListener('click',()=>submitExam(false))}
+  function beforeUnload(e){if(examOn){e.preventDefault();e.returnValue=''}}
+  function tick(){remaining--;const el=document.getElementById('cbExamTimer');if(el){el.textContent=fmt(Math.max(remaining,0));if(remaining<=300)el.classList.add('warn')}if(remaining<=0)submitExam(true)}
+  function buildPalette(){const pal=document.getElementById('cbExamPal');pal.innerHTML='';items.forEach((it,n)=>{const b=document.createElement('button');b.className='cb-pal';b.textContent=n+1;b.dataset.n=n;b.addEventListener('click',()=>{cur=n;renderQ()});pal.appendChild(b)});refreshPalette()}
+  function refreshPalette(){document.querySelectorAll('#cbExamPal .cb-pal').forEach(b=>{const n=+b.dataset.n,id=items[n].id;b.classList.toggle('answered',id in answers);b.classList.toggle('marked',!!marked[id]);b.classList.toggle('cur',n===cur)});const el=document.getElementById('cbExamAnsN');if(el)el.textContent=Object.keys(answers).length}
+  function renderQ(){const it=items[cur],id=it.id,pane=document.getElementById('cbExamQ');pane.innerHTML=`<div class="cb-qnum">Question ${cur+1} of ${items.length}</div><div class="cb-qtext">${esc(it.q)}${it.difficulty?`<span class="diff">${esc(it.difficulty)}</span>`:''}</div><div class="cb-opts" id="cbExamOpts">${it.options.map((o,i)=>`<div class="cb-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${esc(o)}</span></div>`).join('')}</div><div class="cb-actions"><button class="cb-btn nav" id="cbPrev" ${cur===0?'disabled':''}>← Previous</button><button class="cb-btn mark${marked[id]?' on':''}" id="cbMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button><button class="cb-btn nav" id="cbNext" ${cur===items.length-1?'disabled':''}>Next →</button></div>`;pane.querySelectorAll('.cb-opt').forEach(el=>el.addEventListener('click',()=>{answers[id]=+el.dataset.i;pane.querySelectorAll('.cb-opt').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');refreshPalette()}));document.getElementById('cbPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ()}});document.getElementById('cbNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ()}});document.getElementById('cbMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ()});refreshPalette()}
+  async function submitExam(auto){if(!examOn)return;const unanswered=items.length-Object.keys(answers).length;if(!auto){const ok=await confirmBox('Submit assessment?',unanswered?`You have ${unanswered} unanswered question(s). Once submitted, you cannot change your answers.`:'Once submitted, you cannot change your answers.','Submit Assessment');if(!ok)return}examOn=false;clearInterval(timerId);window.removeEventListener('beforeunload',beforeUnload);stopProctor();const score=items.reduce((n,it)=>n+(answers[it.id]===it.answer?1:0),0);saveScore(score,items.length);showResults(score)}
+  function saveScore(score,total){const a=JSON.parse(localStorage.getItem(LS_KEY)||'[]');a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,EXAM_COUNT)))}catch(e){}}
+  function showResults(score){const total=items.length,pct=Math.round(score/total*100);let msg='Keep practicing — review the questions you missed and try again.';if(pct>=85)msg='Outstanding — strong command of this topic.';else if(pct>=65)msg='Solid performance. Review the harder areas and try another attempt.';else if(pct>=50)msg='Borderline — revisit the course topics and retake the assessment.';const rev=items.map((it,n)=>{const you=answers[it.id],attempted=you!=null;const your=attempted?String.fromCharCode(65+you)+'. '+esc(it.options[you]):'<i>Not answered</i>';const cor=String.fromCharCode(65+it.answer)+'. '+esc(it.options[it.answer]);return `<div class="r ${attempted&&you===it.answer?'ok':'no'}"><div class="rq">Q${n+1}. ${esc(it.q)}</div><div class="ra ${attempted&&you===it.answer?'cor':'wrong'}">Your answer: ${your}</div>${attempted&&you!==it.answer?`<div class="ra cor">Correct: ${cor}</div>`:''}${it.explanation?`<div class="rx">${esc(it.explanation)}</div>`:''}</div>`}).join('');const ov=document.getElementById('cbExamOverlay');ov.innerHTML=`<div class="cb-exam-top"><div class="et-title">Result — ${esc(ROLE)} Assessment</div><button class="cb-btn" id="cbClose" style="background:rgba(255,255,255,.15);color:#fff">✕ Close</button></div><div class="cb-exam-q-pane" style="flex:1"><div class="cb-result"><div class="cb-score">${score} / ${total}</div><div class="cb-rmsg">${pct}% correct — ${msg}</div><div style="margin-top:16px"><button class="cb-btn primary" id="cbRetry">↻ Take another assessment</button></div><div class="cb-rev">${rev}</div></div></div>`;document.getElementById('cbRetry').addEventListener('click',()=>{ov.remove();enterExam()});document.getElementById('cbClose').addEventListener('click',()=>closeExam())}
+  function closeExam(){stopProctor();const ov=document.getElementById('cbExamOverlay');if(ov)ov.remove();document.body.style.overflow='';if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}
+  function warning(title,msg){if(!proctorOn||!examOn)return;const now=Date.now();if(now-lastWarn<1200)return;lastWarn=now;warns++;const cover=document.getElementById('cbExamCover')||document.createElement('div');cover.className='cb-cover';cover.id='cbExamCover';cover.style.display='flex';cover.innerHTML=`<div>⚠️ ${esc(title)}</div><small>${esc(msg)}</small><small>Warning ${warns} of 3</small><button class="cb-btn primary" id="cbResume">Return to assessment</button>`;document.body.appendChild(cover);document.getElementById('cbResume').onclick=()=>{cover.style.display='none';if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});if(warns>=3)submitExam(true)};if(warns>=3)setTimeout(()=>submitExam(true),500)}
+  function visHandler(){if(document.hidden)warning('Tab or window switch detected','Please stay on the assessment screen. Repeated violations will submit the assessment automatically.')}
+  function fsHandler(){if(examOn&&!document.fullscreenElement)warning('Fullscreen exited','The assessment must remain in fullscreen mode.')}
+  function blurHandler(){if(examOn)warning('Focus changed','Please keep the assessment window active.')}
+  function focusHandler(){}
+  function blockEvt(e){if(examOn){e.preventDefault();warning('Action blocked','Copy, cut and right-click are disabled during the assessment.')}}
+  function keyGuard(e){if(!examOn)return;const k=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&['c','x','p','s','u'].includes(k)){e.preventDefault();warning('Shortcut blocked','This assessment disables copy, print, save and source shortcuts.')}if(k==='f12'){e.preventDefault();warning('Developer tools shortcut blocked','This action is disabled during the assessment.')}}
+  function printGuard(e){if(examOn&&e.key==='PrintScreen'){e.preventDefault();warning('Screenshot action blocked','Screenshot capture is restricted during the assessment.')}}
+  function startProctor(){warns=0;lastWarn=0;proctorOn=true;document.addEventListener('visibilitychange',visHandler);document.addEventListener('fullscreenchange',fsHandler);window.addEventListener('blur',blurHandler);document.addEventListener('contextmenu',blockEvt,true);document.addEventListener('copy',blockEvt,true);document.addEventListener('cut',blockEvt,true);document.addEventListener('keydown',keyGuard,true);document.addEventListener('keyup',printGuard,true)}
+  function stopProctor(){proctorOn=false;document.removeEventListener('visibilitychange',visHandler);document.removeEventListener('fullscreenchange',fsHandler);window.removeEventListener('blur',blurHandler);document.removeEventListener('contextmenu',blockEvt,true);document.removeEventListener('copy',blockEvt,true);document.removeEventListener('cut',blockEvt,true);document.removeEventListener('keydown',keyGuard,true);document.removeEventListener('keyup',printGuard,true);const c=document.getElementById('cbExamCover');if(c)c.remove()}
+  document.addEventListener('click',function(e){const b=e.target.closest('#cbAssessStart');if(b){e.preventDefault();startEntry();}},true)
+  window.addEventListener('keydown',e=>{if(e.key==='Escape'&&examOn)e.preventDefault()});
+})();
+
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body>
+</html>

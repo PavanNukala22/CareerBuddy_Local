@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Tokens Architecture — Design Systems Designer Learning Module</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#d9730d 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans',system-ui,sans-serif;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans',system-ui,sans-serif;font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'Noto Sans',system-ui,sans-serif;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'Noto Sans',system-ui,sans-serif;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'Noto Sans',system-ui,sans-serif;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'Noto Sans',system-ui,sans-serif;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'Noto Sans',system-ui,sans-serif;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'Noto Sans',system-ui,sans-serif;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+
+/* ============= Module additions (same visual language) ============= */
+.table-wrap{overflow-x:auto;margin:16px 0;-webkit-overflow-scrolling:touch}
+.table-wrap table{margin:0;min-width:560px}
+.formula{display:inline-block;font-size:12.5px;background:var(--bg-code);border:1px solid var(--line);padding:2px 8px;border-radius:4px;color:#14213D;font-weight:500}
+.saq-toggle{margin-top:10px}
+.mcq-opt:focus-visible,.btn:focus-visible,.tab:focus-visible,.assess-start-btn:focus-visible,.saq textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.example{border:1px solid var(--line);border-left:4px solid var(--orange);border-radius:var(--radius);padding:14px 18px;margin:16px 0;background:#fffdf9}
+.example-title{font-weight:700;font-size:13px;color:#a85a08;margin-bottom:6px;letter-spacing:.02em}
+.example p,.example ul{margin:6px 0;font-size:14.5px}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.expert{background:#14213D;color:#fff}
+.term{display:grid;grid-template-columns:190px 1fr;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.term:last-child{border-bottom:none}
+details{border:1px solid var(--line);border-radius:var(--radius);margin:10px 0;background:#fff}
+summary{cursor:pointer;padding:11px 16px;font-weight:600;font-size:15px}details[open] summary{border-bottom:1px solid var(--line)}details>div{padding:10px 16px 12px;font-size:14.5px;line-height:1.6;color:#3a3833}
+.term b{color:#14213D}
+.terms{border:1px solid var(--line);border-radius:var(--radius);padding:4px 16px;margin:16px 0;background:#fff}
+@media (max-width:720px){
+  .header-top{padding:12px 16px;flex-wrap:wrap}
+  .brand{font-size:14px;line-height:1.35}
+  .brand-sub{display:block;margin-left:0}
+  .panel-title{font-size:30px}
+  .section h2{font-size:22px}
+  .assess-modal-box{padding:0 18px 40px}
+  .term{grid-template-columns:1fr;gap:2px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+<style>
+/* Noto Sans everywhere */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,td,th,div,section,header,nav,aside,main,label,button,input,textarea,small,strong,b,em,i,code,pre,svg text{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif !important}
+</style>
+<style id="cb-assess-intro-css">
+.cb-assess-intro{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg,12px);padding:28px 30px;box-shadow:var(--shadow-sm,0 1px 3px rgba(0,0,0,.06));margin-top:18px}
+.cb-assess-intro h3{margin:0 0 8px;font-size:20px;font-weight:600}
+.cb-assess-intro p{margin:6px 0;color:var(--ink-soft);font-size:14px}
+.cb-assess-intro ul{margin:12px 0 18px 18px;color:var(--ink-soft);font-size:13.5px;line-height:1.8}
+.cb-start{border:0;background:var(--accent,#14213d);color:#fff;border-radius:9px;padding:12px 20px;font:700 14px 'Noto Sans',system-ui,sans-serif;cursor:pointer}
+.cb-start:hover{opacity:.9}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-top">
+    <div class="brand"><div class="brand-mark">DT</div><span>Design / UX/UI | Design Systems Designer<span class="brand-sub"> · Design Tokens Architecture</span></span></div>
+    <div class="header-actions">
+      <span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 8</span></span>
+      <button class="btn" onclick="resetProgress()" title="Reset to first tab"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9"/><path d="M2 4v3.5h3.5"/></svg> Reset</button>
+    </div>
+  </div>
+  <nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Foundations</button><button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> Token Tiers</button><button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> Token Formats</button><button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> Theming & Modes</button><button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> Multi-Platform Sync</button><button class="tab" data-tab="t6" role="tab"><span class="tab-num">06</span> Interview Preparation</button><button class="tab" data-tab="t7" role="tab"><span class="tab-num">07</span> Practice</button><button class="tab" data-tab="t8" role="tab"><span class="tab-num">08</span> Assessment</button></nav>
+</header>
+<div class="layout">
+  <aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside>
+  <main class="main">
+    <section class="panel active" id="t1" data-toc='[["s1-1", "What is a Design Token?"], ["s1-2", "Why Tokens Matter"], ["s1-3", "Types of Token Values"], ["s1-4", "Key Terms (What is What)"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag fresher">→ Fresher-friendly</span></div><div class="panel-eyebrow">Module 01 · Foundations</div><h1 class="panel-title">What are Design Tokens?</h1><p class="panel-subtitle">Start from zero: what design tokens are, why design systems use them, and the vocabulary of token architecture.</p></div>
+      <div class="section" id="s1-1"><h2><span class="sec-emoji">🧭</span> What is a Design Token?</h2><p>A <strong>design token</strong> is a named, platform-agnostic design decision — a colour, spacing value, font size, radius, shadow or duration — stored as data. Instead of writing <span class="formula">#14213D</span> in 300 places, every platform references <span class="formula">color.action.primary</span>.</p><div class="compare"><div class="compare-col"><h4>🔴 Hard-coded values</h4><p style="font-size:14px;color:var(--ink-soft);margin:0">Designers pick colours by eye; iOS, Android and web each copy values by hand. A brand change takes weeks and still misses screens.</p></div><div class="compare-col"><h4>🟢 Tokens</h4><p style="font-size:14px;color:var(--ink-soft);margin:0">One source of truth exported to Figma, CSS, iOS and Android. Change the token once, every platform updates in the next release.</p></div></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">🎯</span> Why Tokens Matter</h2><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#14213D">🔁</div><div class="card-title">Consistency</div><div class="card-desc">Same decision everywhere.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">⚡</div><div class="card-title">Speed</div><div class="card-desc">Global changes in one place.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🌗</div><div class="card-title">Theming</div><div class="card-desc">Light/dark, brands, density by swapping values.</div></div><div class="card"><div class="card-icon" style="background:var(--pink-soft);color:#8c1a63">🤝</div><div class="card-title">Shared language</div><div class="card-desc">Designers and engineers use the same names.</div></div></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">🗂️</span> Types of Token Values</h2><div class="table-wrap"><table><tr><th>Category</th><th>Example token</th><th>Value</th></tr><tr><td>Colour</td><td>color.blue.700</td><td>#14213D</td></tr><tr><td>Spacing</td><td>space.4</td><td>16px</td></tr><tr><td>Sizing</td><td>size.icon.md</td><td>24px</td></tr><tr><td>Typography</td><td>font.size.body.md</td><td>16px</td></tr><tr><td>Font weight / family</td><td>font.weight.bold</td><td>700</td></tr><tr><td>Radius</td><td>radius.md</td><td>8px</td></tr><tr><td>Border width</td><td>border.width.thin</td><td>1px</td></tr><tr><td>Shadow / elevation</td><td>shadow.level.2</td><td>0 2px 8px rgba(0,0,0,.12)</td></tr><tr><td>Opacity</td><td>opacity.disabled</td><td>0.38</td></tr><tr><td>Motion</td><td>motion.duration.medium</td><td>250ms</td></tr><tr><td>Z-index</td><td>z.modal</td><td>1000</td></tr><tr><td>Breakpoint</td><td>breakpoint.md</td><td>768px</td></tr></table></div></div><div class="section" id="s1-4"><h2><span class="sec-emoji">📖</span> Key Terms (What is What)</h2><div class="terms"><div class="term"><b>Primitive / global token</b><span>Raw value with no meaning: blue.700, space.4.</span></div><div class="term"><b>Semantic / alias token</b><span>Purpose-based reference: color.text.primary → {blue.900}.</span></div><div class="term"><b>Component token</b><span>Scoped to one component: button.primary.bg → {color.action.primary}.</span></div><div class="term"><b>Alias / reference</b><span>A token whose value points to another token.</span></div><div class="term"><b>Mode / theme</b><span>A set of values for the same tokens (light, dark, brand B).</span></div><div class="term"><b>Source of truth</b><span>The single place tokens are defined (JSON in Git, Tokens Studio).</span></div><div class="term"><b>Transform</b><span>Converting token values for a platform (px → dp/pt, hex → UIColor).</span></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which is a design token?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> A login password</li><li class="mcq-opt"><span class="opt-letter">B</span> A named design decision like color.action.primary = #14213D</li><li class="mcq-opt"><span class="opt-letter">C</span> A React component</li><li class="mcq-opt"><span class="opt-letter">D</span> A user persona</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — a token is a named design value."></div></div></div>
+    </section>
+    <section class="panel" id="t2" data-toc='[["s2-1", "The Three Tiers"], ["s2-2", "Why Not Use Primitives Directly?"], ["s2-3", "Naming Conventions"], ["s2-4", "Check Yourself"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">→ Intermediate</span></div><div class="panel-eyebrow">Module 02 · Token Tiers</div><h1 class="panel-title">Global, Semantic & Component Tokens</h1><p class="panel-subtitle">Structure tokens in tiers so systems are flexible, themeable and easy to maintain.</p></div>
+      <div class="section" id="s2-1"><h2><span class="sec-emoji">🏛️</span> The Three Tiers</h2><div class="diagram"><svg viewBox="0 0 720 160" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans"><defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><rect x="8" y="30" width="160" height="118" rx="12" fill="#14213D"/><text x="88" y="60" text-anchor="middle" fill="#fff" font-weight="700" font-size="13">Global / primitive</text><text x="88" y="86" text-anchor="middle" fill="#cdd5e5" font-size="11.5">blue.700</text><text x="88" y="102" text-anchor="middle" fill="#cdd5e5" font-size="11.5">space.4</text><text x="88" y="118" text-anchor="middle" fill="#cdd5e5" font-size="11.5">radius.200</text><line x1="170" y1="89" x2="186" y2="89" stroke="#37352f" stroke-width="2" marker-end="url(#a1)"/><rect x="190" y="30" width="160" height="118" rx="12" fill="#eef1f7" stroke="#d3d3d0"/><text x="269" y="60" text-anchor="middle" fill="#14213D" font-weight="700" font-size="13">Semantic / alias</text><text x="269" y="86" text-anchor="middle" fill="#37352f" font-size="11.5">color.action.primary</text><text x="269" y="102" text-anchor="middle" fill="#37352f" font-size="11.5">space.inset.md</text><line x1="351" y1="89" x2="368" y2="89" stroke="#37352f" stroke-width="2" marker-end="url(#a1)"/><rect x="371" y="30" width="160" height="118" rx="12" fill="#ddedea" stroke="#d3d3d0"/><text x="451" y="60" text-anchor="middle" fill="#0a5f0a" font-weight="700" font-size="13">Component</text><text x="451" y="86" text-anchor="middle" fill="#37352f" font-size="11.5">button.primary.bg</text><text x="451" y="102" text-anchor="middle" fill="#37352f" font-size="11.5">card.padding</text><line x1="532" y1="89" x2="550" y2="89" stroke="#37352f" stroke-width="2" marker-end="url(#a1)"/><rect x="552" y="30" width="160" height="118" rx="12" fill="#0f7b0f"/><text x="632" y="60" text-anchor="middle" fill="#fff" font-weight="700" font-size="13">Platforms</text><text x="632" y="86" text-anchor="middle" fill="#fff" font-size="11.5">CSS, iOS,</text><text x="632" y="102" text-anchor="middle" fill="#fff" font-size="11.5">Android, Figma</text></svg><div class="diagram-caption">Figure 2.1 · Each tier references the one before it</div></div><div class="table-wrap"><table><tr><th>Tier</th><th>Answers</th><th>Example</th><th>Who changes it</th></tr><tr><td><strong>Global</strong></td><td>What values exist?</td><td>blue.700 = #14213D</td><td>Brand / core team, rarely</td></tr><tr><td><strong>Semantic</strong></td><td>What is this value for?</td><td>color.text.primary = {neutral.900}</td><td>System team, for themes</td></tr><tr><td><strong>Component</strong></td><td>Where exactly is it used?</td><td>button.primary.bg = {color.action.primary}</td><td>Component owners</td></tr></table></div></div><div class="section" id="s2-2"><h2><span class="sec-emoji">🧩</span> Why Not Use Primitives Directly?</h2><div class="example"><div class="example-title">EXAMPLE · Dark mode change</div><p>If buttons use <span class="formula">blue.700</span> directly, dark mode needs every button edited. If buttons use <span class="formula">color.action.primary</span>, dark mode just maps that semantic token to <span class="formula">blue.300</span>.</p></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Over-tiering is also a problem: thousands of component tokens that all alias the same semantic token add maintenance without value. Create component tokens only where a component genuinely needs to diverge.</div></div></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🏷️</span> Naming Conventions</h2><p>A common structure: <span class="formula">category.property.concept.variant.state</span></p><div class="table-wrap"><table><tr><th>Token</th><th>Category</th><th>Property</th><th>Concept / variant</th><th>State</th></tr><tr><td>color.bg.surface.raised</td><td>color</td><td>bg</td><td>surface · raised</td><td>—</td></tr><tr><td>color.text.action.hover</td><td>color</td><td>text</td><td>action</td><td>hover</td></tr><tr><td>button.primary.bg.pressed</td><td>button (component)</td><td>bg</td><td>primary</td><td>pressed</td></tr><tr><td>space.inset.md</td><td>space</td><td>inset</td><td>md</td><td>—</td></tr></table></div><ul><li>Name by <strong>purpose</strong>, not appearance ("danger", not "red").</li><li>Use consistent size scales (xs, sm, md, lg, xl or 100–900).</li><li>Avoid platform-specific words in names.</li><li>Document allowed values for each segment.</li></ul></div><div class="section" id="s2-4"><h2><span class="sec-emoji">🧠</span> Check Yourself</h2><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which is a semantic token?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> blue.700</li><li class="mcq-opt"><span class="opt-letter">B</span> color.feedback.error</li><li class="mcq-opt"><span class="opt-letter">C</span> #E03E3E</li><li class="mcq-opt"><span class="opt-letter">D</span> 16px</li></ul><div class="mcq-feedback" data-ok="Correct — it describes purpose." data-bad="Not quite — color.feedback.error describes purpose."></div></div><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Create the three tiers for a card background.</div><textarea placeholder="Global… Semantic… Component…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Global: neutral.0 = #FFFFFF, neutral.900 = #121212. Semantic: color.bg.surface → {neutral.0} (light) / {neutral.900} (dark). Component: card.bg → {color.bg.surface}.</div></div></div>
+    </section>
+    <section class="panel" id="t3" data-toc='[["s3-1", "The W3C DTCG Format"], ["s3-2", "Composite Tokens"], ["s3-3", "Scales & Math"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span></div><div class="panel-eyebrow">Module 03 · Token Formats</div><h1 class="panel-title">Token Formats, Types & Composites</h1><p class="panel-subtitle">Store tokens in standard, tool-friendly formats including composite tokens for typography and shadows.</p></div>
+      <div class="section" id="s3-1"><h2><span class="sec-emoji">📄</span> The W3C DTCG Format</h2><p>The <strong>Design Tokens Community Group (DTCG)</strong> format is the emerging standard JSON structure supported by Tokens Studio, Style Dictionary v4 and other tools. Each token has a <span class="formula">$value</span> and <span class="formula">$type</span>.</p><pre><span class="pre-lang">json</span><code>{
+  &quot;color&quot;: {
+    &quot;blue&quot;: { &quot;700&quot;: { &quot;$value&quot;: &quot;#14213D&quot;, &quot;$type&quot;: &quot;color&quot; } },
+    &quot;action&quot;: {
+      &quot;primary&quot;: { &quot;$value&quot;: &quot;{color.blue.700}&quot;, &quot;$type&quot;: &quot;color&quot;,
+                   &quot;$description&quot;: &quot;Primary buttons and links&quot; }
+    }
+  },
+  &quot;space&quot;: { &quot;4&quot;: { &quot;$value&quot;: &quot;16px&quot;, &quot;$type&quot;: &quot;dimension&quot; } }
+}</code></pre></div><div class="section" id="s3-2"><h2><span class="sec-emoji">🧱</span> Composite Tokens</h2><div class="table-wrap"><table><tr><th>Composite type</th><th>Contains</th></tr><tr><td>Typography</td><td>fontFamily, fontSize, fontWeight, lineHeight, letterSpacing</td></tr><tr><td>Shadow</td><td>offsetX, offsetY, blur, spread, color</td></tr><tr><td>Border</td><td>width, style, color</td></tr><tr><td>Transition</td><td>duration, delay, timingFunction</td></tr><tr><td>Gradient</td><td>stops with colours and positions</td></tr></table></div><pre><span class="pre-lang">json</span><code>&quot;heading&quot;: { &quot;lg&quot;: {
+  &quot;$type&quot;: &quot;typography&quot;,
+  &quot;$value&quot;: { &quot;fontFamily&quot;: &quot;{font.family.sans}&quot;, &quot;fontSize&quot;: &quot;{font.size.700}&quot;,
+              &quot;fontWeight&quot;: &quot;{font.weight.bold}&quot;, &quot;lineHeight&quot;: &quot;1.25&quot;, &quot;letterSpacing&quot;: &quot;-0.01em&quot; }
+}}</code></pre></div><div class="section" id="s3-3"><h2><span class="sec-emoji">📏</span> Scales & Math</h2><ul><li>Spacing often uses a 4/8-based scale: 4, 8, 12, 16, 24, 32, 48, 64.</li><li>Type sizes from a modular scale (e.g. ratio 1.25).</li><li>Colour scales in 10 steps (50–900), ideally generated in a perceptual space like OKLCH for even lightness.</li><li>Tokens can contain math in some tools: <span class="formula">{space.4} * 2</span> — keep it simple and documented.</li></ul><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> In DTCG JSON, which key holds a token's value?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> value</li><li class="mcq-opt"><span class="opt-letter">B</span> $value</li><li class="mcq-opt"><span class="opt-letter">C</span> val</li><li class="mcq-opt"><span class="opt-letter">D</span> data</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — DTCG uses $value."></div></div></div>
+    </section>
+    <section class="panel" id="t4" data-toc='[["s4-1", "Types of Modes"], ["s4-2", "How Modes Work"], ["s4-3", "Figma Variables"], ["s4-4", "Check Yourself"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">→ Advanced</span></div><div class="panel-eyebrow">Module 04 · Theming</div><h1 class="panel-title">Theming, Modes & Figma Variables</h1><p class="panel-subtitle">Use tokens to support light/dark, multiple brands, densities and platforms from one system.</p></div>
+      <div class="section" id="s4-1"><h2><span class="sec-emoji">🌗</span> Types of Modes</h2><div class="table-wrap"><table><tr><th>Mode type</th><th>Example</th><th>What changes</th></tr><tr><td><strong>Colour scheme</strong></td><td>Light / dark / high contrast</td><td>Semantic colour tokens</td></tr><tr><td><strong>Brand</strong></td><td>Brand A / Brand B / white-label</td><td>Primitive palettes, fonts, radius</td></tr><tr><td><strong>Density</strong></td><td>Comfortable / compact</td><td>Spacing, sizing tokens</td></tr><tr><td><strong>Platform</strong></td><td>iOS / Android / web</td><td>Sizes, fonts, motion conventions</td></tr><tr><td><strong>Locale</strong></td><td>LTR / RTL, script-specific fonts</td><td>Typography, direction</td></tr></table></div></div><div class="section" id="s4-2"><h2><span class="sec-emoji">🎛️</span> How Modes Work</h2><div class="table-wrap"><table><tr><th>Semantic token</th><th>Light</th><th>Dark</th><th>High contrast</th></tr><tr><td>color.bg.surface</td><td>{neutral.0}</td><td>{neutral.900}</td><td>{neutral.0}</td></tr><tr><td>color.text.primary</td><td>{neutral.900}</td><td>{neutral.50}</td><td>{neutral.1000}</td></tr><tr><td>color.action.primary</td><td>{blue.700}</td><td>{blue.300}</td><td>{blue.900}</td></tr><tr><td>color.border.default</td><td>{neutral.200}</td><td>{neutral.700}</td><td>{neutral.900}</td></tr></table></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Only <strong>semantic</strong> tokens should change between colour modes. Components keep referencing the same semantic names.</div></div></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🟣</span> Figma Variables</h2><ul><li><strong>Collections</strong> group variables (e.g. Primitives, Semantic, Density).</li><li><strong>Modes</strong> per collection (Light/Dark; Brand A/B).</li><li><strong>Aliasing</strong>: semantic variables reference primitive variables.</li><li><strong>Scoping</strong> restricts where a variable appears (fill only, gap only).</li><li>Code syntax field stores the CSS/iOS/Android name for Dev Mode.</li></ul><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Figma variables support colour, number, string and boolean. Composite values like typography and shadow still live in styles, or are managed via Tokens Studio.</div></div></div><div class="section" id="s4-4"><h2><span class="sec-emoji">🧠</span> Check Yourself</h2><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> For dark mode, which tier should change values?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Component tokens only</li><li class="mcq-opt"><span class="opt-letter">B</span> Semantic tokens</li><li class="mcq-opt"><span class="opt-letter">C</span> Every primitive</li><li class="mcq-opt"><span class="opt-letter">D</span> None</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — semantic tokens map to different primitives per mode."></div></div></div>
+    </section>
+    <section class="panel" id="t5" data-toc='[["s5-1", "The Token Pipeline"], ["s5-2", "Tokens Studio"], ["s5-3", "Style Dictionary"], ["s5-4", "Pipeline Governance"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag adv">Advanced</span></div><div class="panel-eyebrow">Module 05 · Multi-Platform Sync</div><h1 class="panel-title">Tokens Studio, Style Dictionary & Sync Pipelines</h1><p class="panel-subtitle">Automate the path from Figma to code for web, iOS and Android.</p></div>
+      <div class="section" id="s5-1"><h2><span class="sec-emoji">🔄</span> The Token Pipeline</h2><div class="diagram"><svg viewBox="0 0 720 160" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans"><defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><rect x="8" y="30" width="123" height="118" rx="12" fill="#14213D"/><text x="70" y="60" text-anchor="middle" fill="#fff" font-weight="700" font-size="12">Design</text><text x="70" y="86" text-anchor="middle" fill="#cdd5e5" font-size="10.5">Tokens Studio /</text><text x="70" y="102" text-anchor="middle" fill="#cdd5e5" font-size="10.5">Figma variables</text><line x1="133" y1="89" x2="150" y2="89" stroke="#37352f" stroke-width="2" marker-end="url(#a2)"/><rect x="153" y="30" width="123" height="118" rx="12" fill="#eef1f7" stroke="#d3d3d0"/><text x="215" y="60" text-anchor="middle" fill="#14213D" font-weight="700" font-size="12">Git</text><text x="215" y="86" text-anchor="middle" fill="#37352f" font-size="10.5">JSON in repo,</text><text x="215" y="102" text-anchor="middle" fill="#37352f" font-size="10.5">pull request</text><line x1="278" y1="89" x2="295" y2="89" stroke="#37352f" stroke-width="2" marker-end="url(#a2)"/><rect x="298" y="30" width="123" height="118" rx="12" fill="#ddedea" stroke="#d3d3d0"/><text x="360" y="60" text-anchor="middle" fill="#0a5f0a" font-weight="700" font-size="12">Build</text><text x="360" y="86" text-anchor="middle" fill="#37352f" font-size="10.5">Style Dictionary</text><text x="360" y="102" text-anchor="middle" fill="#37352f" font-size="10.5">transforms</text><line x1="424" y1="89" x2="441" y2="89" stroke="#37352f" stroke-width="2" marker-end="url(#a2)"/><rect x="444" y="30" width="123" height="118" rx="12" fill="#fadec9" stroke="#d3d3d0"/><text x="505" y="60" text-anchor="middle" fill="#a85a08" font-weight="700" font-size="12">Outputs</text><text x="505" y="86" text-anchor="middle" fill="#37352f" font-size="10.5">CSS vars, Swift,</text><text x="505" y="102" text-anchor="middle" fill="#37352f" font-size="10.5">Kotlin/XML, JS</text><line x1="569" y1="89" x2="586" y2="89" stroke="#37352f" stroke-width="2" marker-end="url(#a2)"/><rect x="589" y="30" width="123" height="118" rx="12" fill="#0f7b0f"/><text x="650" y="60" text-anchor="middle" fill="#fff" font-weight="700" font-size="12">Consume</text><text x="650" y="86" text-anchor="middle" fill="#fff" font-size="10.5">Apps import</text><text x="650" y="102" text-anchor="middle" fill="#fff" font-size="10.5">packages</text></svg><div class="diagram-caption">Figure 5.1 · Design-to-code token pipeline</div></div></div><div class="section" id="s5-2"><h2><span class="sec-emoji">🧰</span> Tokens Studio</h2><ul><li>Figma plugin to create and manage tokens, including composites and math.</li><li>Syncs JSON to GitHub, GitLab, Azure DevOps, JSONBin or URL storage.</li><li>Supports token sets and themes (combinations of sets).</li><li>Can create Figma variables and styles from tokens.</li><li>Designers open pull requests instead of sending values over chat.</li></ul></div><div class="section" id="s5-3"><h2><span class="sec-emoji">📚</span> Style Dictionary</h2><p><strong>Style Dictionary</strong> (by Amazon) reads token JSON and outputs platform-specific files using <strong>transforms</strong> (convert values), <strong>formats</strong> (file syntax) and <strong>platforms</strong>.</p><pre><span class="pre-lang">javascript</span><code>// style-dictionary config (simplified)
+export default {
+  source: [&quot;tokens/**/*.json&quot;],
+  platforms: {
+    css:     { transformGroup: &quot;css&quot;,     buildPath: &quot;build/css/&quot;,     files: [{ destination: &quot;tokens.css&quot;, format: &quot;css/variables&quot; }] },
+    ios:     { transformGroup: &quot;ios-swift&quot;, buildPath: &quot;build/ios/&quot;,   files: [{ destination: &quot;Tokens.swift&quot;, format: &quot;ios-swift/class.swift&quot; }] },
+    android: { transformGroup: &quot;android&quot;, buildPath: &quot;build/android/&quot;, files: [{ destination: &quot;colors.xml&quot;, format: &quot;android/colors&quot; }] }
+  }
+};</code></pre><pre><span class="pre-lang">css output</span><code>--color-action-primary: #14213d;
+--space-4: 1rem;
+--radius-md: 0.5rem;</code></pre></div><div class="section" id="s5-4"><h2><span class="sec-emoji">✅</span> Pipeline Governance</h2><ul><li>Token changes go through <strong>pull requests</strong> with design and engineering review.</li><li><strong>CI</strong> builds and validates tokens (no broken references, contrast checks).</li><li><strong>Semantic versioning</strong> and changelog: renaming or deleting tokens is a breaking change.</li><li>Deprecate before deleting; provide migration notes.</li></ul><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> What does Style Dictionary do?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Draws icons</li><li class="mcq-opt"><span class="opt-letter">B</span> Transforms token JSON into platform-specific outputs (CSS, Swift, Android XML)</li><li class="mcq-opt"><span class="opt-letter">C</span> Hosts documentation only</li><li class="mcq-opt"><span class="opt-letter">D</span> Tests usability</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — it builds platform outputs from token JSON."></div></div></div>
+    </section>
+    <section class="panel" id="t6" data-toc='[["s6-1", "Token Architecture Questions"], ["s6-2", "Theming & Format Questions"], ["s6-3", "Pipeline & Governance Questions"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 06 · Interview Preparation</div><h1 class="panel-title">Interview Preparation</h1><p class="panel-subtitle">Click a question to reveal a model answer.</p></div>
+      <div class="section" id="s6-1"><h2><span class="sec-emoji">🏛️</span> Token Architecture Questions</h2><details><summary>What are design tokens and why use them?</summary><div>Named, platform-agnostic design decisions stored as data. They give a single source of truth, consistency across platforms, fast global changes and theming.</div></details><details><summary>Explain global, semantic and component tokens.</summary><div>Global (primitive) tokens hold raw values; semantic tokens give them purpose (color.text.primary); component tokens scope them to a component (button.primary.bg). Each tier references the one below.</div></details><details><summary>Why shouldn't components reference primitives directly?</summary><div>Because theming would require editing every component. Referencing semantic tokens lets modes swap values centrally.</div></details><details><summary>How do you name tokens?</summary><div>A consistent structure like category.property.concept.variant.state, named by purpose not appearance, with documented scales and no platform-specific words.</div></details><details><summary>When are component tokens worth it?</summary><div>When a component must diverge from semantic defaults or be themed independently; otherwise they add maintenance without value.</div></details></div><div class="section" id="s6-2"><h2><span class="sec-emoji">🌗</span> Theming & Format Questions</h2><details><summary>How do you implement dark mode with tokens?</summary><div>Keep the same semantic names, map them to different primitives per mode, and keep components referencing semantics. Check contrast in both modes.</div></details><details><summary>What is the DTCG format?</summary><div>The W3C Design Tokens Community Group JSON standard where tokens have $value, $type and optional $description, with references like {color.blue.700}.</div></details><details><summary>What are composite tokens?</summary><div>Tokens whose value groups several properties, like typography (family, size, weight, line height) or shadow (offsets, blur, colour).</div></details><details><summary>Figma variables vs Tokens Studio?</summary><div>Figma variables are native, support modes and aliasing for colour/number/string/boolean; Tokens Studio adds composites, math and Git sync. Many teams use both.</div></details></div><div class="section" id="s6-3"><h2><span class="sec-emoji">🔄</span> Pipeline & Governance Questions</h2><details><summary>Describe a token pipeline from Figma to production.</summary><div>Tokens Studio or Figma variables → JSON in Git via pull request → CI runs Style Dictionary to generate CSS, Swift and Android outputs → packages published and consumed by apps.</div></details><details><summary>How do you handle a token rename?</summary><div>Treat it as a breaking change: add the new token, deprecate the old one with an alias, announce in release notes, provide migration steps and remove in the next major version.</div></details><details><summary>How do you prevent broken tokens?</summary><div>Linting and CI checks for missing references, naming rules, type validation and automated contrast checks before merge.</div></details><details><summary>How do you get adoption of tokens?</summary><div>Make them easy to consume (packages, Figma libraries), document usage, show wins (theme switch in minutes), and track hard-coded values with lint rules.</div></details></div>
+    </section>
+    <section class="panel" id="t7" data-toc='[["s7-1", "Scenario: FinCore White-Label Banking App"], ["s7-2", "Task 1 \u00b7 Tiers"], ["s7-3", "Task 2 \u00b7 Modes"], ["s7-4", "Task 3 \u00b7 Pipeline"], ["s7-5", "Task 4 \u00b7 Migration"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 07 · Practice</div><h1 class="panel-title">Practice: Tokenise a Multi-Brand App</h1><p class="panel-subtitle">Design a token architecture for a real-feeling product with two brands and dark mode.</p></div>
+      <div class="quiz-progress"><span class="quiz-score">0 / 0 correct</span><div class="quiz-bar-track"><div class="quiz-bar-fill"></div></div><button class="btn quiz-reset-btn">↻ Reset answers</button></div><div class="section" id="s7-1"><h2><span class="sec-emoji">🏦</span> Scenario: FinCore White-Label Banking App</h2><p><strong>FinCore</strong> sells one banking app to two banks: <strong>Sahyadri Bank</strong> (green, rounded, friendly) and <strong>Meridian Bank</strong> (navy, sharp, premium). Each needs light and dark mode on web, iOS and Android. Today, colours are hard-coded in 600+ places.</p></div><div class="section" id="s7-2"><h2><span class="sec-emoji">1️⃣</span> Task 1 · Tiers</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Define tokens for the primary button background across all tiers.</div><textarea placeholder="Global… Semantic… Component…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Global: green.600 = #1E7B4F, green.300 = #6FCF97 (Sahyadri); navy.800 = #14213D, navy.300 = #8FA3D9 (Meridian). Semantic: color.action.primary → Sahyadri light {green.600}, dark {green.300}; Meridian light {navy.800}, dark {navy.300}. Component: button.primary.bg → {color.action.primary}.</div></div></div><div class="section" id="s7-3"><h2><span class="sec-emoji">2️⃣</span> Task 2 · Modes</h2><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> How should you structure modes?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> One mode per screen</li><li class="mcq-opt"><span class="opt-letter">B</span> Brand collection (Sahyadri/Meridian) × colour-scheme collection (light/dark)</li><li class="mcq-opt"><span class="opt-letter">C</span> Separate component libraries per bank</li><li class="mcq-opt"><span class="opt-letter">D</span> Hard-code per platform</li></ul><div class="mcq-feedback" data-ok="Correct — 2 × 2 combinations from two mode dimensions." data-bad="Not quite. Use brand and colour-scheme as separate mode dimensions."></div></div><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Which tokens differ between brands besides colour?</div><textarea placeholder="Tokens…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> radius.md (Sahyadri 12px, Meridian 4px), font.family.heading (rounded sans vs serif), shadow.level.1 (soft vs crisp), motion.easing.standard (gentle vs precise), and logo assets.</div></div></div><div class="section" id="s7-4"><h2><span class="sec-emoji">3️⃣</span> Task 3 · Pipeline</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Describe the pipeline from Figma to the three apps.</div><textarea placeholder="Steps…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Tokens managed in Tokens Studio with sets for primitives, semantic, brand and mode → synced to GitHub → pull request reviewed by design and engineering → CI runs Style Dictionary with one config per brand × mode → outputs CSS variables (web), Swift (iOS), Android XML/Compose → published as versioned packages per brand → apps update dependency.</div></div></div><div class="section" id="s7-5"><h2><span class="sec-emoji">4️⃣</span> Task 4 · Migration</h2><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Best way to replace 600 hard-coded colours?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Change everything in one release with no plan</li><li class="mcq-opt"><span class="opt-letter">B</span> Map existing values to semantic tokens, add lint rules flagging hex values, migrate screen by screen and track progress</li><li class="mcq-opt"><span class="opt-letter">C</span> Leave them</li><li class="mcq-opt"><span class="opt-letter">D</span> Rename the colours</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite. Map, lint, migrate incrementally and track."></div></div></div>
+    </section>
+    <section class="panel" id="t8" data-toc='[["sA-1","Take the Assessment"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag expert">→ Expert</span></div><p class="panel-eyebrow">Module 08</p><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">Test yourself on Design Tokens Architecture — from basic to expert.</p></div>
+      <div class="section" id="sA-1"><div class="cb-assess-intro"><h3>Test what you've learned</h3><p>Full-screen, timed assessment on Design Tokens Architecture.</p><ul><li><strong>50 multiple-choice questions</strong> — concepts and scenarios, basic to expert</li><li><strong>60-minute</strong> timer with warning state and automatic submission</li><li>Question palette, Previous/Next, Mark for Review</li><li>Full-screen and tab-switch warnings — <strong>3 warnings auto-submit</strong></li><li>Copy, cut, right-click and screenshot/print shortcuts are blocked</li><li>Questions and options are shuffled on every attempt</li></ul><button class="cb-start" id="cbAssessStart">▶ Start Assessment</button></div></div>
+</section>
+  </main>
+</div>
+<script>
+
+/* Tabs, dynamic TOC, scroll-spy, progress pill */
+(function(){
+  const tabs=document.querySelectorAll('.tab'),panels=document.querySelectorAll('.panel'),tocEl=document.getElementById('toc'),total=tabs.length,pt=document.getElementById('progressText');
+  function buildToc(panel){const data=JSON.parse(panel.getAttribute('data-toc')||'[]');tocEl.innerHTML=data.map(([id,l])=>`<li><a href="#${id}" data-target="${id}">${l}</a></li>`).join('');const f=tocEl.querySelector('a');if(f)f.classList.add('active');}
+  function activate(i){tabs.forEach((t,k)=>{t.classList.toggle('active',k===i);t.setAttribute('aria-selected',k===i)});panels.forEach((p,k)=>p.classList.toggle('active',k===i));buildToc(panels[i]);pt.textContent=`Tab ${i+1} of ${total}`;window.scrollTo({top:0,behavior:'instant'});}
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{const a=e.target.closest('.toc-list a');if(!a)return;e.preventDefault();const el=document.getElementById(a.dataset.target);if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});});
+  let tk=false;function spy(){const ap=document.querySelector('.panel.active');if(!ap)return;let cur=null;ap.querySelectorAll('.section').forEach(s=>{if(s.getBoundingClientRect().top-180<0)cur=s.id});if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));tk=false;}
+  window.addEventListener('scroll',()=>{if(!tk){requestAnimationFrame(spy);tk=true}},{passive:true});
+  window.resetProgress=()=>activate(0);activate(0);
+})();
+/* Inline MCQs, per-panel score, model answers */
+(function(){
+  function update(panel){const bar=panel.querySelector('.quiz-progress');if(!bar||bar.id)return;const all=panel.querySelectorAll('.mcq').length,done=panel.querySelectorAll('.mcq.answered').length,okc=panel.querySelectorAll('.mcq.answered[data-correct="1"]').length;bar.querySelector('.quiz-score').textContent=`${okc} / ${all} correct`;bar.querySelector('.quiz-bar-fill').style.width=(all?done/all*100:0)+'%';}
+  document.querySelectorAll('.mcq').forEach(m=>{const ans=+m.dataset.answer,opts=m.querySelectorAll('.mcq-opt'),fb=m.querySelector('.mcq-feedback');
+    opts.forEach((o,i)=>{o.tabIndex=0;o.setAttribute('role','button');const go=()=>{if(m.classList.contains('answered'))return;m.classList.add('answered');const r=i===ans;m.dataset.correct=r?'1':'0';opts[ans].classList.add('correct');if(!r)o.classList.add('incorrect');fb.className='mcq-feedback '+(r?'ok':'bad');fb.textContent=r?fb.dataset.ok:fb.dataset.bad;update(m.closest('.panel'));};
+      o.addEventListener('click',go);o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});});});
+  document.querySelectorAll('.panel').forEach(p=>{update(p);const rb=p.querySelector('.quiz-reset-btn');if(rb)rb.addEventListener('click',()=>{p.querySelectorAll('.mcq').forEach(m=>{m.classList.remove('answered');delete m.dataset.correct;m.querySelectorAll('.mcq-opt').forEach(o=>o.classList.remove('correct','incorrect'));const fb=m.querySelector('.mcq-feedback');fb.className='mcq-feedback';fb.textContent='';});p.querySelectorAll('.saq textarea').forEach(t=>t.value='');p.querySelectorAll('.saq-model').forEach(x=>x.classList.remove('show'));p.querySelectorAll('.saq-toggle').forEach(b=>b.textContent='Show model answer');update(p);});});
+  document.querySelectorAll('.saq-toggle').forEach(b=>b.addEventListener('click',()=>{const s=b.nextElementSibling.classList.toggle('show');b.textContent=s?'Hide model answer':'Show model answer';}));
+})();
+
+/* Assessment — timed full-screen exam with rules & security */
+(function(){
+  const ROLE = "Design Systems Designer \u2014 Design Tokens Architecture";
+  const QUESTION_BANK = [{"id": "dsd_design_tokens_architecture-01", "q": "What is a design token?", "options": ["A named, platform-agnostic design decision stored as data", "A login session key", "A Figma frame", "A CSS framework"], "answer": 0, "difficulty": "", "explanation": "Tokens store design values like colour or spacing under names shared by design and code."}, {"id": "dsd_design_tokens_architecture-02", "q": "Which is the main benefit of design tokens?", "options": ["Faster servers", "A single source of truth for design values across platforms", "More fonts", "Fewer designers"], "answer": 1, "difficulty": "", "explanation": "One definition feeds Figma, web, iOS and Android, keeping them consistent."}, {"id": "dsd_design_tokens_architecture-03", "q": "blue.700 = #14213D belongs to which tier?", "options": ["Global / primitive", "Mode", "Component", "Semantic"], "answer": 0, "difficulty": "", "explanation": "Primitive tokens hold raw values with no meaning attached."}, {"id": "dsd_design_tokens_architecture-04", "q": "color.text.primary belongs to which tier?", "options": ["Component", "Breakpoint", "Semantic / alias", "Global"], "answer": 2, "difficulty": "", "explanation": "Semantic tokens describe purpose and reference primitives."}, {"id": "dsd_design_tokens_architecture-05", "q": "button.primary.bg belongs to which tier?", "options": ["Global", "Platform", "Component", "Semantic"], "answer": 2, "difficulty": "", "explanation": "Component tokens are scoped to a single component."}, {"id": "dsd_design_tokens_architecture-06", "q": "Tokens should be named by\u2026", "options": ["Creation date", "Appearance (e.g. red)", "Designer name", "Purpose (e.g. danger)"], "answer": 3, "difficulty": "", "explanation": "Purpose-based names survive rebrands and theme changes."}, {"id": "dsd_design_tokens_architecture-07", "q": "Why shouldn't components reference primitives directly?", "options": ["Primitives are slower", "Themes couldn't swap values centrally without editing every component", "Figma forbids it", "It increases file size"], "answer": 1, "difficulty": "", "explanation": "Semantic tokens are the layer that changes per mode or brand."}, {"id": "dsd_design_tokens_architecture-08", "q": "What is an alias token?", "options": ["A duplicated token", "A token with no value", "A deleted token", "A token whose value references another token"], "answer": 3, "difficulty": "", "explanation": "Aliases like {color.blue.700} create the tier chain."}, {"id": "dsd_design_tokens_architecture-09", "q": "In DTCG JSON, which key stores the value?", "options": ["value", "val", "data", "$value"], "answer": 3, "difficulty": "", "explanation": "The W3C Design Tokens Community Group format uses $value and $type."}, {"id": "dsd_design_tokens_architecture-10", "q": "In DTCG JSON, a reference to another token looks like\u2026", "options": ["@color.blue.700", "{color.blue.700}", "<color.blue.700>", "$ref(color.blue.700)"], "answer": 1, "difficulty": "", "explanation": "Curly braces denote references in the DTCG format."}, {"id": "dsd_design_tokens_architecture-11", "q": "A typography composite token contains\u2026", "options": ["Font family, size, weight, line height and letter spacing", "Only colour", "Only font size", "Breakpoints"], "answer": 0, "difficulty": "", "explanation": "Composite tokens group several related properties."}, {"id": "dsd_design_tokens_architecture-12", "q": "A shadow composite token includes\u2026", "options": ["Opacity only", "Offsets, blur, spread and colour", "Border radius only", "Font weight"], "answer": 1, "difficulty": "", "explanation": "Shadow tokens combine all shadow properties into one value."}, {"id": "dsd_design_tokens_architecture-13", "q": "Which is a leading naming structure for tokens?", "options": ["value_hex", "category.property.concept.variant.state", "random-name-123", "designer_initials_value"], "answer": 1, "difficulty": "", "explanation": "A consistent structure keeps thousands of tokens predictable."}, {"id": "dsd_design_tokens_architecture-14", "q": "Which token category would hold 250ms?", "options": ["Z-index", "Spacing", "Colour", "Motion / duration"], "answer": 3, "difficulty": "", "explanation": "Durations belong to motion tokens."}, {"id": "dsd_design_tokens_architecture-15", "q": "Which token category would hold 1000 for modals?", "options": ["Opacity", "Z-index", "Radius", "Font weight"], "answer": 1, "difficulty": "", "explanation": "Z-index tokens control stacking order."}, {"id": "dsd_design_tokens_architecture-16", "q": "For dark mode, which tier usually changes values?", "options": ["None", "Semantic", "Component names", "Breakpoints"], "answer": 1, "difficulty": "", "explanation": "Semantic tokens map to different primitives per mode."}, {"id": "dsd_design_tokens_architecture-17", "q": "A density mode mainly changes\u2026", "options": ["Logos", "Copy", "Spacing and sizing tokens", "Brand colours"], "answer": 2, "difficulty": "", "explanation": "Compact vs comfortable layouts adjust spacing and sizes."}, {"id": "dsd_design_tokens_architecture-18", "q": "A brand mode in a white-label product changes\u2026", "options": ["User flows", "Database schema", "Component code", "Primitive palettes, fonts and radius values"], "answer": 3, "difficulty": "", "explanation": "Components stay the same; brand token values swap."}, {"id": "dsd_design_tokens_architecture-19", "q": "Figma variables support which types?", "options": ["Only gradients", "Colour, number, string and boolean", "Images and video", "Only typography"], "answer": 1, "difficulty": "", "explanation": "Composite values like typography still use styles or Tokens Studio."}, {"id": "dsd_design_tokens_architecture-20", "q": "Figma variable modes are used for\u2026", "options": ["Version history", "Exports", "Comments", "Light/dark themes, brands or densities"], "answer": 3, "difficulty": "", "explanation": "Each mode holds a different set of values for the same variables."}, {"id": "dsd_design_tokens_architecture-21", "q": "Variable scoping in Figma\u2026", "options": ["Locks the file", "Exports code", "Restricts where a variable can be applied (e.g. fills only)", "Deletes variables"], "answer": 2, "difficulty": "", "explanation": "Scoping keeps pickers clean and prevents misuse."}, {"id": "dsd_design_tokens_architecture-22", "q": "Tokens Studio is\u2026", "options": ["A Figma plugin for managing tokens and syncing them to Git", "A testing tool", "A CSS framework", "A font"], "answer": 0, "difficulty": "", "explanation": "It supports composites, math, themes and Git sync."}, {"id": "dsd_design_tokens_architecture-23", "q": "Style Dictionary is\u2026", "options": ["A Figma plugin for icons", "A documentation site", "A build tool that transforms token JSON into platform outputs", "A UX research tool"], "answer": 2, "difficulty": "", "explanation": "It outputs CSS variables, Swift, Android XML and more."}, {"id": "dsd_design_tokens_architecture-24", "q": "In Style Dictionary, a transform\u2026", "options": ["Publishes docs", "Converts token values for a platform (e.g. px to rem or dp)", "Deletes tokens", "Draws icons"], "answer": 1, "difficulty": "", "explanation": "Transforms adapt values; formats define file syntax."}, {"id": "dsd_design_tokens_architecture-25", "q": "Which file might Style Dictionary output for web?", "options": ["A video", "CSS custom properties (--color-action-primary)", "A PSD", "A Figma file"], "answer": 1, "difficulty": "", "explanation": "Web outputs are commonly CSS variables or JS modules."}, {"id": "dsd_design_tokens_architecture-26", "q": "Which output suits iOS?", "options": ["Android colors.xml", "SCSS only", "Swift / UIColor definitions", "PDF"], "answer": 2, "difficulty": "", "explanation": "Style Dictionary has iOS Swift formats."}, {"id": "dsd_design_tokens_architecture-27", "q": "Which output suits Android?", "options": ["JSON schema only", "colors.xml / dimens.xml or Compose values", "HTML page", "Swift class"], "answer": 1, "difficulty": "", "explanation": "Android formats include XML resources and Compose."}, {"id": "dsd_design_tokens_architecture-28", "q": "A recommended token change workflow is\u2026", "options": ["Editing production CSS directly", "Messaging values on chat", "Changing each app manually", "Pull request reviewed by design and engineering, then CI build"], "answer": 3, "difficulty": "", "explanation": "PRs keep changes reviewed, versioned and automated."}, {"id": "dsd_design_tokens_architecture-29", "q": "Renaming a token is\u2026", "options": ["A patch fix", "Invisible to consumers", "A breaking change needing deprecation and migration", "Never allowed"], "answer": 2, "difficulty": "", "explanation": "Consumers referencing the old name would break."}, {"id": "dsd_design_tokens_architecture-30", "q": "Best way to remove an old token?", "options": ["Delete immediately", "Deprecate with an alias, document migration, remove in next major", "Rename silently", "Hide it in Figma only"], "answer": 1, "difficulty": "", "explanation": "Deprecation gives teams time to migrate."}, {"id": "dsd_design_tokens_architecture-31", "q": "CI checks for tokens can include\u2026", "options": ["Broken references, naming rules and contrast checks", "User interviews", "Pricing", "Logo design"], "answer": 0, "difficulty": "", "explanation": "Automated validation prevents broken builds."}, {"id": "dsd_design_tokens_architecture-32", "q": "Over-tiering refers to\u2026", "options": ["Using DTCG", "Using semantic tokens", "Using too few colours", "Creating unnecessary component tokens that add maintenance"], "answer": 3, "difficulty": "", "explanation": "Only create component tokens where components truly diverge."}, {"id": "dsd_design_tokens_architecture-33", "q": "Colour scales generated in OKLCH help because\u2026", "options": ["Browsers require it", "It removes dark mode", "Lightness steps look perceptually even", "Files are smaller"], "answer": 2, "difficulty": "", "explanation": "Perceptual spaces give consistent contrast across hues."}, {"id": "dsd_design_tokens_architecture-34", "q": "A 4/8-based spacing scale example is\u2026", "options": ["3, 7, 13, 21", "1, 100, 1000", "4, 8, 12, 16, 24, 32", "10, 25, 50"], "answer": 2, "difficulty": "", "explanation": "Consistent multiples create rhythm and simple maths."}, {"id": "dsd_design_tokens_architecture-35", "q": "Which semantic token would a page background use?", "options": ["button.primary.bg", "color.bg.surface", "space.4", "blue.700"], "answer": 1, "difficulty": "", "explanation": "Surface tokens describe background roles."}, {"id": "dsd_design_tokens_architecture-36", "q": "Why include $description on tokens?", "options": ["To slow builds", "To hide tokens", "It is required for colour", "To document intended usage for designers and engineers"], "answer": 3, "difficulty": "", "explanation": "Descriptions guide correct use in tools and docs."}, {"id": "dsd_design_tokens_architecture-37", "q": "A high-contrast mode is best implemented by\u2026", "options": ["Changing font family only", "Mapping semantic tokens to higher-contrast primitives", "Duplicating all components", "Removing colours"], "answer": 1, "difficulty": "", "explanation": "Modes swap values without touching components."}, {"id": "dsd_design_tokens_architecture-38", "q": "Lint rules flagging raw hex values in code help\u2026", "options": ["Drive token adoption and find hard-coded values", "Increase file size", "Speed up rendering", "Remove dark mode"], "answer": 0, "difficulty": "", "explanation": "Linting enforces token usage during migration."}, {"id": "dsd_design_tokens_architecture-39", "q": "Which is NOT a good token name?", "options": ["color.action.primary", "space.inset.md", "radius.md", "red-button-color-final2"], "answer": 3, "difficulty": "", "explanation": "Names should be purpose-based and systematic, not ad hoc."}, {"id": "dsd_design_tokens_architecture-40", "q": "A designer wants a slightly different card background in one product. Best approach?", "options": ["Edit the primitive for everyone", "Create/override a component or semantic token in that product theme", "Detach the component", "Hard-code a hex value"], "answer": 1, "difficulty": "", "explanation": "Scoped overrides keep the system intact."}, {"id": "dsd_design_tokens_architecture-41", "q": "What does 'source of truth' mean for tokens?", "options": ["A screenshot", "Every designer's file", "The production CSS", "The single place tokens are defined (e.g. JSON in Git)"], "answer": 3, "difficulty": "", "explanation": "All platforms derive from one canonical definition."}, {"id": "dsd_design_tokens_architecture-42", "q": "Why version token packages?", "options": ["So apps can upgrade predictably and see breaking changes", "To increase file size", "Because npm requires dates", "To hide changes"], "answer": 0, "difficulty": "", "explanation": "Semantic versioning communicates impact."}, {"id": "dsd_design_tokens_architecture-43", "q": "Which tier should product designers mostly use in Figma?", "options": ["Semantic tokens/variables", "Component internals", "Raw hex values", "Primitives directly"], "answer": 0, "difficulty": "", "explanation": "Semantic tokens make designs theme-ready."}, {"id": "dsd_design_tokens_architecture-44", "q": "Multi-platform sync means\u2026", "options": ["Copying values by hand", "The same token decisions flow to web, iOS, Android and Figma", "Using screenshots", "Only web uses tokens"], "answer": 1, "difficulty": "", "explanation": "Automation keeps every platform aligned."}, {"id": "dsd_design_tokens_architecture-45", "q": "A token for disabled opacity might be\u2026", "options": ["space.4", "opacity.disabled = 0.38", "z.modal", "color.blue.700"], "answer": 1, "difficulty": "", "explanation": "Opacity tokens standardise states like disabled."}, {"id": "dsd_design_tokens_architecture-46", "q": "Tokens Studio 'themes' are\u2026", "options": ["Figma pages", "Combinations of token sets activated together", "Plugins", "Fonts"], "answer": 1, "difficulty": "", "explanation": "Themes combine sets like core + brand + dark."}, {"id": "dsd_design_tokens_architecture-47", "q": "Which statement about composite tokens and Figma variables is true?", "options": ["Composites are not allowed anywhere", "Figma variables don't natively store composites like typography; styles or Tokens Studio do", "Variables replace all styles", "Variables store videos"], "answer": 1, "difficulty": "", "explanation": "Variables are single-value types."}, {"id": "dsd_design_tokens_architecture-48", "q": "A migration of 600 hard-coded colours should\u2026", "options": ["Be skipped", "Map to semantic tokens, lint, migrate incrementally and track progress", "Happen in one untested release", "Use more hard-coding"], "answer": 1, "difficulty": "", "explanation": "Incremental migration lowers risk."}, {"id": "dsd_design_tokens_architecture-49", "q": "Which is an example of math in tokens?", "options": ["#14213D", "Noto Sans", "{space.4} * 2", "250ms ease"], "answer": 2, "difficulty": "", "explanation": "Some tools support arithmetic between tokens; keep it simple."}, {"id": "dsd_design_tokens_architecture-50", "q": "The main reason semantic tokens exist is\u2026", "options": ["To replace components", "To increase token count", "To speed up Figma", "To decouple purpose from raw values so themes and rebrands are easy"], "answer": 3, "difficulty": "", "explanation": "Purpose-based indirection makes the system flexible."}];
+  const EXAM_MINUTES = Math.ceil(QUESTION_BANK.length*1.2);
+  const EXAM_SECONDS = EXAM_MINUTES*60;
+  const EXAM_COUNT = QUESTION_BANK.length;
+  const LS_KEY = 'careerBuddyAssessment:' + ROLE;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false, warns=0, proctorOn=false, lastWarn=0;
+  const esc = s => String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const fmt=t=>{const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s};
+  const css=`
+  .cb-exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .cb-exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .cb-exam-top .et-title{font-size:16px;font-weight:800}.cb-exam-top .et-sub{font-size:12px;color:#cdd5e5}.cb-exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}.cb-exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:cbpulse 1s infinite}@keyframes cbpulse{50%{opacity:.5}}
+  .cb-exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}.cb-exam-q-pane{padding:28px 36px;overflow:auto}.cb-exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}.cb-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}.cb-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}.cb-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}.cb-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}.cb-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}.cb-opt:hover{border-color:#14213D;background:#f9f9ff}.cb-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}.cb-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}.cb-opt.sel .k{background:#14213D;color:#fff}.cb-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}.cb-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}.cb-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}.cb-btn.nav:disabled{opacity:.4;cursor:not-allowed}.cb-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}.cb-btn.mark.on{background:#FCA311;color:#14213D}.cb-btn.submit{background:#FCA311;color:#14213D}.cb-btn.primary{background:#14213D;color:#fff}.cb-side-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}.cb-count{font-size:13px;color:#4a5568;font-weight:600}.cb-count b{color:#14213D}.cb-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.cb-pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}.cb-pal.answered{background:#14213D;color:#fff;border-color:#14213D}.cb-pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}.cb-pal.cur{outline:2px solid #14213D;outline-offset:1px}.cb-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}.cb-legend span{display:inline-flex;align-items:center;gap:8px}.cb-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}.cb-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}.cb-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}.cb-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}.cb-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}.cb-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}.cb-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}.cb-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}.cb-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}.cb-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}.cb-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}.cb-rev .r.ok{border-left-color:#38a169}.cb-rev .r.no{border-left-color:#e53e3e}.cb-rev .rq{font-weight:700;margin-bottom:6px}.cb-rev .ra{font-size:13px;margin:2px 0}.cb-rev .ra.wrong{color:#c53030}.cb-rev .ra.cor{color:#276749}.cb-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}.cb-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}.cb-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}.cb-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}.cb-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}.cb-confirm .row{display:flex;gap:10px;justify-content:flex-end}.cb-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}.cb-cover small{font-weight:500;color:#cdd5e5;font-size:14px}.cb-assess-intro{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}.cb-assess-intro h3{margin:0 0 8px;font-size:21px}.cb-assess-intro p{margin:6px 0;color:var(--ink-soft)}.cb-assess-intro ul{margin:12px 0 18px}.cb-start{border:0;background:#14213D;color:#fff;border-radius:9px;padding:12px 18px;font:700 14px inherit;cursor:pointer}.cb-start:hover{opacity:.92}
+  @media(max-width:820px){.cb-exam-main{grid-template-columns:1fr}.cb-exam-side{border-left:none;border-top:1px solid #e2e8f0}.cb-exam-q-pane{padding:22px 18px}.cb-exam-top{padding:10px 14px}}
+  `;
+  function injectCss(){if(document.getElementById('cbExamCss'))return;const s=document.createElement('style');s.id='cbExamCss';s.textContent=css;document.head.appendChild(s)}
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function buildAttempt(){
+    const recent=JSON.parse(localStorage.getItem(LS_KEY+'_attempts')||'[]');
+    let selected=[], sig='';
+    for(let tries=0;tries<25;tries++){
+      selected=shuffle(QUESTION_BANK.slice()).slice(0,EXAM_COUNT);
+      sig=selected.map(x=>x.id).sort().join('|');
+      if(!recent.includes(sig))break;
+    }
+    recent.unshift(sig); try{localStorage.setItem(LS_KEY+'_attempts',JSON.stringify(recent.slice(0,20)))}catch(e){}
+    return selected.map(q=>{const c=JSON.parse(JSON.stringify(q)); const pairs=c.options.map((o,i)=>({o,i}));shuffle(pairs);c.options=pairs.map(x=>x.o);c.answer=pairs.findIndex(x=>x.i===q.answer);return c});
+  }
+  function confirmBox(title,msg,okLabel){return new Promise(resolve=>{injectCss();const d=document.createElement('div');d.className='cb-confirm';d.innerHTML=`<div class="box"><h3>${esc(title)}</h3><p>${esc(msg)}</p><div class="row"><button class="cb-btn nav" data-a="0">Cancel</button><button class="cb-btn primary" data-a="1">${esc(okLabel||'Confirm')}</button></div></div>`;document.body.appendChild(d);d.addEventListener('click',e=>{if(e.target===d){d.remove();resolve(false);return}const b=e.target.closest('[data-a]');if(!b)return;d.remove();resolve(b.dataset.a==='1')})})}
+  function startEntry(){showSplash()}
+  function showSplash(){injectCss();const sp=document.createElement('div');sp.className='cb-splash';sp.id='cbExamSplash';sp.innerHTML=`<div class="card"><h2>🎯 ${esc(ROLE)} — Assessment</h2><p>A timed, full-screen assessment based on this course.</p><ul><li><b>${EXAM_COUNT} questions</b> drawn from this course's question bank</li><li><b>${EXAM_MINUTES}-minute</b> timer — the assessment auto-submits when time is up</li><li>Navigate freely, answer questions, and <b>mark questions for review</b></li><li>Questions and answer options are shuffled on every attempt</li></ul><p style="font-weight:700;color:#14213D;margin-bottom:6px">Assessment rules</p><ul style="margin-top:0"><li>The assessment runs in <b>fullscreen</b>.</li><li>Do not switch tabs/windows or exit fullscreen.</li><li><b>3 warnings</b> for tab/window switching or leaving fullscreen will auto-submit the assessment.</li><li>Copy, cut, right-click and common screenshot/print shortcuts are blocked during the assessment.</li></ul><button class="cb-btn primary" id="cbExamBegin" style="width:100%;padding:14px">Start Assessment →</button></div>`;document.body.appendChild(sp);document.getElementById('cbExamBegin').addEventListener('click',()=>{if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});sp.remove();enterExam()})}
+  function enterExam(){injectCss();items=buildAttempt();answers={};marked={};cur=0;remaining=EXAM_SECONDS;examOn=true;document.body.style.overflow='hidden';const ov=document.createElement('div');ov.className='cb-exam-overlay';ov.id='cbExamOverlay';ov.innerHTML=`<div class="cb-exam-top"><div><div class="et-title">${esc(ROLE)} — Assessment</div><div class="et-sub">${EXAM_COUNT} questions · ${EXAM_MINUTES}-minute timer · one attempt</div></div><div class="cb-exam-timer" id="cbExamTimer">${fmt(remaining)}</div></div><div class="cb-exam-main"><div class="cb-exam-q-pane" id="cbExamQ"></div><div class="cb-exam-side"><div class="cb-count">Answered <b id="cbExamAnsN">0</b> / ${EXAM_COUNT}</div><h4 class="cb-side-title">Question palette</h4><div class="cb-palette" id="cbExamPal"></div><div class="cb-legend"><span><i style="background:#14213D;border-color:#14213D"></i> Answered</span><span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span><span><i></i> Not answered</span></div><button class="cb-btn submit" id="cbExamSubmit" style="width:100%">Submit Assessment</button></div></div>`;document.body.appendChild(ov);buildPalette();renderQ();timerId=setInterval(tick,1000);window.addEventListener('beforeunload',beforeUnload);startProctor();document.getElementById('cbExamSubmit').addEventListener('click',()=>submitExam(false))}
+  function beforeUnload(e){if(examOn){e.preventDefault();e.returnValue=''}}
+  function tick(){remaining--;const el=document.getElementById('cbExamTimer');if(el){el.textContent=fmt(Math.max(remaining,0));if(remaining<=300)el.classList.add('warn')}if(remaining<=0)submitExam(true)}
+  function buildPalette(){const pal=document.getElementById('cbExamPal');pal.innerHTML='';items.forEach((it,n)=>{const b=document.createElement('button');b.className='cb-pal';b.textContent=n+1;b.dataset.n=n;b.addEventListener('click',()=>{cur=n;renderQ()});pal.appendChild(b)});refreshPalette()}
+  function refreshPalette(){document.querySelectorAll('#cbExamPal .cb-pal').forEach(b=>{const n=+b.dataset.n,id=items[n].id;b.classList.toggle('answered',id in answers);b.classList.toggle('marked',!!marked[id]);b.classList.toggle('cur',n===cur)});const el=document.getElementById('cbExamAnsN');if(el)el.textContent=Object.keys(answers).length}
+  function renderQ(){const it=items[cur],id=it.id,pane=document.getElementById('cbExamQ');pane.innerHTML=`<div class="cb-qnum">Question ${cur+1} of ${items.length}</div><div class="cb-qtext">${esc(it.q)}${it.difficulty?`<span class="diff">${esc(it.difficulty)}</span>`:''}</div><div class="cb-opts" id="cbExamOpts">${it.options.map((o,i)=>`<div class="cb-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${esc(o)}</span></div>`).join('')}</div><div class="cb-actions"><button class="cb-btn nav" id="cbPrev" ${cur===0?'disabled':''}>← Previous</button><button class="cb-btn mark${marked[id]?' on':''}" id="cbMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button><button class="cb-btn nav" id="cbNext" ${cur===items.length-1?'disabled':''}>Next →</button></div>`;pane.querySelectorAll('.cb-opt').forEach(el=>el.addEventListener('click',()=>{answers[id]=+el.dataset.i;pane.querySelectorAll('.cb-opt').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');refreshPalette()}));document.getElementById('cbPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ()}});document.getElementById('cbNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ()}});document.getElementById('cbMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ()});refreshPalette()}
+  async function submitExam(auto){if(!examOn)return;const unanswered=items.length-Object.keys(answers).length;if(!auto){const ok=await confirmBox('Submit assessment?',unanswered?`You have ${unanswered} unanswered question(s). Once submitted, you cannot change your answers.`:'Once submitted, you cannot change your answers.','Submit Assessment');if(!ok)return}examOn=false;clearInterval(timerId);window.removeEventListener('beforeunload',beforeUnload);stopProctor();const score=items.reduce((n,it)=>n+(answers[it.id]===it.answer?1:0),0);saveScore(score,items.length);showResults(score)}
+  function saveScore(score,total){const a=JSON.parse(localStorage.getItem(LS_KEY)||'[]');a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,EXAM_COUNT)))}catch(e){}}
+  function showResults(score){const total=items.length,pct=Math.round(score/total*100);let msg='Keep practicing — review the questions you missed and try again.';if(pct>=85)msg='Outstanding — strong command of this topic.';else if(pct>=65)msg='Solid performance. Review the harder areas and try another attempt.';else if(pct>=50)msg='Borderline — revisit the course topics and retake the assessment.';const rev=items.map((it,n)=>{const you=answers[it.id],attempted=you!=null;const your=attempted?String.fromCharCode(65+you)+'. '+esc(it.options[you]):'<i>Not answered</i>';const cor=String.fromCharCode(65+it.answer)+'. '+esc(it.options[it.answer]);return `<div class="r ${attempted&&you===it.answer?'ok':'no'}"><div class="rq">Q${n+1}. ${esc(it.q)}</div><div class="ra ${attempted&&you===it.answer?'cor':'wrong'}">Your answer: ${your}</div>${attempted&&you!==it.answer?`<div class="ra cor">Correct: ${cor}</div>`:''}${it.explanation?`<div class="rx">${esc(it.explanation)}</div>`:''}</div>`}).join('');const ov=document.getElementById('cbExamOverlay');ov.innerHTML=`<div class="cb-exam-top"><div class="et-title">Result — ${esc(ROLE)} Assessment</div><button class="cb-btn" id="cbClose" style="background:rgba(255,255,255,.15);color:#fff">✕ Close</button></div><div class="cb-exam-q-pane" style="flex:1"><div class="cb-result"><div class="cb-score">${score} / ${total}</div><div class="cb-rmsg">${pct}% correct — ${msg}</div><div style="margin-top:16px"><button class="cb-btn primary" id="cbRetry">↻ Take another assessment</button></div><div class="cb-rev">${rev}</div></div></div>`;document.getElementById('cbRetry').addEventListener('click',()=>{ov.remove();enterExam()});document.getElementById('cbClose').addEventListener('click',()=>closeExam())}
+  function closeExam(){stopProctor();const ov=document.getElementById('cbExamOverlay');if(ov)ov.remove();document.body.style.overflow='';if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}
+  function warning(title,msg){if(!proctorOn||!examOn)return;const now=Date.now();if(now-lastWarn<1200)return;lastWarn=now;warns++;const cover=document.getElementById('cbExamCover')||document.createElement('div');cover.className='cb-cover';cover.id='cbExamCover';cover.style.display='flex';cover.innerHTML=`<div>⚠️ ${esc(title)}</div><small>${esc(msg)}</small><small>Warning ${warns} of 3</small><button class="cb-btn primary" id="cbResume">Return to assessment</button>`;document.body.appendChild(cover);document.getElementById('cbResume').onclick=()=>{cover.style.display='none';if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});if(warns>=3)submitExam(true)};if(warns>=3)setTimeout(()=>submitExam(true),500)}
+  function visHandler(){if(document.hidden)warning('Tab or window switch detected','Please stay on the assessment screen. Repeated violations will submit the assessment automatically.')}
+  function fsHandler(){if(examOn&&!document.fullscreenElement)warning('Fullscreen exited','The assessment must remain in fullscreen mode.')}
+  function blurHandler(){if(examOn)warning('Focus changed','Please keep the assessment window active.')}
+  function focusHandler(){}
+  function blockEvt(e){if(examOn){e.preventDefault();warning('Action blocked','Copy, cut and right-click are disabled during the assessment.')}}
+  function keyGuard(e){if(!examOn)return;const k=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&['c','x','p','s','u'].includes(k)){e.preventDefault();warning('Shortcut blocked','This assessment disables copy, print, save and source shortcuts.')}if(k==='f12'){e.preventDefault();warning('Developer tools shortcut blocked','This action is disabled during the assessment.')}}
+  function printGuard(e){if(examOn&&e.key==='PrintScreen'){e.preventDefault();warning('Screenshot action blocked','Screenshot capture is restricted during the assessment.')}}
+  function startProctor(){warns=0;lastWarn=0;proctorOn=true;document.addEventListener('visibilitychange',visHandler);document.addEventListener('fullscreenchange',fsHandler);window.addEventListener('blur',blurHandler);document.addEventListener('contextmenu',blockEvt,true);document.addEventListener('copy',blockEvt,true);document.addEventListener('cut',blockEvt,true);document.addEventListener('keydown',keyGuard,true);document.addEventListener('keyup',printGuard,true)}
+  function stopProctor(){proctorOn=false;document.removeEventListener('visibilitychange',visHandler);document.removeEventListener('fullscreenchange',fsHandler);window.removeEventListener('blur',blurHandler);document.removeEventListener('contextmenu',blockEvt,true);document.removeEventListener('copy',blockEvt,true);document.removeEventListener('cut',blockEvt,true);document.removeEventListener('keydown',keyGuard,true);document.removeEventListener('keyup',printGuard,true);const c=document.getElementById('cbExamCover');if(c)c.remove()}
+  document.addEventListener('click',function(e){const b=e.target.closest('#cbAssessStart');if(b){e.preventDefault();startEntry();}},true)
+  window.addEventListener('keydown',e=>{if(e.key==='Escape'&&examOn)e.preventDefault()});
+})();
+
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,708 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pipeline Orchestration — CI/CD for release engineers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--soft:#f7f6f3;--block:#f1f1ef;--ink:#37352f;--ink2:#787774;--mute:#9b9a97;--line:#e9e9e7;--line2:#d3d3d0;
+--accent:#14213D;--asoft:#eef1f7;--green:#0f7b0f;--gsoft:#ddedea;--orange:#d9730d;--osoft:#fadec9;--red:#e03e3e;--rsoft:#ffe2dd;--ysoft:#fdecc8;--psoft:#f5e0e9;
+--sh:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);--sh2:0 4px 14px rgba(15,15,15,.08);--r:10px}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{font-family:'Noto Sans',-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:12px 32px;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand-mark{width:34px;height:34px;display:grid;place-items:center;background:linear-gradient(135deg,#14213D,#3b5bdb);border-radius:9px;color:#fff;font-family:'Noto Sans Mono',monospace;font-weight:700;font-size:13px}
+.brand-sub{color:var(--ink2);font-weight:400;font-size:13px;margin-left:4px}
+.pill-prog{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:var(--block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500;color:var(--ink2)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--gsoft)}
+.btn{padding:6px 12px;background:#fff;border:1px solid var(--line2);border-radius:6px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--soft)}
+.hr{display:flex;align-items:center;gap:10px}
+.tabbar{display:flex;gap:2px;padding:6px 24px;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--line)}.tabbar::-webkit-scrollbar{display:none}
+.tab{padding:9px 16px;background:transparent;border:none;border-radius:8px;font-family:inherit;font-size:13.5px;font-weight:500;color:#4a5568;cursor:pointer;white-space:nowrap;display:flex;gap:7px;transition:background .15s,color .15s}
+.tab .n{font-family:'Noto Sans Mono',monospace;font-size:11px;color:var(--mute);font-weight:600}
+.tab:hover{background:#eef1f7;color:#14213D}.tab.active{background:#14213D;color:#fff;font-weight:700}.tab.active .n{color:#FCA311}
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr);max-width:1400px;margin:0 auto}
+@media(max-width:960px){.layout{grid-template-columns:1fr}.toc{display:none}}
+.toc{position:sticky;top:104px;align-self:start;height:calc(100vh - 116px);overflow-y:auto;padding:32px 16px 32px 32px;border-right:1px solid var(--line)}
+.toc-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:600;margin:0 0 12px 8px}
+.toc ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:2px}
+.toc a{display:block;padding:6px 10px;font-size:13px;color:var(--ink2);text-decoration:none;border-radius:4px;line-height:1.4}
+.toc a:hover{background:var(--soft);color:var(--ink)}
+.toc a.active{color:#fff;background:#16233f;font-weight:600;border-radius:12px;padding:9px 14px}
+.main{padding:48px 56px 80px;min-width:0}@media(max-width:720px){.main{padding:32px 20px 60px}}
+.panel{display:none}.panel.active{display:block;animation:fi .35s ease}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
+.title{font-size:38px;line-height:1.15;font-weight:700;letter-spacing:-.02em;margin:0 0 14px}
+.subtitle{font-size:17px;color:var(--ink2);margin:0 0 8px;max-width:700px}
+.section{margin-top:48px;scroll-margin-top:130px}
+.section h2{font-size:26px;font-weight:700;letter-spacing:-.01em;margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.section h3{font-size:18px;font-weight:600;margin:26px 0 8px}
+.section p{margin:10px 0;color:#3a3833}.section ul,.section ol{margin:10px 0;padding-left:22px}.section li{margin:5px 0}
+code{font-family:'Noto Sans Mono',monospace;font-size:.86em;background:#f6f5f4;border:1px solid var(--line);padding:1px 6px;border-radius:4px;color:#c2410c}
+pre{font-family:'Noto Sans Mono',monospace;background:#2b2a28;color:#e6e6e3;padding:20px 20px 16px;border-radius:var(--r);overflow-x:auto;font-size:13px;line-height:1.6;margin:14px 0;position:relative;box-shadow:var(--sh)}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.lang{position:absolute;top:6px;right:12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9b9a97;font-weight:600}
+.callout{display:grid;grid-template-columns:32px 1fr;gap:12px;background:var(--block);border-radius:var(--r);padding:14px 16px;margin:16px 0;border:1px solid var(--line);font-size:14.5px}
+.callout .ic{width:28px;height:28px;display:grid;place-items:center;background:#fff;border-radius:6px;border:1px solid var(--line)}
+.callout.tip{background:var(--asoft);border-color:#c9d3ea}.callout.warn{background:var(--osoft);border-color:#f5cc9c}.callout.success{background:var(--gsoft);border-color:#bdd9d2}.callout.note{background:var(--ysoft);border-color:#f0d889}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px;transition:.2s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
+.card .ci{width:36px;height:36px;display:grid;place-items:center;border-radius:8px;font-size:18px;margin-bottom:10px}
+.card b{display:block;font-size:15px;margin-bottom:4px}.card span{font-size:13px;color:var(--ink2);line-height:1.5;display:block}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;border:1px solid var(--line)}
+.tw{overflow-x:auto}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--soft);font-weight:600;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2)}
+tr:last-child td{border-bottom:none}
+.lv{font-family:'Noto Sans Mono',monospace;font-size:11px;font-weight:600;padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase}
+.lv.b{background:var(--gsoft);color:#0a5f0a}.lv.i{background:var(--asoft);color:#1d4ed8}.lv.e{background:var(--psoft);color:#8c1a63}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;background:linear-gradient(180deg,#fafaf8,#f4f3ef);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin:18px 0}
+.flow .st{background:#fff;border:1px solid var(--line2);border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;box-shadow:var(--sh)}
+.flow .st small{display:block;font-weight:400;color:var(--ink2);font-size:11px}
+.flow .st.hl{background:var(--accent);color:#fff;border-color:var(--accent)}.flow .st.hl small{color:#cdd5e5}
+.flow .ar{color:var(--mute);font-weight:700}
+.cap{font-size:12px;color:var(--ink2);font-style:italic;margin:-8px 0 14px}
+.mcq{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin:16px 0;box-shadow:var(--sh)}
+.mcq-q{font-weight:600;margin-bottom:10px}.mcq-q i{font-style:normal;font-family:'Noto Sans Mono',monospace;color:#3b5bdb;margin-right:8px}
+.opt{display:block;width:100%;text-align:left;padding:10px 14px;margin:6px 0;border:1px solid var(--line);border-radius:8px;cursor:pointer;font:inherit;font-size:14px;background:var(--soft)}
+.opt:hover{border-color:var(--accent);background:var(--asoft)}
+.mcq.done .opt{pointer-events:none;opacity:.75}.mcq.done .opt.ok{background:var(--gsoft);border-color:var(--green);opacity:1;font-weight:600}
+.mcq.done .opt.no{background:var(--rsoft);border-color:var(--red);opacity:1}
+.fb{display:none;margin-top:10px;padding:10px 14px;border-radius:8px;font-size:13.5px;background:var(--block)}.mcq.done .fb{display:block}
+.score{display:flex;align-items:center;gap:14px;background:var(--block);border:1px solid var(--line);border-radius:var(--r);padding:14px 18px;margin:18px 0}
+.bar{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+</style><style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head><body>
+<header class="header"><div class="header-top"><div class="brand"><div class="brand-mark">CI</div><span>Pipeline Orchestration<span class="brand-sub"> · CI/CD for release engineers</span></span></div>
+<div class="hr"><span class="pill-prog"><span class="dot"></span><span id="pt"></span></span><button class="btn" onclick="resetProgress()">↺ Reset</button></div></div>
+<nav class="tabbar"><button class="tab active"><span class="n">01</span> Fundamentals</button><button class="tab"><span class="n">02</span> GitHub Actions</button><button class="tab"><span class="n">03</span> GitLab CI</button><button class="tab"><span class="n">04</span> Jenkins & Harness</button><button class="tab"><span class="n">05</span> Template Maintenance</button><button class="tab"><span class="n">06</span> Practice</button></nav></header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul id="toc"></ul></aside><main class="main"><section class="panel active" data-toc='[["s1-1", "What is a pipeline?"], ["s1-2", "Core vocabulary"], ["s1-3", "Choosing an orchestrator"]]'><div class="eyebrow">Module 01 · Foundations</div><h1 class="title">CI/CD Pipeline Fundamentals</h1><p class="subtitle">What a pipeline is, the vocabulary every release engineer must know, and how the main orchestrators compare.</p><div class="section" id="s1-1"><h2><span>🔁</span> What is a pipeline?</h2><span class="lv b">Basic</span>
+<p>A <strong>pipeline</strong> is an automated, versioned sequence of steps that takes code from a commit to production. <strong>CI</strong> (Continuous Integration) merges and verifies code frequently; <strong>CD</strong> means either <em>Continuous Delivery</em> (always releasable, human approves deploy) or <em>Continuous Deployment</em> (every green build goes live automatically).</p>
+<div class="flow"><div class="st">Commit<small>push / PR</small></div><span class="ar">→</span><div class="st">Build<small>compile, package</small></div><span class="ar">→</span><div class="st">Test<small>unit, lint, SAST</small></div><span class="ar">→</span><div class="st hl">Publish<small>artifact + image</small></div><span class="ar">→</span><div class="st">Deploy<small>staging</small></div><span class="ar">→</span><div class="st">Verify<small>smoke, e2e</small></div><span class="ar">→</span><div class="st">Release<small>prod</small></div></div><div class="cap">A typical end-to-end pipeline. Highlighted stage = the hand-off from CI to CD.</div>
+<div class="cards"><div class="card"><div class="ci" style="background:#eef1f7;color:#1d4ed8">⚡</div><b>CI</b><span>Integrate often; every push builds and tests.</span></div><div class="card"><div class="ci" style="background:#ddedea;color:#0a5f0a">📦</div><b>Continuous Delivery</b><span>Artifact is always deployable; release is a button.</span></div><div class="card"><div class="ci" style="background:#f5e0e9;color:#8c1a63">🚀</div><b>Continuous Deployment</b><span>No human gate; automation decides.</span></div><div class="card"><div class="ci" style="background:#fadec9;color:#a85a08">🧱</div><b>Pipeline as Code</b><span>Pipelines live in Git: reviewable, versioned, reusable.</span></div></div></div><div class="section" id="s1-2"><h2><span>📖</span> Core vocabulary</h2><div class="tw"><table><tr><th>Term</th><th>Meaning</th><th>Example</th></tr><tr><td>Trigger</td><td>Event that starts a run</td><td>push, PR, tag, cron, webhook</td></tr><tr><td>Stage / Job / Step</td><td>Group → unit of work → single command</td><td><code>test</code> stage → <code>unit</code> job → <code>pytest</code> step</td></tr><tr><td>Runner / Agent</td><td>Machine that executes jobs</td><td>GitHub-hosted VM, Jenkins agent, GitLab runner</td></tr><tr><td>Artifact</td><td>Output passed between jobs or stored</td><td>JAR, wheel, Docker image</td></tr><tr><td>Cache</td><td>Reusable dependency data to save time</td><td><code>~/.m2</code>, <code>node_modules</code></td></tr><tr><td>Secret</td><td>Encrypted credential injected at runtime</td><td>Registry token, cloud role</td></tr><tr><td>Gate</td><td>Condition that must pass to proceed</td><td>Manual approval, quality gate, policy check</td></tr></table></div></div><div class="section" id="s1-3"><h2><span>⚖️</span> Choosing an orchestrator</h2><div class="tw"><table><tr><th>Tool</th><th>Config</th><th>Hosting</th><th>Strength</th></tr><tr><td>GitHub Actions</td><td>YAML in <code>.github/workflows</code></td><td>SaaS / self-hosted runners</td><td>Huge marketplace, tight GitHub integration</td></tr><tr><td>GitLab CI</td><td><code>.gitlab-ci.yml</code></td><td>SaaS / self-managed</td><td>All-in-one DevOps platform, powerful includes</td></tr><tr><td>Jenkins</td><td>Groovy <code>Jenkinsfile</code></td><td>Self-hosted</td><td>Ultimate flexibility, 1800+ plugins</td></tr><tr><td>Harness</td><td>Visual + YAML, templates</td><td>SaaS / self-managed</td><td>Built-in CD, verification, governance (OPA)</td></tr></table></div><div class="callout tip"><div class="ic">💡</div><div><b>Rule of thumb:</b> pick the tool closest to where your code lives. Switching cost is mostly in <em>templates and scripts</em>, so keep logic in portable scripts and let YAML just orchestrate.</div></div></div></section><section class="panel" data-toc='[["s2-1", "Your first workflow"], ["s2-2", "Matrix, needs & artifacts"], ["s2-3", "Reusable workflows & composite actions"]]'><div class="eyebrow">Module 02 · Orchestrator</div><h1 class="title">GitHub Actions</h1><p class="subtitle">From your first workflow to reusable workflows, OIDC and environment protection.</p><div class="section" id="s2-1"><h2><span>🌱</span> Your first workflow</h2><span class="lv b">Basic</span><p>A workflow is a YAML file with <code>on</code> (triggers), <code>jobs</code>, and <code>steps</code>.</p>
+<pre><span class="lang">yaml</span><code>name: ci
+on: { push: { branches: [main] }, pull_request: {} }
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci &amp;&amp; npm test</code></pre></div><div class="section" id="s2-2"><h2><span>🧮</span> Matrix, needs & artifacts</h2><span class="lv i">Intermediate</span><p><code>strategy.matrix</code> fans a job out over versions/OSes; <code>needs</code> builds a dependency graph; artifacts pass files between jobs.</p>
+<pre><span class="lang">yaml</span><code>jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix: { os: [ubuntu-latest, windows-latest], node: [18, 20] }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci &amp;&amp; npm run build
+      - uses: actions/upload-artifact@v4
+        with: { name: dist-${{ matrix.os }}-${{ matrix.node }}, path: dist/ }
+  deploy:
+    needs: build
+    if: github.ref == &#x27;refs/heads/main&#x27;
+    runs-on: ubuntu-latest
+    environment: production        # approvals + secrets scoped here
+    steps: [ { run: echo deploying } ]</code></pre></div><div class="section" id="s2-3"><h2><span>♻️</span> Reusable workflows & composite actions</h2><span class="lv e">Expert</span>
+<div class="cards">
+<div class="card"><div class="ci" style="background:#eef1f7;color:#1d4ed8">📞</div><b>Reusable workflow</b><span><code>workflow_call</code>: a whole pipeline you call from many repos with inputs/secrets.</span></div><div class="card"><div class="ci" style="background:#ddedea;color:#0a5f0a">🧩</div><b>Composite action</b><span>Bundle several steps into one action (<code>action.yml</code>).</span></div></div>
+<pre><span class="lang">yaml</span><code># org/platform-workflows/.github/workflows/build.yml
+on:
+  workflow_call:
+    inputs: { image: { type: string, required: true } }
+    secrets: { REGISTRY_TOKEN: { required: true } }
+# caller repo
+jobs:
+  build:
+    uses: org/platform-workflows/.github/workflows/build.yml@v3
+    with: { image: payments-api }
+    secrets: inherit</code></pre>
+<div class="callout success"><div class="ic">🔐</div><div><b>Expert hardening:</b> authenticate to AWS/GCP with <b>OIDC</b> (<code>permissions: id-token: write</code>) instead of long-lived keys; pin third-party actions to a <b>commit SHA</b>; set minimal <code>permissions:</code>; use <code>concurrency:</code> to cancel superseded runs.</div></div></div></section><section class="panel" data-toc='[["s3-1", "Stages and jobs"], ["s3-2", "Rules, needs (DAG) and environments"], ["s3-3", "Includes, templates and child pipelines"]]'><div class="eyebrow">Module 03 · Orchestrator</div><h1 class="title">GitLab CI/CD</h1><p class="subtitle">Stages, rules, DAG pipelines, includes and child pipelines.</p><div class="section" id="s3-1"><h2><span>🌱</span> Stages and jobs</h2><span class="lv b">Basic</span><p>Jobs in the same <code>stage</code> run in parallel; stages run in order.</p>
+<pre><span class="lang">yaml</span><code>stages: [build, test, deploy]
+build:
+  stage: build
+  image: node:20
+  script: [npm ci, npm run build]
+  artifacts: { paths: [dist/], expire_in: 1 week }
+test:
+  stage: test
+  script: [npm test]
+  cache: { key: $CI_COMMIT_REF_SLUG, paths: [node_modules/] }</code></pre></div><div class="section" id="s3-2"><h2><span>🔀</span> Rules, needs (DAG) and environments</h2><span class="lv i">Intermediate</span>
+<pre><span class="lang">yaml</span><code>deploy_prod:
+  stage: deploy
+  script: ./deploy.sh prod
+  needs: [test]                       # start as soon as test is done (DAG)
+  rules:
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH == &quot;main&quot;
+      when: manual                    # approval gate
+  environment: { name: production, url: https://app.example.com }</code></pre><div class="callout warn"><div class="ic">⚠️</div><div><code>only/except</code> is legacy. Use <code>rules:</code> everywhere for predictable behaviour.</div></div></div><div class="section" id="s3-3"><h2><span>🏗️</span> Includes, templates and child pipelines</h2><span class="lv e">Expert</span>
+<pre><span class="lang">yaml</span><code>include:
+  - project: platform/ci-templates
+    ref: v2.4.0                       # always pin a version
+    file: /templates/docker-build.yml
+  - template: Security/SAST.gitlab-ci.yml
+.deploy_base:                         # hidden job = reusable template
+  script: ./deploy.sh $ENV
+deploy_stg:
+  extends: .deploy_base
+  variables: { ENV: staging }
+trigger_services:                     # dynamic child pipeline per service
+  trigger: { include: services/pipeline.yml, strategy: depend }</code></pre><p>Expert tips: <code>parallel:matrix</code>, merge-request pipelines, merge trains, <code>resource_group</code> for serialised deploys, and CI/CD components catalog.</p></div></section><section class="panel" data-toc='[["s4-1", "Jenkins declarative pipeline"], ["s4-2", "Shared libraries (template maintenance)"], ["s4-3", "Harness pipelines & templates"]]'><div class="eyebrow">Module 04 · Orchestrator</div><h1 class="title">Jenkins and Harness</h1><p class="subtitle">Declarative pipelines and shared libraries, plus Harness templates and governance.</p><div class="section" id="s4-1"><h2><span>🧰</span> Jenkins declarative pipeline</h2><span class="lv b">Basic</span><pre><span class="lang">groovy</span><code>pipeline {
+  agent { label &#x27;docker&#x27; }
+  options { timeout(time: 30, unit: &#x27;MINUTES&#x27;); disableConcurrentBuilds() }
+  stages {
+    stage(&#x27;Build&#x27;) { steps { sh &#x27;mvn -B package&#x27; } }
+    stage(&#x27;Test&#x27;)  { steps { sh &#x27;mvn test&#x27; } post { always { junit &#x27;target/surefire-reports/*.xml&#x27; } } }
+    stage(&#x27;Deploy&#x27;) { when { branch &#x27;main&#x27; } steps { input &#x27;Deploy to prod?&#x27;; sh &#x27;./deploy.sh&#x27; } }
+  }
+  post { failure { slackSend message: &quot;Build failed: ${env.BUILD_URL}&quot; } }
+}</code></pre></div><div class="section" id="s4-2"><h2><span>📚</span> Shared libraries (template maintenance)</h2><span class="lv e">Expert</span><p>Put reusable steps in a Git repo under <code>vars/</code> and load with <code>@Library('platform@v5')</code>.</p>
+<pre><span class="lang">groovy</span><code>// vars/standardPipeline.groovy
+def call(Map cfg) {
+  pipeline { agent any
+    stages { stage(&#x27;Build&#x27;){ steps { sh cfg.buildCmd } }
+             stage(&#x27;Scan&#x27;){ steps { sh &quot;trivy fs ${cfg.scanPath ?: &#x27;.&#x27;}&quot; } } } }
+}
+// Jenkinsfile in each repo
+@Library(&#x27;platform@v5&#x27;) _
+standardPipeline(buildCmd: &#x27;npm ci &amp;&amp; npm run build&#x27;)</code></pre><div class="callout tip"><div class="ic">💡</div><div>Use <b>Configuration as Code (JCasC)</b> and Job DSL to rebuild Jenkins from Git; run agents as ephemeral Kubernetes pods.</div></div></div><div class="section" id="s4-3"><h2><span>🎯</span> Harness pipelines & templates</h2><span class="lv i">Intermediate</span>
+<div class="cards"><div class="card"><div class="ci" style="background:#eef1f7;color:#1d4ed8">🧱</div><b>Hierarchy</b><span>Pipeline → Stage → Step Group → Step.</span></div><div class="card"><div class="ci" style="background:#ddedea;color:#0a5f0a">📐</div><b>Templates</b><span>Step/Stage/Pipeline templates versioned at account, org or project level.</span></div><div class="card"><div class="ci" style="background:#f5e0e9;color:#8c1a63">🛡️</div><b>Governance</b><span>OPA policies block non-compliant pipelines (e.g. “prod needs approval”).</span></div><div class="card"><div class="ci" style="background:#fadec9;color:#a85a08">📈</div><b>Continuous Verification</b><span>ML compares metrics/logs after deploy and auto-rolls back.</span></div></div>
+<pre><span class="lang">yaml</span><code>pipeline:
+  name: deploy-svc
+  stages:
+    - stage:
+        name: prod
+        type: Deployment
+        spec:
+          execution:
+            steps:
+              - step: { type: K8sCanaryDeploy, name: canary, spec: { instanceSelection: { type: Count, spec: { count: 1 } } } }
+              - step: { type: Verify, name: verify }
+              - step: { type: K8sCanaryDelete, name: cleanup }
+            rollbackSteps:
+              - step: { type: K8sRollingRollback, name: rollback }</code></pre></div></section><section class="panel" data-toc='[["s5-1", "Maturity ladder"], ["s5-2", "Scripting best practices"], ["s5-3", "Template versioning & upgrades"], ["s5-4", "Speed, security and observability"]]'><div class="eyebrow">Module 05 · Expert</div><h1 class="title">Advanced Scripting & Template Maintenance</h1><p class="subtitle">Keeping hundreds of pipelines DRY, safe, fast and observable.</p><div class="section" id="s5-1"><h2><span>🪜</span> Maturity ladder</h2><div class="tw"><table><tr><th>Level</th><th>Practice</th><th>Outcome</th></tr><tr><td><span class="lv b">Basic</span></td><td>Copy-paste YAML per repo</td><td>Works, but drifts fast</td></tr><tr><td><span class="lv i">Intermediate</span></td><td>Shared scripts + includes/reusable workflows</td><td>Fix once, benefit everywhere</td></tr><tr><td><span class="lv e">Expert</span></td><td>Versioned golden-path templates, policy-as-code, automated upgrade PRs</td><td>Platform-owned, self-service pipelines</td></tr></table></div></div><div class="section" id="s5-2"><h2><span>🐚</span> Scripting best practices</h2><span class="lv i">Intermediate</span><p>Keep real logic in scripts, not YAML, so it is testable locally and portable between orchestrators.</p>
+<pre><span class="lang">bash</span><code>#!/usr/bin/env bash
+set -euo pipefail                      # fail fast, no unset vars, pipe errors count
+trap &#x27;echo &quot;failed at line $LINENO&quot; &gt;&amp;2&#x27; ERR
+: &quot;${IMAGE:?IMAGE required}&quot;
+retry() { for i in 1 2 3; do &quot;$@&quot; &amp;&amp; return 0 || sleep $((i*5)); done; return 1; }
+retry docker push &quot;$IMAGE&quot;</code></pre><ul><li>Lint with <code>shellcheck</code>; unit-test with <code>bats</code>.</li><li>Make scripts idempotent: re-running must be safe.</li><li>Never echo secrets; mask them and prefer short-lived tokens.</li></ul></div><div class="section" id="s5-3"><h2><span>🔖</span> Template versioning & upgrades</h2><span class="lv e">Expert</span>
+<div class="flow"><div class="st">Template repo<small>semver tags</small></div><span class="ar">→</span><div class="st hl">Release v3.2.0<small>changelog</small></div><span class="ar">→</span><div class="st">Dependabot / Renovate<small>PR in each consumer</small></div><span class="ar">→</span><div class="st">Canary repos<small>run first</small></div><span class="ar">→</span><div class="st">Org-wide rollout</div></div><div class="cap">Roll template changes out like a product release.</div>
+<ul><li><b>Pin</b> consumers to <code>@v3</code> (major) or exact tag; never <code>@main</code>.</li><li><b>Test templates</b> with a sample repo matrix (<code>act</code>, <code>gitlab-ci-local</code>, Jenkins Pipeline Unit).</li><li><b>Deprecate</b> with warnings in logs before removing inputs.</li></ul></div><div class="section" id="s5-4"><h2><span>⚡</span> Speed, security and observability</h2><div class="tw"><table><tr><th>Area</th><th>Technique</th></tr><tr><td>Speed</td><td>Dependency + Docker layer cache, parallel jobs, path filters, test sharding, ephemeral autoscaled runners</td></tr><tr><td>Security</td><td>Least-privilege tokens, OIDC, SHA-pinned actions, SAST/SCA/secret scan stages, signed artifacts</td></tr><tr><td>Observability</td><td>Export duration/failure metrics; track <b>DORA</b>: deploy frequency, lead time, change-fail rate, MTTR</td></tr><tr><td>Cost</td><td>Cancel stale runs (<code>concurrency</code>), right-size runners, expire artifacts</td></tr></table></div></div></section><section class="panel" data-toc='[["s6-1", "Quiz"]]'><div class="eyebrow">Module 06 · Assessment</div><h1 class="title">Final Assessment</h1><p class="subtitle">Timed, proctored final assessment for this module.</p><div class="section" id="s6-1"><h2><span>📝</span> Quiz</h2><p>This module ends with a <b>timed, proctored assessment</b>. Questions and options are shuffled, answers and explanations appear only after you submit.</p><ul class="assess-rules"><li>Runs in <b>fullscreen</b> &mdash; leaving it, switching tabs or windows gives a warning; <b>3 warnings auto-submit</b></li><li>Copy, paste, right-click, select, print and developer shortcuts are disabled</li><li>Refreshing or closing the page abandons the attempt</li></ul><button class="btn assess-start" id="assessStartBtn" style="background:#14213D;color:#fff;border-color:#14213D;padding:12px 22px;font-weight:700">Start Final Assessment &rarr;</button><div id="scoreBoard"></div></div></section></main></div>
+<script>
+(function(){
+let manual=null;const tabs=[...document.querySelectorAll('.tab')],panels=[...document.querySelectorAll('.panel')],toc=document.getElementById('toc'),pt=document.getElementById('pt');
+function act(i){tabs.forEach((t,j)=>t.classList.toggle('active',i===j));panels.forEach((p,j)=>p.classList.toggle('active',i===j));
+const d=JSON.parse(panels[i].dataset.toc||'[]');toc.innerHTML=d.map(([id,l])=>'<li><a href="#'+id+'" data-t="'+id+'">'+l+'</a></li>').join('');
+manual=null;const f=toc.querySelector('a');if(f)f.classList.add('active');pt.textContent='Tab '+(i+1)+' of '+tabs.length;window.scrollTo(0,0)}
+tabs.forEach((t,i)=>t.onclick=()=>act(i));
+document.addEventListener('click',e=>{const a=e.target.closest('.toc a');if(!a)return;e.preventDefault();const el=document.getElementById(a.dataset.t);manual=a.dataset.t;toc.querySelectorAll('a').forEach(x=>x.classList.toggle('active',x===a));if(el)window.scrollTo({top:el.getBoundingClientRect().top+scrollY-120,behavior:'smooth'})});
+addEventListener('scroll',()=>{if(manual)return;const p=document.querySelector('.panel.active');if(!p)return;let c=null;const ss=[...p.querySelectorAll('.section')];ss.forEach(s=>{if(s.getBoundingClientRect().top-170<0)c=s.id});if(ss.length&&innerHeight+scrollY>=document.documentElement.scrollHeight-4)c=ss[ss.length-1].id;
+if(c)toc.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.t===c))},{passive:true});
+['wheel','touchstart','keydown','pointerdown'].forEach(ev=>window.addEventListener(ev,e=>{if(e.target&&e.target.closest&&e.target.closest('.toc a'))return;manual=null},{passive:true}));
+window.resetProgress=()=>act(0);
+act(0)})();
+
+/* =====================================================================
+   Final assessment — proctored, timed, full-screen (graded in-browser)
+   Anti-malpractice model copied from the Royal HRMS assessment:
+   fullscreen, tab/window-switch strikes (3 -> auto-submit), copy / right-click
+   blocked, shuffled questions, answers revealed only after submit.
+   ===================================================================== */
+(function(){
+  const C = {title:"Pipeline Orchestration", slug:"pipeline_orchestration"};
+  const RAW = [{"q": "Which keyword in GitHub Actions makes a job wait for another?", "o": ["<code>needs</code>", "<code>after</code>", "<code>stage</code>", "<code>depends</code>"], "a": "MDpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjA=", "e": "<code>needs</code> builds the job dependency graph."}, {"q": "Safest way to give a workflow access to AWS?", "o": ["Store access keys in code", "OIDC federation with short-lived role", "Share one admin key", "Disable auth"], "a": "MTpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjE=", "e": "OIDC removes long-lived credentials."}, {"q": "In GitLab CI, which replaces legacy <code>only/except</code>?", "o": ["<code>when</code>", "<code>rules</code>", "<code>needs</code>", "<code>extends</code>"], "a": "MTpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjI=", "e": "<code>rules</code> is the modern, composable condition syntax."}, {"q": "Where do Jenkins shared libraries keep global steps?", "o": ["<code>vars/</code>", "<code>bin/</code>", "<code>tests/</code>", "<code>docs/</code>"], "a": "MDpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjM=", "e": "Files in <code>vars/</code> become callable pipeline steps."}, {"q": "Best way to reference a shared template?", "o": ["<code>@main</code>", "Copy file locally", "Pin to a version tag", "Latest always"], "a": "MjpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjQ=", "e": "Pinned versions make upgrades deliberate and rollbacks easy."}, {"q": "What distinguishes Continuous Delivery from Continuous Deployment?", "o": ["Delivery needs a human approval to go live; Deployment is fully automatic", "Delivery has no tests", "Deployment does not use artifacts", "They are identical"], "a": "MDpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjU=", "e": "Both keep software releasable; only deployment removes the human gate."}, {"q": "In GitHub Actions, what does needs do?", "o": ["Installs a dependency", "Sets an environment variable", "Selects the runner OS", "Makes a job wait for another job and builds the dependency graph"], "a": "MzpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjY=", "e": "needs defines ordering between jobs."}, {"q": "What does strategy.matrix do?", "o": ["Caches dependencies", "Fans a job out over combinations such as OS and version", "Encrypts secrets", "Cancels old runs"], "a": "MTpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjc=", "e": "Each combination runs as a separate job."}, {"q": "Which permission enables OIDC authentication to a cloud provider from Actions?", "o": ["contents: delete", "packages: none", "permissions: id-token: write", "actions: admin"], "a": "MjpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjg=", "e": "OIDC replaces long-lived cloud keys with short-lived federated tokens."}, {"q": "Why pin third-party actions to a commit SHA?", "o": ["It makes jobs run faster", "It is required for matrix builds", "It hides secrets", "Tags can be moved, a SHA is immutable and protects the supply chain"], "a": "MzpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjk=", "e": "A compromised or retagged action cannot silently change what you run."}, {"q": "What does the concurrency key do?", "o": ["Cancels or serialises superseded runs of the same group", "Increases runner count", "Sets job timeout", "Defines matrix size"], "a": "MDpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjEw", "e": "It avoids wasted runs and overlapping deploys."}, {"q": "Which trigger turns a workflow into a reusable workflow?", "o": ["workflow_dispatch", "schedule", "pull_request", "workflow_call"], "a": "MzpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjEx", "e": "Callers reference it with uses: org/repo/.github/workflows/file.yml@ref."}, {"q": "In GitLab CI, how do jobs in the same stage run?", "o": ["One after another", "Only on manual trigger", "Only on tags", "In parallel"], "a": "MzpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjEy", "e": "Stages run in order; jobs inside a stage run concurrently."}, {"q": "What replaces the legacy only/except keywords in GitLab CI?", "o": ["needs", "extends", "trigger", "rules"], "a": "MzpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjEz", "e": "rules gives predictable condition-based job control."}, {"q": "What does needs: [test] enable in GitLab CI?", "o": ["Skipping the test job", "Running the job manually", "A DAG, so the job starts as soon as test finishes", "Caching test results"], "a": "MjpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjE0", "e": "DAG pipelines ignore stage barriers for the listed dependencies."}, {"q": "Why set ref: v2.4.0 on a GitLab include?", "o": ["To make it run on tags", "To cache it", "To pin the shared template to a known version", "To mark it manual"], "a": "MjpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjE1", "e": "Unpinned includes change underneath every consumer."}, {"q": "How is a Jenkins shared library loaded?", "o": ["@Library('platform@v5') _", "import platform.v5", "load 'platform'", "include 'v5'"], "a": "MDpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjE2", "e": "Reusable steps live under vars/ in a Git repo and are versioned by tag."}, {"q": "What do OPA policies do in Harness?", "o": ["Speed up builds", "Block non-compliant pipelines, for example prod without approval", "Store artifacts", "Generate SBOMs"], "a": "MTpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjE3", "e": "Governance as code is evaluated before pipelines are saved or run."}, {"q": "What does set -euo pipefail do in a pipeline script?", "o": ["Prints all secrets", "Retries every command", "Runs commands in parallel", "Fails fast on errors, unset variables and failed pipe stages"], "a": "MzpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjE4", "e": "It prevents silent failures in CI scripts."}, {"q": "How should consumers reference shared pipeline templates?", "o": ["Always @main", "Copy-paste into each repo", "Use a random branch", "Pinned to a version tag such as @v3, never @main"], "a": "MzpwaXBlbGluZV9vcmNoZXN0cmF0aW9uOjE5", "e": "Versioned templates can be rolled out and rolled back like a product."}];
+  const dec = s => { try{ return parseInt(atob(s).split(':')[0],10); }catch(e){ return -1; } };
+  const BANK = RAW.map((q,i)=>({id:'q'+i, q:q.q, options:q.o, ans:q.a, exp:q.e}));
+  delete window.__BANK; 
+  const EXAM_SECONDS = 1500;
+  const MAX_WARN = 3;
+  const LS_KEY = 'cicd_scores_' + C.slug;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-right{display:flex;align-items:center;gap:12px}
+  .exam-strikes{font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);padding:6px 10px;border-radius:8px}
+  .exam-strikes.hot{background:#e53e3e}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif;overflow:auto}
+  .exam-splash .xcard{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash h2{font-size:24px;font-weight:800;margin:0 0 8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9;padding:0}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-fswarn{position:fixed;inset:0;z-index:100003;background:rgba(15,23,42,.92);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#fff;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fswarn .fw-box{max-width:520px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .exam-fswarn h3{font-size:30px;font-weight:800;margin:0;display:flex;align-items:center;gap:12px;color:#fff}
+  .exam-fswarn p{margin:0;font-size:16px;color:#e2e8f0;line-height:1.5}
+  .exam-fswarn .fw-count{font-size:16px;font-weight:600;color:#fff}
+  .exam-fswarn .fw-btn{margin-top:6px;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:15px 26px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+  .exam-fswarn .fw-btn:hover{background:#000}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  .exam-sb{display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:14px}
+  .exam-sb .best{flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:16px 22px;text-align:center}
+  .exam-sb .best .l{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311}
+  .exam-sb .best .v{font-size:32px;font-weight:800;line-height:1.1;margin-top:4px}
+  .exam-sb .best .v span{font-size:17px;color:#cdd5e5}
+  .exam-sb .hist{flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px 18px}
+  .exam-sb .hist .l{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px}
+  .exam-sb .hist div.row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px}
+  .assess-start{margin-top:14px}
+  .assess-rules{margin:10px 0 0 18px;font-size:14px;line-height:1.8;color:var(--ink2)}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}.exam-q-pane{padding:20px}}
+  @media print{.exam-overlay,.exam-splash,.exam-cover{display:none!important}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){t=Math.max(t,0);const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+  function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function examDialog(title,msg,okLabel,cancel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">${cancel?'<button class="exam-btn nav" data-a="0">Cancel</button>':''}<button class="exam-btn primary" data-a="1">${okLabel||'OK'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d && cancel){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total,warnCount,auto){
+    const a=loadScores(); a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now(),warns:warnCount,auto:!!auto});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.innerHTML=''; return; }
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`<div class="exam-sb">
+      <div class="best"><div class="l">Top score</div><div class="v">${best.score}<span>/${best.total}</span></div><div style="font-size:12px;color:#cdd5e5">${best.pct}%</div></div>
+      <div class="hist"><div class="l">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+      ${last5.map(x=>`<div class="row"><span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%${x.warns?' &middot; '+x.warns+' warning'+(x.warns>1?'s':''):''}${x.auto?' &middot; auto-submitted':''}</span></span><span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}</div></div>`;
+  }
+
+  /* ---- proctoring: tab-switch / window-blur / fullscreen-exit strikes (3 -> auto-submit) ---- */
+  let warns=0, lastWarn=0, proctorOn=false, fsWanted=false;
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function updStrikes(){ const s=document.getElementById('examStrikes'); if(s){ s.textContent='Warnings '+warns+'/'+MAX_WARN; s.classList.toggle('hot',warns>0); } }
+  function hideFsWarn(){ const w=document.getElementById('examFsWarn'); if(w)w.remove(); }
+  function showFsWarn(n){
+    injectCss(); hideFsWarn();
+    const w=document.createElement('div'); w.className='exam-fswarn'; w.id='examFsWarn';
+    w.innerHTML='<div class="fw-box"><h3><span>&#9888;&#65039;</span> Fullscreen exited</h3>'+
+      '<p>The assessment must remain in fullscreen mode.</p>'+
+      '<div class="fw-count">Warning '+n+' of '+MAX_WARN+'</div>'+
+      '<button class="fw-btn" id="examFsReturn">Return to assessment</button></div>';
+    document.body.appendChild(w);
+    const btn=document.getElementById('examFsReturn');
+    btn.addEventListener('click',()=>{
+      const el=document.documentElement;
+      const done=()=>{ fsWanted=true; hideFsWarn(); hideCover(); };
+      if(el.requestFullscreen){ el.requestFullscreen().then(done).catch(()=>{}); } else { done(); }
+    });
+    try{btn.focus();}catch(e){}
+  }
+  function countWarn(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<1500)return; lastWarn=now;
+    warns++; updStrikes();
+    if(warns>=MAX_WARN){ hideFsWarn(); examDialog('Test submitted','You left the test '+MAX_WARN+' times. It has been auto-submitted.'); submitExam(true); }
+    else if(kind==='fs'){ showFsWarn(warns); }
+    else { examDialog('Warning '+warns+' of '+MAX_WARN,'Switching tabs or leaving the window is not allowed. After '+MAX_WARN+' warnings the test is auto-submitted.'); }
+  }
+  function fsHandler(){
+    if(!examOn)return;
+    if(document.fullscreenElement){ hideFsWarn(); hideCover(); return; }
+    if(fsWanted){ countWarn('fs'); }
+  }
+  function visHandler(){ if(document.hidden){ showCover(); countWarn(); } else { hideCover(); } }
+  function blurHandler(){ if(examOn && !document.hidden){ showCover(); countWarn(); } }
+  function focusHandler(){ if(!document.hidden && (document.fullscreenElement||!fsWanted)) hideCover(); }
+  function blockEvt(e){ e.preventDefault(); e.stopPropagation(); return false; }
+  function keyGuard(e){
+    const k=(e.key||'').toLowerCase(), mod=e.ctrlKey||e.metaKey;
+    const bad = (mod && ['c','x','v','a','s','p','u','f','g'].includes(k))
+             || (mod && e.shiftKey && ['i','j','c','k'].includes(k))
+             || k==='f12' || k==='printscreen' || k==='f5' || (mod && k==='r');
+    if(bad){ e.preventDefault(); e.stopPropagation(); if(k==='printscreen'){ try{navigator.clipboard.writeText('');}catch(_){} } return false; }
+  }
+  const EVTS=['contextmenu','copy','cut','paste','selectstart','dragstart','drop'];
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true; updStrikes();
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    window.addEventListener('blur',blurHandler);
+    window.addEventListener('focus',focusHandler);
+    EVTS.forEach(n=>document.addEventListener(n,blockEvt,true));
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keyup',keyGuard,true);
+  }
+  function stopProctor(){
+    proctorOn=false; hideFsWarn();
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    window.removeEventListener('blur',blurHandler);
+    window.removeEventListener('focus',focusHandler);
+    EVTS.forEach(n=>document.removeEventListener(n,blockEvt,true));
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keyup',keyGuard,true);
+    hideCover();
+  }
+
+  function showSplash(){
+    injectCss();
+    if(document.getElementById('examSplash'))return;
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="xcard">
+      <h2>&#127919; ${C.title} &mdash; Final Assessment</h2>
+      <p>A timed, proctored assessment on this module.</p>
+      <ul>
+        <li><b>${BANK.length} questions</b>, questions and options shuffled every attempt</li>
+        <li><b>${Math.round(EXAM_SECONDS/60)}-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Correct answers and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> where your browser allows it</li>
+        <li><b>No tab / window switching</b> and <b>no exiting fullscreen (Esc)</b> &mdash; ${MAX_WARN} warnings and the test <b>auto-submits</b></li>
+        <li>Copy, paste, right-click, select, print and developer shortcuts are disabled during the test</li>
+        <li>Refreshing or closing the page abandons the attempt</li>
+      </ul>
+      <div style="display:flex;gap:10px"><button class="exam-btn nav" id="examCancel" style="flex:0 0 auto">Cancel</button>
+      <button class="exam-btn primary" id="examBegin" style="flex:1;padding:14px">Start Test &rarr;</button></div>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examCancel').addEventListener('click',()=>sp.remove());
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      fsWanted=false;
+      if(document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().then(()=>{fsWanted=true;}).catch(()=>{}); }
+      sp.remove(); enterExam();
+    });
+  }
+
+  function enterExam(){
+    injectCss();
+    // shuffle questions AND options; keep track of the correct option after shuffling
+    items = shuffle(BANK).map(b=>{
+      const correct = b.options[dec(b.ans)];
+      const opts = shuffle(b.options);
+      return {id:b.id, q:b.q, options:opts, answer:opts.indexOf(correct), exp:b.exp};
+    });
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    const ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">${C.title} &mdash; Final Assessment</div><div class="et-sub">${items.length} questions &middot; one sitting &middot; good luck</div></div>
+        <div class="exam-right"><div class="exam-strikes" id="examStrikes">Warnings 0/${MAX_WARN}</div><div class="exam-timer" id="examTimer">${fmt(remaining)}</div></div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(remaining); if(remaining<=60)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}</div>
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}" tabindex="0"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>{
+      const pick=()=>{ answers[id]=+el.dataset.i; pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); refreshPalette(); };
+      el.addEventListener('click',pick);
+      el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();} });
+    });
+    document.getElementById('examPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    document.getElementById('examNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();});
+    refreshPalette();
+    pane.scrollTop=0;
+  }
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examDialog('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test', true);
+      if(!ok)return;
+    }
+    if(!examOn)return;
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    const usedWarns=warns;
+    stopProctor();
+    let score=0; items.forEach(it=>{ if(answers[it.id]===it.answer) score++; });
+    showResults(score,usedWarns,auto);
+  }
+  function showResults(score,usedWarns,auto){
+    const total=items.length; saveScore(score,total,usedWarns,auto);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below, revisit the module and try again.';
+    if(pct>=85)msg='Outstanding &mdash; you are operating at an expert level.';
+    else if(pct>=65)msg='Solid pass. Review the questions you missed and you are interview-ready.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the sections you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const you=answers[it.id], attempted=(you!=null), ok=attempted&&you===it.answer;
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      inner+= attempted ? '<div class="ra '+(ok?'cor':'wrong')+'">Your answer: '+String.fromCharCode(65+you)+'. '+it.options[you]+'</div>' : '<div class="ra wrong">Your answer: <i>Not answered</i></div>';
+      if(!ok) inner+='<div class="ra cor">Correct: '+String.fromCharCode(65+it.answer)+'. '+it.options[it.answer]+'</div>';
+      if(it.exp) inner+='<div class="rx">'+it.exp+'</div>';
+      return '<div class="r '+(ok?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; ${C.title}</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1;flex:1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          ${auto&&usedWarns>=MAX_WARN?'<div class="exam-rmsg" style="color:#c53030;font-weight:700">Auto-submitted after '+MAX_WARN+' warnings.</div>':''}
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another attempt</button></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    document.getElementById('examRetry').addEventListener('click',()=>{ closeExam(); showSplash(); });
+    document.getElementById('examClose').addEventListener('click',closeExam);
+  }
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',showSplash);
+  renderScoreboard();
+})();
+</script><script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body></html>

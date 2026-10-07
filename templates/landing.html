@@ -684,6 +684,8 @@ a.cp-back[href$="#choose-path"]:focus-visible,button.cp-back[data-back="deptView
 .skill-card .chips{padding:1rem 1.1rem 1.15rem}
 @media(max-width:1000px){.skill-list{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.skill-list{grid-template-columns:1fr}}
+.sk-cta{display:flex;justify-content:center;margin-top:2rem}
+.sk-cta .btn{padding:.85rem 2rem;font-size:1rem}
 #ntDeptView{animation:cpIn .25s ease}
 .rm-body [hidden]{display:none}
 .rm-body.solo{grid-template-columns:1fr}
@@ -1158,7 +1160,7 @@ header, header a, header button, header span, nav.main-nav, nav.main-nav a, nav.
   {% else %}
   <p class="cp-sub-t">Pick a department to see its roles, then pick a role to see the skills it needs and how your profile matches.</p>
   {% endif %}
-  {% if track == 'it' %}<div class="cp-panel" id="panelIt" data-src="{% static 'data/it_departments.json' %}" data-art="{% static 'img/roles/' %}"><div class="role-grid2"></div></div>{% endif %}
+  {% if track == 'it' %}<div class="cp-panel" id="panelIt" data-src="{% static 'data/it_departments.json' %}" data-art="{% static 'img/roles/' %}" data-learn="{% url 'skill_up' %}"><div class="role-grid2"></div></div>{% endif %}
   {% if track == 'non-it' or track == 'technical' %}<div class="cp-panel" id="panelTech"><h3 class="cp-ph">Non-IT Technical</h3><div class="role-grid2"></div></div>{% endif %}
   {% if track == 'non-it' or track == 'non-technical' %}<div class="cp-panel" id="panelNt"><h3 class="cp-ph">Non-IT Non-Technical</h3><div class="role-grid2"></div></div>{% endif %}
 {% else %}
@@ -1885,6 +1887,58 @@ var DEPTS=[
 ['UI/UX Designer (Enterprise HR Systems)','Complex workflow simplification, self-service dashboard prototyping, mobile HR app design, design systems management'],
 ['HRMS Integration & API Engineer','RESTful API development, webhook systems, biometric clock hardware integration, third-party benefits provider connectors'],
 ['Customer Success Director (Royal HRMS)','Enterprise SaaS retention, Net Revenue Retention (NRR) optimization, client onboarding SLAs, customer executive relationships']]},
+{c:'tech',i:'clip',n:'Quality & Inspection Skills',r:[
+['QA/QC',''],
+['Quality Inspection',''],
+['Quality Engineering',''],
+['NDT',''],
+['Welding Inspection',''],
+['Mechanical Inspection',''],
+['Electrical Inspection',''],
+['Documentation & Quality Reporting','']
+]},
+{c:'tech',i:'hat',n:'Skilled & Technical Trades',r:[
+['Electrician',''],
+['Fitter',''],
+['Welder',''],
+['Rigger',''],
+['Fabricator',''],
+['Technician',''],
+['Machine Operator',''],
+['Plant Operator',''],
+['Foreman',''],
+['Site Supervisor','']
+]},
+{c:'tech',i:'bolt',n:'Automotive & EV Skills',r:[
+['Automotive Production',''],
+['EV Manufacturing',''],
+['Electrical Systems',''],
+['Mechanical Assembly',''],
+['Production Operations',''],
+['Quality Inspection',''],
+['Maintenance',''],
+['Industrial Automation','']
+]},
+{c:'tech',i:'gear',n:'Oil & Gas / Energy Skills',r:[
+['Refinery Operations',''],
+['Petrochemical Operations',''],
+['Oil & Gas Maintenance',''],
+['Process Engineering',''],
+['HSE',''],
+['Fire Safety',''],
+['Shutdown & Turnaround',''],
+['Commissioning',''],
+['Inspection','']
+]},
+{c:'tech',i:'cart',n:'Logistics & Industrial Workforce Skills',r:[
+['Warehouse Operations',''],
+['Industrial Logistics',''],
+['Material Handling',''],
+['Inventory Management',''],
+['Supervisory Skills',''],
+['Workforce Coordination',''],
+['Shift Management','']
+]},
 /* ----- Non-Technical ----- */
 {c:'nt',i:'people',n:'Workforce Outsourcing & Managed Staffing',r:[
 ['Managed Services Program (MSP) Delivery Manager','Vendor-neutral management, VMS administration, supplier performance scorecards, contingent workforce optimization'],
@@ -1932,7 +1986,7 @@ var DEPTS=[
 ['Payroll Operations Manager','End-to-end payroll governance, SLA accountability, banking integration for disbursements, SOX compliance management']]},
 {c:'nt',i:'crown',n:'Executive Search & Leadership Hiring',r:[
 ['Executive Search Partner (C-Suite & Board)','Board-level advisory, CEO/CTO/COO search execution, confidential headhunting, leadership assessment methodologies'],
-['Executive Talent Mapping & Research Specialist','Deep org-chart reverse-engineering, competitive intelligence, executive talent ecosystem tracking, Boolean/X-ray search'],
+['Executive Talent Mapping & Research Specialist','Deep org-chart reverse engineering, competitive intelligence, executive talent ecosystem tracking, Boolean/X-ray search'],
 ['Leadership Assessment & Profiling Consultant','Psychometric testing (Hogan, SHL), behavioral event interviewing, leadership competency framework benchmarking'],
 ['Executive Compensation & Offer Negotiator','Long-term incentive plans (LTIP), equity and carried-interest design, executive sign-on bonuses, restrictive covenant negotiations'],
 ['Executive Candidate Experience Lead','White-glove concierge scheduling, executive travel logistics, confidential communications governance, high-touch follow-through'],
@@ -1940,7 +1994,7 @@ var DEPTS=[
 ['Executive Search Client Partner','Retained search sales, leadership consultation, board committee presentation, corporate client retainers'],
 ['Leadership Onboarding & Executive Coach','Executive first-90-days planning, leadership assimilation programs, stakeholder 360 review facilitate'],
 ['Confidential Reference Auditor','360-degree discrete referencing, deep reputation audits, credential and background forensic checks'],
-['Managing Director / Head of Executive Search','Retained search practice P&L management, key-client senior advisor, strategic mandate closure, firm brand positioning']]},
+['Managing Director / Head of Executive Search','Retained search practice for P&L management, key-client senior advisor, strategic mandate closure, firm brand positioning']]},
 {c:'nt',i:'trend',n:'Skill Development & Workforce Readiness',r:[
 ['Workforce Capability Architect','Industrial competency mapping, organizational skills gap analysis, readiness roadmap design, career pathway architecture'],
 ['Technical Curriculum & Instructional Designer','ADDIE model, technical course authoring (SCORM/xAPI), engineering simulator workflow creation, rapid microlearning authoring'],
@@ -1991,8 +2045,12 @@ if(dh.tech||dh.nt){
         +'<p class="cp-sub-t">Skills this role requires.</p>'
         +'<div class="skill-list"><div class="skill-card"><div class="sk-head g0">'
         +'<span>01</span><b>Skills</b></div><div class="chips">'
-        +splitSk(role[1]).map(function(sk){return '<span class="chip">'+esc(sk)+'</span>'}).join('')
-        +'</div></div></div>';
+        +(splitSk(role[1]).map(function(sk){return '<span class="chip">'+esc(sk)+'</span>'}).join('')||'<span class="chip">Skills coming soon</span>')
+        +'</div></div></div>'
+        /* Non-technical roles have a course: open the role in the Skill Up Non-IT Center (#role-nonit-<dept>--<role>). */
+        +(d.c==='nt'?'<div class="sk-cta"><a class="btn btn-primary" href="{% url 'skill_up' %}?section=role-nonit-'
+          +[d.n,role[0]].map(function(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}).join('--')
+          +'">Start Learning &rarr;</a></div>':'');
       window.scrollTo(0,0);return;
     }
 
@@ -2004,7 +2062,7 @@ if(dh.tech||dh.nt){
         +' data-idx="'+d.idx[j]+'" data-skills-hash="#'+d.key+'-'+(j+1)+'">'
         +'<div class="rc-img g'+(j%6)+'">'+svg(d.i)+'</div>'
         +'<div class="rc-body"><b>'+esc(x[0])+'</b>'
-        +'<span>'+splitSk(x[1]).length+' skills</span>'
+        +'<span>'+(splitSk(x[1]).length?splitSk(x[1]).length+' skills':'Skills coming soon')+'</span>'
         +'<em>View options &rarr;</em></div></button>');
     });
     window.scrollTo(0,0);
@@ -2101,7 +2159,8 @@ var itSkills=null,itRole=null;
       + '<button type="button" class="cp-back" data-back="deptRolesView">&larr; <span id="skillsBack"></span></button>'
       + '<h3 class="cp-ph" id="skillTitle"></h3>'
       + '<p class="cp-sub-t">Skills this role requires.</p>'
-      + '<div class="skill-list" id="skillList"></div></div>';
+      + '<div class="skill-list" id="skillList"></div>'
+      + '<div class="sk-cta"><a class="btn btn-primary" id="skillLearn" href="#">Start Learning &rarr;</a></div></div>';
     panel.innerHTML = html;
   }
 
@@ -2144,6 +2203,8 @@ var itSkills=null,itRole=null;
   itSkills = function (i) {
       var role = curDept[2][i];
       document.getElementById('skillTitle').textContent = role[0];
+      // Opens this role in the Skill Up Tech Center (same id scheme: #role-tech-<dept>--<role>).
+      document.getElementById('skillLearn').href = panel.dataset.learn + '?section=role-tech-' + slug(curDept[0]) + '--' + slug(role[0]);
       document.getElementById('skillsBack').textContent = curDept[0];
       // Each line reads "Category: skill, skill, ..." - the label heads the card and the
       // skills become chips. A line without a colon becomes a card with no label.

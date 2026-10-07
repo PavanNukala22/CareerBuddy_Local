@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accessibility Standards — Design Systems Designer Learning Module</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#d9730d 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans',system-ui,sans-serif;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'Noto Sans',system-ui,sans-serif;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans',system-ui,sans-serif;font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'Noto Sans',system-ui,sans-serif;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'Noto Sans',system-ui,sans-serif;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'Noto Sans',system-ui,sans-serif;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'Noto Sans',system-ui,sans-serif;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'Noto Sans',system-ui,sans-serif;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'Noto Sans',system-ui,sans-serif;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',system-ui,sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',system-ui,sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'Noto Sans',system-ui,sans-serif;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+
+/* ============= Module additions (same visual language) ============= */
+.table-wrap{overflow-x:auto;margin:16px 0;-webkit-overflow-scrolling:touch}
+.table-wrap table{margin:0;min-width:560px}
+.formula{display:inline-block;font-size:12.5px;background:var(--bg-code);border:1px solid var(--line);padding:2px 8px;border-radius:4px;color:#14213D;font-weight:500}
+.saq-toggle{margin-top:10px}
+.mcq-opt:focus-visible,.btn:focus-visible,.tab:focus-visible,.assess-start-btn:focus-visible,.saq textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.example{border:1px solid var(--line);border-left:4px solid var(--orange);border-radius:var(--radius);padding:14px 18px;margin:16px 0;background:#fffdf9}
+.example-title{font-weight:700;font-size:13px;color:#a85a08;margin-bottom:6px;letter-spacing:.02em}
+.example p,.example ul{margin:6px 0;font-size:14.5px}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.expert{background:#14213D;color:#fff}
+.term{display:grid;grid-template-columns:190px 1fr;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.term:last-child{border-bottom:none}
+details{border:1px solid var(--line);border-radius:var(--radius);margin:10px 0;background:#fff}
+summary{cursor:pointer;padding:11px 16px;font-weight:600;font-size:15px}details[open] summary{border-bottom:1px solid var(--line)}details>div{padding:10px 16px 12px;font-size:14.5px;line-height:1.6;color:#3a3833}
+.term b{color:#14213D}
+.terms{border:1px solid var(--line);border-radius:var(--radius);padding:4px 16px;margin:16px 0;background:#fff}
+@media (max-width:720px){
+  .header-top{padding:12px 16px;flex-wrap:wrap}
+  .brand{font-size:14px;line-height:1.35}
+  .brand-sub{display:block;margin-left:0}
+  .panel-title{font-size:30px}
+  .section h2{font-size:22px}
+  .assess-modal-box{padding:0 18px 40px}
+  .term{grid-template-columns:1fr;gap:2px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+<style>
+/* Noto Sans everywhere */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,td,th,div,section,header,nav,aside,main,label,button,input,textarea,small,strong,b,em,i,code,pre,svg text{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif !important}
+</style>
+<style id="cb-assess-intro-css">
+.cb-assess-intro{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg,12px);padding:28px 30px;box-shadow:var(--shadow-sm,0 1px 3px rgba(0,0,0,.06));margin-top:18px}
+.cb-assess-intro h3{margin:0 0 8px;font-size:20px;font-weight:600}
+.cb-assess-intro p{margin:6px 0;color:var(--ink-soft);font-size:14px}
+.cb-assess-intro ul{margin:12px 0 18px 18px;color:var(--ink-soft);font-size:13.5px;line-height:1.8}
+.cb-start{border:0;background:var(--accent,#14213d);color:#fff;border-radius:9px;padding:12px 20px;font:700 14px 'Noto Sans',system-ui,sans-serif;cursor:pointer}
+.cb-start:hover{opacity:.9}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-top">
+    <div class="brand"><div class="brand-mark">A11</div><span>Design / UX/UI | Design Systems Designer<span class="brand-sub"> · Accessibility Standards (a11y)</span></span></div>
+    <div class="header-actions">
+      <span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 8</span></span>
+      <button class="btn" onclick="resetProgress()" title="Reset to first tab"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9"/><path d="M2 4v3.5h3.5"/></svg> Reset</button>
+    </div>
+  </div>
+  <nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Foundations</button><button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> Contrast & Colour</button><button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> Focus & Keyboard</button><button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> Screen Reader Semantics</button><button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> Targets & Input</button><button class="tab" data-tab="t6" role="tab"><span class="tab-num">06</span> Interview Preparation</button><button class="tab" data-tab="t7" role="tab"><span class="tab-num">07</span> Practice</button><button class="tab" data-tab="t8" role="tab"><span class="tab-num">08</span> Assessment</button></nav>
+</header>
+<div class="layout">
+  <aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside>
+  <main class="main">
+    <section class="panel active" id="t1" data-toc='[["s1-1", "What is Accessibility?"], ["s1-2", "POUR Principles"], ["s1-3", "WCAG Structure & Levels"], ["s1-4", "Key Terms"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag fresher">→ Fresher-friendly</span></div><div class="panel-eyebrow">Module 01 · Foundations</div><h1 class="panel-title">What is Accessibility (a11y)?</h1><p class="panel-subtitle">Start from zero: what accessibility means, who it serves, the POUR principles and how WCAG 2.1/2.2 is structured.</p></div>
+      <div class="section" id="s1-1"><h2><span class="sec-emoji">🧭</span> What is Accessibility?</h2><p><strong>Accessibility (a11y)</strong> means people with disabilities can perceive, understand, navigate and interact with products. For a design system, accessibility is built into every token and component so every product team inherits it by default.</p><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#14213D">👁️</div><div class="card-title">Visual</div><div class="card-desc">Blindness, low vision, colour blindness.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">👂</div><div class="card-title">Auditory</div><div class="card-desc">Deaf and hard of hearing.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🖐️</div><div class="card-title">Motor</div><div class="card-desc">Limited dexterity, tremors, one-handed use.</div></div><div class="card"><div class="card-icon" style="background:var(--pink-soft);color:#8c1a63">🧠</div><div class="card-title">Cognitive</div><div class="card-desc">Memory, attention, learning differences.</div></div></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Disabilities can be <strong>permanent</strong> (one arm), <strong>temporary</strong> (broken wrist) or <strong>situational</strong> (holding a baby, bright sunlight). Accessible design helps everyone.</div></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">🏛️</span> POUR Principles</h2><div class="table-wrap"><table><tr><th>Principle</th><th>Meaning</th><th>Example</th></tr><tr><td><strong>Perceivable</strong></td><td>Information can be seen/heard</td><td>Alt text, captions, contrast</td></tr><tr><td><strong>Operable</strong></td><td>Interface can be used</td><td>Keyboard access, enough time, target size</td></tr><tr><td><strong>Understandable</strong></td><td>Content and behaviour are clear</td><td>Labels, consistent navigation, error help</td></tr><tr><td><strong>Robust</strong></td><td>Works with assistive technologies</td><td>Valid semantics, correct ARIA</td></tr></table></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">📚</span> WCAG Structure & Levels</h2><div class="table-wrap"><table><tr><th>Level</th><th>Meaning</th><th>Typical target</th></tr><tr><td><strong>A</strong></td><td>Minimum — essential barriers removed</td><td>Must</td></tr><tr><td><strong>AA</strong></td><td>Standard most laws and policies require</td><td>Design system default</td></tr><tr><td><strong>AAA</strong></td><td>Enhanced — not always achievable for all content</td><td>Specific needs</td></tr></table></div><div class="table-wrap"><table><tr><th>Version</th><th>Notes</th></tr><tr><td>WCAG 2.1 (2018)</td><td>Added mobile, low vision and cognitive criteria (reflow, non-text contrast, target size AAA)</td></tr><tr><td>WCAG 2.2 (2023)</td><td>Adds focus not obscured, focus appearance (AAA), dragging movements, target size minimum (AA), consistent help, redundant entry, accessible authentication; removes 4.1.1 Parsing</td></tr></table></div></div><div class="section" id="s1-4"><h2><span class="sec-emoji">📖</span> Key Terms</h2><div class="terms"><div class="term"><b>Assistive technology (AT)</b><span>Screen readers (NVDA, JAWS, VoiceOver, TalkBack), switch access, magnifiers, voice control.</span></div><div class="term"><b>Accessible name</b><span>What AT announces for an element ("Search, button").</span></div><div class="term"><b>Role</b><span>What an element is (button, link, checkbox).</span></div><div class="term"><b>State</b><span>Current condition (checked, expanded, disabled).</span></div><div class="term"><b>Focus</b><span>Which element receives keyboard input.</span></div><div class="term"><b>Success criterion (SC)</b><span>A testable WCAG requirement, e.g. SC 1.4.3 Contrast (Minimum).</span></div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> What does the "O" in POUR stand for?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Optional</li><li class="mcq-opt"><span class="opt-letter">B</span> Operable</li><li class="mcq-opt"><span class="opt-letter">C</span> Organised</li><li class="mcq-opt"><span class="opt-letter">D</span> Open</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — Operable."></div></div></div>
+    </section>
+    <section class="panel" id="t2" data-toc='[["s2-1", "Contrast Requirements"], ["s2-2", "Testing Contrast"], ["s2-3", "Beyond Colour"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">→ Intermediate</span></div><div class="panel-eyebrow">Module 02 · Contrast</div><h1 class="panel-title">Colour & Contrast</h1><p class="panel-subtitle">Meet contrast requirements for text, components and graphics, and never rely on colour alone.</p></div>
+      <div class="section" id="s2-1"><h2><span class="sec-emoji">🎨</span> Contrast Requirements</h2><div class="table-wrap"><table><tr><th>Success criterion</th><th>Level</th><th>Requirement</th></tr><tr><td>1.4.3 Contrast (Minimum)</td><td>AA</td><td>Text 4.5:1; large text (≥ 24 px regular or ≥ 18.66 px bold) 3:1</td></tr><tr><td>1.4.6 Contrast (Enhanced)</td><td>AAA</td><td>Text 7:1; large text 4.5:1</td></tr><tr><td>1.4.11 Non-text Contrast</td><td>AA</td><td>UI components (borders, focus indicators, icons) and meaningful graphics 3:1</td></tr><tr><td>1.4.1 Use of Colour</td><td>A</td><td>Colour must not be the only way to convey information</td></tr></table></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Disabled components are exempt from contrast rules — but they should still be clearly identifiable, and you should consider explaining why something is disabled.</div></div></div><div class="section" id="s2-2"><h2><span class="sec-emoji">🧪</span> Testing Contrast</h2><div class="table-wrap"><table><tr><th>Pair</th><th>Ratio</th><th>Result</th></tr><tr><td>#37352F on #FFFFFF</td><td>~12.6:1</td><td>✅ AAA text</td></tr><tr><td>#787774 on #FFFFFF</td><td>~4.5:1</td><td>✅ AA text (borderline)</td></tr><tr><td>#A3A3A3 on #FFFFFF</td><td>~2.5:1</td><td>❌ fails text and UI</td></tr><tr><td>#14213D button on #FFFFFF page</td><td>~16:1</td><td>✅ component boundary</td></tr></table></div><ul><li>Tools: Stark, Contrast plugin (Figma), WebAIM Contrast Checker, axe DevTools.</li><li>Bake checks into tokens: every text/background semantic pair documented with its ratio.</li><li>Check every mode (light, dark, high contrast) and brand theme.</li></ul></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🚦</span> Beyond Colour</h2><div class="example"><div class="example-title">EXAMPLE · Form error</div><p>❌ Red border only. ✅ Red border <strong>+</strong> error icon <strong>+</strong> text "Enter a valid PIN code (6 digits)" linked to the input with aria-describedby.</p></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Minimum contrast for a text-input border against the page (AA)?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> 1.5:1</li><li class="mcq-opt"><span class="opt-letter">B</span> 3:1</li><li class="mcq-opt"><span class="opt-letter">C</span> 4.5:1</li><li class="mcq-opt"><span class="opt-letter">D</span> 7:1</li></ul><div class="mcq-feedback" data-ok="Correct — non-text contrast 3:1." data-bad="Not quite — UI component boundaries need 3:1."></div></div></div>
+    </section>
+    <section class="panel" id="t3" data-toc='[["s3-1", "Keyboard Criteria"], ["s3-2", "Designing Focus Indicators"], ["s3-3", "Keyboard Patterns"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span></div><div class="panel-eyebrow">Module 03 · Focus States</div><h1 class="panel-title">Focus States & Keyboard Access</h1><p class="panel-subtitle">Make every interaction reachable by keyboard with clear, unobscured focus indicators.</p></div>
+      <div class="section" id="s3-1"><h2><span class="sec-emoji">⌨️</span> Keyboard Criteria</h2><div class="table-wrap"><table><tr><th>Success criterion</th><th>Level</th><th>Requirement</th></tr><tr><td>2.1.1 Keyboard</td><td>A</td><td>All functionality available via keyboard</td></tr><tr><td>2.1.2 No Keyboard Trap</td><td>A</td><td>Focus can always move away</td></tr><tr><td>2.4.3 Focus Order</td><td>A</td><td>Order preserves meaning and operability</td></tr><tr><td>2.4.7 Focus Visible</td><td>AA</td><td>Keyboard focus indicator is visible</td></tr><tr><td>2.4.11 Focus Not Obscured (Minimum)</td><td>AA (2.2)</td><td>Focused element not entirely hidden by sticky headers, banners</td></tr><tr><td>2.4.13 Focus Appearance</td><td>AAA (2.2)</td><td>Indicator at least a 2 px perimeter with 3:1 contrast change</td></tr><tr><td>2.4.1 Bypass Blocks</td><td>A</td><td>Skip link to main content</td></tr></table></div></div><div class="section" id="s3-2"><h2><span class="sec-emoji">🎯</span> Designing Focus Indicators</h2><ul><li>Use a <strong>focus token</strong>: e.g. 2 px outline + 2 px offset in <span class="formula">color.focus.ring</span>, 3:1 against adjacent colours.</li><li>Show focus on <strong>keyboard</strong> navigation (<span class="formula">:focus-visible</span>), not necessarily on mouse click.</li><li>Never remove outlines without a replacement.</li><li>Design focus for every component variant and on dark/coloured backgrounds (double ring: dark + light).</li></ul><pre><span class="pre-lang">css</span><code>.btn:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}</code></pre></div><div class="section" id="s3-3"><h2><span class="sec-emoji">🧭</span> Keyboard Patterns</h2><div class="table-wrap"><table><tr><th>Component</th><th>Keys</th></tr><tr><td>Button</td><td>Enter / Space activate</td></tr><tr><td>Link</td><td>Enter</td></tr><tr><td>Checkbox</td><td>Space toggles</td></tr><tr><td>Radio group</td><td>Arrow keys move selection; Tab enters/leaves group</td></tr><tr><td>Tabs</td><td>Arrow keys between tabs; Tab into panel</td></tr><tr><td>Menu / listbox</td><td>Arrows navigate; Enter selects; Esc closes</td></tr><tr><td>Modal dialog</td><td>Focus moves in, trapped inside, Esc closes, focus returns to trigger</td></tr></table></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> In a modal dialog, where should focus go when it closes?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Top of the page</li><li class="mcq-opt"><span class="opt-letter">B</span> Back to the element that opened it</li><li class="mcq-opt"><span class="opt-letter">C</span> Nowhere</li><li class="mcq-opt"><span class="opt-letter">D</span> The footer</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — return focus to the trigger."></div></div></div>
+    </section>
+    <section class="panel" id="t4" data-toc='[["s4-1", "Name, Role, Value (SC 4.1.2)"], ["s4-2", "Semantic Structure"], ["s4-3", "Images, Icons & Live Updates"], ["s4-4", "Documenting Semantics in Specs"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">→ Advanced</span></div><div class="panel-eyebrow">Module 04 · Semantics</div><h1 class="panel-title">Screen Reader Semantics</h1><p class="panel-subtitle">Give every element the right role, name, state and structure so assistive technologies understand the UI.</p></div>
+      <div class="section" id="s4-1"><h2><span class="sec-emoji">🗣️</span> Name, Role, Value (SC 4.1.2)</h2><div class="table-wrap"><table><tr><th>Element</th><th>Role</th><th>Name</th><th>State/value</th></tr><tr><td>Search button</td><td>button</td><td>"Search"</td><td>—</td></tr><tr><td>Mute toggle</td><td>switch / button</td><td>"Mute notifications"</td><td>aria-checked / aria-pressed</td></tr><tr><td>Accordion header</td><td>button</td><td>"Shipping details"</td><td>aria-expanded="true"</td></tr><tr><td>Quantity field</td><td>spinbutton / textbox</td><td>"Quantity"</td><td>value 2</td></tr></table></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">First rule of ARIA: <strong>use native HTML</strong> elements (button, a, input, select) whenever possible. ARIA only adds meaning; it doesn't add behaviour.</div></div></div><div class="section" id="s4-2"><h2><span class="sec-emoji">🧱</span> Semantic Structure</h2><ul><li><strong>Headings</strong> in logical order (h1 → h2 → h3); screen reader users navigate by headings.</li><li><strong>Landmarks</strong>: header, nav, main, aside, footer.</li><li><strong>Lists</strong> for groups of items (users hear "list, 5 items").</li><li><strong>Tables</strong> with header cells for data.</li><li><strong>Labels</strong>: every input has a visible label programmatically linked.</li></ul><pre><span class="pre-lang">html</span><code>&lt;label for=&quot;pin&quot;&gt;PIN code&lt;/label&gt;
+&lt;input id=&quot;pin&quot; inputmode=&quot;numeric&quot; aria-describedby=&quot;pin-err&quot; aria-invalid=&quot;true&quot;&gt;
+&lt;p id=&quot;pin-err&quot;&gt;Enter a valid 6-digit PIN code&lt;/p&gt;</code></pre></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🖼️</span> Images, Icons & Live Updates</h2><div class="table-wrap"><table><tr><th>Content</th><th>Guidance</th></tr><tr><td>Informative image</td><td>Meaningful alt text describing purpose</td></tr><tr><td>Decorative image</td><td>Empty alt (alt="") so it's skipped</td></tr><tr><td>Icon-only button</td><td>aria-label ("Close") — icon itself hidden</td></tr><tr><td>Toasts &amp; async results</td><td>Live region (role="status" or aria-live="polite")</td></tr><tr><td>Errors on submit</td><td>Move focus to error summary or announce with role="alert"</td></tr></table></div></div><div class="section" id="s4-4"><h2><span class="sec-emoji">📝</span> Documenting Semantics in Specs</h2><p>Design-system docs should include an <strong>accessibility spec</strong> per component: role, accessible name source, states, keyboard interaction, focus management and announcements.</p><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> A close button shows only an "×" icon. What does it need?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Nothing</li><li class="mcq-opt"><span class="opt-letter">B</span> An accessible name like aria-label="Close"</li><li class="mcq-opt"><span class="opt-letter">C</span> A red colour</li><li class="mcq-opt"><span class="opt-letter">D</span> A tooltip only</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — it needs an accessible name."></div></div></div>
+    </section>
+    <section class="panel" id="t5" data-toc='[["s5-1", "Target Size"], ["s5-2", "Other WCAG 2.2 Criteria"], ["s5-3", "Reflow, Text & Motion"], ["s5-4", "Testing Accessibility"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag adv">Advanced</span></div><div class="panel-eyebrow">Module 05 · Tap Targets</div><h1 class="panel-title">Tap Targets, Input & WCAG 2.2 Additions</h1><p class="panel-subtitle">Make controls easy to hit and input forgiving for motor and cognitive needs.</p></div>
+      <div class="section" id="s5-1"><h2><span class="sec-emoji">👆</span> Target Size</h2><div class="table-wrap"><table><tr><th>Criterion</th><th>Level</th><th>Requirement</th></tr><tr><td>2.5.8 Target Size (Minimum)</td><td>AA (2.2)</td><td>At least 24 × 24 CSS px, or enough spacing so a 24 px circle doesn't overlap another target</td></tr><tr><td>2.5.5 Target Size (Enhanced)</td><td>AAA</td><td>At least 44 × 44 CSS px</td></tr><tr><td>Platform guidance</td><td>—</td><td>iOS 44 × 44 pt, Material 48 × 48 dp</td></tr></table></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Design-system default: visible element can be smaller (e.g. 20 px icon), but the <strong>hit area</strong> is 44–48 px.</div></div></div><div class="section" id="s5-2"><h2><span class="sec-emoji">🧩</span> Other WCAG 2.2 Criteria</h2><div class="table-wrap"><table><tr><th>Criterion</th><th>Level</th><th>Design implication</th></tr><tr><td>2.5.7 Dragging Movements</td><td>AA</td><td>Provide single-pointer alternative to drag (e.g. move buttons for reorder)</td></tr><tr><td>3.2.6 Consistent Help</td><td>A</td><td>Help options in the same place across pages</td></tr><tr><td>3.3.7 Redundant Entry</td><td>A</td><td>Don't make users re-enter info already given (auto-fill, "same as billing")</td></tr><tr><td>3.3.8 Accessible Authentication (Minimum)</td><td>AA</td><td>No cognitive tests like memorising passwords without alternatives — allow paste, password managers, OTP, passkeys</td></tr></table></div></div><div class="section" id="s5-3"><h2><span class="sec-emoji">🧠</span> Reflow, Text & Motion</h2><div class="table-wrap"><table><tr><th>Criterion</th><th>Requirement</th></tr><tr><td>1.4.4 Resize Text (AA)</td><td>Text resizes to 200% without loss of content</td></tr><tr><td>1.4.10 Reflow (AA)</td><td>No horizontal scroll at 320 CSS px width (except data tables, maps)</td></tr><tr><td>1.4.12 Text Spacing (AA)</td><td>Layout survives increased line/letter/word spacing</td></tr><tr><td>2.3.1 Three Flashes (A)</td><td>No flashing more than 3 times per second</td></tr><tr><td>2.2.2 Pause, Stop, Hide (A)</td><td>Moving content over 5 s can be paused</td></tr></table></div></div><div class="section" id="s5-4"><h2><span class="sec-emoji">🧪</span> Testing Accessibility</h2><ul><li>Automated: axe, Lighthouse, WAVE — catch ~30–40% of issues.</li><li>Manual: keyboard-only walkthrough, zoom to 200%/400%, reduced motion.</li><li>Screen readers: NVDA/JAWS (Windows), VoiceOver (macOS/iOS), TalkBack (Android).</li><li>Usability testing with people with disabilities.</li></ul><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Minimum target size in WCAG 2.2 AA?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> 16 × 16 px</li><li class="mcq-opt"><span class="opt-letter">B</span> 24 × 24 CSS px (or sufficient spacing)</li><li class="mcq-opt"><span class="opt-letter">C</span> 44 × 44 px required</li><li class="mcq-opt"><span class="opt-letter">D</span> 100 × 100 px</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — 2.5.8 sets 24 × 24 CSS px."></div></div></div>
+    </section>
+    <section class="panel" id="t6" data-toc='[["s6-1", "WCAG Fundamentals"], ["s6-2", "Contrast & Focus"], ["s6-3", "Semantics & Input"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 06 · Interview Preparation</div><h1 class="panel-title">Interview Preparation</h1><p class="panel-subtitle">Click a question to reveal a model answer.</p></div>
+      <div class="section" id="s6-1"><h2><span class="sec-emoji">🏛️</span> WCAG Fundamentals</h2><details><summary>What are the POUR principles?</summary><div>Perceivable, Operable, Understandable and Robust — the four principles WCAG is organised around.</div></details><details><summary>What is new in WCAG 2.2?</summary><div>Focus not obscured (AA) and focus appearance (AAA), dragging movements, target size minimum (AA), consistent help, redundant entry and accessible authentication; 4.1.1 Parsing was removed.</div></details><details><summary>Which conformance level should a design system target?</summary><div>AA as the baseline for all components, with AAA where practical (e.g. 7:1 text options, 44 px targets).</div></details><details><summary>Why build accessibility into the design system?</summary><div>Every product inherits accessible tokens and components by default, reducing repeated work and risk.</div></details></div><div class="section" id="s6-2"><h2><span class="sec-emoji">🎨</span> Contrast & Focus</h2><details><summary>What are the contrast requirements?</summary><div>Text 4.5:1 (large text 3:1) at AA, 7:1 at AAA; UI components, focus indicators and meaningful graphics 3:1.</div></details><details><summary>How do you design focus states for a system?</summary><div>A focus token (e.g. 2 px ring with offset, 3:1 contrast), shown with :focus-visible, applied to every interactive variant and tested on all backgrounds and themes.</div></details><details><summary>What is focus not obscured?</summary><div>WCAG 2.2 SC 2.4.11: a focused element must not be completely hidden by sticky headers, cookie banners or other overlays.</div></details><details><summary>How should a modal handle focus?</summary><div>Move focus into the dialog, keep it inside while open, close with Esc, and return focus to the element that opened it.</div></details><details><summary>Is colour alone acceptable to show errors?</summary><div>No — add icons, text and programmatic association so the error is perceivable without colour.</div></details></div><div class="section" id="s6-3"><h2><span class="sec-emoji">🗣️</span> Semantics & Input</h2><details><summary>What is the first rule of ARIA?</summary><div>Use native HTML elements whenever possible; add ARIA only when native semantics are insufficient.</div></details><details><summary>How do you document component accessibility?</summary><div>Role, accessible name source, states, keyboard interactions, focus management, announcements, contrast and target size per component.</div></details><details><summary>What are WCAG target size rules?</summary><div>2.5.8 AA: at least 24 × 24 CSS px or sufficient spacing; 2.5.5 AAA: 44 × 44 CSS px. Systems usually adopt 44–48 px hit areas.</div></details><details><summary>How do you test accessibility?</summary><div>Automated scans plus manual keyboard, zoom and screen-reader testing, and research with disabled users.</div></details></div>
+    </section>
+    <section class="panel" id="t7" data-toc='[["s7-1", "Scenario: GovPay Design System Audit"], ["s7-2", "Task 1 \u00b7 Input"], ["s7-3", "Task 2 \u00b7 Icon Chip"], ["s7-4", "Task 3 \u00b7 Drag List"], ["s7-5", "Task 4 \u00b7 Sticky Header"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag expert">→ Expert</span></div><div class="panel-eyebrow">Module 07 · Practice</div><h1 class="panel-title">Practice: Audit a Component Set</h1><p class="panel-subtitle">Audit and fix real-feeling components against WCAG 2.2 AA.</p></div>
+      <div class="quiz-progress"><span class="quiz-score">0 / 0 correct</span><div class="quiz-bar-track"><div class="quiz-bar-fill"></div></div><button class="btn quiz-reset-btn">↻ Reset answers</button></div><div class="section" id="s7-1"><h2><span class="sec-emoji">🧾</span> Scenario: GovPay Design System Audit</h2><p><strong>GovPay</strong>, a public payments platform, must meet WCAG 2.2 AA. You audit four components: a grey placeholder-only input, an icon-only "×" chip, a drag-to-reorder list, and a sticky header that covers focused fields when tabbing.</p></div><div class="section" id="s7-2"><h2><span class="sec-emoji">1️⃣</span> Task 1 · Input</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> List the issues with a placeholder-only input (#A3A3A3 text) and fixes.</div><textarea placeholder="Issues… Fixes…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Issues: no persistent label (3.3.2, 1.3.1), placeholder contrast ~2.5:1 fails 1.4.3, border may fail 1.4.11, errors shown by colour only. Fixes: visible label linked with for/id, placeholder only as a hint with ≥4.5:1 text, border ≥3:1, error text + icon via aria-describedby and aria-invalid.</div></div></div><div class="section" id="s7-3"><h2><span class="sec-emoji">2️⃣</span> Task 2 · Icon Chip</h2><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q.</span> The chip's "×" is 16 px with no spacing. What fails?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> Nothing</li><li class="mcq-opt"><span class="opt-letter">B</span> Target size (2.5.8) and accessible name (4.1.2)</li><li class="mcq-opt"><span class="opt-letter">C</span> Only colour</li><li class="mcq-opt"><span class="opt-letter">D</span> Only motion</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — it fails target size and naming."></div></div><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Specify the fixed remove button.</div><textarea placeholder="Size… Name… Focus…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Hit area at least 24 × 24 (system default 44 px) with the 16 px icon centred; aria-label="Remove filter: Paid"; visible focus ring from the focus token; keyboard: Enter/Space removes and focus moves to the next chip or the field.</div></div></div><div class="section" id="s7-4"><h2><span class="sec-emoji">3️⃣</span> Task 3 · Drag List</h2><div class="mcq" data-answer="0"><div class="mcq-q"><span class="mcq-qnum">Q.</span> Which WCAG 2.2 criterion applies to drag-to-reorder?</div><ul class="mcq-opts"><li class="mcq-opt"><span class="opt-letter">A</span> 2.5.7 Dragging Movements</li><li class="mcq-opt"><span class="opt-letter">B</span> 1.4.3 Contrast</li><li class="mcq-opt"><span class="opt-letter">C</span> 2.4.1 Bypass Blocks</li><li class="mcq-opt"><span class="opt-letter">D</span> 3.1.1 Language</li></ul><div class="mcq-feedback" data-ok="Correct." data-bad="Not quite — 2.5.7 requires a single-pointer alternative."></div></div><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> Design the alternative.</div><textarea placeholder="…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Add "Move up / Move down" buttons (or a "Move to position" menu) on each row, operable by single tap and keyboard, with a live region announcing "Item moved to position 3 of 5".</div></div></div><div class="section" id="s7-5"><h2><span class="sec-emoji">4️⃣</span> Task 4 · Sticky Header</h2><div class="saq"><div class="saq-q"><span class="saq-qnum">✍️</span> How do you fix focused fields hidden under the sticky header?</div><textarea placeholder="…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model"><strong>Model answer:</strong> Meets SC 2.4.11 by adding scroll-padding-top equal to the header height so focused elements scroll into view below it, reducing header height on scroll, and testing by tabbing through long forms at 200% zoom.</div></div></div>
+    </section>
+    <section class="panel" id="t8" data-toc='[["sA-1","Take the Assessment"]]'>
+      <div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag expert">→ Expert</span></div><p class="panel-eyebrow">Module 08</p><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">Test yourself on Accessibility Standards (a11y) — from basic to expert.</p></div>
+      <div class="section" id="sA-1"><div class="cb-assess-intro"><h3>Test what you've learned</h3><p>Full-screen, timed assessment on Accessibility Standards (a11y).</p><ul><li><strong>50 multiple-choice questions</strong> — concepts and scenarios, basic to expert</li><li><strong>60-minute</strong> timer with warning state and automatic submission</li><li>Question palette, Previous/Next, Mark for Review</li><li>Full-screen and tab-switch warnings — <strong>3 warnings auto-submit</strong></li><li>Copy, cut, right-click and screenshot/print shortcuts are blocked</li><li>Questions and options are shuffled on every attempt</li></ul><button class="cb-start" id="cbAssessStart">▶ Start Assessment</button></div></div>
+</section>
+  </main>
+</div>
+<script>
+
+/* Tabs, dynamic TOC, scroll-spy, progress pill */
+(function(){
+  const tabs=document.querySelectorAll('.tab'),panels=document.querySelectorAll('.panel'),tocEl=document.getElementById('toc'),total=tabs.length,pt=document.getElementById('progressText');
+  function buildToc(panel){const data=JSON.parse(panel.getAttribute('data-toc')||'[]');tocEl.innerHTML=data.map(([id,l])=>`<li><a href="#${id}" data-target="${id}">${l}</a></li>`).join('');const f=tocEl.querySelector('a');if(f)f.classList.add('active');}
+  function activate(i){tabs.forEach((t,k)=>{t.classList.toggle('active',k===i);t.setAttribute('aria-selected',k===i)});panels.forEach((p,k)=>p.classList.toggle('active',k===i));buildToc(panels[i]);pt.textContent=`Tab ${i+1} of ${total}`;window.scrollTo({top:0,behavior:'instant'});}
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{const a=e.target.closest('.toc-list a');if(!a)return;e.preventDefault();const el=document.getElementById(a.dataset.target);if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});});
+  let tk=false;function spy(){const ap=document.querySelector('.panel.active');if(!ap)return;let cur=null;ap.querySelectorAll('.section').forEach(s=>{if(s.getBoundingClientRect().top-180<0)cur=s.id});if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));tk=false;}
+  window.addEventListener('scroll',()=>{if(!tk){requestAnimationFrame(spy);tk=true}},{passive:true});
+  window.resetProgress=()=>activate(0);activate(0);
+})();
+/* Inline MCQs, per-panel score, model answers */
+(function(){
+  function update(panel){const bar=panel.querySelector('.quiz-progress');if(!bar||bar.id)return;const all=panel.querySelectorAll('.mcq').length,done=panel.querySelectorAll('.mcq.answered').length,okc=panel.querySelectorAll('.mcq.answered[data-correct="1"]').length;bar.querySelector('.quiz-score').textContent=`${okc} / ${all} correct`;bar.querySelector('.quiz-bar-fill').style.width=(all?done/all*100:0)+'%';}
+  document.querySelectorAll('.mcq').forEach(m=>{const ans=+m.dataset.answer,opts=m.querySelectorAll('.mcq-opt'),fb=m.querySelector('.mcq-feedback');
+    opts.forEach((o,i)=>{o.tabIndex=0;o.setAttribute('role','button');const go=()=>{if(m.classList.contains('answered'))return;m.classList.add('answered');const r=i===ans;m.dataset.correct=r?'1':'0';opts[ans].classList.add('correct');if(!r)o.classList.add('incorrect');fb.className='mcq-feedback '+(r?'ok':'bad');fb.textContent=r?fb.dataset.ok:fb.dataset.bad;update(m.closest('.panel'));};
+      o.addEventListener('click',go);o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});});});
+  document.querySelectorAll('.panel').forEach(p=>{update(p);const rb=p.querySelector('.quiz-reset-btn');if(rb)rb.addEventListener('click',()=>{p.querySelectorAll('.mcq').forEach(m=>{m.classList.remove('answered');delete m.dataset.correct;m.querySelectorAll('.mcq-opt').forEach(o=>o.classList.remove('correct','incorrect'));const fb=m.querySelector('.mcq-feedback');fb.className='mcq-feedback';fb.textContent='';});p.querySelectorAll('.saq textarea').forEach(t=>t.value='');p.querySelectorAll('.saq-model').forEach(x=>x.classList.remove('show'));p.querySelectorAll('.saq-toggle').forEach(b=>b.textContent='Show model answer');update(p);});});
+  document.querySelectorAll('.saq-toggle').forEach(b=>b.addEventListener('click',()=>{const s=b.nextElementSibling.classList.toggle('show');b.textContent=s?'Hide model answer':'Show model answer';}));
+})();
+
+/* Assessment — timed full-screen exam with rules & security */
+(function(){
+  const ROLE = "Design Systems Designer \u2014 Accessibility Standards (a11y)";
+  const QUESTION_BANK = [{"id": "dsd_accessibility_standards-01", "q": "What does POUR stand for?", "options": ["Public, Online, Usable, Responsive", "Perceivable, Operable, Understandable, Robust", "Precise, Open, Usable, Reliable", "Plan, Organise, Use, Review"], "answer": 1, "difficulty": "", "explanation": "WCAG is organised around these four principles."}, {"id": "dsd_accessibility_standards-02", "q": "Most design systems target which WCAG level?", "options": ["None", "AA", "AAA for everything", "A only"], "answer": 1, "difficulty": "", "explanation": "AA is the level most laws and policies reference."}, {"id": "dsd_accessibility_standards-03", "q": "WCAG 2.2 was published in\u2026", "options": ["2030", "2023", "2018", "2008"], "answer": 1, "difficulty": "", "explanation": "2.2 added nine new success criteria and removed 4.1.1 Parsing."}, {"id": "dsd_accessibility_standards-04", "q": "Which criterion was removed in WCAG 2.2?", "options": ["2.4.7 Focus Visible", "2.1.1 Keyboard", "4.1.1 Parsing", "1.4.3 Contrast"], "answer": 2, "difficulty": "", "explanation": "Parsing became obsolete with modern browsers."}, {"id": "dsd_accessibility_standards-05", "q": "Normal text contrast at AA must be at least\u2026", "options": ["2:1", "3:1", "4.5:1", "7:1"], "answer": 2, "difficulty": "", "explanation": "SC 1.4.3 Contrast (Minimum)."}, {"id": "dsd_accessibility_standards-06", "q": "Large text contrast at AA must be at least\u2026", "options": ["1.5:1", "3:1", "7:1", "4.5:1"], "answer": 1, "difficulty": "", "explanation": "Large text is \u2265 24px regular or \u2265 18.66px bold."}, {"id": "dsd_accessibility_standards-07", "q": "Normal text contrast at AAA must be at least\u2026", "options": ["4.5:1", "10:1", "7:1", "3:1"], "answer": 2, "difficulty": "", "explanation": "SC 1.4.6 Contrast (Enhanced)."}, {"id": "dsd_accessibility_standards-08", "q": "UI components and focus indicators need contrast of at least\u2026", "options": ["3:1", "7:1", "1.5:1", "4.5:1"], "answer": 0, "difficulty": "", "explanation": "SC 1.4.11 Non-text Contrast."}, {"id": "dsd_accessibility_standards-09", "q": "Showing an error only with a red border fails\u2026", "options": ["1.4.1 Use of Colour", "2.1.1 Keyboard", "3.1.1 Language of Page", "2.4.1 Bypass Blocks"], "answer": 0, "difficulty": "", "explanation": "Colour must not be the only means of conveying information."}, {"id": "dsd_accessibility_standards-10", "q": "Are disabled controls required to meet contrast?", "options": ["No, they are exempt, but should still be identifiable", "Yes, 4.5:1", "They must be invisible", "Yes, 7:1"], "answer": 0, "difficulty": "", "explanation": "Inactive components are exempt from 1.4.3 and 1.4.11."}, {"id": "dsd_accessibility_standards-11", "q": "SC 2.1.1 Keyboard requires\u2026", "options": ["All functionality to be operable via keyboard", "Only Tab key usage", "Keyboard shortcuts for everything", "No mouse support"], "answer": 0, "difficulty": "", "explanation": "Keyboard users must reach every function."}, {"id": "dsd_accessibility_standards-12", "q": "A keyboard trap is\u2026", "options": ["A focus ring", "A skip link", "A shortcut", "Focus that cannot move out of a component"], "answer": 3, "difficulty": "", "explanation": "SC 2.1.2 forbids keyboard traps."}, {"id": "dsd_accessibility_standards-13", "q": "SC 2.4.7 Focus Visible is level\u2026", "options": ["A", "AA", "AAA", "Not in WCAG"], "answer": 1, "difficulty": "", "explanation": "Keyboard focus must be visible."}, {"id": "dsd_accessibility_standards-14", "q": "SC 2.4.11 Focus Not Obscured (Minimum) means\u2026", "options": ["Focused elements must not be completely hidden by sticky content", "Focus must be blue", "Focus must animate", "Focus is optional"], "answer": 0, "difficulty": "", "explanation": "New in WCAG 2.2 at AA."}, {"id": "dsd_accessibility_standards-15", "q": "SC 2.4.13 Focus Appearance is level\u2026", "options": ["AA", "AAA", "Not in WCAG", "A"], "answer": 1, "difficulty": "", "explanation": "It sets size and contrast for focus indicators."}, {"id": "dsd_accessibility_standards-16", "q": ":focus-visible is used to\u2026", "options": ["Show focus styles for keyboard users without showing them on every mouse click", "Change fonts", "Animate pages", "Hide all focus"], "answer": 0, "difficulty": "", "explanation": "It applies when the browser determines focus should be visible."}, {"id": "dsd_accessibility_standards-17", "q": "A good focus token example is\u2026", "options": ["2px outline with 2px offset at 3:1 contrast", "Colour change only on hover", "No outline", "1px light grey dotted line on white"], "answer": 0, "difficulty": "", "explanation": "Clear, high-contrast rings work on all backgrounds."}, {"id": "dsd_accessibility_standards-18", "q": "Bypass blocks (2.4.1) is commonly met with\u2026", "options": ["A 'Skip to main content' link", "A carousel", "A modal", "A footer"], "answer": 0, "difficulty": "", "explanation": "Skip links let keyboard users jump past navigation."}, {"id": "dsd_accessibility_standards-19", "q": "In a radio group, arrow keys\u2026", "options": ["Close the page", "Submit the form", "Move selection between options", "Do nothing"], "answer": 2, "difficulty": "", "explanation": "Tab enters/leaves the group; arrows move within."}, {"id": "dsd_accessibility_standards-20", "q": "Which keys activate a button?", "options": ["Arrow keys", "Enter and Space", "Escape", "Tab only"], "answer": 1, "difficulty": "", "explanation": "Native buttons respond to Enter and Space."}, {"id": "dsd_accessibility_standards-21", "q": "When a modal opens, focus should\u2026", "options": ["Move into the dialog", "Disappear", "Go to the footer", "Stay on the page behind"], "answer": 0, "difficulty": "", "explanation": "Users must start inside the dialog."}, {"id": "dsd_accessibility_standards-22", "q": "When a modal closes, focus should\u2026", "options": ["Go to the browser bar", "Be lost", "Return to the element that opened it", "Go to the top of the page"], "answer": 2, "difficulty": "", "explanation": "Returning focus keeps context."}, {"id": "dsd_accessibility_standards-23", "q": "Esc in a modal dialog should\u2026", "options": ["Delete data", "Close the dialog", "Submit the form", "Open another modal"], "answer": 1, "difficulty": "", "explanation": "Standard dialog keyboard pattern."}, {"id": "dsd_accessibility_standards-24", "q": "The first rule of ARIA is\u2026", "options": ["Use ARIA on every element", "Never use labels", "Use native HTML elements when possible", "Use divs for buttons"], "answer": 2, "difficulty": "", "explanation": "Native elements bring semantics and behaviour."}, {"id": "dsd_accessibility_standards-25", "q": "SC 4.1.2 Name, Role, Value requires\u2026", "options": ["Components expose their name, role and state to assistive tech", "Brand colours", "Animations", "Pretty names"], "answer": 0, "difficulty": "", "explanation": "AT needs to know what an element is and its state."}, {"id": "dsd_accessibility_standards-26", "q": "aria-expanded communicates\u2026", "options": ["Page title", "Colour", "Whether a collapsible element is open", "Font size"], "answer": 2, "difficulty": "", "explanation": "Used for accordions, menus and disclosure buttons."}, {"id": "dsd_accessibility_standards-27", "q": "An indeterminate checkbox uses\u2026", "options": ["role=\"img\"", "aria-checked=\"mixed\"", "aria-hidden=\"true\"", "aria-busy=\"true\""], "answer": 1, "difficulty": "", "explanation": "Mixed indicates partial selection."}, {"id": "dsd_accessibility_standards-28", "q": "An icon-only close button needs\u2026", "options": ["A red colour", "An accessible name, e.g. aria-label=\"Close\"", "Nothing", "Only a tooltip"], "answer": 1, "difficulty": "", "explanation": "Without a name, screen readers announce just 'button'."}, {"id": "dsd_accessibility_standards-29", "q": "Decorative images should have\u2026", "options": ["Empty alt text (alt=\"\")", "Title only", "No img tag", "Long alt text"], "answer": 0, "difficulty": "", "explanation": "Empty alt tells AT to skip the image."}, {"id": "dsd_accessibility_standards-30", "q": "Toast notifications should be announced using\u2026", "options": ["A modal", "A live region (role=\"status\" or aria-live=\"polite\")", "Nothing", "A tooltip"], "answer": 1, "difficulty": "", "explanation": "Live regions announce dynamic updates."}, {"id": "dsd_accessibility_standards-31", "q": "Urgent errors can be announced with\u2026", "options": ["role=\"presentation\"", "aria-hidden", "role=\"img\"", "role=\"alert\""], "answer": 3, "difficulty": "", "explanation": "Alerts are assertive live regions."}, {"id": "dsd_accessibility_standards-32", "q": "Every form input needs\u2026", "options": ["A tooltip", "A programmatically associated label", "An icon", "Only placeholder text"], "answer": 1, "difficulty": "", "explanation": "Placeholders disappear and are not labels."}, {"id": "dsd_accessibility_standards-33", "q": "Error text is linked to its input with\u2026", "options": ["role=\"img\"", "aria-describedby", "tabindex", "aria-hidden"], "answer": 1, "difficulty": "", "explanation": "Screen readers read the description with the field."}, {"id": "dsd_accessibility_standards-34", "q": "Headings should be\u2026", "options": ["All h1", "Random", "In logical order (h1 \u2192 h2 \u2192 h3)", "Chosen by font size only"], "answer": 2, "difficulty": "", "explanation": "AT users navigate by headings."}, {"id": "dsd_accessibility_standards-35", "q": "Landmarks include\u2026", "options": ["div, span", "header, nav, main, aside, footer", "b, i", "img, video"], "answer": 1, "difficulty": "", "explanation": "Landmarks let AT users jump to regions."}, {"id": "dsd_accessibility_standards-36", "q": "WCAG 2.2 SC 2.5.8 Target Size (Minimum) requires\u2026", "options": ["100\u00d7100 px", "At least 24\u00d724 CSS px or sufficient spacing", "10\u00d710 px", "No requirement"], "answer": 1, "difficulty": "", "explanation": "New AA criterion in 2.2."}, {"id": "dsd_accessibility_standards-37", "q": "SC 2.5.5 Target Size (Enhanced, AAA) requires\u2026", "options": ["16\u00d716 px", "24\u00d724 px", "64\u00d764 px", "44\u00d744 CSS px"], "answer": 3, "difficulty": "", "explanation": "Enhanced target size."}, {"id": "dsd_accessibility_standards-38", "q": "iOS and Material target guidance is\u2026", "options": ["No guidance", "100 pt and 100 dp", "24 px and 24 dp", "44\u00d744 pt and 48\u00d748 dp"], "answer": 3, "difficulty": "", "explanation": "Platform guidance exceeds the WCAG minimum."}, {"id": "dsd_accessibility_standards-39", "q": "SC 2.5.7 Dragging Movements requires\u2026", "options": ["Drag only", "A single-pointer alternative to dragging", "Keyboard shortcuts only", "Bigger fonts"], "answer": 1, "difficulty": "", "explanation": "E.g. move up/down buttons for reorderable lists."}, {"id": "dsd_accessibility_standards-40", "q": "SC 3.3.7 Redundant Entry means\u2026", "options": ["Don't make users re-enter information already provided", "Ask for passwords twice", "Repeat every question", "Remove autofill"], "answer": 0, "difficulty": "", "explanation": "Auto-fill or offer previously entered data."}, {"id": "dsd_accessibility_standards-41", "q": "SC 3.3.8 Accessible Authentication (Minimum) supports\u2026", "options": ["CAPTCHA only", "Disabling paste", "Memorising codes", "Password managers, paste, OTP or passkeys instead of memory tests"], "answer": 3, "difficulty": "", "explanation": "Avoid cognitive function tests for login."}, {"id": "dsd_accessibility_standards-42", "q": "SC 3.2.6 Consistent Help requires\u2026", "options": ["Help in random places", "Help on one page only", "Help mechanisms in the same relative place across pages", "No help"], "answer": 2, "difficulty": "", "explanation": "Predictable location aids users."}, {"id": "dsd_accessibility_standards-43", "q": "SC 1.4.10 Reflow requires\u2026", "options": ["Fixed widths", "Small fonts", "No horizontal scrolling at 320 CSS px for most content", "Two-dimensional scrolling everywhere"], "answer": 2, "difficulty": "", "explanation": "Content must reflow on narrow viewports."}, {"id": "dsd_accessibility_standards-44", "q": "SC 1.4.4 Resize Text requires\u2026", "options": ["No zoom", "Fixed text sizes", "Text resizable to 200% without loss of content", "300% zoom only"], "answer": 2, "difficulty": "", "explanation": "Users must be able to enlarge text."}, {"id": "dsd_accessibility_standards-45", "q": "SC 1.4.12 Text Spacing ensures\u2026", "options": ["Only bold text", "Layouts survive increased line, letter and word spacing", "No spacing", "Fixed spacing"], "answer": 1, "difficulty": "", "explanation": "Users may override spacing for readability."}, {"id": "dsd_accessibility_standards-46", "q": "SC 2.3.1 Three Flashes requires\u2026", "options": ["Only red flashes", "No content flashing more than 3 times per second", "Unlimited flashing", "At least 3 flashes"], "answer": 1, "difficulty": "", "explanation": "Flashing can trigger seizures."}, {"id": "dsd_accessibility_standards-47", "q": "Automated accessibility tools catch roughly\u2026", "options": ["90% of all issues", "30\u201340% of issues", "100%", "0%"], "answer": 1, "difficulty": "", "explanation": "Manual and AT testing are still required."}, {"id": "dsd_accessibility_standards-48", "q": "Which screen readers should a team test with?", "options": ["Photoshop", "Only Chrome DevTools", "NVDA/JAWS, VoiceOver and TalkBack", "None"], "answer": 2, "difficulty": "", "explanation": "Different platforms have different screen readers."}, {"id": "dsd_accessibility_standards-49", "q": "A sticky header hides focused fields. A good fix is\u2026", "options": ["Hide the header permanently", "Remove focus rings", "scroll-padding-top equal to the header height", "Disable Tab"], "answer": 2, "difficulty": "", "explanation": "Ensures focused elements scroll into view below it."}, {"id": "dsd_accessibility_standards-50", "q": "Why build accessibility into the design system?", "options": ["Only designers benefit", "It is cheaper to ignore", "Every product inherits accessible tokens and components by default", "It slows teams forever"], "answer": 2, "difficulty": "", "explanation": "Fix once, benefit everywhere."}];
+  const EXAM_MINUTES = Math.ceil(QUESTION_BANK.length*1.2);
+  const EXAM_SECONDS = EXAM_MINUTES*60;
+  const EXAM_COUNT = QUESTION_BANK.length;
+  const LS_KEY = 'careerBuddyAssessment:' + ROLE;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false, warns=0, proctorOn=false, lastWarn=0;
+  const esc = s => String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const fmt=t=>{const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s};
+  const css=`
+  .cb-exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .cb-exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .cb-exam-top .et-title{font-size:16px;font-weight:800}.cb-exam-top .et-sub{font-size:12px;color:#cdd5e5}.cb-exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}.cb-exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:cbpulse 1s infinite}@keyframes cbpulse{50%{opacity:.5}}
+  .cb-exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}.cb-exam-q-pane{padding:28px 36px;overflow:auto}.cb-exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}.cb-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}.cb-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}.cb-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}.cb-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}.cb-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}.cb-opt:hover{border-color:#14213D;background:#f9f9ff}.cb-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}.cb-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}.cb-opt.sel .k{background:#14213D;color:#fff}.cb-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}.cb-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}.cb-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}.cb-btn.nav:disabled{opacity:.4;cursor:not-allowed}.cb-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}.cb-btn.mark.on{background:#FCA311;color:#14213D}.cb-btn.submit{background:#FCA311;color:#14213D}.cb-btn.primary{background:#14213D;color:#fff}.cb-side-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}.cb-count{font-size:13px;color:#4a5568;font-weight:600}.cb-count b{color:#14213D}.cb-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.cb-pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}.cb-pal.answered{background:#14213D;color:#fff;border-color:#14213D}.cb-pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}.cb-pal.cur{outline:2px solid #14213D;outline-offset:1px}.cb-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}.cb-legend span{display:inline-flex;align-items:center;gap:8px}.cb-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}.cb-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}.cb-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}.cb-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}.cb-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}.cb-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}.cb-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}.cb-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}.cb-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}.cb-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}.cb-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}.cb-rev .r.ok{border-left-color:#38a169}.cb-rev .r.no{border-left-color:#e53e3e}.cb-rev .rq{font-weight:700;margin-bottom:6px}.cb-rev .ra{font-size:13px;margin:2px 0}.cb-rev .ra.wrong{color:#c53030}.cb-rev .ra.cor{color:#276749}.cb-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}.cb-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}.cb-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}.cb-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}.cb-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}.cb-confirm .row{display:flex;gap:10px;justify-content:flex-end}.cb-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}.cb-cover small{font-weight:500;color:#cdd5e5;font-size:14px}.cb-assess-intro{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}.cb-assess-intro h3{margin:0 0 8px;font-size:21px}.cb-assess-intro p{margin:6px 0;color:var(--ink-soft)}.cb-assess-intro ul{margin:12px 0 18px}.cb-start{border:0;background:#14213D;color:#fff;border-radius:9px;padding:12px 18px;font:700 14px inherit;cursor:pointer}.cb-start:hover{opacity:.92}
+  @media(max-width:820px){.cb-exam-main{grid-template-columns:1fr}.cb-exam-side{border-left:none;border-top:1px solid #e2e8f0}.cb-exam-q-pane{padding:22px 18px}.cb-exam-top{padding:10px 14px}}
+  `;
+  function injectCss(){if(document.getElementById('cbExamCss'))return;const s=document.createElement('style');s.id='cbExamCss';s.textContent=css;document.head.appendChild(s)}
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function buildAttempt(){
+    const recent=JSON.parse(localStorage.getItem(LS_KEY+'_attempts')||'[]');
+    let selected=[], sig='';
+    for(let tries=0;tries<25;tries++){
+      selected=shuffle(QUESTION_BANK.slice()).slice(0,EXAM_COUNT);
+      sig=selected.map(x=>x.id).sort().join('|');
+      if(!recent.includes(sig))break;
+    }
+    recent.unshift(sig); try{localStorage.setItem(LS_KEY+'_attempts',JSON.stringify(recent.slice(0,20)))}catch(e){}
+    return selected.map(q=>{const c=JSON.parse(JSON.stringify(q)); const pairs=c.options.map((o,i)=>({o,i}));shuffle(pairs);c.options=pairs.map(x=>x.o);c.answer=pairs.findIndex(x=>x.i===q.answer);return c});
+  }
+  function confirmBox(title,msg,okLabel){return new Promise(resolve=>{injectCss();const d=document.createElement('div');d.className='cb-confirm';d.innerHTML=`<div class="box"><h3>${esc(title)}</h3><p>${esc(msg)}</p><div class="row"><button class="cb-btn nav" data-a="0">Cancel</button><button class="cb-btn primary" data-a="1">${esc(okLabel||'Confirm')}</button></div></div>`;document.body.appendChild(d);d.addEventListener('click',e=>{if(e.target===d){d.remove();resolve(false);return}const b=e.target.closest('[data-a]');if(!b)return;d.remove();resolve(b.dataset.a==='1')})})}
+  function startEntry(){showSplash()}
+  function showSplash(){injectCss();const sp=document.createElement('div');sp.className='cb-splash';sp.id='cbExamSplash';sp.innerHTML=`<div class="card"><h2>🎯 ${esc(ROLE)} — Assessment</h2><p>A timed, full-screen assessment based on this course.</p><ul><li><b>${EXAM_COUNT} questions</b> drawn from this course's question bank</li><li><b>${EXAM_MINUTES}-minute</b> timer — the assessment auto-submits when time is up</li><li>Navigate freely, answer questions, and <b>mark questions for review</b></li><li>Questions and answer options are shuffled on every attempt</li></ul><p style="font-weight:700;color:#14213D;margin-bottom:6px">Assessment rules</p><ul style="margin-top:0"><li>The assessment runs in <b>fullscreen</b>.</li><li>Do not switch tabs/windows or exit fullscreen.</li><li><b>3 warnings</b> for tab/window switching or leaving fullscreen will auto-submit the assessment.</li><li>Copy, cut, right-click and common screenshot/print shortcuts are blocked during the assessment.</li></ul><button class="cb-btn primary" id="cbExamBegin" style="width:100%;padding:14px">Start Assessment →</button></div>`;document.body.appendChild(sp);document.getElementById('cbExamBegin').addEventListener('click',()=>{if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});sp.remove();enterExam()})}
+  function enterExam(){injectCss();items=buildAttempt();answers={};marked={};cur=0;remaining=EXAM_SECONDS;examOn=true;document.body.style.overflow='hidden';const ov=document.createElement('div');ov.className='cb-exam-overlay';ov.id='cbExamOverlay';ov.innerHTML=`<div class="cb-exam-top"><div><div class="et-title">${esc(ROLE)} — Assessment</div><div class="et-sub">${EXAM_COUNT} questions · ${EXAM_MINUTES}-minute timer · one attempt</div></div><div class="cb-exam-timer" id="cbExamTimer">${fmt(remaining)}</div></div><div class="cb-exam-main"><div class="cb-exam-q-pane" id="cbExamQ"></div><div class="cb-exam-side"><div class="cb-count">Answered <b id="cbExamAnsN">0</b> / ${EXAM_COUNT}</div><h4 class="cb-side-title">Question palette</h4><div class="cb-palette" id="cbExamPal"></div><div class="cb-legend"><span><i style="background:#14213D;border-color:#14213D"></i> Answered</span><span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span><span><i></i> Not answered</span></div><button class="cb-btn submit" id="cbExamSubmit" style="width:100%">Submit Assessment</button></div></div>`;document.body.appendChild(ov);buildPalette();renderQ();timerId=setInterval(tick,1000);window.addEventListener('beforeunload',beforeUnload);startProctor();document.getElementById('cbExamSubmit').addEventListener('click',()=>submitExam(false))}
+  function beforeUnload(e){if(examOn){e.preventDefault();e.returnValue=''}}
+  function tick(){remaining--;const el=document.getElementById('cbExamTimer');if(el){el.textContent=fmt(Math.max(remaining,0));if(remaining<=300)el.classList.add('warn')}if(remaining<=0)submitExam(true)}
+  function buildPalette(){const pal=document.getElementById('cbExamPal');pal.innerHTML='';items.forEach((it,n)=>{const b=document.createElement('button');b.className='cb-pal';b.textContent=n+1;b.dataset.n=n;b.addEventListener('click',()=>{cur=n;renderQ()});pal.appendChild(b)});refreshPalette()}
+  function refreshPalette(){document.querySelectorAll('#cbExamPal .cb-pal').forEach(b=>{const n=+b.dataset.n,id=items[n].id;b.classList.toggle('answered',id in answers);b.classList.toggle('marked',!!marked[id]);b.classList.toggle('cur',n===cur)});const el=document.getElementById('cbExamAnsN');if(el)el.textContent=Object.keys(answers).length}
+  function renderQ(){const it=items[cur],id=it.id,pane=document.getElementById('cbExamQ');pane.innerHTML=`<div class="cb-qnum">Question ${cur+1} of ${items.length}</div><div class="cb-qtext">${esc(it.q)}${it.difficulty?`<span class="diff">${esc(it.difficulty)}</span>`:''}</div><div class="cb-opts" id="cbExamOpts">${it.options.map((o,i)=>`<div class="cb-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${esc(o)}</span></div>`).join('')}</div><div class="cb-actions"><button class="cb-btn nav" id="cbPrev" ${cur===0?'disabled':''}>← Previous</button><button class="cb-btn mark${marked[id]?' on':''}" id="cbMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button><button class="cb-btn nav" id="cbNext" ${cur===items.length-1?'disabled':''}>Next →</button></div>`;pane.querySelectorAll('.cb-opt').forEach(el=>el.addEventListener('click',()=>{answers[id]=+el.dataset.i;pane.querySelectorAll('.cb-opt').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');refreshPalette()}));document.getElementById('cbPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ()}});document.getElementById('cbNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ()}});document.getElementById('cbMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ()});refreshPalette()}
+  async function submitExam(auto){if(!examOn)return;const unanswered=items.length-Object.keys(answers).length;if(!auto){const ok=await confirmBox('Submit assessment?',unanswered?`You have ${unanswered} unanswered question(s). Once submitted, you cannot change your answers.`:'Once submitted, you cannot change your answers.','Submit Assessment');if(!ok)return}examOn=false;clearInterval(timerId);window.removeEventListener('beforeunload',beforeUnload);stopProctor();const score=items.reduce((n,it)=>n+(answers[it.id]===it.answer?1:0),0);saveScore(score,items.length);showResults(score)}
+  function saveScore(score,total){const a=JSON.parse(localStorage.getItem(LS_KEY)||'[]');a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,EXAM_COUNT)))}catch(e){}}
+  function showResults(score){const total=items.length,pct=Math.round(score/total*100);let msg='Keep practicing — review the questions you missed and try again.';if(pct>=85)msg='Outstanding — strong command of this topic.';else if(pct>=65)msg='Solid performance. Review the harder areas and try another attempt.';else if(pct>=50)msg='Borderline — revisit the course topics and retake the assessment.';const rev=items.map((it,n)=>{const you=answers[it.id],attempted=you!=null;const your=attempted?String.fromCharCode(65+you)+'. '+esc(it.options[you]):'<i>Not answered</i>';const cor=String.fromCharCode(65+it.answer)+'. '+esc(it.options[it.answer]);return `<div class="r ${attempted&&you===it.answer?'ok':'no'}"><div class="rq">Q${n+1}. ${esc(it.q)}</div><div class="ra ${attempted&&you===it.answer?'cor':'wrong'}">Your answer: ${your}</div>${attempted&&you!==it.answer?`<div class="ra cor">Correct: ${cor}</div>`:''}${it.explanation?`<div class="rx">${esc(it.explanation)}</div>`:''}</div>`}).join('');const ov=document.getElementById('cbExamOverlay');ov.innerHTML=`<div class="cb-exam-top"><div class="et-title">Result — ${esc(ROLE)} Assessment</div><button class="cb-btn" id="cbClose" style="background:rgba(255,255,255,.15);color:#fff">✕ Close</button></div><div class="cb-exam-q-pane" style="flex:1"><div class="cb-result"><div class="cb-score">${score} / ${total}</div><div class="cb-rmsg">${pct}% correct — ${msg}</div><div style="margin-top:16px"><button class="cb-btn primary" id="cbRetry">↻ Take another assessment</button></div><div class="cb-rev">${rev}</div></div></div>`;document.getElementById('cbRetry').addEventListener('click',()=>{ov.remove();enterExam()});document.getElementById('cbClose').addEventListener('click',()=>closeExam())}
+  function closeExam(){stopProctor();const ov=document.getElementById('cbExamOverlay');if(ov)ov.remove();document.body.style.overflow='';if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}
+  function warning(title,msg){if(!proctorOn||!examOn)return;const now=Date.now();if(now-lastWarn<1200)return;lastWarn=now;warns++;const cover=document.getElementById('cbExamCover')||document.createElement('div');cover.className='cb-cover';cover.id='cbExamCover';cover.style.display='flex';cover.innerHTML=`<div>⚠️ ${esc(title)}</div><small>${esc(msg)}</small><small>Warning ${warns} of 3</small><button class="cb-btn primary" id="cbResume">Return to assessment</button>`;document.body.appendChild(cover);document.getElementById('cbResume').onclick=()=>{cover.style.display='none';if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});if(warns>=3)submitExam(true)};if(warns>=3)setTimeout(()=>submitExam(true),500)}
+  function visHandler(){if(document.hidden)warning('Tab or window switch detected','Please stay on the assessment screen. Repeated violations will submit the assessment automatically.')}
+  function fsHandler(){if(examOn&&!document.fullscreenElement)warning('Fullscreen exited','The assessment must remain in fullscreen mode.')}
+  function blurHandler(){if(examOn)warning('Focus changed','Please keep the assessment window active.')}
+  function focusHandler(){}
+  function blockEvt(e){if(examOn){e.preventDefault();warning('Action blocked','Copy, cut and right-click are disabled during the assessment.')}}
+  function keyGuard(e){if(!examOn)return;const k=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&['c','x','p','s','u'].includes(k)){e.preventDefault();warning('Shortcut blocked','This assessment disables copy, print, save and source shortcuts.')}if(k==='f12'){e.preventDefault();warning('Developer tools shortcut blocked','This action is disabled during the assessment.')}}
+  function printGuard(e){if(examOn&&e.key==='PrintScreen'){e.preventDefault();warning('Screenshot action blocked','Screenshot capture is restricted during the assessment.')}}
+  function startProctor(){warns=0;lastWarn=0;proctorOn=true;document.addEventListener('visibilitychange',visHandler);document.addEventListener('fullscreenchange',fsHandler);window.addEventListener('blur',blurHandler);document.addEventListener('contextmenu',blockEvt,true);document.addEventListener('copy',blockEvt,true);document.addEventListener('cut',blockEvt,true);document.addEventListener('keydown',keyGuard,true);document.addEventListener('keyup',printGuard,true)}
+  function stopProctor(){proctorOn=false;document.removeEventListener('visibilitychange',visHandler);document.removeEventListener('fullscreenchange',fsHandler);window.removeEventListener('blur',blurHandler);document.removeEventListener('contextmenu',blockEvt,true);document.removeEventListener('copy',blockEvt,true);document.removeEventListener('cut',blockEvt,true);document.removeEventListener('keydown',keyGuard,true);document.removeEventListener('keyup',printGuard,true);const c=document.getElementById('cbExamCover');if(c)c.remove()}
+  document.addEventListener('click',function(e){const b=e.target.closest('#cbAssessStart');if(b){e.preventDefault();startEntry();}},true)
+  window.addEventListener('keydown',e=>{if(e.key==='Escape'&&examOn)e.preventDefault()});
+})();
+
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body>
+</html>

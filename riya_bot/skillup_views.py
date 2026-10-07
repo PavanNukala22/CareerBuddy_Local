@@ -32,6 +32,11 @@ _HEAD_RE = re.compile(r"<head[^>]*>(?P<inner>.*?)</head>", re.S | re.I)
 # script text. Greedy anchors on the last "</body>", which is the real one.
 _BODY_RE = re.compile(r"<body[^>]*>(?P<inner>.*)</body>", re.S | re.I)
 
+# Tech and Non-IT Center departments and roles (#grp-tech-<dept>,
+# #role-nonit-<dept>--<role>, ...), linked from the career-path role pages; the hub
+# opens that department or role.
+_TECH_ROLE_RE = re.compile(r"(grp|role)-(tech|nonit)-[a-z0-9-]{1,150}")
+
 # Parse the Skill Up index once and reuse it; re-parse only when the file's
 # mtime changes so editing the static page still shows up without a restart.
 _PARSE_CACHE: dict = {}
@@ -79,7 +84,8 @@ def skillup_hub(request):
     base_href = static(f"{SKILLUP_DIRNAME}/{SKILLUP_INDEX}").rsplit("/", 1)[0] + "/"
 
     requested_section = request.GET.get("section", "")
-    section = requested_section if requested_section in ALLOWED_SECTIONS else ""
+    allowed = requested_section in ALLOWED_SECTIONS or _TECH_ROLE_RE.fullmatch(requested_section)
+    section = requested_section if allowed else ""
 
     return render(request, "skillup/skillup_hub.html", {
         "skillup_base": base_href,

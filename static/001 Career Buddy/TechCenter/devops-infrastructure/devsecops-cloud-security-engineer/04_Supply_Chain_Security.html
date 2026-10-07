@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevSecOps · Supply Chain Security</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>:root{--brand1:#b45309;--brand2:#14213D}
+:root{--bg:#fff;--bg-soft:#f7f6f3;--bg-block:#f1f1ef;--bg-code:#f6f5f4;--ink:#37352f;--ink-soft:#6b6a66;--ink-mute:#9b9a97;--line:#e9e9e7;--line-strong:#d3d3d0;
+--accent:#14213D;--accent-soft:#eef1f7;--green:#0f7b0f;--green-soft:#ddedea;--orange:#d9730d;--orange-soft:#fadec9;--red:#e03e3e;--red-soft:#ffe2dd;
+--purple:#22345f;--purple-soft:#eef1f7;--yellow:#dfab01;--yellow-soft:#fdecc8;--pink:#ad1a72;--pink-soft:#f5e0e9;
+--shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);--shadow-md:0 4px 14px rgba(15,15,15,.08);--radius-sm:6px;--radius:10px;--radius-lg:14px;
+--font:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--mono:'Noto Sans Mono',ui-monospace,SFMono-Regular,Consolas,monospace}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,button,input,textarea,table,svg text{font-family:var(--font)}
+.header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:12px 32px;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand-mark{width:34px;height:34px;display:grid;place-items:center;background:linear-gradient(135deg,var(--brand1) 0%,var(--brand2) 100%);border-radius:9px;color:#fff;font-family:var(--mono);font-weight:700;font-size:13px;box-shadow:var(--shadow-sm)}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500;color:var(--ink-soft)}
+.progress-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-soft)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--bg-soft)}.btn svg{width:14px;height:14px}
+.tabbar{display:flex;gap:2px;padding:6px 24px;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--line);background:#fff}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{padding:8px 15px;background:transparent;border:none;border-radius:8px;font-size:13.5px;font-weight:500;color:#4a5568;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.tab:hover{background:var(--accent-soft);color:var(--accent)}
+.tab.active{background:var(--accent);color:#fff;font-weight:700}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr)}
+@media(max-width:960px){.layout{grid-template-columns:1fr}.toc{display:none}}
+.toc{position:sticky;top:112px;align-self:start;height:calc(100vh - 124px);overflow-y:auto;padding:28px 16px 28px 28px;border-right:1px solid var(--line);scrollbar-width:thin}
+.toc-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);font-weight:700;margin-bottom:12px;padding-left:8px}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:2px}
+.toc-list a{display:block;padding:6px 10px;font-size:13px;color:var(--ink-soft);text-decoration:none;border-radius:6px;line-height:1.4}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{color:#fff;background:#16233f;font-weight:600;border-radius:12px;padding:9px 14px}
+.main{padding:44px 56px 80px;min-width:0;max-width:1100px}
+@media(max-width:720px){.main{padding:28px 18px 60px}.header-top{padding:10px 16px}}
+.panel{display:none}.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel-header{margin-bottom:30px}
+.panel-eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:8px}
+.panel-title{font-size:38px;line-height:1.15;font-weight:700;letter-spacing:-.02em;margin:0 0 14px}
+.panel-subtitle{font-size:17px;color:var(--ink-soft);margin:0;max-width:720px}
+.level-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.level-tag{font-family:var(--mono);font-size:11px;font-weight:600;padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase}
+.level-tag.inter{background:var(--accent-soft);color:#1d4f8f}.level-tag.adv{background:var(--pink-soft);color:#8c1a63}.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+.section{margin-top:46px;scroll-margin-top:130px}
+.section h2{font-size:26px;font-weight:700;letter-spacing:-.01em;margin:0 0 10px;padding-bottom:8px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.sec-emoji{font-size:24px}
+.section h3{font-size:18px;font-weight:700;margin:26px 0 8px}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}.section li{margin:5px 0}.section li::marker{color:var(--ink-mute)}
+code{font-family:var(--mono);font-size:.86em;background:var(--bg-code);border:1px solid var(--line);padding:1px 6px;border-radius:4px;color:#c2410c}
+pre{font-family:var(--mono);background:#1f2430;color:#e6e6e3;padding:20px 20px 16px;border-radius:var(--radius);overflow-x:auto;font-size:13px;line-height:1.6;margin:14px 0;box-shadow:var(--shadow-sm);position:relative}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{position:absolute;top:6px;right:12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#8b93a7;font-weight:700}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-c{color:#7f8bb3;font-style:italic}
+.callout{display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start;background:var(--bg-block);border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout-icon{width:28px;height:28px;display:grid;place-items:center;background:#fff;border-radius:6px;font-size:16px;border:1px solid var(--line)}
+.callout-body{font-size:14.5px;line-height:1.6}
+.callout.tip{background:var(--accent-soft);border-color:#c9d3e8}.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;transition:transform .2s,box-shadow .2s,border-color .2s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:9px;font-size:19px;margin-bottom:10px}
+.card-title{font-weight:700;font-size:15px;margin-bottom:4px}.card-desc{font-size:13.5px;color:var(--ink-soft);line-height:1.55}
+.tbl-wrap{overflow-x:auto;margin:16px 0;border:1px solid var(--line);border-radius:var(--radius)}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--bg-soft);font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg-soft)}
+.diagram{background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin:18px 0;text-align:center}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{font-size:12px;color:var(--ink-soft);margin-top:10px;font-style:italic}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media(max-width:760px){.compare{grid-template-columns:1fr}}
+.compare-col{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;min-width:0}
+.compare-col h4{margin:0 0 8px;font-size:15px;font-weight:700}
+.compare-col p,.compare-col li{font-size:14px}
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{padding:4px 10px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-family:var(--mono);color:var(--ink)}
+.assess-start-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px}
+.assess-intro-title{font-size:20px;font-weight:700;margin-bottom:10px}.assess-intro-text{font-size:14px;color:var(--ink-soft);margin-bottom:14px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn,.assess-retry-btn{background:var(--accent);color:#fff;border:none;padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;cursor:pointer}
+.assess-start-btn:hover,.assess-retry-btn:hover{opacity:.9}
+.quiz-progress{display:flex;align-items:center;gap:14px;background:var(--bg-block);border:1px solid var(--line);border-radius:var(--radius);padding:14px 18px;margin:18px 0}
+.quiz-score{font-family:var(--mono);font-weight:700;font-size:14px;white-space:nowrap}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}.quiz-bar-fill{height:100%;width:0;background:var(--accent);transition:width .3s}
+.assess-q{font-weight:700;font-size:17px;line-height:1.5;margin-bottom:14px}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:14.5px;background:var(--bg-soft)}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt-letter{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:11px;font-weight:700;font-family:var(--mono);flex-shrink:0;color:var(--ink-soft)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.fb{margin-top:14px;padding:12px 16px;border-radius:10px;font-size:14px}.fb.ok{background:var(--green-soft);color:#0a5f0a}.fb.bad{background:var(--red-soft);color:#a01c1c}
+.assess-next-btn{background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:13.5px;cursor:pointer;margin-top:14px}
+.assess-result-score{font-size:40px;font-weight:700;text-align:center;margin:20px 0 6px}.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:20px}
+.assess-retry-btn{display:block;margin:0 auto}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:#cbd2e0;border-radius:8px}::-webkit-scrollbar-thumb:hover{background:#9aa4b8}
+
+/* ===== Tab bar: even spread + custom scrollbar under the tabs ===== */
+.tabbar{overflow-x:auto !important;overflow-y:hidden;scroll-padding:0 16px;scrollbar-width:none !important}
+.tabbar::-webkit-scrollbar{display:none !important}
+.tabbar .tab{flex:1 0 auto !important;justify-content:center;text-align:center}
+.tabscroll{position:relative;height:10px;margin:0;background:#e6e9f1;border-top:1px solid #d3d8e4;cursor:pointer;touch-action:none;user-select:none}
+.tabscroll-thumb{position:absolute;top:1px;bottom:1px;left:0;width:100%;min-width:40px;background:#14213D;border-radius:5px;cursor:grab;transition:background .15s}
+.tabscroll-thumb:hover{background:#2f4a85}
+.tabscroll.dragging .tabscroll-thumb{cursor:grabbing;background:#2f4a85}
+.tabscroll.fits .tabscroll-thumb{background:#c3c9d8;cursor:default}
+</style><style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head><body>
+<header class="header"><div class="header-top"><div class="brand"><div class="brand-mark">SC</div><span>Supply Chain Security<span class="brand-sub"> · SBOM · Cosign · SLSA</span></span></div>
+<div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 7</span></span>
+<button class="btn" onclick="resetProgress()"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9"/><path d="M2 4v3.5h3.5"/></svg>Reset</button></div></div>
+<nav class="tabbar" role="tablist"><button class="tab active" data-tab="t1" role="tab">01 Software Supply Chain Foundations</button><button class="tab" data-tab="t2" role="tab">02 SBOM — Software Bill of Materials</button><button class="tab" data-tab="t3" role="tab">03 Image Signing with Cosign &amp; Sigstore</button><button class="tab" data-tab="t4" role="tab">04 SLSA — Supply-chain Levels for Software Artifacts</button><button class="tab" data-tab="t5" role="tab">05 Hardening the Pipeline &amp; Dependencies</button><button class="tab" data-tab="t6" role="tab">06 Expert: End-to-End Architecture &amp; Governance</button><button class="tab" data-tab="t7" role="tab">07 Assessment</button></nav></header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside><main class="main"><section class="panel" id="t1" data-toc="[&quot;What is the software supply chain?&quot;, &quot;Famous attacks (and the lesson)&quot;, &quot;Attack types&quot;, &quot;The four defensive pillars&quot;]"><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Beginner</span></div><div class="panel-eyebrow">Module 01 · Foundations</div><h1 class="panel-title">Software Supply Chain Foundations</h1><p class="panel-subtitle">What the software supply chain is, how attackers abuse it, and the frameworks that organise the defence.</p></div><div class="section" id="s1-1"><h2><span class="sec-emoji">⛓️</span> What is the software supply chain?</h2><p>Everything that goes into producing and delivering your software: <strong>source code, third-party libraries, build tools, CI/CD systems, container base images, registries, and the people with access</strong>. If any link is tampered with, every user downstream inherits the compromise.</p><div class="diagram"><svg viewBox="0 0 720 192" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Every stage is an attack surface"><defs><marker id="ar30" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><text x="360.0" y="30" text-anchor="middle" font-weight="700" font-size="16" fill="#37352f">The chain, end to end</text><rect x="20.0" y="54" width="108.8" height="104" rx="12" fill="#14213D"/><text x="74.4" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Source</text><text x="74.4" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">your repo</text><text x="74.4" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">developers</text><line x1="132.8" y1="106.0" x2="158.8" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar30)"/><rect x="162.8" y="54" width="108.8" height="104" rx="12" fill="#2563eb"/><text x="217.2" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Dependencies</text><text x="217.2" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.3">npm · PyPI · Maven</text><text x="217.2" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">base images</text><line x1="275.6" y1="106.0" x2="301.6" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar30)"/><rect x="305.6" y="54" width="108.8" height="104" rx="12" fill="#0f7b0f"/><text x="360.0" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Build</text><text x="360.0" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">CI runners</text><text x="360.0" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">build scripts</text><line x1="418.4" y1="106.0" x2="444.4" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar30)"/><rect x="448.4" y="54" width="108.8" height="104" rx="12" fill="#d9730d"/><text x="502.8" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Package</text><text x="502.8" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">image · artifact</text><text x="502.8" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">registry</text><line x1="561.2" y1="106.0" x2="587.2" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar30)"/><rect x="591.2" y="54" width="108.8" height="104" rx="12" fill="#6d28d9"/><text x="645.6" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Deploy</text><text x="645.6" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">cluster · cloud</text><text x="645.6" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">customers</text></svg><div class="diagram-caption">Figure · Every stage is an attack surface</div></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Analogy: a food supply chain. Checking the final meal is not enough — you need to trust the farm, the transport, the factory and the packaging.</div></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">📰</span> Famous attacks (and the lesson)</h2><div class="tbl-wrap"><table><thead><tr><th>Incident</th><th>What happened</th><th>Lesson</th></tr></thead><tbody><tr><td><strong>SolarWinds (2020)</strong></td><td>Attackers compromised the <em>build system</em> and inserted a backdoor into a signed update sent to ~18,000 customers</td><td>Protect and verify the build; a valid signature ≠ trustworthy build</td></tr><tr><td><strong>Log4Shell (2021)</strong></td><td>Critical RCE in a ubiquitous logging library</td><td>You must know every component you ship → <strong>SBOM</strong></td></tr><tr><td><strong>Codecov (2021)</strong></td><td>Modified bash uploader script exfiltrated CI secrets</td><td>Pin and verify third-party scripts; keep secrets out of CI env</td></tr><tr><td><strong>event-stream / ua-parser-js / colors</strong></td><td>Maintainer takeover or sabotage of popular npm packages</td><td>Pin versions, review updates, lockfiles</td></tr><tr><td><strong>Dependency confusion (2021)</strong></td><td>Public package with the same name as an internal one gets installed</td><td>Scoped/namespaced registries, registry priority rules</td></tr><tr><td><strong>3CX (2023)</strong></td><td>A compromised upstream dependency led to a trojanised desktop app</td><td>Attacks cascade — vendor-of-a-vendor risk</td></tr><tr><td><strong>xz-utils (2024)</strong></td><td>A long-con maintainer persona planted a backdoor in a core compression library</td><td>Open-source maintainer trust and review are part of your attack surface</td></tr></tbody></table></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Pattern: attackers prefer to compromise <strong>one upstream</strong> to reach <strong>thousands of downstream</strong> victims.</div></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">🎭</span> Attack types</h2><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d4f8f">📥</div><div class="card-title">Malicious dependency</div><div class="card-desc">Typosquatting (<code>reqeusts</code>), dependency confusion, hijacked maintainer.</div></div><div class="card"><div class="card-icon" style="background:var(--red-soft);color:#a01c1c">🏭</div><div class="card-title">Build compromise</div><div class="card-desc">Poisoned CI runner, altered build script, stolen signing key.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">📦</div><div class="card-title">Artifact tampering</div><div class="card-desc">Image or package swapped in the registry after build.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#22345f">🔓</div><div class="card-title">Credential theft</div><div class="card-desc">CI tokens, PATs, publish keys used to push malicious releases.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🧟</div><div class="card-title">Vulnerable component</div><div class="card-desc">Known-CVE library shipped unknowingly.</div></div><div class="card"><div class="card-icon" style="background:var(--pink-soft);color:#8c1a63">🧑‍💻</div><div class="card-title">Insider / social</div><div class="card-desc">Malicious contributor, hostile PR, compromised developer laptop.</div></div></div></div><div class="section" id="s1-4"><h2><span class="sec-emoji">🏛️</span> The four defensive pillars</h2><div class="diagram"><svg viewBox="0 0 720 272" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The structure of this module"><text x="360.0" y="28" text-anchor="middle" font-weight="700" font-size="16" fill="#37352f">Know → Verify → Harden → Enforce</text><rect x="20" y="46" width="680" height="46" rx="10" fill="#14213D"/><text x="38" y="75" fill="#fff" font-weight="700" font-size="13.5">1 · Know</text><text x="682" y="75" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">SBOM — inventory of every component</text><rect x="20" y="100" width="680" height="46" rx="10" fill="#2563eb"/><text x="38" y="129" fill="#fff" font-weight="700" font-size="13.5">2 · Verify</text><text x="682" y="129" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">Signatures &amp;amp; attestations — prove who built what</text><rect x="20" y="154" width="680" height="46" rx="10" fill="#0f7b0f"/><text x="38" y="183" fill="#fff" font-weight="700" font-size="13.5">3 · Harden</text><text x="682" y="183" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">SLSA-level build integrity &amp;amp; pipeline security</text><rect x="20" y="208" width="680" height="46" rx="10" fill="#d9730d"/><text x="38" y="237" fill="#fff" font-weight="700" font-size="13.5">4 · Enforce</text><text x="682" y="237" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">Admission / policy gates — only trusted artifacts run</text></svg><div class="diagram-caption">Figure · The structure of this module</div></div><div class="tbl-wrap"><table><thead><tr><th>Framework</th><th>Purpose</th></tr></thead><tbody><tr><td><strong>SLSA</strong></td><td>Build-integrity maturity levels</td></tr><tr><td><strong>NIST SSDF (SP 800-218)</strong></td><td>Secure development practices</td></tr><tr><td><strong>OpenSSF Scorecard</strong></td><td>Automated health score of open-source repos</td></tr><tr><td><strong>CISA / EO 14028</strong></td><td>US requirement for SBOMs from software vendors</td></tr><tr><td><strong>EU Cyber Resilience Act</strong></td><td>Security obligations for products with digital elements, incl. vulnerability handling</td></tr></tbody></table></div></div></section><section class="panel" id="t2" data-toc="[&quot;What is an SBOM?&quot;, &quot;Formats: SPDX vs CycloneDX&quot;, &quot;Generating SBOMs&quot;, &quot;Consuming SBOMs: vulnerability matching&quot;, &quot;VEX \u2014 Vulnerability Exploitability eXchange&quot;, &quot;SBOM best practices&quot;]"><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Beginner</span><span class="level-tag inter">Intermediate</span></div><div class="panel-eyebrow">Module 02 · Inventory</div><h1 class="panel-title">SBOM — Software Bill of Materials</h1><p class="panel-subtitle">The ingredient list of your software: what SBOMs contain, the SPDX and CycloneDX formats, how to generate and consume them, and how VEX reduces noise.</p></div><div class="section" id="s2-1"><h2><span class="sec-emoji">🧾</span> What is an SBOM?</h2><p>A <strong>Software Bill of Materials</strong> is a machine-readable inventory of every component in a piece of software — names, versions, suppliers, licences, hashes and relationships. Like an ingredient label.</p><div class="compare"><div class="compare-col"><h4>Without SBOM</h4><ul><li>"Are we using Log4j?" → days of grepping</li><li>Unknown licences discovered at audit</li><li>Cannot answer customer questionnaires</li></ul></div><div class="compare-col"><h4>With SBOM</h4><ul><li>Query every release in minutes</li><li>Instant impact analysis for new CVEs</li><li>Licence &amp; supplier visibility</li><li>Evidence for regulators and customers</li></ul></div></div></div><div class="section" id="s2-2"><h2><span class="sec-emoji">📐</span> Formats: SPDX vs CycloneDX</h2><div class="tbl-wrap"><table><thead><tr><th></th><th>SPDX</th><th>CycloneDX</th></tr></thead><tbody><tr><td>Steward</td><td>Linux Foundation (ISO/IEC 5962)</td><td>OWASP (ECMA-424)</td></tr><tr><td>Origin</td><td>Licence compliance</td><td>Security &amp; vulnerability use cases</td></tr><tr><td>Formats</td><td>JSON, YAML, tag-value, RDF, XLSX</td><td>JSON, XML, protobuf</td></tr><tr><td>Strengths</td><td>Rich licence &amp; provenance data</td><td>Lightweight; supports services, VEX, ML-BOM, CBOM</td></tr><tr><td>Minimum elements (NTIA)</td><td>Supplier, name, version, unique ID, dependency relationships, author, timestamp</td><td>Same</td></tr></tbody></table></div><pre><span class="pre-lang">json</span><code><span class="tok-c">// CycloneDX (abridged)</span>
+{
+  <span class="tok-s">"bomFormat"</span>: <span class="tok-s">"CycloneDX"</span>,
+  <span class="tok-s">"specVersion"</span>: <span class="tok-s">"1.5"</span>,
+  <span class="tok-s">"metadata"</span>: { <span class="tok-s">"component"</span>: { <span class="tok-s">"type"</span>: <span class="tok-s">"application"</span>, <span class="tok-s">"name"</span>: <span class="tok-s">"shop-api"</span>, <span class="tok-s">"version"</span>: <span class="tok-s">"1.4.2"</span> } },
+  <span class="tok-s">"components"</span>: [{
+    <span class="tok-s">"type"</span>: <span class="tok-s">"library"</span>,
+    <span class="tok-s">"name"</span>: <span class="tok-s">"log4j-core"</span>,
+    <span class="tok-s">"version"</span>: <span class="tok-s">"2.14.1"</span>,
+    <span class="tok-s">"purl"</span>: <span class="tok-s">"pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"</span>,
+    <span class="tok-s">"licenses"</span>: [{ <span class="tok-s">"license"</span>: { <span class="tok-s">"id"</span>: <span class="tok-s">"Apache-2.0"</span> } }],
+    <span class="tok-s">"hashes"</span>: [{ <span class="tok-s">"alg"</span>: <span class="tok-s">"SHA-256"</span>, <span class="tok-s">"content"</span>: <span class="tok-s">"ab12..."</span> }]
+  }]
+}</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><strong>purl</strong> (package URL) is the universal identifier: <code>pkg:npm/lodash@4.17.21</code>, <code>pkg:pypi/requests@2.32.0</code>, <code>pkg:oci/nginx@sha256:...</code></div></div></div><div class="section" id="s2-3"><h2><span class="sec-emoji">⚙️</span> Generating SBOMs</h2><div class="diagram"><svg viewBox="0 0 720 192" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SBOM lifecycle"><defs><marker id="ar32" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><text x="360.0" y="30" text-anchor="middle" font-weight="700" font-size="16" fill="#37352f">SBOM generation pipeline</text><rect x="20.0" y="54" width="108.8" height="104" rx="12" fill="#14213D"/><text x="74.4" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="9.8">Source / lockfile</text><text x="74.4" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">pre-build SBOM</text><line x1="132.8" y1="106.0" x2="158.8" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar32)"/><rect x="162.8" y="54" width="108.8" height="104" rx="12" fill="#2563eb"/><text x="217.2" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.1">Container image</text><text x="217.2" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">post-build SBOM</text><line x1="275.6" y1="106.0" x2="301.6" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar32)"/><rect x="305.6" y="54" width="108.8" height="104" rx="12" fill="#0f7b0f"/><text x="360.0" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="8.0">Syft · Trivy · cdxgen</text><text x="360.0" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">generate</text><line x1="418.4" y1="106.0" x2="444.4" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar32)"/><rect x="448.4" y="54" width="108.8" height="104" rx="12" fill="#d9730d"/><text x="502.8" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Store</text><text x="502.8" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="8.0">registry · artifact repo</text><line x1="561.2" y1="106.0" x2="587.2" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar32)"/><rect x="591.2" y="54" width="108.8" height="104" rx="12" fill="#6d28d9"/><text x="645.6" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Consume</text><text x="645.6" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="8.0">vuln match · licence · audit</text></svg><div class="diagram-caption">Figure · SBOM lifecycle</div></div><pre><span class="pre-lang">bash</span><code><span class="tok-c"># Syft (Anchore) – image or directory</span>
+syft shop-api:1.4.2 -o spdx-json=sbom.spdx.json -o cyclonedx-json=sbom.cdx.json
+syft dir:. -o cyclonedx-json &gt; sbom-source.json
+
+<span class="tok-c"># Trivy</span>
+trivy <span class="tok-k">image</span> --format cyclonedx --output sbom.cdx.json shop-api:1.4.2
+
+<span class="tok-c"># Language-native (CycloneDX)</span>
+cyclonedx-py environment -o sbom.json            <span class="tok-c"># Python</span>
+npx @cyclonedx/cyclonedx-npm --output-file sbom.json   <span class="tok-c"># Node</span></code></pre><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body"><strong>Build-time</strong> SBOMs (from the build tool) are usually more accurate for app dependencies; <strong>image-scan</strong> SBOMs capture OS packages. Mature teams generate both and merge.</div></div></div><div class="section" id="s2-4"><h2><span class="sec-emoji">🔎</span> Consuming SBOMs: vulnerability matching</h2><pre><span class="pre-lang">bash</span><code><span class="tok-c"># Scan an SBOM instead of re-scanning the image</span>
+grype sbom:./sbom.cdx.json --fail-<span class="tok-k">on</span> high
+trivy sbom sbom.cdx.json --severity HIGH,CRITICAL
+
+<span class="tok-c"># "Are we affected by Log4Shell?" across all stored SBOMs</span>
+grep -l <span class="tok-s">'"log4j-core"'</span> sboms/*.json</code></pre><p>At scale, feed SBOMs into <strong>OWASP Dependency-Track</strong> — it ingests CycloneDX, monitors continuously for new CVEs, applies policy and shows portfolio-wide exposure.</p></div><div class="section" id="s2-5"><h2><span class="sec-emoji">🧯</span> VEX — Vulnerability Exploitability eXchange</h2><p>A scanner may report 200 CVEs, yet many cannot be exploited in your product. A <strong>VEX</strong> document states the <em>exploitability status</em> of each CVE for a specific product so consumers can ignore the noise.</p><div class="tbl-wrap"><table><thead><tr><th>Status</th><th>Meaning</th></tr></thead><tbody><tr><td><code>not_affected</code></td><td>Vulnerable code not present or not reachable (give a justification)</td></tr><tr><td><code>affected</code></td><td>Exploitable — here is the remediation</td></tr><tr><td><code>fixed</code></td><td>Patched in this version</td></tr><tr><td><code>under_investigation</code></td><td>Analysis in progress</td></tr></tbody></table></div><pre><span class="pre-lang">json</span><code>{
+  <span class="tok-s">"vulnerabilities"</span>: [{
+    <span class="tok-s">"id"</span>: <span class="tok-s">"CVE-2021-44228"</span>,
+    <span class="tok-s">"analysis"</span>: { <span class="tok-s">"state"</span>: <span class="tok-s">"not_affected"</span>,
+                  <span class="tok-s">"justification"</span>: <span class="tok-s">"code_not_reachable"</span>,
+                  <span class="tok-s">"detail"</span>: <span class="tok-s">"JndiLookup class removed from the shaded jar"</span> },
+    <span class="tok-s">"affects"</span>: [{ <span class="tok-s">"ref"</span>: <span class="tok-s">"pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"</span> }]
+  }]
+}</code></pre></div><div class="section" id="s2-6"><h2><span class="sec-emoji">✅</span> SBOM best practices</h2><ol><li>Generate an SBOM for <strong>every release</strong>, automatically in CI.</li><li>Include <strong>transitive</strong> dependencies and hashes.</li><li><strong>Sign</strong> the SBOM and attach it to the image (see next module) — an unsigned SBOM can be forged.</li><li>Store SBOMs in a searchable system (Dependency-Track, artifact repo).</li><li>Share with customers on request; publish VEX alongside.</li><li>Treat SBOMs as <em>living</em>: re-evaluate against new CVEs daily, not just at build.</li></ol></div></section><section class="panel" id="t3" data-toc="[&quot;Why sign artifacts?&quot;, &quot;Sigstore ecosystem&quot;, &quot;Signing: key-based vs keyless&quot;, &quot;Attestations: signing claims about the artifact&quot;, &quot;Enforcing at deploy time (Kubernetes)&quot;, &quot;Complete GitHub Actions example&quot;]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Advanced</span></div><div class="panel-eyebrow">Module 03 · Trust</div><h1 class="panel-title">Image Signing with Cosign &amp; Sigstore</h1><p class="panel-subtitle">Prove an artifact came from you and was not modified. Learn digital signatures, keyed vs keyless signing, attestations and verification policies.</p></div><div class="section" id="s3-1"><h2><span class="sec-emoji">✍️</span> Why sign artifacts?</h2><p>A container tag like <code>shop-api:latest</code> can be overwritten by anyone with registry access. A <strong>signature</strong> binds an identity to an exact <em>image digest</em>, so deployers can verify: "this digest was produced by <em>my</em> pipeline."</p><div class="tbl-wrap"><table><thead><tr><th>Threat</th><th>How signing helps</th></tr></thead><tbody><tr><td>Registry compromised / tag overwritten</td><td>Digest signature no longer matches</td></tr><tr><td>Rogue image deployed</td><td>Admission policy rejects unsigned images</td></tr><tr><td>Insider pushes untested build</td><td>Only the CI identity can produce valid signatures</td></tr><tr><td>Mix-up between environments</td><td>Attestations record how/where it was built</td></tr></tbody></table></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Signatures reference the image <strong>digest</strong> (<code>sha256:…</code>), never a mutable tag.</div></div></div><div class="section" id="s3-2"><h2><span class="sec-emoji">🌐</span> Sigstore ecosystem</h2><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d4f8f">🖊️</div><div class="card-title">Cosign</div><div class="card-desc">CLI/library to sign, verify and attach attestations to OCI artifacts.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🪪</div><div class="card-title">Fulcio</div><div class="card-desc">Certificate authority issuing <em>short-lived (10-minute)</em> certificates bound to an OIDC identity.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#22345f">📒</div><div class="card-title">Rekor</div><div class="card-desc">Public, tamper-evident <em>transparency log</em> of all signatures.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🔭</div><div class="card-title">Policy controller</div><div class="card-desc">Kubernetes admission control enforcing Sigstore signatures.</div></div></div><div class="diagram"><svg viewBox="0 0 720 192" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Keyless signing flow — no long-term private key to steal"><defs><marker id="ar33" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><text x="360.0" y="30" text-anchor="middle" font-weight="700" font-size="16" fill="#37352f">Sigstore keyless signing</text><rect x="20.0" y="54" width="108.8" height="104" rx="12" fill="#14213D"/><text x="74.4" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">CI job</text><text x="74.4" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">OIDC identity</text><text x="74.4" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">(GitHub / Google)</text><line x1="132.8" y1="106.0" x2="158.8" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar33)"/><rect x="162.8" y="54" width="108.8" height="104" rx="12" fill="#2563eb"/><text x="217.2" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Fulcio</text><text x="217.2" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.3">issues short-lived</text><text x="217.2" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">cert</text><line x1="275.6" y1="106.0" x2="301.6" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar33)"/><rect x="305.6" y="54" width="108.8" height="104" rx="12" fill="#0f7b0f"/><text x="360.0" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Cosign sign</text><text x="360.0" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">signs digest with</text><text x="360.0" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">ephemeral key</text><line x1="418.4" y1="106.0" x2="444.4" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar33)"/><rect x="448.4" y="54" width="108.8" height="104" rx="12" fill="#d9730d"/><text x="502.8" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Rekor</text><text x="502.8" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">logs signature</text><text x="502.8" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">publicly</text><line x1="561.2" y1="106.0" x2="587.2" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar33)"/><rect x="591.2" y="54" width="108.8" height="104" rx="12" fill="#6d28d9"/><text x="645.6" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Registry</text><text x="645.6" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">stores signature</text><text x="645.6" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">next to image</text></svg><div class="diagram-caption">Figure · Keyless signing flow — no long-term private key to steal</div></div></div><div class="section" id="s3-3"><h2><span class="sec-emoji">🔑</span> Signing: key-based vs keyless</h2><div class="compare"><div class="compare-col"><h4>🗝️ Key-based</h4><pre><span class="pre-lang">bash</span><code>cosign generate-key-pair      <span class="tok-c"># cosign.key + cosign.pub</span>
+cosign sign --key cosign.key \
+  registry.acme.io/shop-api@sha256:ab12...
+cosign verify --key cosign.pub \
+  registry.acme.io/shop-api@sha256:ab12...</code></pre><ul><li>Works air-gapped</li><li>You must protect + rotate the private key (use KMS/HSM: <code>--key awskms:///alias/sign</code>)</li></ul></div><div class="compare-col"><h4>🪄 Keyless (OIDC)</h4><pre><span class="pre-lang">bash</span><code><span class="tok-c"># in GitHub Actions (id-token: write)</span>
+cosign sign --yes \
+  registry.acme.io/shop-api@sha256:ab12...
+
+cosign verify \
+  --certificate-identity-regexp <span class="tok-s">"https://github.com/acme/shop-api/.github/workflows/release.yml@refs/tags/.*"</span> \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  registry.acme.io/shop-api@sha256:ab12...</code></pre><ul><li>No key management</li><li>Identity = who/what/where built it</li><li>Logged in Rekor</li></ul></div></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Verification must pin the <strong>expected identity</strong> (workflow + repo + issuer). "Any valid signature" is not a policy — attackers can sign with their own identity.</div></div></div><div class="section" id="s3-4"><h2><span class="sec-emoji">📎</span> Attestations: signing <em>claims</em> about the artifact</h2><p>Beyond "who signed", an <strong>attestation</strong> is a signed statement (in-toto format) about the artifact: its SBOM, its build provenance, its test or vulnerability scan results.</p><pre><span class="pre-lang">bash</span><code><span class="tok-c"># Attach and sign an SBOM attestation</span>
+cosign attest --yes --predicate sbom.cdx.json --type cyclonedx \
+  registry.acme.io/shop-api@sha256:ab12...
+
+<span class="tok-c"># Attach vulnerability scan result</span>
+trivy <span class="tok-k">image</span> --format cosign-vuln -o vuln.json shop-api:1.4.2
+cosign attest --yes --predicate vuln.json --type vuln registry.acme.io/shop-api@sha256:ab12...
+
+<span class="tok-c"># Verify attestation and read it</span>
+cosign verify-attestation --type cyclonedx \
+  --certificate-identity-regexp <span class="tok-s">".*"</span> --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  registry.acme.io/shop-api@sha256:ab12... | jq .payload -r | base64 -d | jq .</code></pre></div><div class="section" id="s3-5"><h2><span class="sec-emoji">🛂</span> Enforcing at deploy time (Kubernetes)</h2><p>Signing is useless unless <em>something refuses unsigned images</em>. Use an admission controller.</p><pre><span class="pre-lang">yaml</span><code><span class="tok-c"># Kyverno verifyImages policy</span>
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata: { <span class="tok-k">name</span>: verify-signed-images }
+spec:
+  validationFailureAction: Enforce
+  webhookTimeoutSeconds: 30
+  rules:
+    - <span class="tok-k">name</span>: check-cosign
+      match: { any: [{ resources: { kinds: [Pod] } }] }
+      verifyImages:
+        - imageReferences: [<span class="tok-s">"registry.acme.io/*"</span>]
+          mutateDigest: <span class="tok-k">true</span>            <span class="tok-c"># rewrite tag → digest</span>
+          attestors:
+            - entries:
+                - keyless:
+                    issuer: https://token.actions.githubusercontent.com
+                    subject: <span class="tok-s">"https://github.com/acme/*"</span>
+                    rekor: { url: https://rekor.sigstore.dev }</code></pre><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Alternatives: <strong>Sigstore policy-controller</strong>, <strong>Ratify</strong> + OPA Gatekeeper, <strong>Notation</strong> (CNCF Notary Project) as another signing standard, especially for Azure/AWS registries.</div></div></div><div class="section" id="s3-6"><h2><span class="sec-emoji">🧪</span> Complete GitHub Actions example</h2><pre><span class="pre-lang">yaml</span><code><span class="tok-k">name</span>: release
+<span class="tok-k">on</span>: { push: { tags: [<span class="tok-s">"v*"</span>] } }
+permissions: { contents: read, id-token: write, packages: write }
+<span class="tok-k">jobs</span>:
+  build-sign:
+    runs-<span class="tok-k">on</span>: ubuntu-latest
+    <span class="tok-k">steps</span>:
+      - <span class="tok-k">uses</span>: actions/checkout@v4
+      - <span class="tok-k">uses</span>: docker/login-action@v3
+        <span class="tok-k">with</span>: { registry: ghcr.io, username: <span class="tok-s">"${{ github.actor }}"</span>, password: <span class="tok-s">"${{ secrets.GITHUB_TOKEN }}"</span> }
+      - id: build
+        <span class="tok-k">uses</span>: docker/build-push-action@v6
+        <span class="tok-k">with</span>: { push: <span class="tok-k">true</span>, tags: <span class="tok-s">"ghcr.io/acme/shop-api:${{ github.ref_name }}"</span> }
+      - <span class="tok-k">uses</span>: sigstore/cosign-installer@v3
+      - <span class="tok-k">run</span>: cosign sign --yes ghcr.io/acme/shop-api@${{ <span class="tok-k">steps</span>.build.outputs.digest }}
+      - <span class="tok-k">uses</span>: anchore/sbom-action@v0
+        <span class="tok-k">with</span>: { <span class="tok-k">image</span>: <span class="tok-s">"ghcr.io/acme/shop-api@${{ steps.build.outputs.digest }}"</span>, format: cyclonedx-json, output-file: sbom.cdx.json }
+      - <span class="tok-k">run</span>: cosign attest --yes --predicate sbom.cdx.json --type cyclonedx ghcr.io/acme/shop-api@${{ <span class="tok-k">steps</span>.build.outputs.digest }}</code></pre></div></section><section class="panel" id="t4" data-toc="[&quot;What is SLSA?&quot;, &quot;Build track levels&quot;, &quot;Provenance &amp;amp; in-toto&quot;, &quot;Reaching SLSA Build L3 on GitHub&quot;, &quot;Practical requirements for higher levels&quot;]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Advanced</span></div><div class="panel-eyebrow">Module 04 · Build Integrity</div><h1 class="panel-title">SLSA — Supply-chain Levels for Software Artifacts</h1><p class="panel-subtitle">The maturity framework for build integrity: levels, provenance, in-toto, and how to reach SLSA Build L3 in practice.</p></div><div class="section" id="s4-1"><h2><span class="sec-emoji">🏔️</span> What is SLSA?</h2><p><strong>SLSA</strong> (pronounced "salsa") is an OpenSSF framework: a checklist of increasingly strong guarantees that an artifact was built from the expected source, by the expected process, <em>without tampering</em>. It answers "<em>can I trust how this was built?</em>"</p><div class="diagram"><svg viewBox="0 0 720 192" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SLSA focuses on provenance — a verifiable build record"><defs><marker id="ar34" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><text x="360.0" y="30" text-anchor="middle" font-weight="700" font-size="16" fill="#37352f">SLSA idea in four steps</text><rect x="20.0" y="54" width="144.5" height="104" rx="12" fill="#14213D"/><text x="92.2" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="13.0">Source</text><text x="92.2" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="10.5">version-controlled</text><text x="92.2" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="10.5">reviewed</text><line x1="168.5" y1="106.0" x2="194.5" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar34)"/><rect x="198.5" y="54" width="144.5" height="104" rx="12" fill="#2563eb"/><text x="270.8" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="13.0">Build</text><text x="270.8" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="10.5">isolated</text><text x="270.8" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="10.5">scripted</text><line x1="347.0" y1="106.0" x2="373.0" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar34)"/><rect x="377.0" y="54" width="144.5" height="104" rx="12" fill="#0f7b0f"/><text x="449.2" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="13.0">Provenance</text><text x="449.2" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="10.5">signed record</text><text x="449.2" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="10.5">of how built</text><line x1="525.5" y1="106.0" x2="551.5" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar34)"/><rect x="555.5" y="54" width="144.5" height="104" rx="12" fill="#d9730d"/><text x="627.8" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="13.0">Verify</text><text x="627.8" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="10.5">consumer checks</text><text x="627.8" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="10.5">before use</text></svg><div class="diagram-caption">Figure · SLSA focuses on provenance — a verifiable build record</div></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">SLSA v1.0 (2023) defines the <strong>Build track</strong> (Levels 0–3). Source and other tracks are evolving; check <code>slsa.dev</code> for current specs.</div></div></div><div class="section" id="s4-2"><h2><span class="sec-emoji">🪜</span> Build track levels</h2><div class="diagram"><svg viewBox="0 0 720 272" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Each level raises the cost of tampering"><text x="360.0" y="28" text-anchor="middle" font-weight="700" font-size="16" fill="#37352f">SLSA Build Track</text><rect x="20" y="46" width="680" height="46" rx="10" fill="#14213D"/><text x="38" y="75" fill="#fff" font-weight="700" font-size="13.5">Build L0</text><text x="682" y="75" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">No guarantees — manual / unknown builds</text><rect x="20" y="100" width="680" height="46" rx="10" fill="#2563eb"/><text x="38" y="129" fill="#fff" font-weight="700" font-size="13.5">Build L1</text><text x="682" y="129" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">Provenance exists (documents how it was built)</text><rect x="20" y="154" width="680" height="46" rx="10" fill="#0f7b0f"/><text x="38" y="183" fill="#fff" font-weight="700" font-size="13.5">Build L2</text><text x="682" y="183" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">Hosted build service signs the provenance</text><rect x="20" y="208" width="680" height="46" rx="10" fill="#d9730d"/><text x="38" y="237" fill="#fff" font-weight="700" font-size="13.5">Build L3</text><text x="682" y="237" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">Hardened, isolated builds; forgery-resistant provenance</text></svg><div class="diagram-caption">Figure · Each level raises the cost of tampering</div></div><div class="tbl-wrap"><table><thead><tr><th>Level</th><th>Requirements</th><th>Stops</th></tr></thead><tbody><tr><td>L1</td><td>Build is scripted; provenance generated (even if unsigned)</td><td>Mistakes, enables audit</td></tr><tr><td>L2</td><td>Runs on a <strong>hosted build platform</strong> that generates and <strong>signs</strong> provenance</td><td>Tampering after build; forged provenance by developers</td></tr><tr><td>L3</td><td>Build platform hardens: <strong>isolated, ephemeral</strong> environments; signing secrets inaccessible to build steps</td><td>Compromise via one build influencing another; key theft by build scripts</td></tr></tbody></table></div></div><div class="section" id="s4-3"><h2><span class="sec-emoji">📜</span> Provenance &amp; in-toto</h2><p><strong>Provenance</strong> is a signed attestation (an <strong>in-toto</strong> statement) with the SLSA predicate: what was built, from which repo and commit, by which builder, with what parameters.</p><pre><span class="pre-lang">json</span><code>{
+  <span class="tok-s">"_type"</span>: <span class="tok-s">"https://in-toto.io/Statement/v1"</span>,
+  <span class="tok-s">"subject"</span>: [{ <span class="tok-s">"name"</span>: <span class="tok-s">"ghcr.io/acme/shop-api"</span>, <span class="tok-s">"digest"</span>: { <span class="tok-s">"sha256"</span>: <span class="tok-s">"ab12..."</span> } }],
+  <span class="tok-s">"predicateType"</span>: <span class="tok-s">"https://slsa.dev/provenance/v1"</span>,
+  <span class="tok-s">"predicate"</span>: {
+    <span class="tok-s">"buildDefinition"</span>: {
+      <span class="tok-s">"buildType"</span>: <span class="tok-s">"https://actions.github.io/buildtypes/workflow/v1"</span>,
+      <span class="tok-s">"externalParameters"</span>: { <span class="tok-s">"workflow"</span>: { <span class="tok-s">"repository"</span>: <span class="tok-s">"https://github.com/acme/shop-api"</span>, <span class="tok-s">"ref"</span>: <span class="tok-s">"refs/tags/v1.4.2"</span> } },
+      <span class="tok-s">"resolvedDependencies"</span>: [{ <span class="tok-s">"uri"</span>: <span class="tok-s">"git+https://github.com/acme/shop-api"</span>, <span class="tok-s">"digest"</span>: { <span class="tok-s">"gitCommit"</span>: <span class="tok-s">"9fceb02..."</span> } }]
+    },
+    <span class="tok-s">"runDetails"</span>: { <span class="tok-s">"builder"</span>: { <span class="tok-s">"id"</span>: <span class="tok-s">"https://github.com/slsa-framework/slsa-github-generator/..."</span> } }
+  }
+}</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Consumers verify: <em>Is the signature valid? Is the builder trusted? Does the source repo + ref match what I expect?</em></div></div></div><div class="section" id="s4-4"><h2><span class="sec-emoji">🏗️</span> Reaching SLSA Build L3 on GitHub</h2><p>The <strong>slsa-github-generator</strong> runs the provenance step in an isolated reusable workflow, so your build steps cannot touch the signing identity.</p><pre><span class="pre-lang">yaml</span><code><span class="tok-k">jobs</span>:
+  build:
+    runs-<span class="tok-k">on</span>: ubuntu-latest
+    outputs: { digest: <span class="tok-s">"${{ steps.push.outputs.digest }}"</span> }
+    <span class="tok-k">steps</span>:
+      - <span class="tok-k">uses</span>: actions/checkout@v4
+      - id: push
+        <span class="tok-k">uses</span>: docker/build-push-action@v6
+        <span class="tok-k">with</span>: { push: <span class="tok-k">true</span>, tags: <span class="tok-s">"ghcr.io/acme/shop-api:${{ github.ref_name }}"</span> }
+
+  provenance:
+    needs: build
+    permissions: { actions: read, id-token: write, packages: write }
+    <span class="tok-k">uses</span>: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+    <span class="tok-k">with</span>:
+      <span class="tok-k">image</span>: ghcr.io/acme/shop-api
+      digest: ${{ needs.build.outputs.digest }}
+    secrets:
+      registry-username: ${{ github.actor }}
+      registry-password: ${{ secrets.GITHUB_TOKEN }}</code></pre><pre><span class="pre-lang">bash</span><code><span class="tok-c"># Consumer verifies provenance before deploying</span>
+slsa-verifier verify-<span class="tok-k">image</span> ghcr.io/acme/shop-api@sha256:ab12... \
+  --source-uri github.com/acme/shop-api --source-tag v1.4.2
+<span class="tok-c"># or: cosign verify-attestation --type slsaprovenance ...</span></code></pre></div><div class="section" id="s4-5"><h2><span class="sec-emoji">🧩</span> Practical requirements for higher levels</h2><div class="tbl-wrap"><table><thead><tr><th>Control</th><th>Why</th></tr></thead><tbody><tr><td>Hosted, ephemeral, isolated runners</td><td>One build cannot poison the next</td></tr><tr><td>No long-lived secrets in build steps</td><td>Build scripts cannot steal the signing identity</td></tr><tr><td>Reviewed, protected branches &amp; tags</td><td>Source integrity (two-person review)</td></tr><tr><td>Hermetic / pinned dependencies (digests, lockfiles)</td><td>Same inputs → same outputs</td></tr><tr><td>Reproducible builds (aim)</td><td>Independent rebuild verifies the binary</td></tr></tbody></table></div></div></section><section class="panel" id="t5" data-toc="[&quot;Pin everything&quot;, &quot;Control where packages come from&quot;, &quot;CI/CD pipeline hardening checklist&quot;, &quot;Protect the source repository&quot;, &quot;OpenSSF Scorecard \u2014 grade your dependencies&quot;, &quot;Detecting malicious packages&quot;]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Advanced</span></div><div class="panel-eyebrow">Module 05 · Practice</div><h1 class="panel-title">Hardening the Pipeline &amp; Dependencies</h1><p class="panel-subtitle">Concrete defences: dependency pinning, registry controls, CI/CD hardening, repository protections and continuous health scoring.</p></div><div class="section" id="s5-1"><h2><span class="sec-emoji">📌</span> Pin everything</h2><div class="tbl-wrap"><table><thead><tr><th>Item</th><th>Do</th><th>Don't</th></tr></thead><tbody><tr><td>npm / pip / Maven</td><td>Commit lockfiles; <code>npm ci</code>, <code>pip install --require-hashes</code></td><td><code>npm install</code> with caret ranges in CI</td></tr><tr><td>Docker base image</td><td><code>FROM python:3.12-slim@sha256:…</code></td><td><code>FROM python:latest</code></td></tr><tr><td>GitHub Actions</td><td><code>uses: actions/checkout@&lt;40-char-sha&gt;</code></td><td><code>uses: foo/bar@main</code></td></tr><tr><td>Install scripts</td><td>Verify checksum / signature of downloaded tools</td><td><code>curl … | bash</code></td></tr></tbody></table></div><pre><span class="pre-lang">bash</span><code>pip-compile --generate-hashes requirements.<span class="tok-k">in</span> -o requirements.txt
+pip install --require-hashes -r requirements.txt
+npm ci --ignore-scripts          <span class="tok-c"># install exact lockfile versions, skip lifecycle scripts</span></code></pre></div><div class="section" id="s5-2"><h2><span class="sec-emoji">🏪</span> Control where packages come from</h2><ul><li>Run an <strong>internal proxy/registry</strong> (Artifactory, Nexus, CodeArtifact, Harbor) — builds pull only from it.</li><li>Defeat <strong>dependency confusion</strong>: use scoped names (<code>@acme/lib</code>), claim your names publicly, configure the proxy to prefer internal sources.</li><li>Add a <strong>cooldown / quarantine</strong> for brand-new package versions before they are allowed in.</li><li>Block packages with failing malware / reputation scans (Socket, Snyk, Phylum, OSV malicious-package feed).</li><li>Mirror critical base images into your own registry.</li></ul><pre><span class="pre-lang">ini</span><code># .npmrc – scoped packages only from the private registry
+@acme:registry=https://npm.acme.io/
+registry=https://npm.acme.io/virtual-proxy/
+always-auth=true</code></pre></div><div class="section" id="s5-3"><h2><span class="sec-emoji">🏭</span> CI/CD pipeline hardening checklist</h2><div class="tbl-wrap"><table><thead><tr><th>Area</th><th>Control</th></tr></thead><tbody><tr><td>Identity</td><td>OIDC to cloud — no static keys; least-privilege <code>GITHUB_TOKEN</code> (<code>permissions:</code> block per job)</td></tr><tr><td>Runners</td><td>Ephemeral, isolated, no self-hosted runners on public-PR triggers</td></tr><tr><td>Secrets</td><td>Scoped to environments, masked, never available to fork PRs</td></tr><tr><td>Workflows</td><td>Review changes to <code>.github/workflows</code> (CODEOWNERS); avoid <code>pull_request_target</code> with untrusted code</td></tr><tr><td>Third-party actions</td><td>Pin by SHA; allow-list org-wide; Dependabot to update</td></tr><tr><td>Artifacts</td><td>Sign, attest, store immutable; promote the <em>same digest</em> across environments</td></tr><tr><td>Egress</td><td>Restrict build network to required hosts (e.g. StepSecurity Harden-Runner)</td></tr></tbody></table></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">A classic mistake: a workflow triggered by <code>pull_request_target</code> that checks out and runs code from the pull request — it gives an outside contributor access to repository secrets.</div></div></div><div class="section" id="s5-4"><h2><span class="sec-emoji">🛡️</span> Protect the source repository</h2><ul><li><strong>Branch protection / rulesets</strong>: required reviews, status checks, signed commits, no force-push.</li><li><strong>CODEOWNERS</strong> for sensitive paths (workflows, Dockerfiles, IaC).</li><li>Enforce <strong>MFA / phishing-resistant keys</strong> and short-lived tokens for all contributors.</li><li>Turn on secret scanning + push protection, Dependabot alerts, code scanning.</li><li>Review third-party app/OAuth installations regularly.</li></ul></div><div class="section" id="s5-5"><h2><span class="sec-emoji">📊</span> OpenSSF Scorecard — grade your dependencies</h2><pre><span class="pre-lang">bash</span><code>scorecard --repo=github.com/expressjs/express --show-details
+<span class="tok-c"># Checks: Branch-Protection, Code-Review, Pinned-Dependencies, Signed-Releases,</span>
+<span class="tok-c">#         Token-Permissions, Vulnerabilities, Maintained, Dangerous-Workflow, ...</span></code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Use Scorecard in two directions: improve your <em>own</em> repos, and use scores as one signal when choosing <em>new dependencies</em> (a 2/10 repo with one unreviewed maintainer is riskier).</div></div></div><div class="section" id="s5-6"><h2><span class="sec-emoji">🔬</span> Detecting malicious packages</h2><ul><li>Red flags: very new version of an old package, install scripts that make network calls, obfuscated code, maintainer change, name close to a popular package.</li><li>Tools: <strong>OSV malicious-package advisories</strong>, Socket, Phylum, Snyk, <code>guarddog</code> (open source).</li><li>Defence in depth: <code>--ignore-scripts</code>, sandboxed install steps, egress allow-lists in CI.</li></ul><pre><span class="pre-lang">bash</span><code>guarddog pypi scan requests-extra            <span class="tok-c"># heuristic malware rules for PyPI packages</span>
+guarddog npm verify <span class="tok-k">package</span>-lock.json</code></pre></div></section><section class="panel" id="t6" data-toc="[&quot;Reference architecture: build \u2192 verify \u2192 admit&quot;, &quot;Policy as code for supply chain&quot;, &quot;Handling a Log4Shell-style zero-day&quot;, &quot;Third-party and vendor risk&quot;, &quot;Metrics &amp;amp; maturity&quot;, &quot;Capstone lab&quot;]"><div class="panel-header"><div class="level-row"><span class="level-tag adv">Advanced</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 06 · Mastery</div><h1 class="panel-title">Expert: End-to-End Architecture &amp; Governance</h1><p class="panel-subtitle">Combine SBOM, signing, SLSA and policy into one trusted delivery architecture, then govern it with metrics, vendor risk and compliance.</p></div><div class="section" id="s6-1"><h2><span class="sec-emoji">🏗️</span> Reference architecture: build → verify → admit</h2><div class="diagram"><svg viewBox="0 0 720 192" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Producer side — create trustworthy evidence"><defs><marker id="ar36" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><text x="360.0" y="30" text-anchor="middle" font-weight="700" font-size="16" fill="#37352f">Producer</text><rect x="20.0" y="54" width="108.8" height="104" rx="12" fill="#14213D"/><text x="74.4" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Source</text><text x="74.4" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">signed commits</text><text x="74.4" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">protected branch</text><line x1="132.8" y1="106.0" x2="158.8" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar36)"/><rect x="162.8" y="54" width="108.8" height="104" rx="12" fill="#2563eb"/><text x="217.2" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Hardened build</text><text x="217.2" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">SLSA L3</text><text x="217.2" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">pinned deps</text><line x1="275.6" y1="106.0" x2="301.6" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar36)"/><rect x="305.6" y="54" width="108.8" height="104" rx="12" fill="#0f7b0f"/><text x="360.0" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Generate</text><text x="360.0" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">SBOM</text><text x="360.0" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">scan results</text><line x1="418.4" y1="106.0" x2="444.4" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar36)"/><rect x="448.4" y="54" width="108.8" height="104" rx="12" fill="#d9730d"/><text x="502.8" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Sign + attest</text><text x="502.8" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">Cosign keyless</text><text x="502.8" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">provenance</text><line x1="561.2" y1="106.0" x2="587.2" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar36)"/><rect x="591.2" y="54" width="108.8" height="104" rx="12" fill="#6d28d9"/><text x="645.6" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Registry</text><text x="645.6" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">immutable</text><text x="645.6" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">digest</text></svg><div class="diagram-caption">Figure · Producer side — create trustworthy evidence</div></div><div class="diagram"><svg viewBox="0 0 720 192" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Consumer side — verify before running"><defs><marker id="ar37" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs><text x="360.0" y="30" text-anchor="middle" font-weight="700" font-size="16" fill="#37352f">Consumer</text><rect x="20.0" y="54" width="108.8" height="104" rx="12" fill="#14213D"/><text x="74.4" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Pull</text><text x="74.4" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">by digest</text><line x1="132.8" y1="106.0" x2="158.8" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar37)"/><rect x="162.8" y="54" width="108.8" height="104" rx="12" fill="#2563eb"/><text x="217.2" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="10.4">Verify signature</text><text x="217.2" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">identity pinned</text><line x1="275.6" y1="106.0" x2="301.6" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar37)"/><rect x="305.6" y="54" width="108.8" height="104" rx="12" fill="#0f7b0f"/><text x="360.0" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="9.3">Check attestations</text><text x="360.0" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">SBOM · provenance</text><text x="360.0" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">scan clean</text><line x1="418.4" y1="106.0" x2="444.4" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar37)"/><rect x="448.4" y="54" width="108.8" height="104" rx="12" fill="#d9730d"/><text x="502.8" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Policy engine</text><text x="502.8" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">Kyverno · OPA</text><text x="502.8" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">allow / deny</text><line x1="561.2" y1="106.0" x2="587.2" y2="106.0" stroke="#37352f" stroke-width="2" marker-end="url(#ar37)"/><rect x="591.2" y="54" width="108.8" height="104" rx="12" fill="#6d28d9"/><text x="645.6" y="82" text-anchor="middle" fill="#fff" font-weight="700" font-size="11.5">Run</text><text x="645.6" y="106" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">admitted</text><text x="645.6" y="123" text-anchor="middle" fill="#fff" opacity=".92" font-size="9.5">workload</text></svg><div class="diagram-caption">Figure · Consumer side — verify before running</div></div><div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Principle: <strong>"never trust, always verify"</strong> — the cluster admits only artifacts whose evidence satisfies your policy, regardless of who pushed them.</div></div></div><div class="section" id="s6-2"><h2><span class="sec-emoji">📏</span> Policy as code for supply chain</h2><pre><span class="pre-lang">rego</span><code><span class="tok-k">package</span> supplychain
+
+<span class="tok-k">default</span> <span class="tok-k">allow</span> = <span class="tok-k">false</span>
+
+<span class="tok-k">allow</span> {
+  <span class="tok-k">input</span>.signature.valid
+  <span class="tok-k">input</span>.signature.issuer == <span class="tok-s">"https://token.actions.githubusercontent.com"</span>
+  startswith(<span class="tok-k">input</span>.signature.subject, <span class="tok-s">"https://github.com/acme/"</span>)
+  <span class="tok-k">input</span>.provenance.slsa_level &gt;= 3
+  count(critical_vulns) == 0
+}
+
+critical_vulns[v] {
+  v := <span class="tok-k">input</span>.vulnerabilities[_]
+  v.severity == <span class="tok-s">"CRITICAL"</span>
+  not v.vex_status == <span class="tok-s">"not_affected"</span>
+}</code></pre><p>Evaluate this policy in the pipeline (<code>conftest</code>) <em>and</em> at admission (Gatekeeper/Kyverno) so the same rule is enforced twice.</p></div><div class="section" id="s6-3"><h2><span class="sec-emoji">🧬</span> Handling a Log4Shell-style zero-day</h2><ol><li><strong>Query SBOM inventory</strong> (Dependency-Track) — which products ship the vulnerable package, which versions?</li><li><strong>Prioritise</strong> by exposure: internet-facing + reachable first; issue VEX for unaffected products.</li><li><strong>Mitigate</strong> quickly (config flag / WAF rule) while a fix is prepared.</li><li><strong>Patch → rebuild → sign → redeploy</strong> through the normal pipeline (no hand-built images).</li><li><strong>Verify</strong> new SBOMs no longer contain the version; block it with a policy.</li><li><strong>Communicate</strong> status to customers with VEX and release notes.</li></ol><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Time-to-answer "are we affected?" is the key metric. Teams with SBOM inventories answer in minutes; teams without take weeks.</div></div></div><div class="section" id="s6-4"><h2><span class="sec-emoji">🤝</span> Third-party and vendor risk</h2><ul><li>Request <strong>SBOM + VEX + SLSA attestations</strong> from suppliers; make it a contract term.</li><li>Assess critical open-source deps: maintainers, funding, bus factor, Scorecard, release signing.</li><li>For critical components consider <strong>vendoring / forking</strong> with your own review, or paying for support.</li><li>Track <strong>end-of-life</strong> versions — unsupported libraries have no future patches.</li></ul></div><div class="section" id="s6-5"><h2><span class="sec-emoji">📈</span> Metrics &amp; maturity</h2><div class="tbl-wrap"><table><thead><tr><th>Metric</th><th>Why</th></tr></thead><tbody><tr><td>% releases with signed SBOM + provenance</td><td>Coverage of the evidence chain</td></tr><tr><td>% deployments by digest, signature-verified</td><td>Enforcement</td></tr><tr><td>Mean time to answer "are we affected?"</td><td>Inventory quality</td></tr><tr><td>Mean time to patch critical dependency</td><td>Responsiveness</td></tr><tr><td>% actions/images pinned by digest</td><td>Mutable-reference exposure</td></tr><tr><td>Highest SLSA Build level per critical service</td><td>Build-integrity maturity</td></tr><tr><td>Open Scorecard failures (own repos)</td><td>Repo hygiene</td></tr></tbody></table></div><div class="diagram"><svg viewBox="0 0 720 272" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A practical maturity path"><text x="360.0" y="28" text-anchor="middle" font-weight="700" font-size="16" fill="#37352f">Supply chain maturity</text><rect x="20" y="46" width="680" height="46" rx="10" fill="#14213D"/><text x="38" y="75" fill="#fff" font-weight="700" font-size="13.5">Level 1 · Visibility</text><text x="682" y="75" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">SBOMs + SCA, lockfiles</text><rect x="20" y="100" width="680" height="46" rx="10" fill="#2563eb"/><text x="38" y="129" fill="#fff" font-weight="700" font-size="13.5">Level 2 · Integrity</text><text x="682" y="129" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">pinning, protected pipeline, signed artifacts</text><rect x="20" y="154" width="680" height="46" rx="10" fill="#0f7b0f"/><text x="38" y="183" fill="#fff" font-weight="700" font-size="13.5">Level 3 · Verification</text><text x="682" y="183" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">provenance, admission enforcement, SLSA L2–3</text><rect x="20" y="208" width="680" height="46" rx="10" fill="#d9730d"/><text x="38" y="237" fill="#fff" font-weight="700" font-size="13.5">Level 4 · Resilience</text><text x="682" y="237" text-anchor="end" fill="#fff" opacity=".92" font-size="11.5">VEX, vendor attestations, reproducible builds</text></svg><div class="diagram-caption">Figure · A practical maturity path</div></div></div><div class="section" id="s6-6"><h2><span class="sec-emoji">🧪</span> Capstone lab</h2><ol><li>Create a small app + Dockerfile pinned by digest; enable Dependabot and branch protection.</li><li>CI: build → Trivy scan → Syft SBOM (CycloneDX) → push by digest.</li><li>Sign with Cosign keyless; attach SBOM and vulnerability attestations.</li><li>Add SLSA provenance with <code>slsa-github-generator</code>; verify with <code>slsa-verifier</code>.</li><li>Install Kyverno on kind; enforce <code>verifyImages</code>; show an unsigned image being rejected.</li><li>Upload SBOM to Dependency-Track; simulate a new CVE and answer "which services are affected?"</li></ol><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Use a throw-away GitHub repo and local <code>kind</code> cluster — nothing here needs paid services.</div></div></div></section><section class="panel" id="t7" data-toc="[&quot;Take the Assessment&quot;]"><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Beginner</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Advanced</span></div><div class="panel-eyebrow">Module 07</div><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">Check your understanding of the whole module.</p></div><div class="section" id="t7-1"><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div><div class="assess-intro-text">A timed, exam-style secured assessment for the Supply Chain Security module. Questions are shuffled on every attempt.</div><ul class="assess-intro-list"><li><strong>15 multiple-choice questions</strong> — concept checks plus scenario-based judgement calls</li><li>23-minute timer, question palette, mark-for-review, full explanations after you submit</li><li>Full-screen proctoring: 3 warnings for leaving the test and it auto-submits</li><li>Your attempts and top score are saved in this browser</li></ul><button class="assess-start-btn" id="assessStartBtn" type="button">▶ Start Assessment</button></div><div id="scoreBoard" class="score-board" style="display:none"></div></div></section></main></div>
+<script>
+(function(){
+ let manual=null;const tabs=[...document.querySelectorAll('.tab')],panels=[...document.querySelectorAll('.panel')],tocEl=document.getElementById('toc'),pt=document.getElementById('progressText');
+ function buildToc(panel){const labels=JSON.parse(panel.getAttribute('data-toc')||'[]');const secs=[...panel.querySelectorAll('.section')];
+  tocEl.innerHTML=secs.map((s,i)=>`<li><a href="#${s.id}" data-target="${s.id}">${labels[i]||''}</a></li>`).join('');const f=tocEl.querySelector('a');if(f)f.classList.add('active')}
+ function activate(i){tabs.forEach((t,k)=>t.classList.toggle('active',k===i));panels.forEach((p,k)=>p.classList.toggle('active',k===i));manual=null;buildToc(panels[i]);pt.textContent='Tab '+(i+1)+' of '+tabs.length;window.scrollTo(0,0)}
+ tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+ document.addEventListener('click',e=>{const a=e.target.closest('.toc-list a');if(!a)return;e.preventDefault();const el=document.getElementById(a.dataset.target);manual=a.dataset.target;tocEl.querySelectorAll('a').forEach(x=>x.classList.toggle('active',x===a));if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-125,behavior:'smooth'})});
+ let tk=false;function spy(){if(manual){tk=false;return}const ap=document.querySelector('.panel.active');if(!ap){tk=false;return}let cur=null;const secs=[...ap.querySelectorAll('.section')];secs.forEach(s=>{if(s.getBoundingClientRect().top-180<0)cur=s.id});if(secs.length&&window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-4)cur=secs[secs.length-1].id;
+  if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));tk=false}
+ window.addEventListener('scroll',()=>{if(!tk){requestAnimationFrame(spy);tk=true}},{passive:true});
+ ['wheel','touchstart','keydown','pointerdown'].forEach(ev=>window.addEventListener(ev,e=>{if(e.target&&e.target.closest&&e.target.closest('.toc-list a'))return;manual=null},{passive:true}));
+ window.resetProgress=()=>activate(0);activate(0);
+})();
+</script>
+<script>
+window.COURSE = {"slug": "supply-chain", "title": "Supply Chain Security", "assess": [{"q": "What was the key lesson of the SolarWinds attack?", "options": ["Disable updates", "Use longer passwords", "A signed update can still be malicious if the build system is compromised", "Avoid cloud"], "answer": 2, "exp": "Attackers tampered with the build pipeline so a legitimate signature covered malicious code."}, {"q": "Dependency confusion happens when…", "options": ["Two libraries conflict at runtime", "A public package with the same name as an internal one is installed instead", "A package has no licence", "A lockfile is missing"], "answer": 1, "exp": "Package managers may prefer a higher-versioned public package over your private one."}, {"q": "An SBOM is best described as…", "options": ["A vulnerability scan report", "A firewall rule set", "An encryption key list", "A machine-readable inventory of components in software"], "answer": 3, "exp": "It lists components, versions, suppliers, licences and relationships."}, {"q": "Which two SBOM formats are most widely adopted?", "options": ["OCI and ISO", "SARIF and ASFF", "YAML and TOML", "SPDX and CycloneDX"], "answer": 3, "exp": "SPDX (Linux Foundation) and CycloneDX (OWASP) are the dominant standards."}, {"q": "A purl such as <code>pkg:npm/lodash@4.17.21<\/code> is…", "options": ["A signature", "A licence", "A CVE ID", "A universal package identifier"], "answer": 3, "exp": "Package URL gives a consistent identifier across ecosystems and tools."}, {"q": "What does a VEX statement of <code>not_affected<\/code> tell consumers?", "options": ["The SBOM is invalid", "A CVE exists in a component but is not exploitable in this product", "The product is unsupported", "The CVE is fixed upstream only"], "answer": 1, "exp": "VEX removes noise by stating exploitability for the specific product context."}, {"q": "Why should Cosign signatures reference an image digest rather than a tag?", "options": ["Tags are not allowed", "Digests are faster to pull", "Digests are shorter", "Tags are mutable; digests identify exact content"], "answer": 3, "exp": "A tag can be repointed; a digest cannot change without changing the content."}, {"q": "In Sigstore keyless signing, what does Fulcio provide?", "options": ["Short-lived certificates bound to an OIDC identity", "A transparency log", "A container registry", "Vulnerability data"], "answer": 0, "exp": "Fulcio is the CA issuing ephemeral certificates; Rekor is the transparency log."}, {"q": "Which verification is MOST secure for keyless signatures?", "options": ["Pin the expected certificate identity and OIDC issuer", "Accept any valid signature", "Check image size", "Check the tag name"], "answer": 0, "exp": "Anyone can sign with their own identity; policy must name your pipeline identity."}, {"q": "SLSA Build Level 2 adds which major requirement over Level 1?", "options": ["Manual approval", "A hosted build platform that signs the provenance", "Reproducible builds", "Air-gapped builds"], "answer": 1, "exp": "L2 requires provenance generated and signed by the build service, not the developer."}, {"q": "What distinguishes SLSA Build L3?", "options": ["Hardened, isolated builds where signing secrets are unreachable by build steps", "Source is on GitHub", "Provenance exists", "SBOM included"], "answer": 0, "exp": "L3 makes provenance forgery-resistant even if a build script is malicious."}, {"q": "Best way to reference a third-party GitHub Action?", "options": ["Copy the file locally with no review", "@v1 tag only", "@main", "Pin to a full commit SHA"], "answer": 3, "exp": "Tags and branches can be moved by a compromised maintainer; SHAs cannot."}, {"q": "Which workflow trigger is dangerous when combined with checking out PR code?", "options": ["pull_request_target", "push", "schedule", "workflow_dispatch"], "answer": 0, "exp": "It runs with repository secrets and write token, exposing them to untrusted code."}, {"q": "Signing images is only effective if…", "options": ["The image is large", "The tag is latest", "A policy/admission controller rejects unsigned or untrusted images", "The registry is public"], "answer": 2, "exp": "Verification must be enforced at deploy time or signatures are just decoration."}, {"q": "Which metric best shows SBOM programme maturity during a zero-day?", "options": ["Number of SBOM files", "Mean time to answer \"which products are affected?\"", "Size of registry", "Number of developers"], "answer": 1, "exp": "Fast, accurate impact analysis is the real value of inventories."}]};
+</script>
+<script>
+/* =====================================================================
+   Final assessment — full-screen, timed mock exam (graded in-browser)
+   ===================================================================== */
+(function(){
+  const C = window.COURSE;
+  const BANK = C.assess.map((q,i)=>Object.assign({id:'q'+i}, q));
+  const EXAM_SECONDS = Math.ceil(BANK.length*1.5)*60; // 1.5 min per question
+  const LS_KEY = 'devsecops_scores_' + C.slug;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash .card:hover{transform:none}
+  .exam-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9;padding:0}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-fswarn{position:fixed;inset:0;z-index:100003;background:rgba(15,23,42,.92);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#fff;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fswarn .fw-box{max-width:520px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .exam-fswarn h3{font-size:30px;font-weight:800;margin:0;display:flex;align-items:center;gap:12px;color:#fff}
+  .exam-fswarn p{margin:0;font-size:16px;color:#e2e8f0;line-height:1.5}
+  .exam-fswarn .fw-count{font-size:16px;font-weight:600;color:#fff}
+  .exam-fswarn .fw-btn{margin-top:6px;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:15px 26px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+  .exam-fswarn .fw-btn:hover{background:#000}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}.exam-q-pane{padding:20px}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+  function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function examDialog(title,msg,okLabel,cancel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">${cancel?'<button class="exam-btn nav" data-a="0">Cancel</button>':''}<button class="exam-btn primary" data-a="1">${okLabel||'OK'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d && cancel){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores(); a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: tab-switch / fullscreen-exit warnings (3 strikes -> auto-submit) ---- */
+  let warns=0, lastWarn=0, proctorOn=false;
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function hideFsWarn(){ const w=document.getElementById('examFsWarn'); if(w)w.remove(); }
+  function showFsWarn(n){
+    injectCss(); hideFsWarn();
+    const w=document.createElement('div'); w.className='exam-fswarn'; w.id='examFsWarn';
+    w.innerHTML='<div class="fw-box"><h3><span>&#9888;&#65039;</span> Fullscreen exited</h3>'+
+      '<p>The assessment must remain in fullscreen mode.</p>'+
+      '<div class="fw-count">Warning '+n+' of 3</div>'+
+      '<button class="fw-btn" id="examFsReturn">Return to assessment</button></div>';
+    document.body.appendChild(w);
+    const btn=document.getElementById('examFsReturn');
+    btn.addEventListener('click',()=>{
+      const el=document.documentElement;
+      const done=()=>{ fsWanted=true; hideFsWarn(); };
+      if(el.requestFullscreen){ el.requestFullscreen().then(done).catch(()=>{}); } else { done(); }
+    });
+    try{btn.focus();}catch(e){}
+  }
+  function countWarn(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<1500)return; lastWarn=now;
+    warns++;
+    if(warns>=3){ hideFsWarn(); examDialog('Test submitted','You left the test 3 times. It has been auto-submitted.'); submitExam(true); }
+    else if(kind==='fs'){ showFsWarn(warns); }
+    else { examDialog('Warning '+warns+' of 3','Switching tabs or leaving the window is not allowed. After 3 warnings the test is auto-submitted.'); }
+  }
+  function fsHandler(){
+    if(!examOn)return;
+    if(document.fullscreenElement){ hideFsWarn(); return; }
+    if(fsWanted){ countWarn('fs'); }
+  }
+  function visHandler(){ if(document.hidden){ showCover(); countWarn(); } else { hideCover(); } }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function keyGuard(e){ const k=(e.key||'').toLowerCase(); if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; } }
+  let fsWanted=false;
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+  }
+  function stopProctor(){
+    proctorOn=false; hideFsWarn();
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    hideCover();
+  }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; ${C.title} &mdash; Secured Assessment</h2>
+      <p>A timed, exam-style secured assessment for this module.</p>
+      <ul>
+        <li><b>${BANK.length} questions</b>, shuffled every attempt</li>
+        <li><b>${Math.round(EXAM_SECONDS/60)}-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Correct answers and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> where your browser allows it</li>
+        <li><b>No tab / window switching</b> and <b>no exiting fullscreen (Esc)</b> &mdash; 3 warnings and the test <b>auto-submits</b></li>
+        <li>Copy and right-click are disabled during the test</li>
+      </ul>
+      <div style="display:flex;gap:10px"><button class="exam-btn nav" id="examCancel" style="flex:0 0 auto">Cancel</button>
+      <button class="exam-btn primary" id="examBegin" style="flex:1;padding:14px">Start Test &rarr;</button></div>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examCancel').addEventListener('click',()=>sp.remove());
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      fsWanted=false;
+      if(document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().then(()=>{fsWanted=true;}).catch(()=>{}); }
+      sp.remove(); enterExam();
+    });
+  }
+
+  function enterExam(){
+    injectCss();
+    items = shuffle(BANK);
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    const ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">${C.title} &mdash; Secured Assessment</div><div class="et-sub">${items.length} questions &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}${it.code?'<pre><code>'+it.code+'</code></pre>':''}</div>
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}" tabindex="0"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>{
+      const pick=()=>{ answers[id]=+el.dataset.i; pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); refreshPalette(); };
+      el.addEventListener('click',pick);
+      el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();} });
+    });
+    document.getElementById('examPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    document.getElementById('examNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();});
+    refreshPalette();
+    pane.scrollTop=0;
+  }
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examDialog('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test', true);
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    let score=0; items.forEach(it=>{ if(answers[it.id]===it.answer) score++; });
+    showResults(score);
+  }
+  function showResults(score){
+    const total=items.length; saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below, revisit the modules and try again.';
+    if(pct>=85)msg='Outstanding &mdash; you are operating at an expert level for this role.';
+    else if(pct>=65)msg='Solid pass. Review the questions you missed and you are interview-ready.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the modules you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const you=answers[it.id], attempted=(you!=null), ok=attempted&&you===it.answer;
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+(it.code?'<pre><code>'+it.code+'</code></pre>':'')+'</div>';
+      inner+= attempted ? '<div class="ra '+(ok?'cor':'wrong')+'">Your answer: '+String.fromCharCode(65+you)+'. '+it.options[you]+'</div>' : '<div class="ra wrong">Your answer: <i>Not answered</i></div>';
+      if(!ok) inner+='<div class="ra cor">Correct: '+String.fromCharCode(65+it.answer)+'. '+it.options[it.answer]+'</div>';
+      if(it.exp) inner+='<div class="rx">'+it.exp+'</div>';
+      return '<div class="r '+(ok?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; ${C.title}</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another attempt</button></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    document.getElementById('examRetry').addEventListener('click',()=>{ closeExam(); showSplash(); });
+    document.getElementById('examClose').addEventListener('click',closeExam);
+  }
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',showSplash);
+  renderScoreboard();
+})();
+</script><script>
+(function(){
+  var nav=document.querySelector('.tabbar'); if(!nav)return; var PAD=16;
+  var bar=document.createElement('div'); bar.className='tabscroll'; bar.setAttribute('aria-hidden','true');
+  var thumb=document.createElement('div'); thumb.className='tabscroll-thumb'; bar.appendChild(thumb);
+  nav.insertAdjacentElement('afterend',bar);
+  function sync(){
+    var sw=nav.scrollWidth, cw=nav.clientWidth, max=sw-cw, bw=bar.clientWidth;
+    if(max<=1){ bar.classList.add('fits'); thumb.style.width='100%'; thumb.style.left='0px'; return; }
+    bar.classList.remove('fits');
+    var tw=Math.max(40,Math.round(bw*cw/sw)); thumb.style.width=tw+'px';
+    thumb.style.left=Math.round((bw-tw)*nav.scrollLeft/max)+'px';
+  }
+  function toScroll(x){ // x = pointer offset inside bar, centre thumb on it
+    var max=nav.scrollWidth-nav.clientWidth, bw=bar.clientWidth, tw=thumb.offsetWidth; if(max<=1)return;
+    var r=(x-tw/2)/(bw-tw); nav.scrollLeft=Math.max(0,Math.min(1,r))*max;
+  }
+  var drag=false, grab=0;
+  bar.addEventListener('pointerdown',function(e){
+    if(bar.classList.contains('fits'))return;
+    var br=bar.getBoundingClientRect(), tr=thumb.getBoundingClientRect();
+    drag=true; bar.classList.add('dragging'); bar.setPointerCapture(e.pointerId);
+    if(e.target===thumb){ grab=e.clientX-tr.left-tr.width/2; } else { grab=0; nav.style.scrollBehavior='smooth'; toScroll(e.clientX-br.left); setTimeout(function(){nav.style.scrollBehavior='';},350); }
+  });
+  bar.addEventListener('pointermove',function(e){ if(!drag)return; nav.style.scrollBehavior=''; toScroll(e.clientX-bar.getBoundingClientRect().left-grab); });
+  function end(e){ if(!drag)return; drag=false; bar.classList.remove('dragging'); try{bar.releasePointerCapture(e.pointerId);}catch(x){} }
+  bar.addEventListener('pointerup',end); bar.addEventListener('pointercancel',end);
+  nav.addEventListener('scroll',sync,{passive:true});
+  window.addEventListener('resize',sync);
+  if(window.ResizeObserver) new ResizeObserver(sync).observe(nav);
+  function reveal(t){
+    var nb=nav.getBoundingClientRect(), tb=t.getBoundingClientRect();
+    var l=tb.left-nb.left+nav.scrollLeft, r=l+tb.width;
+    if(l<nav.scrollLeft+PAD) nav.scrollTo({left:Math.max(0,l-PAD),behavior:'smooth'});
+    else if(r>nav.scrollLeft+nav.clientWidth-PAD) nav.scrollTo({left:r-nav.clientWidth+PAD,behavior:'smooth'});
+  }
+  new MutationObserver(function(){var a=nav.querySelector('.tab.active'); if(a)reveal(a);}).observe(nav,{attributes:true,subtree:true,attributeFilter:['class']});
+  sync(); setTimeout(sync,300);
+  var a=nav.querySelector('.tab.active'); if(a)setTimeout(function(){reveal(a);},50);
+})();
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body></html>

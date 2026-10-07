@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced Diagnostics — Escalation Engineer / Tier 3 Support Engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============= Notion-inspired theme ============= */
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#ad1a72 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans';font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'JetBrains Mono',monospace;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans';font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'JetBrains Mono',monospace;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'JetBrains Mono',monospace;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'JetBrains Mono',monospace;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'JetBrains Mono',monospace;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'JetBrains Mono',monospace;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+</style>
+<!-- ── Global theme overlay (DESIGN-CBuddy.md) ── -->
+<link rel="stylesheet" href="/theme-cbuddy.css">
+<style>
+/* CareerBuddy: sticky sidebar visible scrollbar */
+.toc,.sidebar,.sidenav{scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc::-webkit-scrollbar,.sidebar::-webkit-scrollbar,.sidenav::-webkit-scrollbar{width:9px;height:9px}
+.toc::-webkit-scrollbar-thumb,.sidebar::-webkit-scrollbar-thumb,.sidenav::-webkit-scrollbar-thumb{background:#cbd2e0;border-radius:8px}
+.toc::-webkit-scrollbar-thumb:hover,.sidebar::-webkit-scrollbar-thumb:hover,.sidenav::-webkit-scrollbar-thumb:hover{background:#9aa4b8}
+.toc::-webkit-scrollbar-track,.sidebar::-webkit-scrollbar-track,.sidenav::-webkit-scrollbar-track{background:transparent}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@100..900&display=swap">
+<style>
+/* -- Unify typography: Noto Sans everywhere (CareerBuddy) -- */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,dl,dt,dd,td,th,div,section,article,header,footer,nav,aside,main,label,button,input,select,textarea,blockquote,figcaption,small,strong,b,em,i{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif !important}
+.material-symbols-outlined,.material-icons{font-family:'Material Symbols Outlined','Material Icons' !important}
+code,pre,kbd,samp,tt,.mono,[class*="mono"],[class*="Mono"],[class*="code"],[class*="Code"],[class*="tok"],[class*="hljs"]{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+
+<style>
+/* Practice + quick-check additions (same visual language as the reference) */
+.practice-label{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:#0a5f0a;background:var(--green-soft);padding:3px 9px;border-radius:5px;margin-bottom:6px}
+.saq-scenario{font-size:14px;color:var(--ink-soft);margin:0 0 10px;line-height:1.55}
+.mcq-reset{margin-top:6px}
+.steps{counter-reset:st;list-style:none;padding-left:0 !important}
+.steps>li{counter-increment:st;position:relative;padding-left:40px;margin:12px 0 !important}
+.steps>li::before{content:counter(st);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;
+  background:#14213D;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}
+.script{background:var(--bg-soft);border-left:3px solid #14213D;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:14.5px}
+.script.bad{border-left-color:var(--red)}
+.script.good{border-left-color:var(--green)}
+.script b{display:block;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:2px}
+</style>
+
+<style>
+/* Visible, thin navbar scrollbar */
+.tabbar{overflow-x:auto !important;scrollbar-width:thin !important;scrollbar-color:#000000 #e2e8f0 !important;padding-bottom:4px}
+.tabbar::-webkit-scrollbar{display:block !important;height:8px}
+.tabbar::-webkit-scrollbar-track{background:#e2e8f0;border-radius:8px}
+.tabbar::-webkit-scrollbar-thumb{background:#000000;border-radius:8px}
+.tabbar::-webkit-scrollbar-thumb:hover{background:#333333}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<!-- ============= STICKY HEADER ============= -->
+<header class="header"><div class="header-top"><div class="brand"><div class="brand-mark">AD</div><span>Advanced Diagnostics<span class="brand-sub"> · Escalation Engineer / Tier 3 Support Engineer</span></span></div><div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 11</span></span><button class="btn" onclick="resetProgress()">↻ Reset</button></div></div><nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Dumps & Memory</button><button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> Core Dump Analysis</button><button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> Heap Dump Analysis</button><button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> Memory Leak Hunting</button><button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> Distributed Tracing</button><button class="tab" data-tab="t6" role="tab"><span class="tab-num">06</span> OpenTelemetry in Practice</button><button class="tab" data-tab="t7" role="tab"><span class="tab-num">07</span> Observability</button><button class="tab" data-tab="t8" role="tab"><span class="tab-num">08</span> CPU, Threads & I/O</button><button class="tab" data-tab="t9" role="tab"><span class="tab-num">09</span> Real-World Scenarios</button><button class="tab" data-tab="t10" role="tab"><span class="tab-num">10</span> Interview Prep</button><button class="tab" data-tab="t11" role="tab"><span class="tab-num">11</span> Assessment</button></nav></header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside><main class="main">
+<section class="panel active" id="t1" data-toc="[[&quot;s1-1&quot;, &quot;Types of Dumps&quot;], [&quot;s1-2&quot;, &quot;Spotting a Memory Leak&quot;], [&quot;s1-3&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 01 · Diagnostics</div><h1 class="panel-title">Core Dumps, Heap Dumps & Memory Leaks</h1><p class="panel-subtitle">Capture and analyse process snapshots when logs are not enough.</p></div>
+<div class="section" id="s1-1"><h2><span class="sec-emoji">🧠</span> Types of Dumps</h2><div style="overflow-x:auto"><table><thead><tr><th>Dump</th><th>What it shows</th><th>Tools</th></tr></thead><tbody><tr><td>Core dump</td><td>Process memory at crash (native)</td><td>gdb, lldb</td></tr><tr><td>Heap dump</td><td>Objects in memory (JVM, Node)</td><td>jmap, Eclipse MAT, Chrome DevTools</td></tr><tr><td>Thread dump</td><td>What every thread is doing now</td><td>jstack, <code>kill -3</code>, py-spy</td></tr><tr><td>Profile</td><td>CPU/alloc hotspots</td><td>pprof, async-profiler</td></tr></tbody></table></div></div>
+<div class="section" id="s1-2"><h2><span class="sec-emoji">📈</span> Spotting a Memory Leak</h2><ol class="steps"><li>Watch memory after each GC: a rising floor means a leak.</li><li>Take two heap dumps minutes apart under load.</li><li>Compare in MAT/DevTools: which class count keeps growing?</li><li>Follow the <b>path to GC roots</b> to see who holds the objects.</li><li>Common cause: unbounded cache, listeners never removed, static collections.</li></ol><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Dumps may contain customer data. Handle under your security policy and delete after use.</div></div></div>
+<div class="section" id="s1-3"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Heap grows 200 MB/hour and OOM hits after a day. What do you capture and why?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Two heap dumps an hour apart plus GC logs; compare dominator trees to find the growing class and its GC root; add a thread dump if CPU is also high.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>A steadily rising post-GC memory floor suggests…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Normal behaviour</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> A memory leak</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Network issue</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Disk issue</li></ul><div class="mcq-feedback" data-expl="Retained objects are not released."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t2" data-toc="[[&quot;s2-1&quot;, &quot;What a Core Dump Contains&quot;], [&quot;s2-2&quot;, &quot;Enabling &amp; Collecting&quot;], [&quot;s2-3&quot;, &quot;Analysing with gdb&quot;], [&quot;s2-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 02 · Core Dumps</div><h1 class="panel-title">Core Dumps: Reading a Crashed Process</h1><p class="panel-subtitle">What a core dump is, how to collect one safely, and how to read it with gdb to find the exact line that crashed a native process.</p></div>
+<div class="section" id="s2-1"><h2><span class="sec-emoji">⚫</span> What a Core Dump Contains</h2><p>A <strong>core dump</strong> is a snapshot of a process's memory, registers and thread stacks written by the operating system at the instant the process crashes. It lets you examine a failure after the fact, even though the process is long gone and the bug may never happen again on demand.</p><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> the black-box flight recorder of an aeroplane. You do not need the plane to crash again; you open the recorder and replay the last moments.</div></div><div style="overflow-x:auto"><table><thead><tr><th>Signal</th><th>Number</th><th>Typical cause</th></tr></thead><tbody><tr><td>SIGSEGV</td><td>11</td><td>Invalid memory access (null/dangling pointer)</td></tr><tr><td>SIGABRT</td><td>6</td><td>Program called abort(), failed assertion, heap corruption</td></tr><tr><td>SIGBUS</td><td>7</td><td>Bad memory alignment or truncated mapped file</td></tr><tr><td>SIGFPE</td><td>8</td><td>Arithmetic error such as integer divide by zero</td></tr><tr><td>SIGKILL</td><td>9</td><td>Killed externally (e.g. OOM killer): <b>no</b> core dump</td></tr></tbody></table></div><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">SIGKILL cannot be caught, so a process killed by the Linux OOM killer or Kubernetes leaves no core. Look at <code>dmesg</code> or pod events instead.</div></div></div>
+<div class="section" id="s2-2"><h2><span class="sec-emoji">⚙️</span> Enabling & Collecting</h2><pre><span class="pre-lang">bash</span><code>ulimit -c unlimited                      # allow core files in this shell
+cat /proc/sys/kernel/core_pattern        # where cores go (file, or systemd-coredump)
+coredumpctl list                         # systemd: list captured crashes
+coredumpctl dump 4242 -o core.4242       # export one core
+gdb --version &amp;&amp; file core.4242          # confirm tooling and core type</code></pre><p><code>ulimit -c</code> removes the size cap that is normally 0 (meaning 'no cores'). <code>core_pattern</code> tells the kernel where to write the file; on modern distros it pipes to <code>systemd-coredump</code>, so you retrieve cores with <code>coredumpctl</code> rather than finding a file on disk. In containers the pattern is host-wide, so you may need the host admin's help.</p><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">A core file holds everything in memory: passwords, tokens and customer data. Treat it as confidential, copy it over encrypted channels and delete it after analysis. It can also be as large as the process's RAM.</div></div></div>
+<div class="section" id="s2-3"><h2><span class="sec-emoji">🔍</span> Analysing with gdb</h2><pre><span class="pre-lang">gdb</span><code>gdb /usr/bin/imgservice core.4242
+(gdb) bt                       # backtrace of the crashing thread
+(gdb) thread apply all bt      # every thread&#x27;s stack
+(gdb) frame 3                  # jump to frame 3
+(gdb) info locals              # local variables in that frame
+(gdb) print *req               # inspect a pointer&#x27;s target
+(gdb) print req-&gt;width         # a field of that structure</code></pre><p>Start with <code>bt</code>: frame 0 is where the process died, higher frames show how it got there. Select a frame, then <code>info locals</code> and <code>print</code> show the values at that moment. A null pointer or a wildly large size in the <em>caller</em> is often the real mistake.</p><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">If frames show <code>?? ()</code> you lack <strong>debug symbols</strong>, or the binary does not match the one that crashed. Install the matching debuginfo package or use the exact build artifact from that release.</div></div></div>
+<div class="section" id="s2-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>gdb shows only '?? ()' frames for a core from production. List two reasons and what you would do.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Missing debug symbols (stripped binary / no debuginfo package) or a binary version that does not match the one that crashed. Obtain the exact release build with symbols (or matching debuginfo) and reopen the core against it.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>A process killed by the Linux OOM killer receives which signal, and does it produce a core dump?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> SIGSEGV, yes</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> SIGKILL, no</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> SIGABRT, yes</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> SIGFPE, no</li></ul><div class="mcq-feedback" data-expl="SIGKILL cannot be caught, so no core is written."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t3" data-toc="[[&quot;s3-1&quot;, &quot;Capturing a Heap Dump&quot;], [&quot;s3-2&quot;, &quot;Reading the Dump in Eclipse MAT&quot;], [&quot;s3-3&quot;, &quot;Example: A Static Cache That Never Shrinks&quot;], [&quot;s3-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 03 · Heap Dumps</div><h1 class="panel-title">Heap Dumps: Capturing and Reading with MAT</h1><p class="panel-subtitle">How to capture a JVM heap dump safely and use Eclipse MAT to find which objects fill memory and why they are never freed.</p></div>
+<div class="section" id="s3-1"><h2><span class="sec-emoji">📸</span> Capturing a Heap Dump</h2><pre><span class="pre-lang">bash</span><code>jcmd 4242 GC.heap_dump /tmp/heap.hprof          # preferred, built into modern JDKs
+jmap -dump:live,format=b,file=/tmp/heap.hprof 4242
+# Make the JVM capture one automatically when it runs out of memory:
+java -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/dumps -Xmx2g -jar app.jar</code></pre><p><code>live</code> forces a garbage collection first so only reachable objects are written. The dump file is roughly as large as the heap in use and the JVM <strong>pauses</strong> while writing it, so on a busy production node take it from one instance that has been removed from the load balancer. The <code>HeapDumpOnOutOfMemoryError</code> flag is the best option because it captures the dump at the exact moment of failure.</p></div>
+<div class="section" id="s3-2"><h2><span class="sec-emoji">🧭</span> Reading the Dump in Eclipse MAT</h2><div style="overflow-x:auto"><table><thead><tr><th>MAT view</th><th>What it shows</th><th>Use it to</th></tr></thead><tbody><tr><td>Histogram</td><td>Instance count and size per class</td><td>Spot a class with millions of instances</td></tr><tr><td>Dominator tree</td><td>Objects ranked by retained size</td><td>Find the single object keeping the most memory alive</td></tr><tr><td>Leak Suspects report</td><td>Automatic analysis of big retainers</td><td>Get a first hypothesis in seconds</td></tr><tr><td>Path to GC Roots</td><td>Chain of references keeping an object alive</td><td>Find the exact field that prevents collection</td></tr></tbody></table></div><p><strong>Shallow heap</strong> is the memory of the object itself. <strong>Retained heap</strong> is the memory that would be freed if the object disappeared, including everything only it references.</p><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> a shipping container. Its shallow size is the empty steel box; its retained size is the box plus every item that would be thrown away with it.</div></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Sort the dominator tree by <b>Retained Heap</b>. A single <code>HashMap</code> with 80% retained size is almost always the answer.</div></div></div>
+<div class="section" id="s3-3"><h2><span class="sec-emoji">🐛</span> Example: A Static Cache That Never Shrinks</h2><pre><span class="pre-lang">java</span><code>public class ProfileService {
+    private static final Map&lt;String, Profile&gt; CACHE = new HashMap&lt;&gt;();  // grows forever
+    public Profile get(String id) {
+        return CACHE.computeIfAbsent(id, this::loadFromDb);
+    }
+}
+// MAT: path to GC roots -&gt; ProfileService.CACHE (static field) -&gt; 4.2 M Profile objects
+
+// Fix: bounded LRU cache
+private static final Map&lt;String, Profile&gt; CACHE =
+    Collections.synchronizedMap(new LinkedHashMap&lt;&gt;(1024, 0.75f, true) {
+        protected boolean removeEldestEntry(Map.Entry e) { return size() &gt; 10_000; }
+    });</code></pre><p>Static fields are GC roots, so everything in <code>CACHE</code> lives until the JVM exits. The fix sets a maximum size and evicts the least recently used entry. In practice use Caffeine or Guava with size and time limits.</p></div>
+<div class="section" id="s3-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>In MAT, a HashMap has shallow heap 48 bytes but retained heap 1.6 GB. What does that tell you?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">The map object itself is tiny, but it references objects that are kept alive only through it: about 1.6 GB would be freed if it were released. It is the dominant retainer and the first suspect for the leak.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Which MAT feature shows the chain of references that prevents an object from being garbage collected?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Histogram</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Path to GC Roots</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Thread overview</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> OQL</li></ul><div class="mcq-feedback" data-expl="Path to GC Roots shows who holds the reference."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t4" data-toc="[[&quot;s4-1&quot;, &quot;Leak, Bloat or Normal?&quot;], [&quot;s4-2&quot;, &quot;Common Leak Patterns&quot;], [&quot;s4-3&quot;, &quot;Tools by Runtime&quot;], [&quot;s4-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 04 · Memory Leaks</div><h1 class="panel-title">Memory Leaks Across Languages</h1><p class="panel-subtitle">Tell a leak from normal growth, recognise the common patterns, and use the right tool for each runtime.</p></div>
+<div class="section" id="s4-1"><h2><span class="sec-emoji">📈</span> Leak, Bloat or Normal?</h2><div style="overflow-x:auto"><table><thead><tr><th>Pattern</th><th>What you see</th><th>Meaning</th></tr></thead><tbody><tr><td>Sawtooth that returns to the same floor</td><td>Memory rises then drops after GC</td><td>Healthy</td></tr><tr><td>Rising floor after each GC</td><td>Each low point is higher than the last</td><td>Leak</td></tr><tr><td>Step up to a new level and stays</td><td>Jumps after a feature/data load</td><td>Bloat or a larger working set, not necessarily a leak</td></tr><tr><td>Fast growth only under load</td><td>Tracks request rate</td><td>Per-request retention (leak) or undersized heap</td></tr></tbody></table></div><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> a bathtub. If the water level rises and falls with use it is normal; if the drain is blocked, the level climbs a little more after every cycle until it overflows.</div></div></div>
+<div class="section" id="s4-2"><h2><span class="sec-emoji">🧩</span> Common Leak Patterns</h2><div style="overflow-x:auto"><table><thead><tr><th>Pattern</th><th>Example</th><th>Fix</th></tr></thead><tbody><tr><td>Unbounded cache</td><td>Dict/Map that only adds entries</td><td>LRU with size/TTL limits</td></tr><tr><td>Listeners never removed</td><td>addEventListener without remove</td><td>Unregister on teardown</td></tr><tr><td>Static/global collections</td><td>Static list collecting requests</td><td>Scope to request, use weak references</td></tr><tr><td>Unclosed resources</td><td>Connections, streams, file handles</td><td>try-with-resources / <code>with</code> / defer Close()</td></tr><tr><td>Thread-locals in pools</td><td>ThreadLocal not cleared on pooled threads</td><td>Clear in finally</td></tr><tr><td>Goroutine / task leaks</td><td>Goroutines blocked on channels forever</td><td>Context cancellation, timeouts</td></tr></tbody></table></div></div>
+<div class="section" id="s4-3"><h2><span class="sec-emoji">🧰</span> Tools by Runtime</h2><pre><span class="pre-lang">bash</span><code># Python
+python -X tracemalloc=25 app.py        # then compare snapshots; or: pip install objgraph
+# Node.js
+node --inspect app.js                  # DevTools &gt; Memory &gt; take 2 heap snapshots, use &#x27;Comparison&#x27;
+# Go
+go tool pprof -http=:8080 http://localhost:6060/debug/pprof/heap
+# JVM
+jcmd 4242 GC.class_histogram | head -20   # quick view of top classes by instances</code></pre><pre><span class="pre-lang">python</span><code># Leak: unbounded dict
+_cache = {}
+def get_user(uid):
+    if uid not in _cache:
+        _cache[uid] = db.load(uid)    # never evicted
+    return _cache[uid]
+
+# Fix
+from functools import lru_cache
+@lru_cache(maxsize=10_000)
+def get_user(uid): return db.load(uid)</code></pre><p>Comparison is the key technique in every runtime: take one snapshot, run the workload for a while, take another, and look at what grew. Objects that exist only in the second snapshot and keep growing are your suspects.</p></div>
+<div class="section" id="s4-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Memory usage on a Node.js service climbs 50 MB per hour and never returns after GC. Describe your investigation steps.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Confirm a rising post-GC floor in metrics, enable the inspector, take a heap snapshot, apply load, take a second snapshot, use the Comparison view to find constructors with growing counts, then follow retainers to the code holding them (global array, listener, cache). Fix and re-verify with the same procedure.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Which graph pattern indicates a memory leak?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Sawtooth returning to the same floor</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> A rising floor after each GC</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> A flat line</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Memory use dropping at night</li></ul><div class="mcq-feedback" data-expl="Each GC leaves more memory in use than before."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t5" data-toc="[[&quot;s5-1&quot;, &quot;Core Concepts&quot;], [&quot;s5-2&quot;, &quot;Latency Investigation&quot;], [&quot;s5-3&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 05 · Tracing</div><h1 class="panel-title">Distributed Tracing</h1><p class="panel-subtitle">Follow one request across many services to find where time or errors are introduced.</p></div>
+<div class="section" id="s5-1"><h2><span class="sec-emoji">🧵</span> Core Concepts</h2><div style="overflow-x:auto"><table><thead><tr><th>Term</th><th>Meaning</th></tr></thead><tbody><tr><td>Trace</td><td>End-to-end journey of one request</td></tr><tr><td>Span</td><td>One timed operation inside a trace</td></tr><tr><td>Context propagation</td><td>Trace ID passed via headers (<code>traceparent</code>)</td></tr><tr><td>Sampling</td><td>Which requests are recorded</td></tr></tbody></table></div><p>Common stack: OpenTelemetry instrumentation → Jaeger / Tempo / Datadog APM.</p></div>
+<div class="section" id="s5-2"><h2><span class="sec-emoji">🔎</span> Latency Investigation</h2><pre><span class="pre-lang">trace (example)</span><code>GET /checkout            1,840 ms
+ ├─ auth-service          45 ms
+ ├─ cart-service         120 ms
+ └─ payment-service    1,650 ms
+     └─ db.query SELECT  1,590 ms   &lt;- slow span (missing index?)</code></pre><ol class="steps"><li>Find a slow trace by trace ID from logs.</li><li>Sort spans by duration; find the widest child.</li><li>Check tags: query, status code, retries.</li><li>Correlate with metrics and logs for that service.</li></ol></div>
+<div class="section" id="s5-3"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Why does a missing trace ID in logs make debugging harder?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">You cannot link one request's logs across services, so you must guess by timestamps. Log the trace ID in every service.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>A span is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> A whole request</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> One timed operation in a trace</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> A server</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> A log file</li></ul><div class="mcq-feedback" data-expl="Spans make up a trace."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t6" data-toc="[[&quot;s6-1&quot;, &quot;Instrumenting a Service&quot;], [&quot;s6-2&quot;, &quot;Context Propagation&quot;], [&quot;s6-3&quot;, &quot;Sampling &amp; Log Correlation&quot;], [&quot;s6-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 06 · Tracing</div><h1 class="panel-title">OpenTelemetry, Context Propagation & Sampling</h1><p class="panel-subtitle">How traces are created in code, how the trace ID travels between services, and what to do when it breaks.</p></div>
+<div class="section" id="s6-1"><h2><span class="sec-emoji">🛠️</span> Instrumenting a Service</h2><pre><span class="pre-lang">python</span><code>from opentelemetry import trace
+tracer = trace.get_tracer(&quot;checkout&quot;)
+
+def pay(order):
+    with tracer.start_as_current_span(&quot;payment.charge&quot;) as span:
+        span.set_attribute(&quot;order.id&quot;, order.id)
+        span.set_attribute(&quot;payment.provider&quot;, &quot;stripe&quot;)
+        try:
+            return gateway.charge(order)
+        except Exception as e:
+            span.record_exception(e)
+            span.set_status(trace.Status(trace.StatusCode.ERROR))
+            raise</code></pre><p><code>start_as_current_span</code> opens a timed span and closes it when the block exits. Attributes are searchable labels, so you can later find all slow traces for one order. <code>record_exception</code> attaches the stack trace to the span, so the trace view shows <em>why</em> it failed, not just <em>that</em> it failed. Most frameworks also have <strong>auto-instrumentation</strong> that creates spans for HTTP, DB and queue calls without code changes.</p></div>
+<div class="section" id="s6-2"><h2><span class="sec-emoji">🔗</span> Context Propagation</h2><pre><span class="pre-lang">http</span><code>GET /api/orders HTTP/1.1
+traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+#            ver  trace-id (32 hex)                span-id (16 hex)  flags</code></pre><p>The <code>traceparent</code> header (W3C standard) carries the <strong>trace ID</strong> shared by every service in the request, plus the <strong>parent span ID</strong> so the next service can attach its span in the right place. The final <code>01</code> flag says 'sampled'.</p><div style="overflow-x:auto"><table><thead><tr><th>Why a trace breaks into pieces</th><th>Fix</th></tr></thead><tbody><tr><td>Header stripped by proxy / gateway</td><td>Allow-list <code>traceparent</code>, <code>tracestate</code></td></tr><tr><td>Message queues and background jobs</td><td>Copy context into message headers and restore on consume</td></tr><tr><td>Thread pools / async tasks</td><td>Use context-aware executors</td></tr><tr><td>Service not instrumented</td><td>Add SDK or sidecar/agent</td></tr></tbody></table></div><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> a baton in a relay race. If a runner drops it, the next runner starts a brand new race and you can no longer see the whole journey.</div></div></div>
+<div class="section" id="s6-3"><h2><span class="sec-emoji">🎲</span> Sampling & Log Correlation</h2><div style="overflow-x:auto"><table><thead><tr><th>Strategy</th><th>How</th><th>Trade-off</th></tr></thead><tbody><tr><td>Head sampling</td><td>Decide at the start (e.g. 5%)</td><td>Cheap, but may miss rare errors</td></tr><tr><td>Tail sampling</td><td>Decide after the trace finishes: keep errors and slow ones</td><td>Better coverage, needs more memory/infrastructure</td></tr><tr><td>Always-on for errors</td><td>Keep 100% of failed requests</td><td>Best for debugging, higher storage cost</td></tr></tbody></table></div><pre><span class="pre-lang">python</span><code>import logging
+span = trace.get_current_span()
+ctx = span.get_span_context()
+logging.info(&quot;charging card&quot;, extra={&quot;trace_id&quot;: format(ctx.trace_id, &quot;032x&quot;)})</code></pre><p>Putting the trace ID in every log line lets you jump from a slow span to the exact logs, and from a customer's error log to the whole trace.</p><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Ask the customer for any request ID or trace ID in the error screen: it is the fastest way into the right trace.</div></div></div>
+<div class="section" id="s6-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>A trace shows the API gateway span but nothing from the downstream orders service. Give three likely causes.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Header (traceparent) stripped or not forwarded by the gateway/proxy, orders service not instrumented or exporting to the wrong backend, or the trace was not sampled downstream (sampling decision not propagated).</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Tail sampling is useful because it…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Decides before the request starts</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Keeps traces that turned out slow or failed</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Disables tracing</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Reduces code size</li></ul><div class="mcq-feedback" data-expl="Decision is made once the outcome is known."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t7" data-toc="[[&quot;s7-1&quot;, &quot;The Three Pillars&quot;], [&quot;s7-2&quot;, &quot;The Four Golden Signals&quot;], [&quot;s7-3&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 07 · Observability</div><h1 class="panel-title">Metrics, Logs & Traces Together</h1><p class="panel-subtitle">Three kinds of telemetry answer three different questions. A Tier 3 engineer moves between them quickly.</p></div>
+<div class="section" id="s7-1"><h2><span class="sec-emoji">🔭</span> The Three Pillars</h2><p><strong>Metrics</strong> are numbers over time (CPU, error rate). <strong>Logs</strong> are timestamped events with detail. <strong>Traces</strong> follow one request across services. Metrics tell you <em>that</em> something is wrong, traces tell you <em>where</em>, and logs tell you <em>why</em>.</p><div style="overflow-x:auto"><table><thead><tr><th>Pillar</th><th>Question it answers</th><th>Typical tools</th></tr></thead><tbody><tr><td>Metrics</td><td>Is it broken? How badly? Since when?</td><td>Prometheus, Grafana, CloudWatch</td></tr><tr><td>Logs</td><td>What exactly happened?</td><td>ELK, Loki, Splunk</td></tr><tr><td>Traces</td><td>Which service made it slow?</td><td>Jaeger, Tempo, Datadog APM</td></tr></tbody></table></div><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> a hospital. Metrics are the vital-signs monitor beeping, traces are the scan that locates the problem, and logs are the doctor's detailed notes explaining it.</div></div></div>
+<div class="section" id="s7-2"><h2><span class="sec-emoji">📊</span> The Four Golden Signals</h2><div style="overflow-x:auto"><table><thead><tr><th>Signal</th><th>Meaning</th><th>Example alert</th></tr></thead><tbody><tr><td>Latency</td><td>Time to serve a request</td><td>p99 &gt; 2 s for 5 min</td></tr><tr><td>Traffic</td><td>Demand on the system</td><td>Requests/sec drops 50%</td></tr><tr><td>Errors</td><td>Rate of failed requests</td><td>5xx &gt; 2%</td></tr><tr><td>Saturation</td><td>How full the resource is</td><td>DB connections &gt; 90%</td></tr></tbody></table></div><pre><span class="pre-lang">promql</span><code># error ratio over the last 5 minutes
+sum(rate(http_requests_total{status=~&quot;5..&quot;}[5m]))
+  / sum(rate(http_requests_total[5m]))</code></pre><p><code>rate(...[5m])</code> converts an ever-growing counter into 'per second over 5 minutes'. The <code>status=~"5.."</code> regex keeps only 500-series responses, and dividing by total traffic gives a ratio, so the alert does not fire just because traffic grew.</p><div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Always look at <b>percentiles</b> (p95, p99), not averages. An average of 200 ms can hide 1% of users waiting 10 s.</div></div></div>
+<div class="section" id="s7-3"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>An average latency graph looks fine but customers complain. What do you check and why?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Check p95/p99 latency and per-endpoint or per-tenant breakdowns. Averages hide slow tails; a small group of slow requests can ruin experience while the mean stays low.</div></div><div class="mcq" data-answer="2"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Which pillar best tells you WHERE in a multi-service request time was spent?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Metrics</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Logs</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Traces</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Billing</li></ul><div class="mcq-feedback" data-expl="Traces show spans across services."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t8" data-toc="[[&quot;s8-1&quot;, &quot;First Five Minutes on a Slow Host&quot;], [&quot;s8-2&quot;, &quot;strace, Flame Graphs &amp; Thread Dumps&quot;], [&quot;s8-3&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 08 · Systems</div><h1 class="panel-title">Linux Diagnostics: CPU, Memory, Disk & Network</h1><p class="panel-subtitle">When the app code looks fine, the host or the runtime is often the real culprit.</p></div>
+<div class="section" id="s8-1"><h2><span class="sec-emoji">🖥️</span> First Five Minutes on a Slow Host</h2><pre><span class="pre-lang">bash</span><code>uptime              # load average: 1, 5, 15 min
+top -H              # per-thread CPU; press M for memory
+free -m             # memory and swap
+iostat -x 1         # disk wait (%util, await)
+ss -tan | awk &#x27;{print $1}&#x27; | sort | uniq -c   # connection states</code></pre><p><strong>Load average</strong> counts processes wanting CPU or waiting on I/O. On a 4-core machine a load of 4 is full; 12 means three times oversubscribed. High load with <em>low</em> CPU usually means processes stuck waiting on disk or network, so check <code>iostat</code> next.</p><div class="callout tip"><div class="callout-icon">🧴</div><div class="callout-body"><strong>Analogy:</strong> a restaurant kitchen. Load is the number of orders in the queue, CPU is cooks actually cooking, and I/O wait is cooks standing idle because the delivery has not arrived.</div></div></div>
+<div class="section" id="s8-2"><h2><span class="sec-emoji">🔬</span> strace, Flame Graphs & Thread Dumps</h2><pre><span class="pre-lang">bash</span><code>strace -f -tt -p 4242 -e trace=network,file   # watch system calls of a live process
+jstack 4242 &gt; td1.txt; sleep 5; jstack 4242 &gt; td2.txt   # two thread dumps 5 s apart
+py-spy dump --pid 4242                                  # Python stack of every thread</code></pre><p><code>strace</code> shows what the process asks the kernel to do (open a file, connect to a host), which exposes missing files, slow DNS and hanging sockets. A <strong>flame graph</strong> stacks sampled call stacks: wide bars mean more time. Find the widest bar near the top and you have found the hot function.</p></div>
+<div class="section" id="s8-3"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Load average is 20 on an 8-core server but CPU usage is only 15%. What is your hypothesis and next command?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Processes are blocked on I/O (disk or network), not computing. Run <code>iostat -x 1</code> for disk wait, check <code>ss</code>/network latency and NFS or database dependencies.</div></div><div class="mcq" data-answer="0"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>High load but low CPU usually points to…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> I/O wait</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Overclocking</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Too few logs</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> A GPU issue</li></ul><div class="mcq-feedback" data-expl="Processes waiting, not computing."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t9" data-toc="[[&quot;s9-1&quot;, &quot;Scenario: Pod keeps restarting with exit code 137&quot;], [&quot;s9-2&quot;, &quot;Scenario: Checkout p99 jumped from 1 s to 9 s&quot;], [&quot;s9-3&quot;, &quot;Scenario: Image service crashes with SIGSEGV every few hours&quot;], [&quot;s9-4&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><div class="panel-eyebrow">Module 09 · Scenarios</div><h1 class="panel-title">Diagnostics Scenarios from Production</h1><p class="panel-subtitle">Three realistic cases combining dumps, memory analysis and tracing.</p></div>
+<div class="section" id="s9-1"><h2><span class="sec-emoji">☸️</span> Scenario: Pod keeps restarting with exit code 137</h2><ul><li><b>Symptom:</b> a Java pod restarts every ~6 hours; <code>kubectl describe pod</code> shows <code>OOMKilled</code>, exit code 137.</li><li><b>Clue:</b> container limit is 2 GiB but the JVM was started with <code>-Xmx2g</code>. Heap plus metaspace, threads and native memory exceed the container limit, so the kernel kills it (SIGKILL, no heap dump).</li><li><b>Action:</b> set <code>-XX:MaxRAMPercentage=70</code>, enable <code>HeapDumpOnOutOfMemoryError</code> on a volume, watch RSS vs heap in metrics.</li><li><b>Lesson:</b> a JVM <code>OutOfMemoryError</code> and a container OOMKill are different failures with different evidence.</li></ul></div>
+<div class="section" id="s9-2"><h2><span class="sec-emoji">🐢</span> Scenario: Checkout p99 jumped from 1 s to 9 s</h2><ul><li>Metrics show latency up only on <code>/checkout</code>; error rate unchanged.</li><li>Open a slow trace: <code>inventory-service</code> span 8.2 s, with 214 child DB spans of 38 ms each.</li><li>Diagnosis: an N+1 query introduced in the last release (one query per cart item).</li><li>Fix: batch the lookup; hand off to engineering with trace link, query and release diff.</li></ul></div>
+<div class="section" id="s9-3"><h2><span class="sec-emoji">💥</span> Scenario: Image service crashes with SIGSEGV every few hours</h2><ul><li>Core dump from <code>coredumpctl</code>; <code>bt</code> shows frame 0 inside <code>libpng</code> and frame 2 in <code>resize_image()</code>.</li><li><code>print *img</code> shows <code>width=0</code> passed by the caller for a corrupted upload.</li><li>Root cause: missing validation on uploaded dimensions.</li><li>Fix: reject images with zero or huge dimensions; add regression test with the sample file.</li></ul></div>
+<div class="section" id="s9-4"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>A container is OOMKilled but the JVM never logged OutOfMemoryError. Explain why and where you look.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">The kernel killed the whole container for exceeding its memory limit (SIGKILL), so the JVM had no chance to log or dump. Check pod events/exit code 137, container memory metrics (RSS), and compare JVM heap plus native memory against the limit.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Exit code 137 on a container usually means…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Normal exit</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> The process was SIGKILLed (often OOM)</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Syntax error</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Disk full</li></ul><div class="mcq-feedback" data-expl="137 = 128 + 9 (SIGKILL)."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t10" data-toc="[[&quot;s10-1&quot;, &quot;Concept Questions&quot;], [&quot;s10-2&quot;, &quot;Practice &amp; Quick Check&quot;]]"><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span></div><div class="panel-eyebrow">Module 10 · Interviews</div><h1 class="panel-title">Interview Prep: Advanced Diagnostics</h1><p class="panel-subtitle">Questions on dumps, leaks and tracing.</p></div>
+<div class="section" id="s10-1"><h2><span class="sec-emoji">🎤</span> Concept Questions</h2><div style="overflow-x:auto"><table><thead><tr><th>Question</th><th>Model answer</th></tr></thead><tbody><tr><td>Heap dump vs thread dump?</td><td>Heap = objects in memory; thread = what threads are doing (deadlocks, hangs).</td></tr><tr><td>Service hangs but CPU is low. What next?</td><td>Take thread dumps 3 times; look for blocked threads, locks or waiting I/O.</td></tr><tr><td>How do you find a slow microservice?</td><td>Use distributed tracing; sort spans by duration; check dependency calls.</td></tr><tr><td>What is a deadlock?</td><td>Threads waiting on each other's locks forever; visible in thread dumps.</td></tr></tbody></table></div></div>
+<div class="section" id="s10-2"><h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2><div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Describe how you would diagnose a hung production service.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Take several thread dumps spaced seconds apart, find threads blocked on the same lock/resource, check connection pool and downstream latency, then capture a heap dump if memory is suspect.</div></div><div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Several thread dumps show threads all BLOCKED on one lock. Likely issue?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Memory leak</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Lock contention or deadlock</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> DNS</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Disk full</li></ul><div class="mcq-feedback" data-expl="Contention/deadlock."></div><button class="btn mcq-reset">↻ Try again</button></div></div>
+</section>
+<section class="panel" id="t11" data-toc='[["s11-1","Take the Assessment"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">→ Intermediate</span></div>
+        <p class="panel-eyebrow">Module 11</p>
+        <h1 class="panel-title">Assessment</h1>
+        <p class="panel-subtitle">Test yourself on everything covered in this course — 50 multiple-choice questions drawn at random from a bank of 50, so every attempt is a little different.</p>
+      </div>
+      <div class="section" id="s11-1">
+        <div class="assess-start-card">
+          <div class="assess-intro-title">Test what you've learned</div>
+          <div class="assess-intro-text">A timed, exam-style mock test. Questions are scenario-based: what you would do, which tool applies, or what went wrong.</div>
+          <ul class="assess-intro-list">
+            <li><strong>50 multiple-choice questions</strong> picked at random from 50</li>
+            <li><strong>50-minute</strong> timer (1 minute per question), with mark-for-review and a question palette</li>
+            <li>Covers every module in this course</li>
+            <li>Answers and explanations are shown after you submit</li>
+          </ul>
+          <button class="assess-start-btn" id="assessStartBtn">▶ Start Assessment</button>
+        </div>
+      </div>
+      <div class="assess-modal-overlay" id="assessModal">
+        <div class="assess-modal-box">
+          <div class="assess-sticky-header">
+            <div class="assess-modal-head">
+              <div class="assess-modal-title">Assessment</div>
+              <button class="assess-modal-close" id="assessModalClose">✕</button>
+            </div>
+            <div class="quiz-progress" id="assessProgressWrap" style="display:none">
+              <span class="quiz-score" id="assessProgressLabel">Question 1</span>
+              <div class="quiz-bar-track"><div class="quiz-bar-fill" id="assessProgressFill" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div id="assessStage"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+/* =========================================================
+   Tab switching, dynamic TOC, scroll-spy, progress pill
+   ========================================================= */
+(function(){
+  const tabs   = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel');
+  const tocEl  = document.getElementById('toc');
+  const total  = tabs.length;
+  const progressText = document.getElementById('progressText');
+
+  function buildToc(panel){
+    const data = JSON.parse(panel.getAttribute('data-toc') || '[]');
+    tocEl.innerHTML = data.map(([id,label]) =>
+      `<li><a href="#${id}" data-target="${id}">${label}</a></li>`
+    ).join('');
+    // first link active by default
+    const first = tocEl.querySelector('a');
+    if(first) first.classList.add('active');
+  }
+
+  function activate(idx){
+    tabs.forEach((t,i)=>t.classList.toggle('active', i===idx));
+    panels.forEach((p,i)=>p.classList.toggle('active', i===idx));
+    buildToc(panels[idx]);
+    progressText.textContent = `Tab ${idx+1} of ${total}`;
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+
+  tabs.forEach((t,i)=>{
+    t.addEventListener('click', ()=> activate(i));
+  });
+
+  // Smooth scroll inside the active tab
+  document.addEventListener('click', (e)=>{
+    const a = e.target.closest('.toc-list a');
+    if(!a) return;
+    e.preventDefault();
+    const id = a.getAttribute('data-target');
+    const el = document.getElementById(id);
+    if(el){
+      window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 130, behavior:'smooth'});
+    }
+  });
+
+  // Scroll spy — highlight the nearest visible section
+  let ticking = false;
+  function spy(){
+    const activePanel = document.querySelector('.panel.active');
+    if(!activePanel) return;
+    const sections = activePanel.querySelectorAll('.section');
+    const trigger  = 180; // px from top
+    let current = null;
+    sections.forEach(sec=>{
+      const rect = sec.getBoundingClientRect();
+      if(rect.top - trigger < 0) current = sec.id;
+    });
+    if(current){
+      tocEl.querySelectorAll('a').forEach(a=>{
+        a.classList.toggle('active', a.dataset.target === current);
+      });
+    }
+    ticking = false;
+  }
+  window.addEventListener('scroll', ()=>{
+    if(!ticking){ requestAnimationFrame(spy); ticking = true; }
+  }, {passive:true});
+
+  // Reset
+  window.resetProgress = function(){ activate(0); };
+
+  // Init
+  activate(0);
+})();
+
+/* =========================================================
+   Assessment modal — legacy modal (unused)
+   ========================================================= */
+(function(){
+  const assessItems = [];
+  const mcqTotal = assessItems.length;
+
+  let idx=0, score=0, answered=false;
+
+  function openAssess(){document.getElementById('assessModal').classList.add('open');showIntroStage()}
+  function closeAssess(){document.getElementById('assessModal').classList.remove('open')}
+
+  function showIntroStage(){
+    idx=0; score=0; answered=false;
+    renderItem();
+  }
+
+  function renderItem(){
+    answered=false;
+    const item=assessItems[idx];
+    const stage=document.getElementById('assessStage');
+    const pct=Math.round((idx/assessItems.length)*100);
+    document.getElementById('assessProgressWrap').style.display='flex';
+    document.getElementById('assessProgressLabel').textContent=`Question ${idx+1} / ${assessItems.length}`;
+    document.getElementById('assessProgressFill').style.width=pct+'%';
+    let inner=`
+      <div class="assess-q-wrap">
+        <div class="assess-q">${item.q}</div>
+        ${item.code?`<pre><code>${item.code}</code></pre>`:''}
+        <div id="assessBody"></div>
+        <div id="assessFeedback"></div>
+      </div>`;
+    stage.innerHTML=inner;
+    const body=document.getElementById('assessBody');
+    body.innerHTML=`<ul class="mcq-opts" id="assessOpts">${item.options.map((o,i)=>`<li class="mcq-opt" data-i="${i}"><span class="opt-letter">${String.fromCharCode(65+i)}</span> ${o}</li>`).join('')}</ul>`;
+    body.querySelectorAll('.mcq-opt').forEach(opt=>opt.addEventListener('click',()=>answerMCQ(opt,item)));
+  }
+
+  function showNextButton(){
+    const fb=document.getElementById('assessFeedback');
+    const btn=document.createElement('button');
+    btn.className='assess-next-btn';
+    btn.textContent = idx<assessItems.length-1 ? 'Next Question →' : 'See Results →';
+    btn.addEventListener('click',()=>{
+      if(idx<assessItems.length-1){idx++;renderItem()}else{showResults()}
+    });
+    fb.appendChild(btn);
+  }
+
+  function answerMCQ(optEl,item){
+    if(answered)return;
+    answered=true;
+    const chosen=parseInt(optEl.getAttribute('data-i'),10);
+    const correct=chosen===item.answer;
+    if(correct)score++;
+    document.querySelectorAll('#assessOpts .mcq-opt').forEach(opt=>{opt.style.pointerEvents='none'});
+    const fb=document.getElementById('assessFeedback');
+    if(correct){
+      optEl.classList.add('correct');
+      fb.innerHTML=`<div class="assess-fb-banner ok"><span>✅</span> Correct!</div>`;
+    }else{
+      optEl.classList.add('incorrect');
+      fb.innerHTML=`<div class="assess-fb-answer ok"><span>✅</span> ${item.options[item.answer]}</div>`;
+    }
+    showNextButton();
+  }
+
+  function showResults(){
+    const stage=document.getElementById('assessStage');
+    const pct=Math.round((score/mcqTotal)*100);
+    document.getElementById('assessProgressLabel').textContent='Completed';
+    document.getElementById('assessProgressFill').style.width='100%';
+    let msg='Keep practicing — revisit the tabs above and try again.';
+    if(pct>=85)msg='Outstanding! You have a strong command of this role.';
+    else if(pct>=65)msg="Great job! A little more practice with the harder questions and you'll be set.";
+    stage.innerHTML=`
+      <div class="assess-q-wrap">
+        <div class="assess-result-score">${score} / ${mcqTotal}</div>
+        <div class="assess-result-msg">${pct}% correct — ${msg}</div>
+        <button class="assess-retry-btn" id="assessRetryBtn">↻ Try Again</button>
+      </div>`;
+    document.getElementById('assessRetryBtn').addEventListener('click',showIntroStage);
+  }
+
+  document.getElementById('__disabledAssess')?.addEventListener('click',openAssess);
+  document.getElementById('assessModalClose').addEventListener('click',closeAssess);
+  document.getElementById('assessModal').addEventListener('click',e=>{if(e.target.id==='assessModal')closeAssess()});
+})();
+</script>
+
+<div id="scoreBoard" class="score-board" style="display:none;max-width:820px;margin:18px auto;padding:0 16px"></div>
+
+
+<script>
+/* Inline quick checks + practice model answers */
+document.addEventListener('click',function(e){
+  const opt=e.target.closest('.mcq .mcq-opt');
+  if(opt){
+    const box=opt.closest('.mcq'); if(box.classList.contains('answered'))return;
+    const ans=+box.dataset.answer, i=+opt.dataset.i;
+    box.classList.add('answered');
+    box.querySelectorAll('.mcq-opt').forEach(o=>{ if(+o.dataset.i===ans)o.classList.add('correct'); });
+    if(i!==ans)opt.classList.add('incorrect');
+    const fb=box.querySelector('.mcq-feedback');
+    fb.classList.add(i===ans?'ok':'bad');
+    fb.innerHTML=(i===ans?'✅ Correct. ':'❌ Not quite. ')+fb.dataset.expl;
+    return;
+  }
+  const rs=e.target.closest('.mcq-reset');
+  if(rs){
+    const box=rs.closest('.mcq'); box.classList.remove('answered');
+    box.querySelectorAll('.mcq-opt').forEach(o=>o.classList.remove('correct','incorrect'));
+    const fb=box.querySelector('.mcq-feedback'); fb.classList.remove('ok','bad'); fb.innerHTML='';
+    return;
+  }
+  const tg=e.target.closest('.saq-toggle');
+  if(tg){
+    const m=tg.closest('.saq').querySelector('.saq-model');
+    m.classList.toggle('show');
+    tg.textContent=m.classList.contains('show')?'Hide model answer':'Show model answer';
+  }
+});
+</script>
+<script>
+(function(){
+  /* =====================================================================
+     Advanced Diagnostics -- full-screen, timed mock exam (MNC style).
+     All 50 questions of the bank, shuffled, none repeated.
+     Grading: all answers submitted at the end (server-side).
+     ===================================================================== */
+  const BANK=[{"id": "q1", "q": "Core dumps are mainly analysed with…", "options": ["gdb / lldb", "Jaeger", "Postman", "Excel"], "answer": 0, "explanation": "Native debuggers.", "difficulty": "Medium"}, {"id": "q2", "q": "Tool to compare heap objects in Java:", "options": ["Eclipse MAT", "curl", "Grafana", "Slack"], "answer": 0, "explanation": "MAT.", "difficulty": "Medium"}, {"id": "q3", "q": "Trace context is passed using…", "options": ["Request headers", "Passwords", "Cron", "Email"], "answer": 0, "explanation": "e.g. traceparent.", "difficulty": "Medium"}, {"id": "q4", "q": "A hung service with low CPU suggests…", "options": ["Blocked threads", "Fast code", "No traffic ever", "Cache hit"], "answer": 0, "explanation": "Waiting on locks or I/O.", "difficulty": "Medium"}, {"id": "q5", "q": "GC roots show…", "options": ["Who retains the object", "File sizes", "Network paths", "Costs"], "answer": 0, "explanation": "The retaining reference chain.", "difficulty": "Medium"}, {"id": "q6", "q": "Why sample traces?", "options": ["Reduce overhead and cost", "Hide errors", "Speed up CPU", "Disable logs"], "answer": 0, "explanation": "Recording all is expensive.", "difficulty": "Medium"}, {"id": "q7", "q": "Dumps may contain…", "options": ["Customer data", "Only code", "Nothing", "Ads"], "answer": 0, "explanation": "Handle securely.", "difficulty": "Medium"}, {"id": "q8", "q": "Slowest span in a trace usually points to…", "options": ["Where to look first", "The client browser", "A typo", "Nothing"], "answer": 0, "explanation": "Start with the widest span.", "difficulty": "Medium"}, {"id": "q9", "q": "The 'errors' golden signal measures…", "options": ["Failed request rate", "CPU temperature", "Disk size", "Team size"], "answer": 0, "explanation": "Error rate.", "difficulty": "Medium"}, {"id": "q10", "q": "Why use p99 latency?", "options": ["It reveals the slow tail", "It is cheaper", "It is the average", "It hides outliers"], "answer": 0, "explanation": "Tails hurt real users.", "difficulty": "Medium"}, {"id": "q11", "q": "Which pillar gives full detail of one event?", "options": ["Logs", "Dashboards", "Quotas", "Tags"], "answer": 0, "explanation": "Logs hold detail.", "difficulty": "Medium"}, {"id": "q12", "q": "strace helps you see…", "options": ["System calls of a process", "Source code", "Customer emails", "Git history"], "answer": 0, "explanation": "Kernel interactions.", "difficulty": "Medium"}, {"id": "q13", "q": "Wide bar in a flame graph means…", "options": ["More time spent", "Less time", "A bug for sure", "A comment"], "answer": 0, "explanation": "Wider = hotter.", "difficulty": "Medium"}, {"id": "q14", "q": "Saturation signal example:", "options": ["DB connections at 95%", "Revenue", "Logo", "Page title"], "answer": 0, "explanation": "How full a resource is.", "difficulty": "Medium"}, {"id": "q15", "q": "Two thread dumps seconds apart help to…", "options": ["See threads stuck in the same place", "Count users", "Rename classes", "Install patches"], "answer": 0, "explanation": "Stuck threads stay put.", "difficulty": "Medium"}, {"id": "q16", "q": "Load average of 12 on 4 cores means…", "options": ["Oversubscribed", "Idle", "Perfect", "Broken disk only"], "answer": 0, "explanation": "3x demand.", "difficulty": "Medium"}, {"id": "q17", "q": "gdb command that shows every thread's stack in a core:", "options": ["thread apply all bt", "info all", "list", "run"], "answer": 0, "explanation": "Prints a backtrace for each thread.", "difficulty": "Medium"}, {"id": "q18", "q": "To get a heap dump at the moment of an OutOfMemoryError use…", "options": ["-XX:+HeapDumpOnOutOfMemoryError", "-Xlog", "-XX:+PrintGC", "--inspect"], "answer": 0, "explanation": "The JVM writes the dump automatically.", "difficulty": "Medium"}, {"id": "q19", "q": "Retained heap of an object is…", "options": ["Its own size only", "Memory freed if the object were collected", "Size on disk", "Number of threads"], "answer": 1, "explanation": "Includes objects only reachable through it.", "difficulty": "Medium"}, {"id": "q20", "q": "A rising memory floor after each garbage collection indicates…", "options": ["A leak", "A healthy app", "DNS issue", "Slow CPU"], "answer": 0, "explanation": "Retained objects accumulate.", "difficulty": "Medium"}, {"id": "q21", "q": "Which is a classic Java leak pattern?", "options": ["Static map that only grows", "Using final variables", "Using interfaces", "Unit tests"], "answer": 0, "explanation": "Static fields are GC roots.", "difficulty": "Medium"}, {"id": "q22", "q": "traceparent header carries…", "options": ["Trace ID and parent span ID", "Password", "Cookie size", "Host name only"], "answer": 0, "explanation": "W3C trace context.", "difficulty": "Medium"}, {"id": "q23", "q": "Why might a trace break at a message queue?", "options": ["Context not copied into message headers", "Queues are too fast", "Queues use TCP", "Traces expire"], "answer": 0, "explanation": "Propagation must be done manually for async hops.", "difficulty": "Medium"}, {"id": "q24", "q": "Head sampling decides…", "options": ["At the start of a request", "After the trace completes", "Never", "Only on Sundays"], "answer": 0, "explanation": "Cheap but may miss rare failures.", "difficulty": "Medium"}, {"id": "q25", "q": "Core dumps can contain secrets because they…", "options": ["Hold the process's whole memory", "Are compressed", "Use TCP", "Are text files"], "answer": 0, "explanation": "Handle as confidential.", "difficulty": "Medium"}, {"id": "q26", "q": "Heap dumps pause the JVM so you should…", "options": ["Take them from an instance removed from the load balancer", "Take them at peak", "Take them hourly", "Never take them"], "answer": 0, "explanation": "Avoid user impact.", "difficulty": "Medium"}, {"id": "q27", "q": "MAT 'Leak Suspects' report is used to…", "options": ["Get a first hypothesis automatically", "Delete objects", "Write code", "Compile"], "answer": 0, "explanation": "Quick starting point.", "difficulty": "Medium"}, {"id": "q28", "q": "Container OOMKilled with no Java OOM message means…", "options": ["The kernel killed it for exceeding its memory limit", "Heap was too small", "Code bug in logging", "Network failure"], "answer": 0, "explanation": "SIGKILL leaves no JVM log.", "difficulty": "Medium"}, {"id": "q29", "q": "Auto-instrumentation in OpenTelemetry…", "options": ["Creates spans for common libraries without code changes", "Removes logs", "Deletes spans", "Needs no SDK"], "answer": 0, "explanation": "Agents instrument HTTP, DB, etc.", "difficulty": "Medium"}, {"id": "q30", "q": "Best habit when a trace looks incomplete:", "options": ["Check header propagation and instrumentation at the missing hop", "Ignore it", "Restart everything", "Delete tracing"], "answer": 0, "explanation": "Find where context is lost.", "difficulty": "Medium"}, {"q": "What does 'perf' help you analyse on Linux?", "options": ["CPU performance and hot spots", "Fonts", "DNS cache", "Emails"], "answer": 0, "explanation": "A profiler.", "difficulty": "Easy", "id": "q31"}, {"q": "Which tool captures network packets?", "options": ["grep", "tcpdump / Wireshark", "ls", "cron"], "answer": 1, "explanation": "Packet capture.", "difficulty": "Easy", "id": "q32"}, {"q": "High iowait suggests…", "options": ["CPU is idle by design", "Network is fast", "Processes waiting on disk I/O", "DNS is slow"], "answer": 2, "explanation": "Disk bottleneck.", "difficulty": "Easy", "id": "q33"}, {"q": "What does a flame graph's x-axis show?", "options": ["Time of day", "Memory addresses", "User IDs", "Share of samples, not time order"], "answer": 3, "explanation": "Width = time spent.", "difficulty": "Easy", "id": "q34"}, {"q": "OOM killer is…", "options": ["Kernel process that kills tasks when memory runs out", "A Java setting", "A DB feature", "A CDN rule"], "answer": 0, "explanation": "Linux protects itself.", "difficulty": "Easy", "id": "q35"}, {"q": "A thread dump shows…", "options": ["Disk usage", "What every thread is doing at that moment", "Heap size only", "DNS records"], "answer": 1, "explanation": "Thread states and stacks.", "difficulty": "Easy", "id": "q36"}, {"q": "Why take several thread dumps?", "options": ["To shrink the dump", "To save disk", "To see which threads stay stuck", "To avoid locks"], "answer": 2, "explanation": "Persistent stacks reveal hangs.", "difficulty": "Easy", "id": "q37"}, {"q": "A CPU-bound service shows…", "options": ["Idle CPU", "Low load", "No threads", "High CPU and busy threads"], "answer": 3, "explanation": "CPU is saturated.", "difficulty": "Easy", "id": "q38"}, {"q": "What does lsof show?", "options": ["Open files and sockets by process", "Disk partitions", "Users", "DNS"], "answer": 0, "explanation": "List open files.", "difficulty": "Easy", "id": "q39"}, {"q": "Distributed tracing helps you…", "options": ["Compress logs", "Follow one request across services", "Rotate keys", "Resize disks"], "answer": 1, "explanation": "Spans link services.", "difficulty": "Easy", "id": "q40"}, {"q": "A span is…", "options": ["A whole log file", "A user session", "One timed operation within a trace", "A server"], "answer": 2, "explanation": "Unit of work in a trace.", "difficulty": "Easy", "id": "q41"}, {"q": "Cardinality in metrics means…", "options": ["CPU cores", "Log size", "Server count", "Number of unique label combinations"], "answer": 3, "explanation": "High cardinality is costly.", "difficulty": "Easy", "id": "q42"}, {"q": "A latency spike with normal CPU may point to…", "options": ["A downstream dependency or lock contention", "A CPU shortage", "Too many cores", "Fast disks"], "answer": 0, "explanation": "Waiting, not computing.", "difficulty": "Easy", "id": "q43"}, {"q": "What does 'netstat -an' help check?", "options": ["Disk health", "Connections and listening ports", "Memory leaks", "Git history"], "answer": 1, "explanation": "Network state.", "difficulty": "Easy", "id": "q44"}, {"q": "GC pauses cause…", "options": ["Faster responses", "Smaller heaps", "Brief freezes in a JVM app", "Disk growth"], "answer": 2, "explanation": "Stop-the-world pauses.", "difficulty": "Easy", "id": "q45"}, {"q": "Heap dump analysis finds…", "options": ["Network routes", "Slow queries", "DNS errors", "Objects consuming memory"], "answer": 3, "explanation": "Heap contents.", "difficulty": "Easy", "id": "q46"}, {"q": "Why correlate metrics, logs and traces?", "options": ["Each gives a different view of the same incident", "To use more storage", "To avoid alerts", "To slow triage"], "answer": 0, "explanation": "Three pillars.", "difficulty": "Easy", "id": "q47"}, {"q": "'Too many open files' error is related to…", "options": ["Disk quota only", "File descriptor limits", "RAM size", "Port 80"], "answer": 1, "explanation": "ulimit -n.", "difficulty": "Easy", "id": "q48"}, {"q": "A load balancer health-check failure removes…", "options": ["The whole cluster", "Logs", "The node from rotation", "Users"], "answer": 2, "explanation": "Unhealthy nodes are skipped.", "difficulty": "Easy", "id": "q49"}, {"q": "Before restarting a hung process you should…", "options": ["Delete logs", "Reboot the host", "Ignore it", "Capture dumps and logs first"], "answer": 3, "explanation": "A restart destroys evidence.", "difficulty": "Easy", "id": "q50"}];
+  const EXAM_N=50;
+  function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  const EXAM_SECONDS=50*60; /* 1 minute per question */
+  const inIframe = window.self!==window.top;
+
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash h2{font-size:25px;font-weight:800;margin-bottom:8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin-bottom:12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:ecpop .18s ease}
+  @keyframes ecpop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+
+  .exam-fsprompt{position:fixed;inset:0;z-index:100003;background:rgba(20,33,61,.93);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fsprompt .box{background:transparent;color:#fff;max-width:640px;width:100%;padding:0;text-align:center;box-shadow:none}
+  .exam-fsprompt h3{font-size:34px;font-weight:700;margin:0 0 22px;color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;line-height:1.2}
+  .exam-fsprompt h3 .wi{font-size:32px;line-height:1}
+  .exam-fsprompt p{font-size:17px;color:#fff;line-height:1.6;margin:0 0 16px}
+  .exam-fsprompt .wcount{font-size:17px;color:#fff;margin:0 0 18px}
+  .exam-fsprompt .rbtn{background:#0f1a2e;color:#fff;border:none;border-radius:12px;padding:15px 26px;font-weight:700;font-size:17px;font-family:inherit;cursor:pointer;transition:.12s}
+  .exam-fsprompt .rbtn:hover{background:#0a1220}
+  .exam-fsprompt .rbtn:focus-visible{outline:2px solid #FCA311;outline-offset:2px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+
+  function examConfirm(title,msg,okLabel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">
+        <button class="exam-btn nav" data-a="0">Cancel</button>
+        <button class="exam-btn primary" data-a="1">${okLabel||'Submit'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  /* ---- score history (localStorage, shared across the exam tab + guide) ---- */
+  const LS_KEY='ADScores';
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores();
+    a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: exactly 3 violation warnings (tab switch, fullscreen exit, screenshot attempt); 3 strikes -> auto-submit ---- */
+  let warns=0, lastWarn=0, lastType='', proctorOn=false;
+  const MAX_WARN=3;
+  const VIOL={
+    tab:{icon:'&#9888;&#65039;',title:'Tab switch detected',msg:'The assessment must stay in this tab and window.'},
+    fs:{icon:'&#9888;&#65039;',title:'Fullscreen exited',msg:'The assessment must remain in fullscreen mode.'},
+    shot:{icon:'&#9888;&#65039;',title:'Screenshot attempt detected',msg:'Screenshots and screen recordings are not permitted during the assessment.'}
+  };
+  function examWarn(title,msg){
+    injectCss();
+    const d=document.createElement('div'); d.className='exam-confirm';
+    d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row"><button class="exam-btn primary" data-a="1">OK</button></div></div>`;
+    document.body.appendChild(d);
+    d.addEventListener('click',e=>{ if(e.target.closest('[data-a]'))d.remove(); });
+  }
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function removeFsPrompt(){ const p=document.getElementById('examFsPrompt'); if(p)p.remove(); }
+  function removeViolPop(){ const p=document.getElementById('examViolPop'); if(p)p.remove(); }
+  function goFullscreen(){
+    try{ const re=document.documentElement.requestFullscreen?document.documentElement.requestFullscreen():Promise.resolve(); return Promise.resolve(re).catch(()=>{}); }
+    catch(_){ return Promise.resolve(); }
+  }
+  /* One popup at a time. kind = tab | fs | shot. n = strike number (null = no strike, e.g. entering fullscreen at start). */
+  function showViolation(kind,n){
+    if(!examOn)return;
+    injectCss(); hideCover(); removeViolPop(); removeFsPrompt();
+    const v=VIOL[kind]; const needFs=!document.fullscreenElement;
+    const title=(!n&&kind==='fs')?'Fullscreen required':v.title;
+    const wline=n?'<div class="wcount">Warning '+n+' of '+MAX_WARN+'</div>':'';
+    const d=document.createElement('div'); d.className='exam-fsprompt'; d.id=(kind==='fs'||needFs)?'examFsPrompt':'examViolPop';
+    d.setAttribute('role','alertdialog'); d.setAttribute('aria-modal','true');
+    d.innerHTML='<div class="box"><h3><span class="wi">'+v.icon+'</span><span>'+title+'</span></h3><p>'+v.msg+'</p>'+wline+'<button class="rbtn" id="examContinue">Return to assessment</button></div>';
+    document.body.appendChild(d);
+    const cb=document.getElementById('examContinue'); try{cb.focus();}catch(_){}
+    cb.addEventListener('click',()=>{
+      const go=document.fullscreenElement?Promise.resolve():goFullscreen();
+      go.then(()=>{ d.remove(); hideCover(); renderQ(); });
+    });
+  }
+  function violation(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now();
+    /* same incident (e.g. tab switch firing blur + visibilitychange together) counts once */
+    const fresh = now-lastWarn >= (kind===lastType?1500:800);
+    if(!fresh){ if(!document.fullscreenElement && !document.getElementById('examFsPrompt')) showViolation(kind,Math.min(warns,MAX_WARN)); return; }
+    lastWarn=now; lastType=kind; warns++;
+    if(warns>=MAX_WARN){
+      removeFsPrompt(); removeViolPop(); hideCover();
+      examWarn('Test submitted','You reached '+MAX_WARN+' warnings ('+VIOL[kind].title.toLowerCase()+'). The test has been auto-submitted.');
+      submitExam(true); return;
+    }
+    showViolation(kind,warns);
+  }
+  function fsHandler(){ if(examOn && !document.fullscreenElement){ violation('fs'); } }
+  function visHandler(){ if(document.hidden){ showCover(); violation('tab'); } else { hideCover(); } }
+  function blurHandler(){ if(!examOn)return; showCover(); violation('tab'); }
+  function focusHandler(){ hideCover(); }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function shotWarn(){ try{navigator.clipboard.writeText('');}catch(_){} violation('shot'); }
+  function keyGuard(e){
+    const k=(e.key||'').toLowerCase(), c=e.code||'';
+    if(k==='printscreen'||(e.metaKey&&e.shiftKey&&k==='s')||(e.metaKey&&e.shiftKey&&['Digit3','Digit4','Digit5'].includes(c))){ e.preventDefault(); shotWarn(); return false; }
+    if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; }
+  }
+  function printGuard(e){ if((e.key||'')==='PrintScreen'){ shotWarn(); } }
+  function startProctor(){
+    warns=0; lastWarn=0; lastType=''; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    window.addEventListener('blur',blurHandler);
+    window.addEventListener('focus',focusHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('cut',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keyup',printGuard,true);
+    /* if fullscreen could not be entered at start, ask for it (no strike) */
+    setTimeout(()=>{ if(examOn && proctorOn && !document.fullscreenElement) showViolation('fs',null); },700);
+  }
+  function stopProctor(){
+    proctorOn=false;
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    window.removeEventListener('blur',blurHandler);
+    window.removeEventListener('focus',focusHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('cut',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keyup',printGuard,true);
+    hideCover(); removeViolPop();
+  }
+
+  function startEntry(){
+    if(inIframe){ window.open(location.pathname+'?mode=exam','_blank'); return; }
+    showSplash();
+  }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; Advanced Diagnostics &mdash; Mock Test</h2>
+      <p>A timed, exam-style assessment modelled on real technical screening tests.</p>
+      <ul>
+        <li><b>50 questions</b> to attempt</li>
+        <li><b>50-minute</b> timer (1 min per question) &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Results and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> &mdash; stay in fullscreen the whole time</li>
+        <li>Exactly <b>3 things trigger a warning</b>: (1) <b>switching tab / window</b>, (2) <b>exiting fullscreen</b>, (3) <b>attempting a screenshot</b> (PrintScreen / Win+Shift+S / Cmd+Shift+3-5)</li>
+        <li>Each warning shows a popup with a <b>Continue Test</b> button that resumes where you left off &mdash; the timer keeps running</li>
+        <li><b>3 warnings in total</b> &rarr; the test <b>auto-submits</b>. Copy and right-click are also disabled</li>
+      </ul>
+      <button class="exam-btn primary" id="examBegin" style="width:100%;padding:14px">Start Test &rarr;</button>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      if(document.documentElement.requestFullscreen){document.documentElement.requestFullscreen().catch(()=>{});}
+      sp.remove(); enterExam();
+    });
+  }
+
+  async function enterExam(){
+    injectCss();
+    let ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Loading your test&hellip;</div>';
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    items=shuffle(BANK).slice(0,EXAM_N).map(b=>({id:b.id,q:b.q,code:b.code,options:b.options,difficulty:b.difficulty}));
+    if(!items.length){ ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center">Could not load the test. Close and try again.</div>'; return; }
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">Advanced Diagnostics &mdash; Mock Test</div><div class="et-sub">50 questions &middot; one attempt &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}${it.difficulty?`<span class="diff">${it.difficulty}</span>`:''}</div>
+      ${it.code?`<pre><code>${it.code}</code></pre>`:''}
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>el.addEventListener('click',()=>{
+      answers[id]=+el.dataset.i;
+      pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel'));
+      el.classList.add('sel'); refreshPalette();
+    }));
+    const prev=document.getElementById('examPrev'), next=document.getElementById('examNext');
+    if(prev)prev.addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    if(next)next.addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();refreshPalette();});
+    refreshPalette();
+  }
+
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examConfirm('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test');
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId); removeFsPrompt();
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    const payload={answers:{}};
+    items.forEach(it=>{ payload.answers[it.id] = (it.id in answers)?answers[it.id]:-1; });
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Grading your test&hellip;</div>';
+    const byId={}; BANK.forEach(b=>byId[b.id]=b);
+    let sc=0; const results={};
+    items.forEach(it=>{ const b=byId[it.id], you=payload.answers[it.id];
+      const ok=(you===b.answer); if(ok)sc++;
+      results[it.id]={correct:ok,answer:b.answer,explanation:b.explanation}; });
+    showResults({score:sc,results:results});
+  }
+
+  function showResults(data){
+    const results=data.results||{}, total=items.length, score=data.score||0;
+    saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below and try again.';
+    if(pct>=85)msg='Outstanding &mdash; strong command of this module.';
+    else if(pct>=65)msg='Solid pass. A little more practice on the tricky ones and you are set.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the topics you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const r=results[it.id]||{}; const you=answers[it.id];
+      const attempted=(you!=null);
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      if(!attempted){
+        // Not attempted: reveal nothing (answer stays protected)
+        inner+='<div class="ra">Your answer: <i>Not answered</i></div>';
+        return '<div class="r no">'+inner+'</div>';
+      }
+      const youTxt=String.fromCharCode(65+you)+'. '+it.options[you];
+      const cor=(r.answer!=null&&r.answer>=0)?(String.fromCharCode(65+r.answer)+'. '+it.options[r.answer]):'';
+      inner+='<div class="ra '+(r.correct?'cor':'wrong')+'">Your answer: '+youTxt+'</div>'
+        +(r.correct?'':'<div class="ra cor">Correct: '+cor+'</div>')
+        +(r.explanation?'<div class="rx">'+r.explanation+'</div>':'');
+      return '<div class="r '+(r.correct?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; Advanced Diagnostics Mock Test</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another test</button></div>
+          <div class="exam-rmsg" id="examRedirect" style="margin-top:8px;color:#94a3b8"></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    let left=30;
+    const rd=document.getElementById('examRedirect');
+    const setTxt=()=>{ if(rd)rd.textContent='Returning to the assessment page in '+left+'s…'; };
+    setTxt();
+    const rt=setInterval(()=>{ left--; setTxt(); if(left<=0){ clearInterval(rt); goBack(); } },1000);
+    function goBack(){
+      if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); }
+      if(window.opener){ try{ window.close(); }catch(_){} }
+      location.href=location.pathname;   // fallback: reload guide (assessment) page
+    }
+    document.getElementById('examRetry').addEventListener('click',()=>{ clearInterval(rt); document.getElementById('examOverlay').remove(); enterExam(); });
+    document.getElementById('examClose').addEventListener('click',()=>{ clearInterval(rt); goBack(); });
+  }
+
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',startEntry);
+  window.__mockExamStart=startEntry;
+  renderScoreboard();
+  window.addEventListener('storage',e=>{ if(e.key===LS_KEY)renderScoreboard(); });
+  if(new URLSearchParams(location.search).get('mode')==='exam'){ showSplash(); }
+})();
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body>
+</html>

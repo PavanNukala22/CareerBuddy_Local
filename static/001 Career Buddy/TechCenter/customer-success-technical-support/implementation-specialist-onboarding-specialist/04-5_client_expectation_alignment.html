@@ -1,0 +1,1948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Client Expectation Alignment — Implementation / Onboarding Specialist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============= Notion-inspired theme ============= */
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#14213D 0%,#ad1a72 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans';font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'JetBrains Mono',monospace;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans';font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'JetBrains Mono',monospace;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'JetBrains Mono',monospace;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'JetBrains Mono',monospace;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'JetBrains Mono',monospace;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'JetBrains Mono',monospace;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+</style>
+<!-- ── Global theme overlay (DESIGN-CBuddy.md) ── -->
+<link rel="stylesheet" href="/theme-cbuddy.css">
+<style>
+/* CareerBuddy: sticky sidebar visible scrollbar */
+.toc,.sidebar,.sidenav{scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc::-webkit-scrollbar,.sidebar::-webkit-scrollbar,.sidenav::-webkit-scrollbar{width:9px;height:9px}
+.toc::-webkit-scrollbar-thumb,.sidebar::-webkit-scrollbar-thumb,.sidenav::-webkit-scrollbar-thumb{background:#cbd2e0;border-radius:8px}
+.toc::-webkit-scrollbar-thumb:hover,.sidebar::-webkit-scrollbar-thumb:hover,.sidenav::-webkit-scrollbar-thumb:hover{background:#9aa4b8}
+.toc::-webkit-scrollbar-track,.sidebar::-webkit-scrollbar-track,.sidenav::-webkit-scrollbar-track{background:transparent}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@100..900&display=swap">
+<style>
+/* -- Unify typography: Noto Sans everywhere (CareerBuddy) -- */
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,dl,dt,dd,td,th,div,section,article,header,footer,nav,aside,main,label,button,input,select,textarea,blockquote,figcaption,small,strong,b,em,i{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif !important}
+.material-symbols-outlined,.material-icons{font-family:'Material Symbols Outlined','Material Icons' !important}
+code,pre,kbd,samp,tt,.mono,[class*="mono"],[class*="Mono"],[class*="code"],[class*="Code"],[class*="tok"],[class*="hljs"]{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+
+<style>
+/* Practice + quick-check additions (same visual language as the reference) */
+.practice-label{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:#0a5f0a;background:var(--green-soft);padding:3px 9px;border-radius:5px;margin-bottom:6px}
+.saq-scenario{font-size:14px;color:var(--ink-soft);margin:0 0 10px;line-height:1.55}
+.mcq-reset{margin-top:6px}
+.steps{counter-reset:st;list-style:none;padding-left:0 !important}
+.steps>li{counter-increment:st;position:relative;padding-left:40px;margin:12px 0 !important}
+.steps>li::before{content:counter(st);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;
+  background:#14213D;color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}
+.script{background:var(--bg-soft);border-left:3px solid #14213D;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:14.5px}
+.script.bad{border-left-color:var(--red)}
+.script.good{border-left-color:var(--green)}
+.script b{display:block;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:2px}
+</style>
+
+<style>
+/* Visible, thin navbar scrollbar */
+.tabbar{overflow-x:auto !important;scrollbar-width:thin !important;scrollbar-color:#000000 #e2e8f0 !important;padding-bottom:4px}
+.tabbar::-webkit-scrollbar{display:block !important;height:8px}
+.tabbar::-webkit-scrollbar-track{background:#e2e8f0;border-radius:8px}
+.tabbar::-webkit-scrollbar-thumb{background:#000000;border-radius:8px}
+.tabbar::-webkit-scrollbar-thumb:hover{background:#333333}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<!-- ============= STICKY HEADER ============= -->
+<header class="header">
+  <div class="header-top">
+    <div class="brand">
+      <div class="brand-mark">EXP</div>
+      <span>Client Expectation Alignment<span class="brand-sub"> · Implementation / Onboarding Specialist</span></span>
+    </div>
+    <div class="header-actions">
+      <span class="progress-pill" id="progressPill">
+        <span class="progress-dot"></span>
+        <span id="progressText">Tab 1 of 10</span>
+      </span>
+      <button class="btn" onclick="resetProgress()" title="Reset to first tab">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9"/><path d="M2 4v3.5h3.5"/></svg>
+        Reset
+      </button>
+    </div>
+  </div>
+  <nav class="tabbar" role="tablist" id="tabbar">
+        <button class="tab active" data-tab="t1" role="tab"><span class="tab-num">01</span> Expectation Basics</button>
+    <button class="tab" data-tab="t2" role="tab"><span class="tab-num">02</span> Sales → Implementation Handoff</button>
+    <button class="tab" data-tab="t3" role="tab"><span class="tab-num">03</span> Kickoff Alignment</button>
+    <button class="tab" data-tab="t4" role="tab"><span class="tab-num">04</span> Scope Creep Basics</button>
+    <button class="tab" data-tab="t5" role="tab"><span class="tab-num">05</span> Managing Scope Creep</button>
+    <button class="tab" data-tab="t6" role="tab"><span class="tab-num">06</span> Communication & Tough Talks</button>
+    <button class="tab" data-tab="t7" role="tab"><span class="tab-num">07</span> Handoff to CS & Support</button>
+    <button class="tab" data-tab="t8" role="tab"><span class="tab-num">08</span> Real-World Scenarios</button>
+    <button class="tab" data-tab="t9" role="tab"><span class="tab-num">09</span> Interview Prep</button>
+    <button class="tab" data-tab="t10" role="tab"><span class="tab-num">10</span> Assessment</button>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="toc">
+    <div class="toc-title">On this page</div>
+    <ul class="toc-list" id="toc"></ul>
+  </aside>
+  <main class="main">
+
+    <section class="panel active" id="t1" data-toc='[["s1-1", "What Are Client Expectations?"], ["s1-2", "Types of Expectations"], ["s1-3", "The Expectation Gap"], ["s1-4", "Where Gaps Come From"], ["s1-5", "Your Role at the Handoffs"], ["s1-6", "Common Mistakes"], ["s1-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Basic</span></div>
+        <div class="panel-eyebrow">Module 01 · What Is What</div>
+        <h1 class="panel-title">What Client Expectations Are</h1>
+        <p class="panel-subtitle">Start from the basics: what client expectations are, the types of expectations, the expectation gap, where gaps come from, and the implementation specialist's role in aligning them.</p>
+      </div>
+<div class="section" id="s1-1">
+<h2><span class="sec-emoji">🎯</span> What Are Client Expectations?</h2>
+<p><strong>Client expectations</strong> are what the customer believes they will get: what will be delivered, when, how it will work, how much effort it needs from them, and what results they'll see. <strong>Expectation alignment</strong> means making sure both sides share the same, realistic picture, in writing.</p><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Customer satisfaction ≈ <strong>what they experience − what they expected</strong>. A great delivery can still disappoint if expectations were unrealistic.</div></div>
+
+</div>
+<div class="section" id="s1-2">
+<h2><span class="sec-emoji">🗂️</span> Types of Expectations</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Type</th><th>Example expectation</th></tr></thead><tbody><tr><td>Scope</td><td>"Salesforce and HubSpot integrations are included"</td></tr><tr><td>Timeline</td><td>"We'll be live in 4 weeks"</td></tr><tr><td>Outcomes</td><td>"Support costs will drop by 30%"</td></tr><tr><td>Effort / resources</td><td>"Our team won't need to do much"</td></tr><tr><td>Communication</td><td>"We'll get weekly updates"</td></tr><tr><td>Service level</td><td>"Questions answered within an hour"</td></tr><tr><td>Product capability</td><td>"It can do custom approval chains"</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s1-3">
+<h2><span class="sec-emoji">📏</span> The Expectation Gap</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Situation</th><th>Result</th></tr></thead><tbody><tr><td>Experience &gt; expectation</td><td>Delight; strong advocate</td></tr><tr><td>Experience = expectation</td><td>Satisfied</td></tr><tr><td>Experience &lt; expectation</td><td>Disappointment, escalations, churn risk</td></tr></tbody></table></div>
+<div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">Most implementation escalations are not about bad work but about a gap between what was expected and what was agreed.</div></div>
+
+</div>
+<div class="section" id="s1-4">
+<h2><span class="sec-emoji">🧩</span> Where Gaps Come From</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Source</th><th>Example</th></tr></thead><tbody><tr><td>Over-promising in sales</td><td>"Yes, we integrate with that" (only via custom work)</td></tr><tr><td>Vague contracts/SOWs</td><td>"Data migration included" (how much? which objects?)</td></tr><tr><td>Assumptions</td><td>Customer assumes vendor will clean their data</td></tr><tr><td>Changing stakeholders</td><td>New manager wasn't part of the original decisions</td></tr><tr><td>Poor communication</td><td>No updates → customer assumes the worst</td></tr><tr><td>Unclear customer responsibilities</td><td>IT tasks not planned</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s1-5">
+<h2><span class="sec-emoji">🌉</span> Your Role at the Handoffs</h2>
+<div class="diagram"><svg viewBox="0 0 740 200" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="jx" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs>
+<g font-family="Noto Sans" font-size="11" text-anchor="middle">
+<rect x="10" y="50" width="190" height="90" rx="14" fill="#f1f1ef" stroke="#d3d3d0"/><text x="105" y="78" font-weight="700" fill="#37352f" font-size="13">Sales</text><text x="105" y="98" fill="#787774">promises, goals,</text><text x="105" y="114" fill="#787774">contract, timeline</text>
+<rect x="275" y="50" width="190" height="90" rx="14" fill="#14213D"/><text x="370" y="78" font-weight="700" fill="#fff" font-size="13">Implementation</text><text x="370" y="98" fill="#cdd5e5">scope, plan, configure,</text><text x="370" y="114" fill="#cdd5e5">train, go-live</text>
+<rect x="540" y="50" width="190" height="90" rx="14" fill="#ddedea" stroke="#bdd9d2"/><text x="635" y="78" font-weight="700" fill="#0a5f0a" font-size="13">CS &amp; Support</text><text x="635" y="98" fill="#0a5f0a">adoption, value,</text><text x="635" y="114" fill="#0a5f0a">renewal, issues</text>
+<line x1="202" y1="95" x2="273" y2="95" stroke="#d9730d" stroke-width="3" marker-end="url(#jx)"/><text x="237" y="82" fill="#a85a08" font-weight="700">Handoff 1</text>
+<line x1="467" y1="95" x2="538" y2="95" stroke="#d9730d" stroke-width="3" marker-end="url(#jx)"/><text x="502" y="82" fill="#a85a08" font-weight="700">Handoff 2</text>
+<text x="370" y="180" fill="#787774" font-style="italic">Expectations are most at risk at the two handoffs; the implementation specialist bridges both.</text>
+</g></svg><div class="diagram-caption">Figure 1.1 · The two handoffs</div></div>
+<ul><li><strong>Handoff 1 (Sales → Implementation)</strong>: understand what was sold and promised; correct gaps early.</li><li><strong>During implementation</strong>: control scope, communicate, manage changes.</li><li><strong>Handoff 2 (Implementation → CS/Support)</strong>: transfer context so the customer never repeats themselves.</li></ul>
+
+</div>
+<div class="section" id="s1-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Assuming the SOW is understood</td><td>Different interpretations</td><td>Walk through scope at kickoff</td></tr><tr><td>Avoiding uncomfortable truths</td><td>Bigger gap later</td><td>Correct expectations early</td></tr><tr><td>Verbal agreements only</td><td>"He said, she said"</td><td>Confirm in writing</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s1-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Classify these expectations by type: (a) "Live before Diwali"; (b) "Your team will migrate and clean all our data"; (c) "Ticket volume will drop 20%".</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">(a) Timeline. (b) Scope + effort/responsibility (needs clarifying who cleans data). (c) Outcome.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Explain the expectation gap in one sentence with an example.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">The gap is the difference between what the customer expected and what they experience; e.g., they expected go-live in 4 weeks but the agreed plan is 8, so even a perfect 8-week delivery feels late.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Expectation alignment means…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Agreeing to everything</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Both sides share the same realistic picture, in writing</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Hiding problems</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Selling more</li></ul><div class="mcq-feedback" data-expl="Shared reality."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>A common source of gaps is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Clear SOWs</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Over-promising in sales</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Written recaps</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Weekly updates</li></ul><div class="mcq-feedback" data-expl="Over-promising."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>Experience below expectation leads to…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Delight</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Disappointment and escalations</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Nothing</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Expansion</li></ul><div class="mcq-feedback" data-expl="Gap."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t2" data-toc='[["s2-1", "Why the Handoff Matters"], ["s2-2", "What to Capture"], ["s2-3", "The Internal Handoff Meeting"], ["s2-4", "Red Flags"], ["s2-5", "Correcting Over-promises"], ["s2-6", "Common Mistakes"], ["s2-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Basic</span><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 02 · Handoff 1</div>
+        <h1 class="panel-title">Bridging the Sales-to-Implementation Handoff</h1>
+        <p class="panel-subtitle">The first handoff decides how the project starts. Learn what to capture, the internal handoff meeting, the handoff document, red flags, and how to correct over-promises without losing trust.</p>
+      </div>
+<div class="section" id="s2-1">
+<h2><span class="sec-emoji">🤝</span> Why the Handoff Matters</h2>
+<ul><li>The customer told Sales their goals, pains and timelines; they shouldn't repeat everything.</li><li>Promises made in sales become expectations you must meet.</li><li>A poor handoff is one of the most common causes of early churn and escalations.</li></ul>
+
+</div>
+<div class="section" id="s2-2">
+<h2><span class="sec-emoji">📋</span> What to Capture</h2>
+<pre><span class="pre-lang">sales handoff document</span><code>Customer: Acme Logistics · Contract: ₹45 L/yr · Signed: 3 Oct · Term: 2 years
+Why they bought: missed SLAs, scattered email support, upcoming peak season
+Goals &amp; success criteria: FRT &lt; 4 h; one queue for 4 hubs; live before 15 Nov
+Scope purchased: Professional plan, 80 agents, Okta SSO, Slack + Salesforce connectors
+Services purchased: standard onboarding (8 weeks), 50k ticket migration
+Promises / special terms: &quot;Weekly status calls&quot;; &quot;HubSpot later&quot; (not in contract)
+Stakeholders: VP Ops (sponsor), Ops Manager (owner), IT lead (SSO), Finance (billing)
+Competitors considered: Vendor X (price), Vendor Y
+Risks: tight deadline (peak season); IT team stretched; messy legacy data
+AE: Rahul · CSM assigned: Priya</code></pre>
+
+</div>
+<div class="section" id="s2-3">
+<h2><span class="sec-emoji">🗣️</span> The Internal Handoff Meeting</h2>
+<ol class="steps"><li>AE presents the deal: why they bought, goals, decision-makers, promises.</li><li>Implementation specialist asks questions; checks contract and SOW details.</li><li>Agree how to address any gaps or risky promises.</li><li>Plan the customer kickoff together (AE often joins).</li><li>Record notes in CRM/CS platform.</li></ol>
+<div style="overflow-x:auto"><table><thead><tr><th>Questions to ask the AE</th></tr></thead><tbody><tr><td>What exactly did we promise (features, dates, integrations)?</td></tr><tr><td>Who signed and who will use it? Any sceptics?</td></tr><tr><td>What would make them say this project was a failure?</td></tr><tr><td>Was anything discussed but not contracted?</td></tr><tr><td>What competitors and objections came up?</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s2-4">
+<h2><span class="sec-emoji">🚩</span> Red Flags</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Red flag</th><th>Risk</th></tr></thead><tbody><tr><td>"They'll be live in 2 weeks" for a complex deal</td><td>Unrealistic timeline</td></tr><tr><td>Custom features promised</td><td>Scope gap; product can't deliver</td></tr><tr><td>No named customer project owner</td><td>Nobody does customer tasks</td></tr><tr><td>Decision-maker not involved in sales</td><td>Priorities may change</td></tr><tr><td>Large data migration "included" without limits</td><td>Unbounded effort</td></tr><tr><td>Customer expects vendor to own their process redesign</td><td>Effort/role confusion</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s2-5">
+<h2><span class="sec-emoji">🩹</span> Correcting Over-promises</h2>
+<ol class="steps"><li>Confirm internally what was said (AE, emails, contract).</li><li>Decide the honest position: what's possible, alternatives, timeline.</li><li>Raise it early (kickoff or before), ideally with the AE present.</li><li>Frame around their goal and offer options (phase 2, workaround, change request).</li><li>Document the agreed position in the scope/kickoff recap.</li></ol>
+<div class="script good"><b>Example</b>I know HubSpot integration came up during the sales process. It isn't part of the current scope, and I want to be upfront about that now rather than later. We can achieve your goal of seeing ticket data in HubSpot with a Zapier workflow in phase 2, or scope a native integration as a change request. Which would you prefer?</div>
+
+</div>
+<div class="section" id="s2-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Skipping the internal handoff</td><td>Customer repeats everything; promises missed</td><td>Mandatory handoff meeting</td></tr><tr><td>Ignoring verbal promises</td><td>Customer feels misled later</td><td>Surface them early</td></tr><tr><td>Blaming Sales in front of the customer</td><td>Damages trust in the company</td><td>Present a united, honest position</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s2-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>List 6 fields every sales handoff document should include.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Why they bought; goals and success criteria; products/services purchased and limits; promises/special terms; stakeholders and roles; key dates (contract, desired go-live); risks; competitors/objections.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>The AE promised go-live in 3 weeks; your standard plan is 8. What do you do before kickoff?</span></div><p class="saq-scenario">Scenario: Unrealistic timeline.</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Meet the AE to understand the driver (event? peak season?); assess an MVP that could go live in 3–4 weeks with phased rollout; agree a united position; at kickoff, present options transparently (MVP date + full scope date) tied to their goal; confirm in writing.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>The internal handoff meeting is between…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Customer and support</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Sales (AE) and implementation (and often CSM)</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Finance and legal</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Users only</li></ul><div class="mcq-feedback" data-expl="Internal."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>A red flag in handoff:</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Named project owner</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Custom features promised</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Clear SOW</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Realistic timeline</li></ul><div class="mcq-feedback" data-expl="Scope gap."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>When correcting an over-promise, you should…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Blame Sales</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Raise early, offer options, document</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Ignore it</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Promise anyway</li></ul><div class="mcq-feedback" data-expl="Honest options."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t3" data-toc='[["s3-1", "Kickoff Goals"], ["s3-2", "Kickoff Agenda"], ["s3-3", "Success Criteria"], ["s3-4", "RACI & Customer Responsibilities"], ["s3-5", "Communication Plan & Working Agreement"], ["s3-6", "Common Mistakes"], ["s3-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 03 · Kickoff</div>
+        <h1 class="panel-title">Setting Expectations at Kickoff</h1>
+        <p class="panel-subtitle">The kickoff is your best moment to align expectations. Learn the kickoff agenda, success criteria, RACI, communication plan, customer responsibilities and the working agreement.</p>
+      </div>
+<div class="section" id="s3-1">
+<h2><span class="sec-emoji">🎯</span> Kickoff Goals</h2>
+<ul><li>Confirm goals and success criteria in the customer's words.</li><li>Walk through scope (in and out).</li><li>Agree timeline, milestones and dependencies.</li><li>Clarify roles and customer responsibilities.</li><li>Agree communication and escalation paths.</li></ul>
+
+</div>
+<div class="section" id="s3-2">
+<h2><span class="sec-emoji">📋</span> Kickoff Agenda</h2>
+<pre><span class="pre-lang">kickoff agenda (60–90 min)</span><code>1. Introductions &amp; roles (both sides)
+2. Why we&#x27;re here: goals &amp; success criteria (customer speaks)
+3. Scope: in scope / out of scope / assumptions
+4. Timeline &amp; milestones (Gantt overview)
+5. Responsibilities: RACI and customer tasks for the next 2 weeks
+6. Communication plan, status reports, escalation path
+7. Risks &amp; open questions
+8. Next steps and dates</code></pre>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Send the kickoff deck and recap in writing within 24 hours, and ask the customer to confirm. That written confirmation is your expectation baseline.</div></div>
+
+</div>
+<div class="section" id="s3-3">
+<h2><span class="sec-emoji">🏁</span> Success Criteria</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Weak</th><th>Strong (measurable)</th></tr></thead><tbody><tr><td>"System works well"</td><td>All 80 agents working tickets in the platform by 15 Nov</td></tr><tr><td>"Faster support"</td><td>Median FRT &lt; 4 h within 60 days of go-live</td></tr><tr><td>"Data migrated"</td><td>Open tickets + last 2 years history migrated; reconciliation signed off</td></tr><tr><td>"Users trained"</td><td>95% of agents complete training and quiz ≥ 80%</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s3-4">
+<h2><span class="sec-emoji">📊</span> RACI & Customer Responsibilities</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Activity</th><th>Customer project owner</th><th>Customer IT</th><th>Implementation specialist</th><th>Customer sponsor</th></tr></thead><tbody><tr><td>Scope sign-off</td><td>R</td><td>C</td><td>R</td><td>A</td></tr><tr><td>SSO setup</td><td>I</td><td>R</td><td>C</td><td>I</td></tr><tr><td>Data export &amp; cleansing decisions</td><td>A/R</td><td>C</td><td>C</td><td>I</td></tr><tr><td>Configuration</td><td>C</td><td>I</td><td>R/A</td><td>I</td></tr><tr><td>UAT</td><td>R/A</td><td>C</td><td>C</td><td>I</td></tr><tr><td>Go-live decision</td><td>R</td><td>C</td><td>C</td><td>A</td></tr></tbody></table></div>
+<div class="callout note"><div class="callout-icon">📌</div><div class="callout-body">R = Responsible (does it), A = Accountable (owns/approves), C = Consulted, I = Informed. Exactly one A per activity.</div></div>
+
+</div>
+<div class="section" id="s3-5">
+<h2><span class="sec-emoji">📣</span> Communication Plan & Working Agreement</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Item</th><th>Agreement</th></tr></thead><tbody><tr><td>Status report</td><td>Weekly email every Friday + 30-min call Monday</td></tr><tr><td>Channel</td><td>Shared Slack channel for quick questions; email for decisions</td></tr><tr><td>Response times</td><td>Vendor replies within 1 business day; customer task delays flagged immediately</td></tr><tr><td>Escalation path</td><td>Project owner → sponsor ↔ implementation lead → services manager</td></tr><tr><td>Decision log</td><td>All decisions recorded in the shared plan</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s3-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Skipping out-of-scope items at kickoff</td><td>Surprises later</td><td>Read them out explicitly</td></tr><tr><td>No customer responsibilities</td><td>Delays blamed on vendor</td><td>RACI + dated customer tasks</td></tr><tr><td>No written recap</td><td>No baseline</td><td>Recap within 24 h, ask for confirmation</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s3-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Rewrite as measurable success criteria: "Make onboarding easier" and "Integrate with our CRM".</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">"New employee onboarding completed in ≤ 5 days (from 12) for all offices by 31 March." "Contacts and deals sync between CRM and platform every 15 minutes with &lt; 1% sync errors, live by go-live."</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Fill the RACI for "Data cleansing": who is Responsible and Accountable, and why?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Customer data owner is Accountable (it's their data and business rules) and often Responsible (with their team); implementation specialist is Consulted (guidance, tools, templates) or Responsible for technical transformation if contracted. Clarifying this avoids the assumption that the vendor cleans everything.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>In RACI, "A" means…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Assisted</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Accountable</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Absent</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Approved by all</li></ul><div class="mcq-feedback" data-expl="Owner."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>Kickoff recap should be sent…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Never</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Within 24 hours and confirmed</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> After go-live</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Only verbally</li></ul><div class="mcq-feedback" data-expl="Baseline."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>Which is a measurable success criterion?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> "Works well"</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> "Median FRT < 4 h within 60 days"</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> "Happy users"</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> "Faster"</li></ul><div class="mcq-feedback" data-expl="Measurable."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t4" data-toc='[["s4-1", "What Is Scope Creep?"], ["s4-2", "Types of Scope Creep"], ["s4-3", "Why It Happens"], ["s4-4", "Early Warning Signs"], ["s4-5", "Impact on the Project"], ["s4-6", "Common Mistakes"], ["s4-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Basic</span><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 04 · Scope Creep</div>
+        <h1 class="panel-title">Scope Creep: What It Is & Why It Happens</h1>
+        <p class="panel-subtitle">Understand scope creep before managing it: definition, types (customer-driven, gold plating, hidden requirements), causes, early warning signs and its impact.</p>
+      </div>
+<div class="section" id="s4-1">
+<h2><span class="sec-emoji">🐍</span> What Is Scope Creep?</h2>
+<p><strong>Scope creep</strong> is the gradual, uncontrolled growth of project scope: extra features, data, integrations or tasks added without adjusting time, cost or resources, and without formal approval.</p><div class="compare"><div class="compare-col"><h4>🐍 Scope creep</h4><p style="font-size:13.5px;margin:0">"Can you also just add…" accepted informally, again and again.</p></div><div class="compare-col"><h4>✅ Managed change</h4><p style="font-size:13.5px;margin:0">New request assessed and approved through change control with updated plan/cost.</p></div></div>
+
+</div>
+<div class="section" id="s4-2">
+<h2><span class="sec-emoji">🗂️</span> Types of Scope Creep</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Type</th><th>Example</th></tr></thead><tbody><tr><td>Customer-driven requests</td><td>"Add two more workflows"</td></tr><tr><td>Gold plating (vendor-driven)</td><td>Specialist adds unrequested extras to impress</td></tr><tr><td>Hidden requirements</td><td>Compliance needs discovered mid-project</td></tr><tr><td>Stakeholder creep</td><td>New department wants to join the rollout</td></tr><tr><td>Data creep</td><td>"Also migrate 10 years of history"</td></tr><tr><td>Integration creep</td><td>"And connect our ERP"</td></tr></tbody></table></div>
+<div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><strong>Gold plating</strong> is scope creep you cause yourself. It sets expectations you'll be held to later and eats time from agreed work.</div></div>
+
+</div>
+<div class="section" id="s4-3">
+<h2><span class="sec-emoji">🤔</span> Why It Happens</h2>
+<ul><li>Vague or missing scope documents.</li><li>No change-control process.</li><li>Wanting to please the customer.</li><li>New stakeholders with new priorities.</li><li>Discovery done too shallowly.</li><li>Customer learning what's possible as they see the system.</li></ul>
+
+</div>
+<div class="section" id="s4-4">
+<h2><span class="sec-emoji">🚩</span> Early Warning Signs</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Sign</th><th>What to do</th></tr></thead><tbody><tr><td>"While you're at it…" / "Can you just…"</td><td>Pause; check scope</td></tr><tr><td>Requirements keep changing in reviews</td><td>Freeze design; use change requests</td></tr><tr><td>New people appear with new asks</td><td>Re-confirm sponsor priorities</td></tr><tr><td>Tasks not in the WBS appear in the plan</td><td>Review against scope</td></tr><tr><td>Timeline slipping without clear reason</td><td>Look for unlogged extras</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s4-5">
+<h2><span class="sec-emoji">💥</span> Impact on the Project</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Impact</th><th>Example</th></tr></thead><tbody><tr><td>Missed deadlines</td><td>Go-live slips 3 weeks</td></tr><tr><td>Budget overrun</td><td>Services hours exceeded</td></tr><tr><td>Quality drops</td><td>Rushed configuration, less testing</td></tr><tr><td>Team burnout</td><td>Overtime to absorb extras</td></tr><tr><td>Customer dissatisfaction</td><td>"You're late," even though they added scope</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s4-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Saying "sure, no problem" to small asks</td><td>Small asks add up</td><td>Log every request</td></tr><tr><td>Gold plating</td><td>New expectations, lost time</td><td>Deliver agreed scope first</td></tr><tr><td>No scope baseline</td><td>Can't prove creep</td><td>Signed scope statement</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s4-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Identify the type of scope creep: (a) you add a fancy dashboard nobody asked for; (b) marketing team asks to join the rollout; (c) customer asks to migrate 10 years of history instead of 2.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">(a) Gold plating. (b) Stakeholder creep. (c) Data creep.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>List four early warning signs of scope creep.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">"Can you just…" requests; changing requirements in every review; new stakeholders with new asks; tasks appearing that aren't in the WBS; unexplained timeline slips.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Scope creep is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Approved change</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Uncontrolled growth of scope without adjusting time/cost</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> A tool</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> A milestone</li></ul><div class="mcq-feedback" data-expl="Definition."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>Gold plating means…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Customer adds requests</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Vendor adds unrequested extras</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Fixing bugs</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Testing</li></ul><div class="mcq-feedback" data-expl="Self-inflicted creep."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>Scope creep often causes…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Earlier go-live</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Missed deadlines and budget overruns</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Lower risk</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Nothing</li></ul><div class="mcq-feedback" data-expl="Impact."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t5" data-toc='[["s5-1", "Prevention Techniques"], ["s5-2", "Responding to New Requests"], ["s5-3", "Change Requests & Phase-2 Backlog"], ["s5-4", "Trade-offs: Swap, Add, Defer"], ["s5-5", "Scripts That Work"], ["s5-6", "Common Mistakes"], ["s5-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div>
+        <div class="panel-eyebrow">Module 05 · Scope Control</div>
+        <h1 class="panel-title">Managing Scope Creep in Practice</h1>
+        <p class="panel-subtitle">Practical techniques to keep projects on track while keeping customers happy: the "yes, and" response, change requests, phase-2 backlogs, trade-offs and scripts for saying no gracefully.</p>
+      </div>
+<div class="section" id="s5-1">
+<h2><span class="sec-emoji">🛡️</span> Prevention Techniques</h2>
+<ul><li>Clear, signed scope with an explicit out-of-scope list.</li><li>Acceptance criteria for each deliverable.</li><li>Design sign-off before configuration starts.</li><li>Agreed change-control process explained at kickoff.</li><li>Regular scope check in status meetings.</li><li>Avoid gold plating.</li></ul>
+
+</div>
+<div class="section" id="s5-2">
+<h2><span class="sec-emoji">💬</span> Responding to New Requests</h2>
+<ol class="steps"><li><strong>Listen and acknowledge</strong>: understand the business need behind the request.</li><li><strong>Check scope</strong>: is it already included, a small clarification, or new?</li><li><strong>Assess impact</strong>: effort, timeline, cost, risk.</li><li><strong>Offer options</strong>: add via change request, swap with something, or defer to phase 2.</li><li><strong>Get a decision</strong> from the right person; document it.</li></ol>
+<div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Use <strong>"Yes, and…"</strong> instead of "No": "Yes, we can do that, and here's what it means for the timeline and cost."</div></div>
+
+</div>
+<div class="section" id="s5-3">
+<h2><span class="sec-emoji">📝</span> Change Requests & Phase-2 Backlog</h2>
+<pre><span class="pre-lang">change request log</span><code>ID      Request                     Requested by  Impact               Decision        Date
+CR-01   Add HubSpot integration     Ops Manager   +5 days, +fee        Deferred (Ph 2) 22 Oct
+CR-02   Extra &quot;Returns&quot; workflow    Team Lead     +1 day, no fee       Approved (swap) 25 Oct
+CR-03   Migrate 10 yrs history      VP Ops        +2 weeks, +fee       Rejected        28 Oct</code></pre>
+<ul><li>Keep a visible <strong>phase-2 backlog</strong> for good ideas that don't fit now.</li><li>Share it with the CSM at handoff; it becomes an expansion/adoption plan.</li></ul>
+
+</div>
+<div class="section" id="s5-4">
+<h2><span class="sec-emoji">⚖️</span> Trade-offs: Swap, Add, Defer</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Option</th><th>When</th><th>Example</th></tr></thead><tbody><tr><td>Swap</td><td>Similar effort, customer priority changed</td><td>Replace "Escalation report" with "Returns workflow"</td></tr><tr><td>Add (change request)</td><td>Customer accepts time/cost change</td><td>HubSpot integration +5 days and fee</td></tr><tr><td>Defer to phase 2</td><td>Nice-to-have; go-live date fixed</td><td>Advanced dashboards after go-live</td></tr><tr><td>Decline</td><td>Out of product capability or strategy</td><td>Custom code the product doesn't support</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s5-5">
+<h2><span class="sec-emoji">🗣️</span> Scripts That Work</h2>
+<div class="script good"><b>Acknowledge + options</b>That's a great idea, and I can see how it would help the regional teams. It isn't in our current scope, so here are two options: we add it now, which moves go-live by about a week, or we put it first on the phase-2 list right after go-live. Which works better for you?</div>
+<div class="script good"><b>Small "free" request</b>I can include that small label change as part of the configuration review, since it doesn't affect the timeline. For anything bigger, we'll use the change-request process so the plan stays accurate.</div>
+<div class="script bad"><b>Avoid</b>Sure, no problem, we'll squeeze it in.</div>
+
+</div>
+<div class="section" id="s5-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Rigid "no" to everything</td><td>Customer feels unheard</td><td>Acknowledge and offer options</td></tr><tr><td>Unlimited "yes"</td><td>Project fails</td><td>Assess impact; decide formally</td></tr><tr><td>Decisions by the wrong person</td><td>Later reversed</td><td>Sponsor approves changes</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s5-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>The customer asks for 3 extra reports in week 5 of 8. Write your response using options.</span></div><p class="saq-scenario">Scenario: Mid-project request.</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">"Thanks, those reports would help leadership. They're outside the current scope. Options: (1) add them now as a change request, about 3 extra days and a small services fee, moving UAT by 3 days; (2) swap them for the two lower-priority reports we planned; or (3) build them in phase 2 in the first two weeks after go-live. Which would you like? I'll confirm the decision in writing."</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>What should a change request record contain?</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">ID, description, requester, date, business reason, impact on scope/time/cost/risk, options, decision, approver, decision date, and updates to plan/SOW.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>"Yes, and…" means…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Agree to everything free</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Agree while explaining impact/options</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Refuse politely</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Ignore</li></ul><div class="mcq-feedback" data-expl="Constructive."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>A phase-2 backlog stores…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Bugs only</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Good ideas deferred until after go-live</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Invoices</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Passwords</li></ul><div class="mcq-feedback" data-expl="Future scope."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>Who should approve scope changes?</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Any user</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> The sponsor/agreed approvers</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> The newest team member</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Nobody</li></ul><div class="mcq-feedback" data-expl="Authority."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t6" data-toc='[["s6-1", "Proactive Communication"], ["s6-2", "Delivering Bad News"], ["s6-3", "Negotiating with Clients"], ["s6-4", "Escalation Done Right"], ["s6-5", "Rebuilding Trust"], ["s6-6", "Common Mistakes"], ["s6-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div>
+        <div class="panel-eyebrow">Module 06 · Communication</div>
+        <h1 class="panel-title">Communication & Difficult Conversations</h1>
+        <p class="panel-subtitle">Keep expectations aligned all project long: proactive status updates, delivering bad news, negotiating, escalating, and rebuilding trust when things go wrong.</p>
+      </div>
+<div class="section" id="s6-1">
+<h2><span class="sec-emoji">📣</span> Proactive Communication</h2>
+<ul><li>Weekly status: done, next, risks, decisions needed, milestones.</li><li>Flag risks early, before they become issues.</li><li>Confirm decisions in writing.</li><li>Match detail to audience: sponsor gets a one-page summary; project team gets details.</li></ul>
+
+</div>
+<div class="section" id="s6-2">
+<h2><span class="sec-emoji">📰</span> Delivering Bad News</h2>
+<ol class="steps"><li>Tell early; don't wait for the deadline to pass.</li><li>State the facts clearly and briefly.</li><li>Explain the cause and impact without blame.</li><li>Present options and your recommendation.</li><li>Agree next steps and confirm in writing.</li></ol>
+<div class="script good"><b>Example</b>I want to flag a risk early: the data export arrived with about 15% duplicates, so cleansing will take 4 extra days. To protect the 15 Nov go-live, I recommend we migrate open tickets first and load older history in the week after go-live. Can we agree this by Wednesday?</div>
+
+</div>
+<div class="section" id="s6-3">
+<h2><span class="sec-emoji">🤝</span> Negotiating with Clients</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Principle</th><th>Example</th></tr></thead><tbody><tr><td>Focus on interests, not positions</td><td>"Why do you need it by Friday?" → board demo</td></tr><tr><td>Offer options</td><td>MVP for demo; full scope later</td></tr><tr><td>Trade, don't give away</td><td>Extra workflow ↔ drop a lower-priority report</td></tr><tr><td>Use objective criteria</td><td>SOW, effort estimates, past projects</td></tr><tr><td>Know your limits</td><td>What you can approve vs what needs management</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s6-4">
+<h2><span class="sec-emoji">⏫</span> Escalation Done Right</h2>
+<ul><li>Escalate when a milestone or relationship is at real risk and working-level fixes failed.</li><li>Bring facts, impact, options and a recommendation.</li><li>Escalate on both sides in parallel when needed (customer sponsor + your manager).</li><li>Never use escalation as a threat; frame it as getting help to protect their goals.</li></ul>
+
+</div>
+<div class="section" id="s6-5">
+<h2><span class="sec-emoji">🛠️</span> Rebuilding Trust</h2>
+<ul><li>Acknowledge the problem and its impact honestly.</li><li>Own your side; avoid blaming the customer or colleagues.</li><li>Share a concrete recovery plan with dates.</li><li>Over-communicate until stable.</li><li>Deliver small, visible wins quickly.</li></ul>
+
+</div>
+<div class="section" id="s6-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Hiding delays</td><td>Bigger shock later</td><td>Flag early with options</td></tr><tr><td>Blaming the customer</td><td>Defensive relationship</td><td>Facts + shared plan</td></tr><tr><td>Escalating without options</td><td>Slow decisions</td><td>Recommendation included</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s6-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>Write a message telling the sponsor that their IT team's delay on SSO will move go-live unless resolved this week.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">"Hi Rohit, a quick heads-up: SSO setup is waiting on your IT team, originally due 10 Oct. If it's not completed by Friday 18 Oct, go-live will move from 15 Nov to 22 Nov. Could you help secure 2 hours of Meera's time this week? Alternatively, we can go live with password login and switch to SSO a week later. Please let me know which you prefer."</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>The customer demands an earlier go-live "or we'll escalate to your CEO". How do you respond?</span></div><p class="saq-scenario">Scenario: Pressure tactic.</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Stay calm; ask what's driving the date; acknowledge the need; present options (MVP for the date, de-scope, extra resources at cost); explain risks honestly; offer to involve your manager to support the decision; confirm the agreed path in writing.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Bad news should be delivered…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> After the deadline</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Early, with options</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Never</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> By email only without context</li></ul><div class="mcq-feedback" data-expl="Early."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>"Focus on interests, not positions" means…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Ignore needs</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Understand the underlying need behind demands</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Always say no</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Discount</li></ul><div class="mcq-feedback" data-expl="Negotiation."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>An escalation should include…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Complaints only</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Facts, impact, options, recommendation</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Threats</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Nothing</li></ul><div class="mcq-feedback" data-expl="Decision-ready."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t7" data-toc='[["s7-1", "Hypercare & Exit Criteria"], ["s7-2", "The CS Handoff Document"], ["s7-3", "The Transition Meeting"], ["s7-4", "Enabling the Support Team"], ["s7-5", "Project Closure"], ["s7-6", "Common Mistakes"], ["s7-7", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div>
+        <div class="panel-eyebrow">Module 07 · Handoff 2</div>
+        <h1 class="panel-title">Bridging the Handoff to Ongoing Support & CS</h1>
+        <p class="panel-subtitle">Finish strong: hypercare exit criteria, the CS handoff document, the transition meeting, enabling Support, and making sure the customer never repeats themselves.</p>
+      </div>
+<div class="section" id="s7-1">
+<h2><span class="sec-emoji">🩺</span> Hypercare & Exit Criteria</h2>
+<p><strong>Hypercare</strong> is the intensive support period right after go-live (often 2–4 weeks) when the implementation team stays closely involved.</p><pre><span class="pre-lang">hypercare exit criteria</span><code>☐ No open P1/P2 issues for 7 consecutive days
+☐ ≥ 85% of licensed users active
+☐ Key workflows used as designed (e.g., 90% tickets routed automatically)
+☐ Remaining issues have owners in Support/CS
+☐ Customer project owner agrees to transition</code></pre>
+
+</div>
+<div class="section" id="s7-2">
+<h2><span class="sec-emoji">📄</span> The CS Handoff Document</h2>
+<pre><span class="pre-lang">implementation → CS handoff</span><code>Customer: Acme Logistics · Go-live: 15 Nov · Plan: Professional, 80 agents
+Goals &amp; success criteria: FRT &lt; 4 h (currently 5.1 h); single queue for 4 hubs ✅
+Configuration summary: workflows, SLAs, SSO (Okta), Slack + Salesforce connectors
+Data: 52k tickets migrated (reconciliation signed 12 Nov)
+Adoption: 88% active; macro usage 74% (target 80%)
+Stakeholders &amp; sentiment: VP Ops (sponsor, positive), Ops Mgr (champion), IT lead (neutral)
+Open items: 2 minor issues (tickets #4412, #4419) with Support
+Phase-2 backlog: HubSpot via Zapier; advanced dashboards; returns workflow
+Risks: IT team stretched; peak season in Dec
+Promises made: monthly check-in during Q1; dashboard training in Jan
+Docs: config workbook, permission matrix, integration inventory, guides</code></pre>
+
+</div>
+<div class="section" id="s7-3">
+<h2><span class="sec-emoji">🤝</span> The Transition Meeting</h2>
+<ol class="steps"><li>Internal prep: implementation specialist briefs CSM (and Support lead).</li><li>Joint customer meeting: recap goals achieved, open items, phase-2 backlog.</li><li>Introduce CSM and support channels; explain how to get help.</li><li>Confirm the next CS touchpoint (e.g., 30-day check-in).</li><li>Send recap with contacts and resources.</li></ol>
+<div class="script good"><b>Introduction</b>Priya will be your Customer Success Manager from here. She's been briefed on everything: your goals, the setup, and the phase-2 ideas. You won't need to repeat anything. For day-to-day questions, the support portal is the fastest route.</div>
+
+</div>
+<div class="section" id="s7-4">
+<h2><span class="sec-emoji">🎧</span> Enabling the Support Team</h2>
+<ul><li>Share configuration specifics that affect troubleshooting (SSO details, custom workflows, integrations).</li><li>Add account notes/flags in the help desk (e.g., "Enterprise, Okta SSO, Salesforce integration").</li><li>Hand over known issues and workarounds.</li><li>Clarify what's supported vs paid professional services.</li></ul>
+
+</div>
+<div class="section" id="s7-5">
+<h2><span class="sec-emoji">🏁</span> Project Closure</h2>
+<ul><li>Formal sign-off / project closure email.</li><li>Final documents shared and stored.</li><li>Lessons-learned review (internal and with customer).</li><li>Customer feedback survey (implementation CSAT/NPS).</li><li>Update templates/playbooks with improvements.</li></ul>
+
+</div>
+<div class="section" id="s7-6">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Disappearing after go-live</td><td>Customer feels abandoned</td><td>Hypercare + warm transition</td></tr><tr><td>Thin handoff notes</td><td>CSM starts blind</td><td>Full handoff document</td></tr><tr><td>Unrecorded promises</td><td>CS can't keep them</td><td>List promises explicitly</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s7-7">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>List 8 items for an implementation-to-CS handoff document.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Goals and success criteria status; configuration summary; data migration status; adoption metrics; stakeholders and sentiment; open issues with owners; phase-2 backlog; risks; promises made; links to documentation.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Write hypercare exit criteria for an HR platform go-live.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">No P1/P2 issues for 7 days; ≥ 90% employees logged in; leave requests processed through the system (not email) for 2 weeks; payroll export validated for one cycle; remaining items owned by Support/CS; customer owner agrees.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Hypercare is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Pre-sales</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Intensive support right after go-live</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> A contract</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Training only</li></ul><div class="mcq-feedback" data-expl="Post go-live."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>The goal of the CS handoff is that the customer…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Starts over</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Never repeats themselves</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Gets a new contract</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Stops using the product</li></ul><div class="mcq-feedback" data-expl="Continuity."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q3.</span><span>The phase-2 backlog at handoff becomes…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Trash</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Input for CS adoption/expansion plans</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> A bug list</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Invoices</li></ul><div class="mcq-feedback" data-expl="Future value."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t8" data-toc='[["s8-1", "End-to-End Workflow"], ["s8-2", "Scenario: Feature Promised by Sales"], ["s8-3", "Scenario: New Stakeholder Mid-project"], ["s8-4", "Scenario: Endless Revisions"], ["s8-5", "Scenario: \"This Isn&#39;t What We Expected\""], ["s8-6", "Practice & Quick Check"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div>
+        <div class="panel-eyebrow">Module 08 · Real-World Workflow</div>
+        <h1 class="panel-title">Real-World Expectation Scenarios</h1>
+        <p class="panel-subtitle">The end-to-end expectation workflow and worked scenarios covering over-promises, new stakeholders, endless revisions and post-go-live disappointment.</p>
+      </div>
+<div class="section" id="s8-1">
+<h2><span class="sec-emoji">🔁</span> End-to-End Workflow</h2>
+<p><strong>Internal sales handoff → Correct gaps → Kickoff (scope, success criteria, RACI, comms) → Written baseline → Status &amp; scope checks → Change control → Go-live → Hypercare → CS/Support handoff → Closure</strong></p>
+</div>
+<div class="section" id="s8-2">
+<h2><span class="sec-emoji">🎁</span> Scenario: Feature Promised by Sales</h2>
+<ul><li>Verify what was promised; align with AE and product.</li><li>Tell the customer early, honestly, with options (workaround, roadmap if confirmed, change request).</li><li>Document the agreed outcome; inform leadership if commercial impact.</li></ul>
+
+</div>
+<div class="section" id="s8-3">
+<h2><span class="sec-emoji">👋</span> Scenario: New Stakeholder Mid-project</h2>
+<ul><li>New VP wants changes in week 6.</li><li>Brief them on goals, scope and decisions made; understand their priorities.</li><li>Use change control for new requirements; involve sponsor to prioritise.</li><li>Update the stakeholder map and communication plan.</li></ul>
+
+</div>
+<div class="section" id="s8-4">
+<h2><span class="sec-emoji">🔄</span> Scenario: Endless Revisions</h2>
+<ul><li>Customer keeps changing configuration after reviews.</li><li>Agree a design freeze date and limited review rounds (e.g., 2).</li><li>Further changes → change requests or phase 2.</li><li>Clarify the decision-maker for sign-off.</li></ul>
+
+</div>
+<div class="section" id="s8-5">
+<h2><span class="sec-emoji">😟</span> Scenario: "This Isn't What We Expected"</h2>
+<ul><li>After go-live, the customer is disappointed.</li><li>Listen; compare with the written scope and success criteria.</li><li>Separate gaps: delivered as agreed vs genuine defects vs new needs.</li><li>Fix defects fast; plan new needs (phase 2/CS); share the plan in writing.</li></ul>
+
+</div>
+<div class="section" id="s8-6">
+<h2><span class="sec-emoji">🏋️</span> Practice & Quick Check</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>A new Head of Support joins in week 5 and wants a different ticket structure. What do you do?</span></div><p class="saq-scenario">Scenario: Stakeholder change.</p><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Meet them to explain goals, scope and decisions to date; understand their reasons; assess impact; present options (change request with timeline impact, partial adjustment, or phase 2); get the sponsor to prioritise; document the decision and update the plan and stakeholder map.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>Customer says after go-live: "We expected automatic invoice reminders." It was never in scope. Respond.</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Acknowledge the need; check scope documents and confirm it wasn't included; explain clearly and kindly; offer options (configure as a quick change request, phase-2 item, or CS-led enablement if the feature exists); confirm the plan in writing and hand to CSM if post-project.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Endless revisions are best controlled with…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> More meetings</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> A design freeze and limited review rounds</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Ignoring requests</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Discounts</li></ul><div class="mcq-feedback" data-expl="Freeze."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>Post go-live disappointment: first step…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Argue</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Listen and compare with written scope/criteria</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Close the project</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Blame sales</li></ul><div class="mcq-feedback" data-expl="Understand."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t9" data-toc='[["s9-1", "Concept Questions"], ["s9-2", "Comparison Cheat Sheet"], ["s9-3", "Common Mistakes & Fixes"], ["s9-4", "Scenario Questions"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">Intermediate</span></div>
+        <div class="panel-eyebrow">Module 09 · Interviews</div>
+        <h1 class="panel-title">Interview Preparation: Client Expectation Alignment</h1>
+        <p class="panel-subtitle">Interview questions on managing expectations, scope creep and handoffs, with model answers, comparisons, common mistakes and scenarios.</p>
+      </div>
+<div class="section" id="s9-1">
+<h2><span class="sec-emoji">🎤</span> Concept Questions</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Question</th><th>Model answer</th></tr></thead><tbody><tr><td>How do you set expectations at the start?</td><td>Internal sales handoff, then kickoff covering goals, measurable success criteria, in/out scope, timeline, RACI and communication, confirmed in writing.</td></tr><tr><td>What is scope creep and how do you manage it?</td><td>Uncontrolled scope growth; prevent with clear scope and change control; respond with acknowledge, assess impact, options (add/swap/defer), approval and documentation.</td></tr><tr><td>How do you handle an over-promise by Sales?</td><td>Verify, align internally, tell the customer early with options, document; present a united front.</td></tr><tr><td>What goes into a sales handoff?</td><td>Why they bought, goals, purchased scope, promises, stakeholders, dates, risks, competitors.</td></tr><tr><td>What goes into a CS handoff?</td><td>Goals status, configuration, data, adoption, stakeholders, open issues, phase-2 backlog, risks, promises, docs.</td></tr><tr><td>What is hypercare?</td><td>Intensive post-go-live support with exit criteria before transition to CS/Support.</td></tr><tr><td>How do you deliver bad news?</td><td>Early, factual, cause and impact, options with recommendation, confirm in writing.</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s9-2">
+<h2><span class="sec-emoji">📋</span> Comparison Cheat Sheet</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Pair</th><th>Key difference</th></tr></thead><tbody><tr><td>Scope creep vs Change request</td><td>Uncontrolled vs assessed and approved</td></tr><tr><td>Customer-driven creep vs Gold plating</td><td>Customer asks vs vendor adds extras</td></tr><tr><td>Swap vs Defer</td><td>Replace similar effort vs move to phase 2</td></tr><tr><td>Handoff 1 vs Handoff 2</td><td>Sales→Implementation vs Implementation→CS/Support</td></tr><tr><td>Hypercare vs Ongoing support</td><td>Intensive post go-live vs standard support model</td></tr><tr><td>Responsible vs Accountable (RACI)</td><td>Does the work vs owns/approves</td></tr><tr><td>Interests vs Positions</td><td>Underlying need vs stated demand</td></tr><tr><td>Success criteria vs Scope</td><td>Measurable outcome vs work delivered</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s9-3">
+<h2><span class="sec-emoji">🚫</span> Common Mistakes & Fixes</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Mistake</th><th>Why it hurts</th><th>Do this instead</th></tr></thead><tbody><tr><td>Skipping internal handoff</td><td>Customer repeats; promises missed</td><td>Mandatory handoff</td></tr><tr><td>Informal yeses</td><td>Scope creep</td><td>Change control</td></tr><tr><td>Gold plating</td><td>Unplanned expectations</td><td>Deliver agreed scope</td></tr><tr><td>Hiding delays</td><td>Trust loss</td><td>Early, honest updates</td></tr><tr><td>Disappearing after go-live</td><td>Customer feels abandoned</td><td>Hypercare + warm handoff</td></tr><tr><td>Unrecorded promises</td><td>CS can't keep them</td><td>List in handoff doc</td></tr></tbody></table></div>
+
+</div>
+<div class="section" id="s9-4">
+<h2><span class="sec-emoji">🧩</span> Scenario Questions</h2>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P1.</span><span>"Tell me about a time you managed scope creep." (STAR)</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">S: Week 5 of 8, customer requested HubSpot integration and 3 reports. T: Protect go-live and relationship. A: Logged change requests, presented options, swapped reports for lower-priority ones, deferred HubSpot to phase 2 via Zapier with sponsor approval. R: Went live on time; phase 2 delivered 3 weeks later; customer gave 9/10 implementation NPS.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P2.</span><span>"How do you hand a customer over to Customer Success?"</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Hypercare with exit criteria; full handoff document; internal briefing; joint transition meeting introducing CSM and support channels; recap with promises and phase-2 backlog; CS first check-in scheduled.</div></div>
+<div class="saq"><span class="practice-label">Practice</span><div class="saq-q"><span class="saq-qnum">P3.</span><span>"A customer insists something was promised that isn't in the contract. What do you do?"</span></div><textarea placeholder="Write your answer here, then compare with the model answer…"></textarea><button class="btn saq-toggle">Show model answer</button><div class="saq-model">Listen; check contract, SOW and sales notes; confirm with AE; if not promised, explain kindly with options; if promised verbally, escalate internally for a decision; document outcome.</div></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q1.</span><span>Gold plating is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> Customer requests</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Vendor adding unrequested extras</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Approved change</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Testing</li></ul><div class="mcq-feedback" data-expl="Self-inflicted creep."></div><button class="btn mcq-reset">↻ Try again</button></div>
+<div class="mcq" data-answer="1"><div class="mcq-q"><span class="mcq-qnum">Q2.</span><span>The main goal of a CS handoff is…</span></div><ul class="mcq-opts"><li class="mcq-opt" data-i="0"><span class="opt-letter">A</span> New contract</li><li class="mcq-opt" data-i="1"><span class="opt-letter">B</span> Customer never repeats themselves</li><li class="mcq-opt" data-i="2"><span class="opt-letter">C</span> Closing tickets</li><li class="mcq-opt" data-i="3"><span class="opt-letter">D</span> Discounts</li></ul><div class="mcq-feedback" data-expl="Continuity."></div><button class="btn mcq-reset">↻ Try again</button></div>
+
+</div>
+
+    </section>
+    <section class="panel" id="t10" data-toc='[["s10-1","Take the Assessment"]]'>
+      <div class="panel-header">
+        <div class="level-row"><span class="level-tag fresher">Fresher</span><span class="level-tag inter">→ Intermediate</span></div>
+        <p class="panel-eyebrow">Module 10</p>
+        <h1 class="panel-title">Assessment</h1>
+        <p class="panel-subtitle">Test yourself on everything covered in this course — 50 scenario-based multiple-choice questions drawn at random from a bank of 50, so every attempt is a little different.</p>
+      </div>
+      <div class="section" id="s10-1">
+        <div class="assess-start-card">
+          <div class="assess-intro-title">Test what you've learned</div>
+          <div class="assess-intro-text">A timed, exam-style mock test. Most questions describe a real support situation and ask what you would do, which tool or metric applies, or what went wrong.</div>
+          <ul class="assess-intro-list">
+            <li><strong>50 multiple-choice questions</strong> picked at random from 50</li>
+            <li><strong>50-minute</strong> timer (1 minute per question), with mark-for-review and a question palette</li>
+            <li>Covers every module, from Expectation Basics through Interview Prep</li>
+            <li>Answers and explanations are shown after you submit</li>
+          </ul>
+          <button class="assess-start-btn" id="assessStartBtn">▶ Start Assessment</button>
+        </div>
+      </div>
+      <div class="assess-modal-overlay" id="assessModal">
+        <div class="assess-modal-box">
+          <div class="assess-sticky-header">
+            <div class="assess-modal-head">
+              <div class="assess-modal-title">Assessment</div>
+              <button class="assess-modal-close" id="assessModalClose">✕</button>
+            </div>
+            <div class="quiz-progress" id="assessProgressWrap" style="display:none">
+              <span class="quiz-score" id="assessProgressLabel">Question 1</span>
+              <div class="quiz-bar-track"><div class="quiz-bar-fill" id="assessProgressFill" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div id="assessStage"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+/* =========================================================
+   Tab switching, dynamic TOC, scroll-spy, progress pill
+   ========================================================= */
+(function(){
+  const tabs   = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel');
+  const tocEl  = document.getElementById('toc');
+  const total  = tabs.length;
+  const progressText = document.getElementById('progressText');
+
+  function buildToc(panel){
+    const data = JSON.parse(panel.getAttribute('data-toc') || '[]');
+    tocEl.innerHTML = data.map(([id,label]) =>
+      `<li><a href="#${id}" data-target="${id}">${label}</a></li>`
+    ).join('');
+    // first link active by default
+    const first = tocEl.querySelector('a');
+    if(first) first.classList.add('active');
+  }
+
+  function activate(idx){
+    tabs.forEach((t,i)=>t.classList.toggle('active', i===idx));
+    panels.forEach((p,i)=>p.classList.toggle('active', i===idx));
+    buildToc(panels[idx]);
+    progressText.textContent = `Tab ${idx+1} of ${total}`;
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+
+  tabs.forEach((t,i)=>{
+    t.addEventListener('click', ()=> activate(i));
+  });
+
+  // Smooth scroll inside the active tab
+  document.addEventListener('click', (e)=>{
+    const a = e.target.closest('.toc-list a');
+    if(!a) return;
+    e.preventDefault();
+    const id = a.getAttribute('data-target');
+    const el = document.getElementById(id);
+    if(el){
+      window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 130, behavior:'smooth'});
+    }
+  });
+
+  // Scroll spy — highlight the nearest visible section
+  let ticking = false;
+  function spy(){
+    const activePanel = document.querySelector('.panel.active');
+    if(!activePanel) return;
+    const sections = activePanel.querySelectorAll('.section');
+    const trigger  = 180; // px from top
+    let current = null;
+    sections.forEach(sec=>{
+      const rect = sec.getBoundingClientRect();
+      if(rect.top - trigger < 0) current = sec.id;
+    });
+    if(current){
+      tocEl.querySelectorAll('a').forEach(a=>{
+        a.classList.toggle('active', a.dataset.target === current);
+      });
+    }
+    ticking = false;
+  }
+  window.addEventListener('scroll', ()=>{
+    if(!ticking){ requestAnimationFrame(spy); ticking = true; }
+  }, {passive:true});
+
+  // Reset
+  window.resetProgress = function(){ activate(0); };
+
+  // Init
+  activate(0);
+})();
+
+/* =========================================================
+   Assessment modal — legacy modal (unused)
+   ========================================================= */
+(function(){
+  const assessItems = [];
+  const mcqTotal = assessItems.length;
+
+  let idx=0, score=0, answered=false;
+
+  function openAssess(){document.getElementById('assessModal').classList.add('open');showIntroStage()}
+  function closeAssess(){document.getElementById('assessModal').classList.remove('open')}
+
+  function showIntroStage(){
+    idx=0; score=0; answered=false;
+    renderItem();
+  }
+
+  function renderItem(){
+    answered=false;
+    const item=assessItems[idx];
+    const stage=document.getElementById('assessStage');
+    const pct=Math.round((idx/assessItems.length)*100);
+    document.getElementById('assessProgressWrap').style.display='flex';
+    document.getElementById('assessProgressLabel').textContent=`Question ${idx+1} / ${assessItems.length}`;
+    document.getElementById('assessProgressFill').style.width=pct+'%';
+    let inner=`
+      <div class="assess-q-wrap">
+        <div class="assess-q">${item.q}</div>
+        ${item.code?`<pre><code>${item.code}</code></pre>`:''}
+        <div id="assessBody"></div>
+        <div id="assessFeedback"></div>
+      </div>`;
+    stage.innerHTML=inner;
+    const body=document.getElementById('assessBody');
+    body.innerHTML=`<ul class="mcq-opts" id="assessOpts">${item.options.map((o,i)=>`<li class="mcq-opt" data-i="${i}"><span class="opt-letter">${String.fromCharCode(65+i)}</span> ${o}</li>`).join('')}</ul>`;
+    body.querySelectorAll('.mcq-opt').forEach(opt=>opt.addEventListener('click',()=>answerMCQ(opt,item)));
+  }
+
+  function showNextButton(){
+    const fb=document.getElementById('assessFeedback');
+    const btn=document.createElement('button');
+    btn.className='assess-next-btn';
+    btn.textContent = idx<assessItems.length-1 ? 'Next Question →' : 'See Results →';
+    btn.addEventListener('click',()=>{
+      if(idx<assessItems.length-1){idx++;renderItem()}else{showResults()}
+    });
+    fb.appendChild(btn);
+  }
+
+  function answerMCQ(optEl,item){
+    if(answered)return;
+    answered=true;
+    const chosen=parseInt(optEl.getAttribute('data-i'),10);
+    const correct=chosen===item.answer;
+    if(correct)score++;
+    document.querySelectorAll('#assessOpts .mcq-opt').forEach(opt=>{opt.style.pointerEvents='none'});
+    const fb=document.getElementById('assessFeedback');
+    if(correct){
+      optEl.classList.add('correct');
+      fb.innerHTML=`<div class="assess-fb-banner ok"><span>✅</span> Correct!</div>`;
+    }else{
+      optEl.classList.add('incorrect');
+      fb.innerHTML=`<div class="assess-fb-answer ok"><span>✅</span> ${item.options[item.answer]}</div>`;
+    }
+    showNextButton();
+  }
+
+  function showResults(){
+    const stage=document.getElementById('assessStage');
+    const pct=Math.round((score/mcqTotal)*100);
+    document.getElementById('assessProgressLabel').textContent='Completed';
+    document.getElementById('assessProgressFill').style.width='100%';
+    let msg='Keep practicing — revisit the tabs above and try again.';
+    if(pct>=85)msg='Outstanding! You have a strong command of this role.';
+    else if(pct>=65)msg="Great job! A little more practice with the harder questions and you'll be set.";
+    stage.innerHTML=`
+      <div class="assess-q-wrap">
+        <div class="assess-result-score">${score} / ${mcqTotal}</div>
+        <div class="assess-result-msg">${pct}% correct — ${msg}</div>
+        <button class="assess-retry-btn" id="assessRetryBtn">↻ Try Again</button>
+      </div>`;
+    document.getElementById('assessRetryBtn').addEventListener('click',showIntroStage);
+  }
+
+  document.getElementById('__disabledAssess')?.addEventListener('click',openAssess);
+  document.getElementById('assessModalClose').addEventListener('click',closeAssess);
+  document.getElementById('assessModal').addEventListener('click',e=>{if(e.target.id==='assessModal')closeAssess()});
+})();
+</script>
+
+<div id="scoreBoard" class="score-board" style="display:none;max-width:820px;margin:18px auto;padding:0 16px"></div>
+
+
+<script>
+/* Inline quick checks + practice model answers */
+document.addEventListener('click',function(e){
+  const opt=e.target.closest('.mcq .mcq-opt');
+  if(opt){
+    const box=opt.closest('.mcq'); if(box.classList.contains('answered'))return;
+    const ans=+box.dataset.answer, i=+opt.dataset.i;
+    box.classList.add('answered');
+    box.querySelectorAll('.mcq-opt').forEach(o=>{ if(+o.dataset.i===ans)o.classList.add('correct'); });
+    if(i!==ans)opt.classList.add('incorrect');
+    const fb=box.querySelector('.mcq-feedback');
+    fb.classList.add(i===ans?'ok':'bad');
+    fb.innerHTML=(i===ans?'✅ Correct. ':'❌ Not quite. ')+fb.dataset.expl;
+    return;
+  }
+  const rs=e.target.closest('.mcq-reset');
+  if(rs){
+    const box=rs.closest('.mcq'); box.classList.remove('answered');
+    box.querySelectorAll('.mcq-opt').forEach(o=>o.classList.remove('correct','incorrect'));
+    const fb=box.querySelector('.mcq-feedback'); fb.classList.remove('ok','bad'); fb.innerHTML='';
+    return;
+  }
+  const tg=e.target.closest('.saq-toggle');
+  if(tg){
+    const m=tg.closest('.saq').querySelector('.saq-model');
+    m.classList.toggle('show');
+    tg.textContent=m.classList.contains('show')?'Hide model answer':'Show model answer';
+  }
+});
+</script>
+<script>
+(function(){
+  /* =====================================================================
+     Client Expectation Alignment -- full-screen, timed mock exam (MNC style).
+     All 50 questions of the bank, shuffled, none repeated.
+     Grading: all answers submitted at the end (server-side).
+     ===================================================================== */
+  const BANK=[{"id": "q1", "q": "Expectation alignment means…", "options": ["Agree to everything", "Shared, realistic, written picture", "Hide issues", "Sell more"], "answer": 1, "explanation": "Definition.", "difficulty": "Easy"}, {"id": "q2", "q": "\"Live before Diwali\" is which expectation type?", "options": ["Scope", "Timeline", "Outcome", "Service"], "answer": 1, "explanation": "Timeline.", "difficulty": "Easy"}, {"id": "q3", "q": "\"Costs will drop 30%\" is…", "options": ["Scope", "Outcome", "Effort", "Communication"], "answer": 1, "explanation": "Outcome.", "difficulty": "Easy"}, {"id": "q4", "q": "Experience below expectation causes…", "options": ["Delight", "Disappointment", "Expansion", "Nothing"], "answer": 1, "explanation": "Gap.", "difficulty": "Easy"}, {"id": "q5", "q": "Common source of expectation gaps:", "options": ["Clear SOW", "Over-promising in sales", "Written recaps", "RACI"], "answer": 1, "explanation": "Over-promise.", "difficulty": "Easy"}, {"id": "q6", "q": "Handoff 1 is…", "options": ["Implementation → CS", "Sales → Implementation", "Support → Sales", "CS → Finance"], "answer": 1, "explanation": "First handoff.", "difficulty": "Easy"}, {"id": "q7", "q": "Handoff 2 is…", "options": ["Sales → Implementation", "Implementation → CS/Support", "Finance → Legal", "Users → Admins"], "answer": 1, "explanation": "Second handoff.", "difficulty": "Easy"}, {"id": "q8", "q": "Sales handoff document includes…", "options": ["Logo", "Goals, scope, promises, stakeholders, risks", "Invoices only", "Passwords"], "answer": 1, "explanation": "Context.", "difficulty": "Easy"}, {"id": "q9", "q": "Red flag at handoff:", "options": ["Named project owner", "Custom features promised", "Realistic timeline", "Signed SOW"], "answer": 1, "explanation": "Scope gap.", "difficulty": "Easy"}, {"id": "q10", "q": "Correcting an over-promise:", "options": ["Blame sales", "Raise early with options and document", "Ignore", "Promise anyway"], "answer": 1, "explanation": "Honesty.", "difficulty": "Easy"}, {"id": "q11", "q": "Kickoff recap should be…", "options": ["Verbal only", "Written within 24 h and confirmed", "Skipped", "After go-live"], "answer": 1, "explanation": "Baseline.", "difficulty": "Easy"}, {"id": "q12", "q": "Measurable success criterion:", "options": ["\"Works well\"", "\"Median FRT < 4 h within 60 days\"", "\"Happy\"", "\"Faster\""], "answer": 1, "explanation": "Measurable.", "difficulty": "Easy"}, {"id": "q13", "q": "RACI \"A\" means…", "options": ["Assisted", "Accountable", "Approved by all", "Absent"], "answer": 1, "explanation": "Owner.", "difficulty": "Easy"}, {"id": "q14", "q": "Each RACI activity should have…", "options": ["Many A's", "Exactly one A", "No A", "Only I's"], "answer": 1, "explanation": "Single owner.", "difficulty": "Medium"}, {"id": "q15", "q": "Kickoff should explicitly cover…", "options": ["Only in-scope", "In-scope and out-of-scope", "Pricing only", "Nothing"], "answer": 1, "explanation": "Both.", "difficulty": "Easy"}, {"id": "q16", "q": "Scope creep is…", "options": ["Approved change", "Uncontrolled scope growth without adjusting time/cost", "A milestone", "Tool"], "answer": 1, "explanation": "Definition.", "difficulty": "Easy"}, {"id": "q17", "q": "Gold plating is…", "options": ["Customer request", "Vendor-added unrequested extras", "Testing", "Sign-off"], "answer": 1, "explanation": "Self-inflicted.", "difficulty": "Easy"}, {"id": "q18", "q": "\"Also migrate 10 years of history\" is…", "options": ["Integration creep", "Data creep", "Gold plating", "Stakeholder creep"], "answer": 1, "explanation": "Data creep.", "difficulty": "Easy"}, {"id": "q19", "q": "New department wants to join mid-project:", "options": ["Data creep", "Stakeholder creep", "Gold plating", "None"], "answer": 1, "explanation": "Stakeholder creep.", "difficulty": "Easy"}, {"id": "q20", "q": "Warning sign of creep:", "options": ["\"Can you just…\" requests", "Signed scope", "Clear RACI", "Weekly status"], "answer": 0, "explanation": "Small asks.", "difficulty": "Easy"}, {"id": "q21", "q": "Scope creep impact:", "options": ["Earlier go-live", "Missed deadlines, budget overrun", "Lower risk", "Nothing"], "answer": 1, "explanation": "Impact.", "difficulty": "Easy"}, {"id": "q22", "q": "First step when a new request arrives:", "options": ["Say yes", "Listen and understand the need", "Refuse", "Escalate"], "answer": 1, "explanation": "Understand.", "difficulty": "Easy"}, {"id": "q23", "q": "\"Yes, and…\" means…", "options": ["Free yes", "Yes with impact/options", "No", "Ignore"], "answer": 1, "explanation": "Constructive.", "difficulty": "Easy"}, {"id": "q24", "q": "Swap option means…", "options": ["Add more", "Replace similar-effort item", "Cancel project", "Defer all"], "answer": 1, "explanation": "Trade.", "difficulty": "Easy"}, {"id": "q25", "q": "Defer option means…", "options": ["Cancel", "Move to phase 2", "Add now", "Ignore"], "answer": 1, "explanation": "Later.", "difficulty": "Easy"}, {"id": "q26", "q": "Phase-2 backlog is shared with…", "options": ["Nobody", "CSM at handoff", "Only finance", "Competitors"], "answer": 1, "explanation": "Future value.", "difficulty": "Easy"}, {"id": "q27", "q": "Scope changes approved by…", "options": ["Any user", "Sponsor/agreed approvers", "Intern", "Nobody"], "answer": 1, "explanation": "Authority.", "difficulty": "Easy"}, {"id": "q28", "q": "Bad news should be…", "options": ["Delayed", "Early, factual, with options", "Hidden", "Blamed"], "answer": 1, "explanation": "Early.", "difficulty": "Easy"}, {"id": "q29", "q": "Interests vs positions:", "options": ["Same", "Underlying need vs stated demand", "Price vs scope", "None"], "answer": 1, "explanation": "Negotiation.", "difficulty": "Medium"}, {"id": "q30", "q": "Escalation should include…", "options": ["Threats", "Facts, impact, options, recommendation", "Complaints only", "Nothing"], "answer": 1, "explanation": "Decision-ready.", "difficulty": "Easy"}, {"id": "q31", "q": "Rebuilding trust starts with…", "options": ["Blaming", "Acknowledging the problem honestly", "Ignoring", "Discount"], "answer": 1, "explanation": "Ownership.", "difficulty": "Easy"}, {"id": "q32", "q": "Hypercare is…", "options": ["Pre-sales", "Intensive post go-live support", "A contract", "Marketing"], "answer": 1, "explanation": "Post go-live.", "difficulty": "Easy"}, {"id": "q33", "q": "Hypercare exit criterion example:", "options": ["Logo approved", "No P1/P2 issues for 7 days", "Invoice paid", "Survey sent"], "answer": 1, "explanation": "Stability.", "difficulty": "Easy"}, {"id": "q34", "q": "CS handoff document includes…", "options": ["Passwords", "Goals status, adoption, stakeholders, open items, promises", "Pricing only", "Nothing"], "answer": 1, "explanation": "Context.", "difficulty": "Easy"}, {"id": "q35", "q": "Purpose of a joint transition meeting:", "options": ["Sell", "Introduce CSM and support channels; recap", "Close account", "Train admins only"], "answer": 1, "explanation": "Warm handoff.", "difficulty": "Easy"}, {"id": "q36", "q": "Support team should receive…", "options": ["Nothing", "Config specifics, known issues, account flags", "Contracts only", "Logos"], "answer": 1, "explanation": "Enablement.", "difficulty": "Easy"}, {"id": "q37", "q": "Project closure includes…", "options": ["Nothing", "Sign-off, docs, lessons learned, feedback survey", "Renewal", "New sale"], "answer": 1, "explanation": "Close properly.", "difficulty": "Easy"}, {"id": "q38", "q": "Disappearing after go-live causes…", "options": ["Delight", "Customer feels abandoned", "Expansion", "Nothing"], "answer": 1, "explanation": "Risk.", "difficulty": "Easy"}, {"id": "q39", "q": "Unrecorded promises at handoff…", "options": ["Fine", "CS can't keep them", "Disappear", "Help"], "answer": 1, "explanation": "Record them.", "difficulty": "Easy"}, {"id": "q40", "q": "Endless revisions: control with…", "options": ["More meetings", "Design freeze + limited review rounds", "Ignore", "Discount"], "answer": 1, "explanation": "Freeze.", "difficulty": "Easy"}, {"id": "q41", "q": "New stakeholder in week 6: first…", "options": ["Ignore", "Brief them on goals, scope, decisions", "Restart", "Cancel"], "answer": 1, "explanation": "Align.", "difficulty": "Easy"}, {"id": "q42", "q": "Post go-live \"not what we expected\": first…", "options": ["Argue", "Listen; compare with written scope", "Close", "Blame"], "answer": 1, "explanation": "Facts.", "difficulty": "Easy"}, {"id": "q43", "q": "Customer says something was promised (not in contract):", "options": ["Refuse flatly", "Check docs and AE; decide; document", "Promise more", "Ignore"], "answer": 1, "explanation": "Verify.", "difficulty": "Medium"}, {"id": "q44", "q": "Verbal agreements should be…", "options": ["Trusted", "Confirmed in writing", "Forgotten", "Avoided always"], "answer": 1, "explanation": "Written.", "difficulty": "Easy"}, {"id": "q45", "q": "Blaming Sales in front of the customer…", "options": ["Builds trust", "Damages company trust", "Required", "Helps"], "answer": 1, "explanation": "United front.", "difficulty": "Easy"}, {"id": "q46", "q": "Pressure \"or we escalate to your CEO\":", "options": ["Panic", "Stay calm, understand driver, present options", "Agree to all", "Hang up"], "answer": 1, "explanation": "Professional.", "difficulty": "Medium"}, {"q": "Setting expectations early helps to…", "options": ["Avoid all questions", "Prevent surprises and disputes later", "Raise prices", "Skip documentation"], "answer": 1, "explanation": "Clear expectations reduce friction.", "difficulty": "Easy", "id": "q47"}, {"q": "A statement of work (SOW) defines…", "options": ["Office layout", "Scope, deliverables and timeline", "User passwords", "Marketing plan"], "answer": 1, "explanation": "SOW sets the agreed scope.", "difficulty": "Easy", "id": "q48"}, {"q": "If a request is out of scope, you should…", "options": ["Do it silently", "Explain the impact and follow change control", "Ignore it", "Blame the client"], "answer": 1, "explanation": "Use change control.", "difficulty": "Easy", "id": "q49"}, {"q": "Best way to confirm shared understanding after a call is…", "options": ["Assume it is fine", "Send a written recap with actions", "Wait for them to ask", "Delete notes"], "answer": 1, "explanation": "Written recaps prevent misalignment.", "difficulty": "Easy", "id": "q50"}];
+  const EXAM_N=50;
+  function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  const EXAM_SECONDS=50*60; /* 1 minute per question */
+  const inIframe = window.self!==window.top;
+
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-qtext .diff{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#f1f3ff;color:#14213D;margin-left:8px;vertical-align:middle}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash h2{font-size:25px;font-weight:800;margin-bottom:8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin-bottom:12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:ecpop .18s ease}
+  @keyframes ecpop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-overlay,.exam-overlay *{-webkit-user-select:none;user-select:none}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+
+  .exam-fsprompt{position:fixed;inset:0;z-index:100003;background:rgba(20,33,61,.93);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fsprompt .box{background:transparent;color:#fff;max-width:640px;width:100%;padding:0;text-align:center;box-shadow:none}
+  .exam-fsprompt h3{font-size:34px;font-weight:700;margin:0 0 22px;color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;line-height:1.2}
+  .exam-fsprompt h3 .wi{font-size:32px;line-height:1}
+  .exam-fsprompt p{font-size:17px;color:#fff;line-height:1.6;margin:0 0 16px}
+  .exam-fsprompt .wcount{font-size:17px;color:#fff;margin:0 0 18px}
+  .exam-fsprompt .rbtn{background:#0f1a2e;color:#fff;border:none;border-radius:12px;padding:15px 26px;font-weight:700;font-size:17px;font-family:inherit;cursor:pointer;transition:.12s}
+  .exam-fsprompt .rbtn:hover{background:#0a1220}
+  .exam-fsprompt .rbtn:focus-visible{outline:2px solid #FCA311;outline-offset:2px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+
+  function examConfirm(title,msg,okLabel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">
+        <button class="exam-btn nav" data-a="0">Cancel</button>
+        <button class="exam-btn primary" data-a="1">${okLabel||'Submit'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  /* ---- score history (localStorage, shared across the exam tab + guide) ---- */
+  const LS_KEY='expScores';
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores();
+    a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: exactly 3 violation warnings (tab switch, fullscreen exit, screenshot attempt); 3 strikes -> auto-submit ---- */
+  let warns=0, lastWarn=0, lastType='', proctorOn=false;
+  const MAX_WARN=3;
+  const VIOL={
+    tab:{icon:'&#9888;&#65039;',title:'Tab switch detected',msg:'The assessment must stay in this tab and window.'},
+    fs:{icon:'&#9888;&#65039;',title:'Fullscreen exited',msg:'The assessment must remain in fullscreen mode.'},
+    shot:{icon:'&#9888;&#65039;',title:'Screenshot attempt detected',msg:'Screenshots and screen recordings are not permitted during the assessment.'}
+  };
+  function examWarn(title,msg){
+    injectCss();
+    const d=document.createElement('div'); d.className='exam-confirm';
+    d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row"><button class="exam-btn primary" data-a="1">OK</button></div></div>`;
+    document.body.appendChild(d);
+    d.addEventListener('click',e=>{ if(e.target.closest('[data-a]'))d.remove(); });
+  }
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function removeFsPrompt(){ const p=document.getElementById('examFsPrompt'); if(p)p.remove(); }
+  function removeViolPop(){ const p=document.getElementById('examViolPop'); if(p)p.remove(); }
+  function goFullscreen(){
+    try{ const re=document.documentElement.requestFullscreen?document.documentElement.requestFullscreen():Promise.resolve(); return Promise.resolve(re).catch(()=>{}); }
+    catch(_){ return Promise.resolve(); }
+  }
+  /* One popup at a time. kind = tab | fs | shot. n = strike number (null = no strike, e.g. entering fullscreen at start). */
+  function showViolation(kind,n){
+    if(!examOn)return;
+    injectCss(); hideCover(); removeViolPop(); removeFsPrompt();
+    const v=VIOL[kind]; const needFs=!document.fullscreenElement;
+    const title=(!n&&kind==='fs')?'Fullscreen required':v.title;
+    const wline=n?'<div class="wcount">Warning '+n+' of '+MAX_WARN+'</div>':'';
+    const d=document.createElement('div'); d.className='exam-fsprompt'; d.id=(kind==='fs'||needFs)?'examFsPrompt':'examViolPop';
+    d.setAttribute('role','alertdialog'); d.setAttribute('aria-modal','true');
+    d.innerHTML='<div class="box"><h3><span class="wi">'+v.icon+'</span><span>'+title+'</span></h3><p>'+v.msg+'</p>'+wline+'<button class="rbtn" id="examContinue">Return to assessment</button></div>';
+    document.body.appendChild(d);
+    const cb=document.getElementById('examContinue'); try{cb.focus();}catch(_){}
+    cb.addEventListener('click',()=>{
+      const go=document.fullscreenElement?Promise.resolve():goFullscreen();
+      go.then(()=>{ d.remove(); hideCover(); renderQ(); });
+    });
+  }
+  function violation(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now();
+    /* same incident (e.g. tab switch firing blur + visibilitychange together) counts once */
+    const fresh = now-lastWarn >= (kind===lastType?1500:800);
+    if(!fresh){ if(!document.fullscreenElement && !document.getElementById('examFsPrompt')) showViolation(kind,Math.min(warns,MAX_WARN)); return; }
+    lastWarn=now; lastType=kind; warns++;
+    if(warns>=MAX_WARN){
+      removeFsPrompt(); removeViolPop(); hideCover();
+      examWarn('Test submitted','You reached '+MAX_WARN+' warnings ('+VIOL[kind].title.toLowerCase()+'). The test has been auto-submitted.');
+      submitExam(true); return;
+    }
+    showViolation(kind,warns);
+  }
+  function fsHandler(){ if(examOn && !document.fullscreenElement){ violation('fs'); } }
+  function visHandler(){ if(document.hidden){ showCover(); violation('tab'); } else { hideCover(); } }
+  function blurHandler(){ if(!examOn)return; showCover(); violation('tab'); }
+  function focusHandler(){ hideCover(); }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function shotWarn(){ try{navigator.clipboard.writeText('');}catch(_){} violation('shot'); }
+  function keyGuard(e){
+    const k=(e.key||'').toLowerCase(), c=e.code||'';
+    if(k==='printscreen'||(e.metaKey&&e.shiftKey&&k==='s')||(e.metaKey&&e.shiftKey&&['Digit3','Digit4','Digit5'].includes(c))){ e.preventDefault(); shotWarn(); return false; }
+    if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; }
+  }
+  function printGuard(e){ if((e.key||'')==='PrintScreen'){ shotWarn(); } }
+  function startProctor(){
+    warns=0; lastWarn=0; lastType=''; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    window.addEventListener('blur',blurHandler);
+    window.addEventListener('focus',focusHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('cut',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keyup',printGuard,true);
+    /* if fullscreen could not be entered at start, ask for it (no strike) */
+    setTimeout(()=>{ if(examOn && proctorOn && !document.fullscreenElement) showViolation('fs',null); },700);
+  }
+  function stopProctor(){
+    proctorOn=false;
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    window.removeEventListener('blur',blurHandler);
+    window.removeEventListener('focus',focusHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('cut',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keyup',printGuard,true);
+    hideCover(); removeViolPop();
+  }
+
+  function startEntry(){
+    if(inIframe){ window.open(location.pathname+'?mode=exam','_blank'); return; }
+    showSplash();
+  }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; Client Expectation Alignment &mdash; Mock Test</h2>
+      <p>A timed, exam-style assessment modelled on real technical screening tests.</p>
+      <ul>
+        <li><b>50 questions</b> to attempt</li>
+        <li><b>50-minute</b> timer (1 min per question) &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Results and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> &mdash; stay in fullscreen the whole time</li>
+        <li>Exactly <b>3 things trigger a warning</b>: (1) <b>switching tab / window</b>, (2) <b>exiting fullscreen</b>, (3) <b>attempting a screenshot</b> (PrintScreen / Win+Shift+S / Cmd+Shift+3-5)</li>
+        <li>Each warning shows a popup with a <b>Continue Test</b> button that resumes where you left off &mdash; the timer keeps running</li>
+        <li><b>3 warnings in total</b> &rarr; the test <b>auto-submits</b>. Copy and right-click are also disabled</li>
+      </ul>
+      <button class="exam-btn primary" id="examBegin" style="width:100%;padding:14px">Start Test &rarr;</button>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      if(document.documentElement.requestFullscreen){document.documentElement.requestFullscreen().catch(()=>{});}
+      sp.remove(); enterExam();
+    });
+  }
+
+  async function enterExam(){
+    injectCss();
+    let ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Loading your test&hellip;</div>';
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    items=shuffle(BANK).slice(0,EXAM_N).map(b=>({id:b.id,q:b.q,code:b.code,options:b.options,difficulty:b.difficulty}));
+    if(!items.length){ ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center">Could not load the test. Close and try again.</div>'; return; }
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">Client Expectation Alignment &mdash; Mock Test</div><div class="et-sub">50 questions &middot; one attempt &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}${it.difficulty?`<span class="diff">${it.difficulty}</span>`:''}</div>
+      ${it.code?`<pre><code>${it.code}</code></pre>`:''}
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>el.addEventListener('click',()=>{
+      answers[id]=+el.dataset.i;
+      pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel'));
+      el.classList.add('sel'); refreshPalette();
+    }));
+    const prev=document.getElementById('examPrev'), next=document.getElementById('examNext');
+    if(prev)prev.addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    if(next)next.addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();refreshPalette();});
+    refreshPalette();
+  }
+
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examConfirm('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test');
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId); removeFsPrompt();
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    const payload={answers:{}};
+    items.forEach(it=>{ payload.answers[it.id] = (it.id in answers)?answers[it.id]:-1; });
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML='<div class="exam-q-pane" style="grid-column:1/-1;padding:60px;text-align:center;color:#64748b">Grading your test&hellip;</div>';
+    const byId={}; BANK.forEach(b=>byId[b.id]=b);
+    let sc=0; const results={};
+    items.forEach(it=>{ const b=byId[it.id], you=payload.answers[it.id];
+      const ok=(you===b.answer); if(ok)sc++;
+      results[it.id]={correct:ok,answer:b.answer,explanation:b.explanation}; });
+    showResults({score:sc,results:results});
+  }
+
+  function showResults(data){
+    const results=data.results||{}, total=items.length, score=data.score||0;
+    saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below and try again.';
+    if(pct>=85)msg='Outstanding &mdash; strong command of expectation setting, scope creep and handoffs.';
+    else if(pct>=65)msg='Solid pass. A little more practice on the tricky ones and you are set.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the topics you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const r=results[it.id]||{}; const you=answers[it.id];
+      const attempted=(you!=null);
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      if(!attempted){
+        // Not attempted: reveal nothing (answer stays protected)
+        inner+='<div class="ra">Your answer: <i>Not answered</i></div>';
+        return '<div class="r no">'+inner+'</div>';
+      }
+      const youTxt=String.fromCharCode(65+you)+'. '+it.options[you];
+      const cor=(r.answer!=null&&r.answer>=0)?(String.fromCharCode(65+r.answer)+'. '+it.options[r.answer]):'';
+      inner+='<div class="ra '+(r.correct?'cor':'wrong')+'">Your answer: '+youTxt+'</div>'
+        +(r.correct?'':'<div class="ra cor">Correct: '+cor+'</div>')
+        +(r.explanation?'<div class="rx">'+r.explanation+'</div>':'');
+      return '<div class="r '+(r.correct?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; Client Expectation Alignment Mock Test</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another test</button></div>
+          <div class="exam-rmsg" id="examRedirect" style="margin-top:8px;color:#94a3b8"></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    let left=30;
+    const rd=document.getElementById('examRedirect');
+    const setTxt=()=>{ if(rd)rd.textContent='Returning to the assessment page in '+left+'s…'; };
+    setTxt();
+    const rt=setInterval(()=>{ left--; setTxt(); if(left<=0){ clearInterval(rt); goBack(); } },1000);
+    function goBack(){
+      if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); }
+      if(window.opener){ try{ window.close(); }catch(_){} }
+      location.href=location.pathname;   // fallback: reload guide (assessment) page
+    }
+    document.getElementById('examRetry').addEventListener('click',()=>{ clearInterval(rt); document.getElementById('examOverlay').remove(); enterExam(); });
+    document.getElementById('examClose').addEventListener('click',()=>{ clearInterval(rt); goBack(); });
+  }
+
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',startEntry);
+  window.__mockExamStart=startEntry;
+  renderScoreboard();
+  window.addEventListener('storage',e=>{ if(e.key===LS_KEY)renderScoreboard(); });
+  if(new URLSearchParams(location.search).get('mode')==='exam'){ showSplash(); }
+})();
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body>
+</html>

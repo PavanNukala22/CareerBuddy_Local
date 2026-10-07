@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workforce Capacity & Shift Planner — A Visual Course</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============= Notion-inspired theme ============= */
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Fraunces',serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#3776ab 0%,#ffd43b 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Inter';font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Fraunces',serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Fraunces',serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Inter',sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'JetBrains Mono',monospace;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Inter';font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'JetBrains Mono',monospace;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'JetBrains Mono',monospace;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'JetBrains Mono',monospace;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'JetBrains Mono',monospace;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Inter',sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Fraunces',serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'JetBrains Mono',monospace;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+</style>
+<style>
+/* CareerBuddy: sticky sidebar visible scrollbar */
+.toc,.sidebar,.sidenav{scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc::-webkit-scrollbar,.sidebar::-webkit-scrollbar,.sidenav::-webkit-scrollbar{width:9px;height:9px}
+.toc::-webkit-scrollbar-thumb,.sidebar::-webkit-scrollbar-thumb,.sidenav::-webkit-scrollbar-thumb{background:#cbd2e0;border-radius:8px}
+.toc::-webkit-scrollbar-thumb:hover,.sidebar::-webkit-scrollbar-thumb:hover,.sidenav::-webkit-scrollbar-thumb:hover{background:#9aa4b8}
+.toc::-webkit-scrollbar-track,.sidebar::-webkit-scrollbar-track,.sidenav::-webkit-scrollbar-track{background:transparent}
+</style>
+<style>
+/* CareerBuddy: devops nav pill */
+.tab .tab-icon,.tab-btn .tab-icon,.tab .tab-emoji,.tab-btn .tab-emoji,.tab .ico,.tab-btn .ico,.tab .tab-ico,.tab-btn .tab-ico,.tab .icon,.tab-btn .icon,.tab .emoji,.tab-btn .emoji{display:none !important}
+.tab .tab-num,.tab-btn .tab-num,.tab .num,.tab-btn .num,.tab .tab-index,.tab-btn .tab-index{display:none !important}
+.tab,.tab-btn{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active),.tab-btn:not(.active){color:#4a5568 !important;background:transparent !important;transition:background .15s,color .15s}
+.tab:not(.active):hover,.tab-btn:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active:hover,.tab-btn.active:hover{background:#0b1526 !important}
+.tab.active,.tab-btn.active,.tabbar .active,.tab-bar .active,.tabs .active,[role="tab"][aria-selected="true"]{
+  background:#14213D !important;color:#fff !important;border-radius:8px !important;
+  border-bottom-color:transparent !important;font-weight:700 !important}
+.tab.active::after,.tab-btn.active::after{display:none !important}
+.tab.active .tab-num,.tab.active .num,.tab-btn.active .num,.tab.active .count,.tab-btn.active .count{
+  color:#fff !important;background:rgba(255,255,255,.2) !important}
+</style>
+<style>
+/* CareerBuddy: full-stretch containers */
+.shell,.wrap,.container,.layout,.main,.content,.doc,.page,.page-inner,.reading,.article,.main-content,.body-wrap{max-width:none !important}
+</style>
+<style>
+/* CareerBuddy: full-bleed + sticky nav + tight tabs */
+.wrap,.shell,.layout,.container,.doc,.page,.main-content{margin:0 !important;padding-top:0 !important;padding-left:0 !important;padding-right:0 !important}
+.tabbar,.tabs{position:sticky !important;top:0 !important;z-index:45 !important;background:#fff !important}
+.tabbar,.tabs,.tab-bar{gap:2px !important}
+</style>
+<style>
+/* CareerBuddy: restore sticky (overflow fix) */
+.shell,.wrap,.layout,.container,.app,.doc,.page,.grid,.body-wrap{overflow:visible !important}
+</style>
+<style>
+body,h1,h2,h3,h4,h5,p,a,span,li,td,th,div,button,summary,strong,em,b{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif !important}
+code,pre,.formula{font-family:'JetBrains Mono',ui-monospace,Consolas,monospace !important}
+.section h3{margin:22px 0 8px;color:#14213D;font-size:16px}
+.section ul,.section ol{margin:6px 0 10px 22px}.section li{margin:4px 0;line-height:1.6}
+.formula{background:#2b2a28;color:#f1fa8c;padding:12px 16px;border-radius:10px;margin:12px 0;font-size:13.5px;overflow-x:auto}
+.lvl{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 10px;border-radius:999px;margin-bottom:8px}
+.lvl1{background:#e3f4e3;color:#0a5f0a}.lvl2{background:#e2eefb;color:#1d6bbf}.lvl3{background:#fdeedc;color:#a85a08}.lvl4{background:#efe6f5;color:#73508c}
+.road{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+.mistakes{background:#fdecea;border:1px solid #f5b8b0;border-radius:12px;padding:12px 16px;margin:14px 0}
+.mistakes h4{margin:0 0 6px;font-size:14px}
+.practice{background:#f6f7fb;border:1px dashed #9aa5c4;border-radius:12px;padding:12px 16px;margin:14px 0}
+.practice h4{margin:0 0 6px;font-size:14px}
+.practice details{margin-top:8px}.practice summary{cursor:pointer;font-weight:600;color:#1d6bbf}
+.practice .ans{margin-top:8px;padding:8px 12px;background:#e3f4e3;border-radius:8px}
+.section table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}
+.section th,.section td{border:1px solid #d9dce3;padding:8px 10px;text-align:left;vertical-align:top}
+.section th{background:#f0f2f7}
+</style>
+<style id="exam-page-css">
+.assess-start-btn{background:#14213D!important;color:#fff!important}
+.assess-intro-list li{margin:2px 0}
+@media print{.exam-overlay,.exam-splash,.exam-confirm,.exam-cover{display:none!important}}
+</style><style id="noto-all">*,*::before,*::after,input,textarea,select,button,code,pre,kbd,samp,.formula,.pre-lang{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif !important}html{overflow-y:scroll;scrollbar-width:auto;scrollbar-color:#8d99ae #e9edf4}*{scrollbar-color:#8d99ae #e9edf4}::-webkit-scrollbar{width:13px;height:13px}::-webkit-scrollbar-track{background:#e9edf4;border-radius:8px}::-webkit-scrollbar-thumb{background:#8d99ae;border-radius:8px;border:2px solid #e9edf4}::-webkit-scrollbar-thumb:hover{background:#5f6b82}.tabbar,.tabs{overflow-x:auto!important;scrollbar-width:auto!important;padding-bottom:2px}.tabbar::-webkit-scrollbar,.tabs::-webkit-scrollbar{display:block!important;height:12px}.toc{overflow-y:auto}.toc::-webkit-scrollbar{width:10px}.exam-q-pane,.exam-side,.exam-overlay{scrollbar-width:auto}</style><style id="cb-navy-scroll">.tabbar,.tabs{scrollbar-color:#14213d #e9edf4!important}.tabbar::-webkit-scrollbar,.tabs::-webkit-scrollbar{display:block!important;height:10px}.tabbar::-webkit-scrollbar-thumb,.tabs::-webkit-scrollbar-thumb{background:#14213d!important;border-radius:8px}.tabbar::-webkit-scrollbar-track,.tabs::-webkit-scrollbar-track{background:#e9edf4!important}</style><script id="cb-exam-tab">/* Inside the course viewer the assessment opens in its own tab; ?mode=exam starts it on load. */(function(){if(new URLSearchParams(location.search).get('mode')==='exam'){addEventListener('DOMContentLoaded',function(){var b=document.querySelector('.assess-start-btn');if(b)b.click();});return;}if(window.self===window.top)return;addEventListener('click',function(e){if(e.target.closest&&e.target.closest('.assess-start-btn')){e.preventDefault();e.stopImmediatePropagation();window.open(location.pathname+'?mode=exam','_blank');}},true);})();</script></head><body>
+<header class="header"><div class="header-top"><div class="brand"><div class="brand-mark">WCP</div><span>Workforce Capacity &amp; Shift Planner<span class="brand-sub"> · basic to expert</span></span></div>
+<div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText"></span></span><button class="btn" onclick="resetProgress()">Reset</button></div></div>
+<nav class="tabbar" role="tablist"><button class="tab active" data-tab="x0" role="tab">Course Overview</button><button class="tab" data-tab="t1" role="tab">Erlang staffing models</button><button class="tab" data-tab="t2" role="tab">Roster / shift scheduling</button><button class="tab" data-tab="t3" role="tab">Absenteeism buffering</button><button class="tab" data-tab="t4" role="tab">Demand-forecasting data analysis</button><button class="tab" data-tab="x1" role="tab">Tools &amp; Quality</button><button class="tab" data-tab="x2" role="tab">Real-World Projects</button><button class="tab" data-tab="x3" role="tab">Practices &amp; Troubleshooting</button><button class="tab" data-tab="x4" role="tab">Interview Prep</button><button class="tab" data-tab="t5" role="tab">Assessment</button><button class="tab" data-tab="x5" role="tab">Course Summary</button></nav></header>
+<div class="layout"><aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside><main class="main"><section class="panel active" id="x0" data-toc='[[&quot;x0-1&quot;, &quot;Course Overview&quot;], [&quot;x0-2&quot;, &quot;Learning Objectives&quot;], [&quot;x0-3&quot;, &quot;Prerequisites&quot;]]'><div class="panel-header"><div class="panel-eyebrow">Module 1</div><h1 class="panel-title">Course Overview</h1><p class="panel-subtitle">Workforce Capacity &amp; Shift Planner: overview, objectives and prerequisites.</p></div><div class="section" id="x0-1"><h2><span class="sec-emoji">🧭</span> Course Overview</h2><p>This course teaches you to plan the people side of a service operation: how many staff are needed each interval, how to turn that into shifts and days off, how much extra cover to hold for absence, and how to forecast the work that will arrive. It is built around four linked skills and one shared model.</p><p>The role matters because every service promise depends on having the right number of people at the right time. Too few people means missed service levels, penalties and tired teams. Too many means idle cost. A good planner saves lakhs of rupees a month and protects both customers and staff.</p><p>The course has four skill tabs, each with five levels of content: tools and workflow, how quality is tested, good practices, a hands-on project, troubleshooting and interview practice. A final assessment and a summary page with formulas and a self-check close the course.</p><h3>Who this course is for</h3><ul><li>Workforce planners, schedulers and real-time analysts in contact centres, BPOs, helpdesks and shared-service teams.</li><li>Team leaders and operations managers who build rosters and defend headcount asks.</li><li>Analysts and fresh graduates who want an entry into workforce management and capacity planning.</li><li>Finance and operations partners who need to read staffing models and challenge their assumptions.</li></ul><h3>How the course is organised</h3><ul><li>Skill tabs: four skills in a fixed chain, from Erlang staffing to rosters, absence buffers and forecasting.</li><li>Tools and workflow: the spreadsheets, tools and step-by-step procedure used in daily planning work.</li><li>Testing and quality: checks, pass standards and one quality KPI for each skill, with a worked example.</li><li>Good practices and projects: do and avoid pairs, then a small project with data, tasks and a verified solution.</li><li>Troubleshooting and interviews: symptom, cause and fix tables, plus five interview questions per skill with model answers.</li><li>Summary: recap, a formula sheet, an I can checklist and next learning steps.</li></ul><div class="callout tip"><div class="callout-icon">⏱️</div><div class="callout-body"><strong>Time needed:</strong> About 10 to 12 hours, including the four projects</div></div></div><div class="section" id="x0-2"><h2><span class="sec-emoji">🎯</span> Learning Objectives</h2><p>When you finish this course you will be able to:</p><ol><li>Calculate workload in Erlangs from volume, AHT and interval length.</li><li>Determine the number of agents needed per interval to meet a service level target using an Erlang C table.</li><li>Evaluate how AHT, volume and target changes move staffing and cost.</li><li>Build a weekly roster from shift templates that matches the interval requirement.</li><li>Check a roster for rest gaps, weekly offs and fairness of nights and weekends.</li><li>Compare overtime and part-time cover for a recurring gap and recommend the cheaper option.</li><li>Calculate roster size from required heads and shrinkage, and size a floater pool statistically.</li><li>Compute MAPE, bias and seasonal indices to judge and adjust a forecast.</li><li>Convert a volume forecast into required FTE and roster size.</li><li>Present a staffing plan with stated assumptions, risks and a monthly cost.</li></ol></div><div class="section" id="x0-3"><h2><span class="sec-emoji">📋</span> Prerequisites</h2><h3>What you should already know</h3><ul><li>Basic arithmetic with percentages, ratios and averages.</li><li>Comfort with seconds, minutes and hours and converting between them.</li><li>A simple idea of what a service level target such as 80 in 20 means.</li><li>Basic reading of tables and simple charts.</li><li>Awareness of shifts, weekly offs and overtime in an Indian workplace.</li></ul><h3>What you need to have ready</h3><ul><li>Spreadsheet basics: formulas, ROUNDUP, SUM and AVERAGE.</li><li>A calculator or phone calculator with square root.</li><li>An Erlang C calculator or the tables shown in the course.</li><li>A sample volume and attendance tracker, real or made up.</li></ul><h3>Quick readiness check</h3><div class="practice"><h4>60 contacts arrive in a 30-minute interval and AHT is 360 seconds. What is the workload in Erlangs?</h4><details><summary>Show answer</summary><div class="ans">60 × 360 ÷ 1,800 = 12 Erlangs.</div></details></div><div class="practice"><h4>100 people must be at work and shrinkage is 10 percent. How many should be rostered?</h4><details><summary>Show answer</summary><div class="ans">100 ÷ 0.90 = 111.1, so 112 people.</div></details></div><div class="practice"><h4>Actual volume was 100 and the forecast was 108. What is the percentage error?</h4><details><summary>Show answer</summary><div class="ans">Error = 8 ÷ 100 = 8%, an over-forecast.</div></details></div></div></section>
+<section class="panel" id="t1" data-toc='[[&quot;s1-1&quot;, &quot;What Erlang models are and why they matter&quot;], [&quot;s1-2&quot;, &quot;Types of Erlang models and key measures&quot;], [&quot;s1-3&quot;, &quot;Erlang C step by step&quot;], [&quot;s1-4&quot;, &quot;Scenarios and KPIs: what moves the staffing number&quot;], [&quot;s1-5&quot;, &quot;Expert: pooling, limits of Erlang C and improving the model&quot;]]'><div class="panel-header"><div class="panel-eyebrow">Module 2</div><h1 class="panel-title">Erlang staffing models</h1><p class="panel-subtitle">Using Erlang formulas to work out how many people are needed to answer work within a target time, interval by interval.</p><div class="road"><span class="pill">Level 1 · Foundations</span><span class="pill">Level 2 · Core concepts</span><span class="pill">Level 3 · Intermediate</span><span class="pill">Level 4 · Expert</span></div></div><div class="section" id="s1-1"><span class="lvl lvl1">Level 1 · Foundations</span><h2><span class="sec-emoji">📞</span> What Erlang models are and why they matter</h2><p>An Erlang is a unit of workload. One Erlang means one person busy for one full hour. If contacts arrive and each takes some time to handle, the total busy time per interval, measured in hours of work per hour, is the workload in Erlangs. Erlang models, named after the Danish engineer A. K. Erlang, turn that workload into the number of staff needed to meet a service target.</p><p>Why they matter: staffing by simple averages fails because work arrives randomly. Even when average capacity equals average workload, queues build up during random bursts. Erlang formulas account for this randomness, so they give a realistic answer to the question &#x27;how many people do I need so that most work is picked up within the target time?&#x27;</p><p>They are used for contact centres, helpdesks, front desks, dispatch and any service where work arrives randomly and waits in a queue until someone is free.</p><table><tr><th>Term</th><th>Meaning</th></tr><tr><td>Workload (Erlangs)</td><td>Total handling time per interval ÷ interval length</td></tr><tr><td>AHT</td><td>Average handling time per item</td></tr><tr><td>Interval</td><td>The time block planned, often 15 or 30 minutes</td></tr><tr><td>Service level</td><td>Share of work answered within a target time, such as 80% in 20 seconds</td></tr><tr><td>ASA</td><td>Average speed of answer</td></tr><tr><td>Occupancy</td><td>Share of agent time spent on work</td></tr><tr><td>Abandonment</td><td>Customers who give up while waiting</td></tr></table><div class="formula">Workload (Erlangs) = Volume × AHT (seconds) ÷ Interval length (seconds)</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> 120 contacts arrive in a 30-minute interval and AHT is 240 seconds. Workload = 120 × 240 ÷ 1,800 = 16 Erlangs. This means 16 agents would be busy all the time, which is the minimum, not the number to roster.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Rostering exactly the workload number of agents</li><li>Using a daily average instead of interval volumes</li><li>Mixing seconds and minutes in the formula</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>90 contacts arrive in a 30-minute interval and AHT is 300 seconds. What is the workload in Erlangs?</p><details><summary>Show answer</summary><div class="ans">90 × 300 ÷ 1,800 = 15 Erlangs.</div></details></div></div><div class="section" id="s1-2"><span class="lvl lvl1">Level 1 · Foundations</span><h2><span class="sec-emoji">🗂️</span> Types of Erlang models and key measures</h2><p>There are three models you will meet. Erlang B assumes there is no queue: if all agents are busy, the contact is blocked and lost. It is used for phone lines and trunks. Erlang C assumes contacts wait in a queue and nobody abandons. It is the standard for staffing. Erlang A extends C by letting some customers abandon after waiting, which is more realistic when queues are long.</p><p>Occupancy is a key companion measure: workload divided by agents. A very high occupancy means agents never get a break between contacts and burn out. A very low occupancy means paid time is idle. Many operations target 80 to 88 percent for phone work.</p><table><tr><th>Model</th><th>Assumption</th><th>Typical use</th></tr><tr><td>Erlang B</td><td>No queue; extra contacts are blocked</td><td>Phone lines, trunks</td></tr><tr><td>Erlang C</td><td>Queue with no abandonment</td><td>Staffing agents</td></tr><tr><td>Erlang A</td><td>Queue with abandonment</td><td>Long queues, realistic planning</td></tr></table><div class="formula">Occupancy = Workload (Erlangs) ÷ Agents</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> The workload is 16 Erlangs and 19 agents are on duty. Occupancy = 16 ÷ 19 = 84.2%. With 20 agents, occupancy would be 80%.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Planning for 100% occupancy</li><li>Using Erlang B for a queue</li><li>Ignoring occupancy and breaks</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>The workload is 15 Erlangs and 18 agents are on duty. What is occupancy?</p><details><summary>Show answer</summary><div class="ans">15 ÷ 18 = 83.3%.</div></details></div></div><div class="section" id="s1-3"><span class="lvl lvl2">Level 2 · Core concepts</span><h2><span class="sec-emoji">🧮</span> Erlang C step by step</h2><p>To staff with Erlang C: (1) compute the workload A in Erlangs; (2) start with N agents slightly above A, because N must be greater than A or the queue grows without limit; (3) compute the probability that a contact has to wait, P(wait); (4) compute the service level using P(wait), N, A, the target time T and AHT; (5) if the service level is below target, add one agent and repeat.</p><p>In practice a spreadsheet or workforce management tool does the arithmetic. The planner&#x27;s job is to understand the inputs and check that the result makes sense. The table below shows the search for the 16 Erlang example with a target of 80 percent answered within 20 seconds and AHT of 240 seconds.</p><table><tr><th>Agents N</th><th>P(wait)</th><th>Service level</th><th>Occupancy</th></tr><tr><td>18</td><td>53.1%</td><td>55.0%</td><td>88.9%</td></tr><tr><td>19</td><td>37.4%</td><td>70.9%</td><td>84.2%</td></tr><tr><td>20</td><td>25.6%</td><td>81.7%</td><td>80.0%</td></tr><tr><td>21</td><td>17.1%</td><td>88.7%</td><td>76.2%</td></tr></table><div class="formula">P(wait) = [Aᴺ/N! × N/(N−A)] ÷ [Σ(k=0..N−1) Aᵏ/k! + Aᴺ/N! × N/(N−A)]   |   SL = 1 − P(wait) × e^(−(N−A)×T/AHT)</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> For a workload of 16 Erlangs, 19 agents give 70.9% service level, which misses the 80% target. 20 agents give 81.7%, which meets it. So the plan is 20 agents for this interval, at 80% occupancy and an average speed of answer of about 15 seconds.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Stopping at the first N above A</li><li>Using a daily target instead of an interval target</li><li>Forgetting that 20 seconds and 240 seconds must be in the same unit</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>The workload is 10 Erlangs with AHT of 240 seconds. The target is 80% in 20 seconds. Service level is 77.8% at 13 agents and 87.5% at 14 agents. How many agents are needed and what is occupancy?</p><details><summary>Show answer</summary><div class="ans">14 agents are needed because 13 misses the target. Occupancy = 10 ÷ 14 = 71.4%.</div></details></div></div><div class="section" id="s1-4"><span class="lvl lvl3">Level 3 · Intermediate</span><h2><span class="sec-emoji">📈</span> Scenarios and KPIs: what moves the staffing number</h2><p>Three inputs drive the answer: volume, AHT and the service target. A small change in AHT changes the staffing number noticeably, so process improvements and coaching that shorten handling time have a direct cost effect.</p><p>Core KPIs to track every interval are service level, ASA, occupancy, abandonment rate and agents on duty against agents required. Review them against the plan weekly. Large gaps point to a forecast error, an adherence problem or a wrong AHT in the model.</p><table><tr><th>Change</th><th>Effect on workload</th><th>Effect on agents</th></tr><tr><td>AHT falls from 240 s to 210 s</td><td>16 to 14 Erlangs</td><td>20 to 18 agents</td></tr><tr><td>Volume rises 25%</td><td>16 to 20 Erlangs</td><td>20 to 25 agents</td></tr><tr><td>Tighter target (90/20)</td><td>Same workload</td><td>More agents</td></tr></table><div class="formula">Agents saved = Old requirement − New requirement   |   Monthly saving = Agents saved × Cost per agent</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> AHT falls from 240 to 210 seconds, so workload falls from 16 to 14 Erlangs. At 14 Erlangs, 17 agents give 73.8% (below target) and 18 agents give 84.2%, so 18 agents are needed against 20 before. At ₹25,000 a month per agent, the saving is 2 × ₹25,000 = ₹50,000 a month for this interval pattern.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Assuming a straight-line relationship between workload and agents</li><li>Not updating AHT after process changes</li><li>Reading only the daily average service level</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>Workload rises from 16 to 20 Erlangs and the requirement rises from 20 to 25 agents. At ₹25,000 per agent per month, what is the extra monthly cost?</p><details><summary>Show answer</summary><div class="ans">5 extra agents × ₹25,000 = ₹1,25,000 a month.</div></details></div></div><div class="section" id="s1-5"><span class="lvl lvl4">Level 4 · Expert</span><h2><span class="sec-emoji">🧠</span> Expert: pooling, limits of Erlang C and improving the model</h2><p>Pooling is the most important idea at expert level. Larger groups are more efficient than small ones, because random peaks in one queue are absorbed by idle agents who would otherwise serve another queue. Combining two teams of 8 Erlangs each, each needing 11 agents, gives one team of 16 Erlangs needing 20 agents. That is a saving of 2 agents with the same service level.</p><p>Know the limits of Erlang C. It assumes contacts arrive randomly in a steady way, that nobody abandons, that all agents have the same skills and that handling time is consistent. Real operations have abandonment, multi-skilled agents, call-backs and sudden spikes. Experts adjust with Erlang A, simulation or a buffer on top of the Erlang result, and they reforecast intraday.</p><p>Leading the process means keeping the model honest: compare predicted and actual service level, correct AHT regularly and document assumptions.</p><table><tr><th>Limit</th><th>Better approach</th></tr><tr><td>No abandonment</td><td>Erlang A or simulation</td></tr><tr><td>Multi-skilled agents</td><td>Skill-based routing models</td></tr><tr><td>Spikes and bursts</td><td>Intraday reforecast and flexible cover</td></tr><tr><td>Stale AHT</td><td>Monthly AHT refresh</td></tr></table><div class="formula">Pooling gain = (Agents for separate teams) − (Agents for pooled team)</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> Two teams each carry 8 Erlangs and each needs 11 agents for 80% in 20 seconds, 22 in total. Pooled, 16 Erlangs need 20 agents. Pooling gain = 22 − 20 = 2 agents, or ₹50,000 a month at ₹25,000 per agent.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Splitting queues by habit rather than need</li><li>Trusting Erlang C results for highly bursty work</li><li>Never comparing the forecast service level with actual</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>Two teams each carry 6 Erlangs and need 9 agents each. Pooled, 12 Erlangs need 16 agents. What is the pooling gain?</p><details><summary>Show answer</summary><div class="ans">Separate = 9 + 9 = 18. Pooled = 16. Gain = 2 agents.</div></details></div></div></section>
+<section class="panel" id="t2" data-toc='[[&quot;s2-1&quot;, &quot;What rostering is and why it matters&quot;], [&quot;s2-2&quot;, &quot;Types of shift patterns&quot;], [&quot;s2-3&quot;, &quot;Building a roster, step by step&quot;], [&quot;s2-4&quot;, &quot;Fairness, overtime and cost trade-offs&quot;], [&quot;s2-5&quot;, &quot;Expert: legal limits, fatigue and optimisation&quot;]]'><div class="panel-header"><div class="panel-eyebrow">Module 3</div><h1 class="panel-title">Roster / shift scheduling</h1><p class="panel-subtitle">Turning the staffing requirement into shifts and days off that cover demand, follow the rules and feel fair.</p><div class="road"><span class="pill">Level 1 · Foundations</span><span class="pill">Level 2 · Core concepts</span><span class="pill">Level 3 · Intermediate</span><span class="pill">Level 4 · Expert</span></div></div><div class="section" id="s2-1"><span class="lvl lvl1">Level 1 · Foundations</span><h2><span class="sec-emoji">🗓️</span> What rostering is and why it matters</h2><p>A roster is the plan that says who works which shift on which day. The staffing requirement tells you how many people are needed at each time. Rostering turns that requirement into real shifts, days off and rest periods, while respecting working-time rules and being fair to workers.</p><p>Why it matters: a good roster puts the right number of people at the right times, controls overtime cost and keeps workers rested and willing to stay. A poor roster gives overstaffing at quiet times, understaffing at busy times and unhappy people.</p><table><tr><th>Term</th><th>Meaning</th></tr><tr><td>Shift</td><td>A defined block of working time</td></tr><tr><td>Roster</td><td>The plan of shifts by person and day</td></tr><tr><td>Coverage</td><td>Staff scheduled against staff required</td></tr><tr><td>Weekly off</td><td>The rest day each worker is entitled to</td></tr><tr><td>FTE</td><td>Full-time equivalent, a unit of staff capacity</td></tr><tr><td>Shift template</td><td>A standard shift pattern, such as 6 to 2</td></tr></table><div class="formula">FTE needed = Required hours per week ÷ Hours per FTE per week</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> A site needs 1,200 hours of work a week and one full-time worker contributes 48 hours. FTE needed = 1,200 ÷ 48 = 25. This is before allowing for absence.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Rostering to the budget instead of the demand</li><li>Forgetting weekly offs when counting capacity</li><li>Building the roster before the forecast is ready</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>A site needs 1,440 hours of work a week and one full-time worker contributes 48 hours. How many FTE are needed?</p><details><summary>Show answer</summary><div class="ans">1,440 ÷ 48 = 30 FTE.</div></details></div></div><div class="section" id="s2-2"><span class="lvl lvl1">Level 1 · Foundations</span><h2><span class="sec-emoji">🗂️</span> Types of shift patterns</h2><p>Patterns differ in how they trade fairness, flexibility and cost. Fixed shifts give workers a stable life but few want nights. Rotating shifts share nights and weekends but can disturb sleep if rotated badly; forward rotation (morning, then evening, then night) is easier on the body. Split shifts cover two peaks with a gap but are unpopular. Compressed weeks pack hours into fewer, longer days. Part-time and on-call workers add flexibility for peaks.</p><table><tr><th>Pattern</th><th>Strength</th><th>Watch-out</th></tr><tr><td>Fixed</td><td>Stable routine</td><td>Hard to staff nights</td></tr><tr><td>Rotating</td><td>Shares unpopular shifts</td><td>Fatigue if rotation is poor</td></tr><tr><td>Split</td><td>Covers two peaks</td><td>Long day, unpopular</td></tr><tr><td>Compressed week</td><td>Fewer commute days</td><td>Fatigue in long days</td></tr><tr><td>Part-time or on call</td><td>Flexible for peaks</td><td>Less reliable, less trained</td></tr></table><div class="formula">Coverage ratio = Staff scheduled ÷ Staff required</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> An interval requires 20 staff and 23 are scheduled. Coverage = 23 ÷ 20 = 115%, which means 3 extra people. Another interval requires 18 and has 16 scheduled: 16 ÷ 18 = 88.9%, which is 2 short.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Using the same pattern for every role</li><li>Rotating backward (night to morning) with short rest</li><li>Splitting shifts without extra pay or notice</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>An interval requires 18 staff and 16 are scheduled. What is the coverage ratio, and how many are short?</p><details><summary>Show answer</summary><div class="ans">16 ÷ 18 = 88.9%. Short by 2.</div></details></div></div><div class="section" id="s2-3"><span class="lvl lvl2">Level 2 · Core concepts</span><h2><span class="sec-emoji">🔧</span> Building a roster, step by step</h2><p>Steps: (1) get the interval requirement from the staffing model; (2) define shift templates that match the demand curve; (3) calculate how many workers each template needs; (4) assign people to templates; (5) check rules: weekly off, maximum hours, rest between shifts and leave already approved; (6) check fairness of nights and weekends; (7) publish early, so workers can plan; (8) manage swaps and changes with clear rules.</p><p>A quick capacity check is the shift-slot method. Count the shift slots needed in a week (shifts per day times people per shift times days) and divide by the number of shifts each worker can do in a week.</p><table><tr><th>Step</th><th>Output</th></tr><tr><td>Requirement by interval</td><td>Staffing numbers</td></tr><tr><td>Shift templates</td><td>Start and end times</td></tr><tr><td>Assign people</td><td>Draft roster</td></tr><tr><td>Rule check</td><td>Compliance flags</td></tr><tr><td>Publish</td><td>Roster at least a week ahead</td></tr></table><div class="formula">Workers needed = Shift slots per week ÷ Shifts per worker per week</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> A 24 by 7 site runs 3 shifts a day with 10 people per shift: 3 × 10 × 7 = 210 shift slots a week. Each worker does 6 shifts, so workers needed = 210 ÷ 6 = 35, before an absence buffer.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Publishing the roster at the last minute</li><li>Skipping the rules check</li><li>Not allowing for approved leave</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>A site runs 3 shifts a day with 12 people per shift for 7 days. Each worker does 6 shifts a week. How many workers are needed?</p><details><summary>Show answer</summary><div class="ans">3 × 12 × 7 = 252 slots. 252 ÷ 6 = 42 workers.</div></details></div></div><div class="section" id="s2-4"><span class="lvl lvl3">Level 3 · Intermediate</span><h2><span class="sec-emoji">💰</span> Fairness, overtime and cost trade-offs</h2><p>Fairness is measured: count each person&#x27;s nights, weekends and public-holiday shifts and compare them. Large gaps lead to complaints and attrition.</p><p>Cost trade-offs also need numbers. When there is a gap in coverage, a manager can ask people to work overtime or add part-time cover. Overtime is paid at a higher rate, often double where the law or policy says so, so it is usually more expensive than a part-timer for regular gaps. Overtime also adds fatigue.</p><table><tr><th>Option</th><th>Rate</th><th>Hours</th><th>Cost</th></tr><tr><td>Overtime (2× ₹120)</td><td>₹240</td><td>120</td><td>₹28,800</td></tr><tr><td>Part-timer</td><td>₹130</td><td>120</td><td>₹15,600</td></tr><tr><td>Saving with part-timer</td><td></td><td></td><td>₹13,200</td></tr></table><div class="formula">Overtime cost = Gap hours × Base rate × 2 (illustrative)   |   Part-timer cost = Gap hours × Part-time rate</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> A recurring gap of 120 hours a month. Overtime at twice the base rate of ₹120 costs 120 × 240 = ₹28,800. A part-timer at ₹130 an hour costs 120 × 130 = ₹15,600. Saving = ₹13,200 a month, and workers are less tired.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Using overtime for permanent gaps</li><li>Not tracking overtime per person</li><li>Ignoring fatigue and error costs</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>A gap of 160 hours a month. Base rate ₹100 with overtime at twice that. A part-timer costs ₹115 an hour. What is the saving from using the part-timer?</p><details><summary>Show answer</summary><div class="ans">Overtime = 160 × 200 = ₹32,000. Part-timer = 160 × 115 = ₹18,400. Saving = ₹13,600.</div></details></div></div><div class="section" id="s2-5"><span class="lvl lvl4">Level 4 · Expert</span><h2><span class="sec-emoji">🛡️</span> Expert: legal limits, fatigue and optimisation</h2><p>Working-time rules limit daily and weekly hours, require weekly rest and often set minimum rest between shifts and restrictions on night work. These rules differ by state and by industry and change over time, so confirm current requirements for each site before finalising a roster.</p><p>Fatigue is a business risk. Quick turnarounds, long runs of nights and extended overtime increase errors and accidents. A common check is the rest gap between the end of one shift and the start of the next.</p><p>At expert level, rosters are built with optimisation tools that balance coverage, cost, rules and preferences, with options such as shift bidding, self-scheduling and structured swaps. Review the results against actual demand each week and feed the lessons back into the next cycle.</p><table><tr><th>Risk</th><th>Control</th></tr><tr><td>Short rest between shifts</td><td>Automatic rest-gap check</td></tr><tr><td>Long overtime runs</td><td>Cap per person per week</td></tr><tr><td>Unfair nights</td><td>Fairness report each cycle</td></tr><tr><td>Last-minute changes</td><td>Swap rules and notice period</td></tr></table><div class="formula">Rest gap = Next shift start − Previous shift end</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> A worker finishes a night shift at 06:00 and is rostered to start at 14:00 the same day. Rest gap = 8 hours. If policy requires at least 11 hours, this roster line is a violation and must be changed.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Checking rules only after publishing</li><li>Ignoring fatigue because coverage looks fine</li><li>Letting swaps bypass the rules check</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>A worker finishes at 22:00 and starts the next shift at 07:00. The policy requires at least 10 hours of rest. Is it a violation?</p><details><summary>Show answer</summary><div class="ans">Rest gap = 9 hours. It is a violation, 1 hour short.</div></details></div></div></section>
+<section class="panel" id="t3" data-toc='[[&quot;s3-1&quot;, &quot;What absenteeism buffering is and why it matters&quot;], [&quot;s3-2&quot;, &quot;Types of shrinkage and buffering methods&quot;], [&quot;s3-3&quot;, &quot;Calculating the buffer, step by step&quot;], [&quot;s3-4&quot;, &quot;Cost of buffer against cost of shortage&quot;], [&quot;s3-5&quot;, &quot;Expert: statistical buffers and pooling&quot;]]'><div class="panel-header"><div class="panel-eyebrow">Module 4</div><h1 class="panel-title">Absenteeism buffering</h1><p class="panel-subtitle">Adding the right amount of extra capacity in advance so absence does not leave the floor short.</p><div class="road"><span class="pill">Level 1 · Foundations</span><span class="pill">Level 2 · Core concepts</span><span class="pill">Level 3 · Intermediate</span><span class="pill">Level 4 · Expert</span></div></div><div class="section" id="s3-1"><span class="lvl lvl1">Level 1 · Foundations</span><h2><span class="sec-emoji">🛡️</span> What absenteeism buffering is and why it matters</h2><p>Absenteeism buffering means planning extra capacity in advance to cover people who will not be at work. Absence is predictable in aggregate even though you cannot know who will be absent on a given day. If 8 percent of rostered people are typically absent, rostering exactly the requirement guarantees a shortfall.</p><p>Why it matters: shortages cause missed targets, penalties, overtime and stress for those present. The buffer protects service. But a buffer that is too big wastes money on idle people, so the aim is the right size.</p><table><tr><th>Term</th><th>Meaning</th></tr><tr><td>Absenteeism rate</td><td>Share of scheduled days lost to absence</td></tr><tr><td>Shrinkage</td><td>All time that scheduled staff are not available for productive work</td></tr><tr><td>Planned shrinkage</td><td>Leave, training, meetings</td></tr><tr><td>Unplanned shrinkage</td><td>Sickness, no-shows, lateness</td></tr><tr><td>Buffer</td><td>Extra capacity rostered to cover shrinkage</td></tr><tr><td>Floater</td><td>A cross-trained worker moved to where gaps appear</td></tr></table><div class="formula">Absenteeism rate = Absent days ÷ Scheduled days</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> A team of 25 is scheduled for 26 days: 25 × 26 = 650 scheduled days. 52 days were lost to absence. Rate = 52 ÷ 650 = 8%.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Planning to the requirement with no buffer</li><li>Measuring absence only monthly, not by day</li><li>Treating all absence as the same</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>A team of 30 is scheduled for 26 days and 39 days were lost to absence. What is the absenteeism rate?</p><details><summary>Show answer</summary><div class="ans">30 × 26 = 780 scheduled days. 39 ÷ 780 = 5%.</div></details></div></div><div class="section" id="s3-2"><span class="lvl lvl1">Level 1 · Foundations</span><h2><span class="sec-emoji">🗂️</span> Types of shrinkage and buffering methods</h2><p>Shrinkage has two parts. Planned shrinkage can be scheduled around: annual leave, training, team meetings and coaching. Unplanned shrinkage cannot: sickness, no-shows, lateness and emergencies. Total shrinkage adds them, and it should always be measured over the same base of scheduled time.</p><p>There are several ways to buffer. Over-rostering adds extra people. A floater or standby pool covers gaps on the day. Cross-training lets people cover different tasks. Flexible hours and overtime help in short bursts. Most operations combine two or three methods.</p><table><tr><th>Method</th><th>Strength</th><th>Weakness</th></tr><tr><td>Over-rostering</td><td>Simple, always present</td><td>Idle cost on good days</td></tr><tr><td>Floater pool</td><td>Moves to where needed</td><td>Needs cross-training</td></tr><tr><td>Cross-training</td><td>Wide cover</td><td>Training time</td></tr><tr><td>Overtime</td><td>Fast, no hiring</td><td>Costly, tiring</td></tr></table><div class="formula">Total shrinkage = Planned shrinkage + Unplanned shrinkage</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> Planned shrinkage is 10 percent (leave 6, training 4) and unplanned is 8 percent. Total shrinkage = 10 + 8 = 18%.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Ignoring planned shrinkage</li><li>Not separating planned from unplanned</li><li>Using last year&#x27;s numbers without updating</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>Planned shrinkage is 9% and unplanned is 6%. What is the total?</p><details><summary>Show answer</summary><div class="ans">9 + 6 = 15%.</div></details></div></div><div class="section" id="s3-3"><span class="lvl lvl2">Level 2 · Core concepts</span><h2><span class="sec-emoji">🧮</span> Calculating the buffer, step by step</h2><p>Steps: (1) state the requirement as the number of people who must be at work; (2) measure total shrinkage from your own data, by shift and day of week; (3) calculate the roster size; (4) round up to a whole person; (5) set the floater pool for the unplanned part; (6) review monthly.</p><p>The formula divides by one minus shrinkage rather than multiplying by one plus shrinkage. This is because shrinkage is a share of the rostered people, not a share of the requirement. Adding 15 percent to 100 gives 115, which is too low; 100 ÷ 0.85 gives 118.</p><table><tr><th>Required</th><th>Shrinkage</th><th>Roster size</th></tr><tr><td>100</td><td>15%</td><td>118</td></tr><tr><td>80</td><td>12%</td><td>91</td></tr><tr><td>120</td><td>20%</td><td>150</td></tr></table><div class="formula">Roster size = Required ÷ (1 − Shrinkage), rounded up</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> 100 people are required on a shift and shrinkage is 15%. Roster size = 100 ÷ 0.85 = 117.65, so 118 people. The buffer is 18 people.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Multiplying by 1.15 instead of dividing by 0.85</li><li>Not rounding up</li><li>Using one shrinkage number for every day</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>80 people are required and shrinkage is 12%. How many should be rostered?</p><details><summary>Show answer</summary><div class="ans">80 ÷ 0.88 = 90.9, so 91 people.</div></details></div></div><div class="section" id="s3-4"><span class="lvl lvl3">Level 3 · Intermediate</span><h2><span class="sec-emoji">💰</span> Cost of buffer against cost of shortage</h2><p>A buffer costs money every day, whether or not people are absent. A shortage costs money only on the days it happens, but it can cost more when it does, through lost output, penalties and overtime. The decision compares the two.</p><p>The comparison should use real costs: the monthly cost of each extra person, and the cost of each missing person-day including lost output and penalties.</p><table><tr><th>Item</th><th>Calculation</th><th>Amount</th></tr><tr><td>Buffer cost</td><td>18 extra × ₹18,000</td><td>₹3,24,000</td></tr><tr><td>Shortage cost</td><td>12 missing × 26 days × ₹1,200</td><td>₹3,74,400</td></tr><tr><td>Buffer saves</td><td></td><td>₹50,400</td></tr></table><div class="formula">Buffer cost = Extra people × Monthly cost   |   Shortage cost = Missing per day × Days × Cost per missing person-day</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> A buffer of 18 extra people at ₹18,000 a month costs ₹3,24,000. Without it, an average of 12 people would be missing each day at ₹1,200 per person-day over 26 days, which is ₹3,74,400. The buffer saves ₹50,400 a month.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Comparing only the buffer cost</li><li>Using only the penalty and ignoring lost output</li><li>Not testing the numbers each quarter</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>A buffer of 10 extra people costs ₹18,000 each a month. Without it, 8 people would be missing each day, costing ₹1,000 per person-day over 26 days. Which is cheaper and by how much?</p><details><summary>Show answer</summary><div class="ans">Buffer = ₹1,80,000. Shortage = 8 × 26 × 1,000 = ₹2,08,000. The buffer is cheaper by ₹28,000.</div></details></div></div><div class="section" id="s3-5"><span class="lvl lvl4">Level 4 · Expert</span><h2><span class="sec-emoji">🧠</span> Expert: statistical buffers and pooling</h2><p>Absence varies from day to day. A buffer sized to the average will be short about half the days. A statistical buffer covers the average plus a safety margin. With a 95 percent cover target and roughly normal, independent absences, the buffer is the mean plus 1.645 times the standard deviation.</p><p>Pooling makes the buffer cheaper. Independent absences partly cancel each other out when groups are combined, so the standard deviation of the combined group grows only with the square root of the sum of variances. A shared floater pool for several lines needs fewer heads than a separate buffer for each line.</p><p>These calculations assume absences are independent and roughly normal. Check for clusters, such as an illness outbreak or post-holiday absence, and keep a contingency plan for them.</p><table><tr><th>Approach</th><th>Buffer</th></tr><tr><td>Mean only</td><td>Short about half the days</td></tr><tr><td>Mean + 1.645 SD</td><td>Covers about 95% of days</td></tr><tr><td>Pooled across lines</td><td>Fewer total heads</td></tr></table><div class="formula">Buffer (95%) = Mean + 1.645 × SD   |   Pooled SD = √(SD₁² + SD₂² + …)</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> Four lines each average 12 absent with SD 3. Separate buffers: 12 + 1.645 × 3 = 16.9, so 17 each, 68 in total. Pooled: mean 48 and SD = √(4 × 9) = 6, so 48 + 1.645 × 6 = 57.9, about 58. Pooling saves 10 heads.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Sizing to the mean</li><li>Assuming absences are independent when they cluster</li><li>Pooling across lines without cross-training</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>Three lines each average 10 absent with SD 2. What are the total buffers separately and pooled at 95%, and what is the saving?</p><details><summary>Show answer</summary><div class="ans">Separate: 10 + 1.645 × 2 = 13.29, so 14 each, 42 in total. Pooled: mean 30, SD = √12 = 3.46, so 30 + 5.70 = 35.7, about 36. Saving = 6 heads.</div></details></div></div></section>
+<section class="panel" id="t4" data-toc='[[&quot;s4-1&quot;, &quot;What demand forecasting is and why it matters&quot;], [&quot;s4-2&quot;, &quot;Types of forecasting methods&quot;], [&quot;s4-3&quot;, &quot;The forecasting process and seasonal indices&quot;], [&quot;s4-4&quot;, &quot;Forecast accuracy: MAPE and bias&quot;], [&quot;s4-5&quot;, &quot;Expert: from forecast to heads, and planning under uncertainty&quot;]]'><div class="panel-header"><div class="panel-eyebrow">Module 5</div><h1 class="panel-title">Demand-forecasting data analysis</h1><p class="panel-subtitle">Using past data and known events to predict how much work will arrive, so capacity can be planned before it is needed.</p><div class="road"><span class="pill">Level 1 · Foundations</span><span class="pill">Level 2 · Core concepts</span><span class="pill">Level 3 · Intermediate</span><span class="pill">Level 4 · Expert</span></div></div><div class="section" id="s4-1"><span class="lvl lvl1">Level 1 · Foundations</span><h2><span class="sec-emoji">📊</span> What demand forecasting is and why it matters</h2><p>Demand forecasting predicts how much work will arrive in a future period, for example contacts per interval, orders per day or shifts needed per week. It is the first step in capacity planning, because the staffing and roster plans are only as good as the forecast beneath them.</p><p>A forecast is built from history and known events. Data patterns have parts: a baseline level, a trend (rising or falling over time), seasonality (repeating patterns by hour, weekday or month) and noise (random variation that cannot be predicted). Good forecasting separates these parts.</p><table><tr><th>Term</th><th>Meaning</th></tr><tr><td>Demand</td><td>Work arriving, such as contacts or shifts requested</td></tr><tr><td>Trend</td><td>Long-term rise or fall</td></tr><tr><td>Seasonality</td><td>Repeating pattern by hour, day or month</td></tr><tr><td>Noise</td><td>Unpredictable random variation</td></tr><tr><td>Horizon</td><td>How far ahead the forecast looks</td></tr><tr><td>Granularity</td><td>Time unit: interval, day, week</td></tr><tr><td>Forecast error</td><td>Difference between forecast and actual</td></tr></table><div class="formula">Moving average forecast = Sum of last n periods ÷ n</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> Weekly volumes for the last 4 weeks were 400, 420, 380 and 400. The 4-week moving average = (400 + 420 + 380 + 400) ÷ 4 = 400. The forecast for next week is 400.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Forecasting without cleaning outliers</li><li>Using too coarse a time unit</li><li>Ignoring known events</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>Weekly volumes for the last 4 weeks were 350, 370, 330 and 350. What is the moving average forecast?</p><details><summary>Show answer</summary><div class="ans">(350 + 370 + 330 + 350) ÷ 4 = 350.</div></details></div></div><div class="section" id="s4-2"><span class="lvl lvl1">Level 1 · Foundations</span><h2><span class="sec-emoji">🗂️</span> Types of forecasting methods</h2><p>Methods range from simple to complex. The naive method uses the last value. Moving averages smooth noise. Weighted averages give recent data more weight. Exponential smoothing updates the forecast each period using a smoothing factor between 0 and 1. Seasonal indices adjust for repeating patterns. Regression and machine-learning models use many drivers, such as promotions, weather or client plans. Qualitative input, such as the client&#x27;s own plan, is also valuable and often beats statistics for one-off events.</p><p>The best method is the simplest one that is accurate enough. Test methods on past data before relying on them.</p><table><tr><th>Method</th><th>Best for</th><th>Weakness</th></tr><tr><td>Naive</td><td>Stable demand</td><td>Copies noise</td></tr><tr><td>Moving average</td><td>Smoothing noise</td><td>Slow to react</td></tr><tr><td>Exponential smoothing</td><td>Responsive and simple</td><td>Needs a factor choice</td></tr><tr><td>Seasonal index</td><td>Repeating weekly or daily patterns</td><td>Needs enough history</td></tr><tr><td>Regression or ML</td><td>Many drivers</td><td>Needs data and skill</td></tr></table><div class="formula">New forecast = α × Latest actual + (1 − α) × Previous forecast</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> With α = 0.3, the previous forecast was 400 and the actual was 440. New forecast = 0.3 × 440 + 0.7 × 400 = 132 + 280 = 412.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Setting α without testing</li><li>Using a complex model when a simple one works</li><li>Ignoring client plans</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>With α = 0.2, the previous forecast was 500 and the actual was 450. What is the new forecast?</p><details><summary>Show answer</summary><div class="ans">0.2 × 450 + 0.8 × 500 = 90 + 400 = 490.</div></details></div></div><div class="section" id="s4-3"><span class="lvl lvl2">Level 2 · Core concepts</span><h2><span class="sec-emoji">🔧</span> The forecasting process and seasonal indices</h2><p>Steps: (1) gather history at the right granularity; (2) clean the data, removing errors and flagging one-off events; (3) look for trend and seasonality; (4) choose a method and test it on past data; (5) produce the forecast; (6) adjust for known events such as promotions or festivals; (7) review with the client; (8) track accuracy and improve.</p><p>A seasonal index measures how a period compares with the average. A weekday index is that day&#x27;s average volume divided by the overall daily average. An index above 1 means a busier-than-average day. To forecast a specific day, multiply the forecast average by the day&#x27;s index.</p><table><tr><th>Day</th><th>Average volume</th><th>Index</th></tr><tr><td>Monday</td><td>125</td><td>1.25</td></tr><tr><td>Wednesday</td><td>100</td><td>1.00</td></tr><tr><td>Friday</td><td>80</td><td>0.80</td></tr></table><div class="formula">Seasonal index = Period average ÷ Overall average   |   Day forecast = Average forecast × Index</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> Monday averages 125 against an overall daily average of 100, so the index is 1.25. If next week&#x27;s average is forecast at 110 a day, the Monday forecast = 110 × 1.25 = 137.5.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Using too little history for seasonality</li><li>Not cleaning one-off spikes</li><li>Forecasting daily totals and assuming a flat profile</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>Friday averages 80 against an overall daily average of 100. Next week&#x27;s average is forecast at 120. What is the Friday forecast?</p><details><summary>Show answer</summary><div class="ans">Index = 80 ÷ 100 = 0.80. Forecast = 120 × 0.80 = 96.</div></details></div></div><div class="section" id="s4-4"><span class="lvl lvl3">Level 3 · Intermediate</span><h2><span class="sec-emoji">🎯</span> Forecast accuracy: MAPE and bias</h2><p>A forecast is useful only if you know how accurate it is. Mean absolute percentage error (MAPE) measures the average size of errors as a percentage of actual. Bias shows whether the forecast is consistently too high or too low. A forecast with low MAPE but strong bias still leads to systematic over or under staffing.</p><p>Track both by interval type and by week, and look at the largest misses. Investigate causes: was it a one-off event, a data problem or a model problem?</p><table><tr><th>Week</th><th>Actual</th><th>Forecast</th><th>Abs error %</th></tr><tr><td>1</td><td>100</td><td>110</td><td>10.0%</td></tr><tr><td>2</td><td>120</td><td>115</td><td>4.2%</td></tr><tr><td>3</td><td>90</td><td>100</td><td>11.1%</td></tr><tr><td>4</td><td>110</td><td>100</td><td>9.1%</td></tr></table><div class="formula">MAPE = Average of (|Actual − Forecast| ÷ Actual)   |   Bias = Σ(Forecast − Actual) ÷ Σ Actual</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> For the four weeks above, errors are 10.0%, 4.2%, 11.1% and 9.1%, so MAPE = 34.4 ÷ 4 = 8.6%. Bias = (10 − 5 + 10 − 10) ÷ 420 = 5 ÷ 420 = +1.2%, a slight over-forecast.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Looking only at MAPE and not bias</li><li>Averaging errors with signs, so they cancel</li><li>Not investigating the biggest misses</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>Actuals are 200, 180 and 220 and forecasts are 190, 190 and 200. What is MAPE?</p><details><summary>Show answer</summary><div class="ans">Errors: 10 ÷ 200 = 5.0%; 10 ÷ 180 = 5.6%; 20 ÷ 220 = 9.1%. MAPE = 19.6 ÷ 3 = 6.5%.</div></details></div></div><div class="section" id="s4-5"><span class="lvl lvl4">Level 4 · Expert</span><h2><span class="sec-emoji">🧠</span> Expert: from forecast to heads, and planning under uncertainty</h2><p>The forecast must be converted into staffing. Required FTE equals workload hours divided by the productive hours each FTE provides at the target occupancy. Then shrinkage is added to get the number to roster.</p><p>Plan for uncertainty. A forecast is a central estimate with a range around it. If MAPE is about 8 percent, a forecast of 3,000 contacts could realistically be 2,760 to 3,240. Experts plan the base on the forecast and hold flexible capacity, such as part-timers, floaters and overtime rules, for the range.</p><p>Lead the process by agreeing a forecast calendar with the client, sharing accuracy reports and building in event feedback: promotions, festivals and system changes should reach the planner before they arrive.</p><table><tr><th>Step</th><th>Calculation</th></tr><tr><td>Workload hours</td><td>Volume × AHT in hours</td></tr><tr><td>Productive FTE</td><td>Workload ÷ (Productive hours × Occupancy)</td></tr><tr><td>Roster size</td><td>Productive FTE ÷ (1 − Shrinkage)</td></tr></table><div class="formula">Required FTE = (Volume × AHT hours) ÷ (Productive hours per FTE × Target occupancy)</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> 3,000 contacts a day at 6 minutes (0.1 hour) AHT give 300 workload hours. With 6.5 productive hours per FTE and 85% occupancy, required FTE = 300 ÷ (6.5 × 0.85) = 54.3, so 55. With 15% shrinkage, roster = 55 ÷ 0.85 = 64.7, so 65.</div></div><div class="mistakes"><h4>⚠️ Common mistakes</h4><ul><li>Forgetting occupancy</li><li>Not adding shrinkage</li><li>Planning only to the central forecast with no flexible capacity</li></ul></div><div class="practice"><h4>✍️ Practice</h4><p>2,400 contacts a day with AHT of 9 minutes (0.15 hour), 6.5 productive hours per FTE and 80% occupancy. How many FTE are required?</p><details><summary>Show answer</summary><div class="ans">Workload = 2,400 × 0.15 = 360 hours. FTE = 360 ÷ (6.5 × 0.8) = 360 ÷ 5.2 = 69.2, so 70.</div></details></div></div></section>
+<section class="panel" id="x1" data-toc='[[&quot;x1-1&quot;, &quot;Tools &amp; Workflows: Erlang staffing models&quot;], [&quot;x1-2&quot;, &quot;Tools &amp; Workflows: Roster / shift scheduling&quot;], [&quot;x1-3&quot;, &quot;Tools &amp; Workflows: Absenteeism buffering&quot;], [&quot;x1-4&quot;, &quot;Tools &amp; Workflows: Demand-forecasting data analysis&quot;], [&quot;x1-5&quot;, &quot;Testing &amp; Quality: Erlang staffing models&quot;], [&quot;x1-6&quot;, &quot;Testing &amp; Quality: Roster / shift scheduling&quot;], [&quot;x1-7&quot;, &quot;Testing &amp; Quality: Absenteeism buffering&quot;], [&quot;x1-8&quot;, &quot;Testing &amp; Quality: Demand-forecasting data analysis&quot;]]'><div class="panel-header"><div class="panel-eyebrow">Module 6</div><h1 class="panel-title">Tools &amp; Quality</h1><p class="panel-subtitle">The tools, workflows and quality checks for each skill.</p></div><div class="section" id="x1-1"><h2><span class="sec-emoji">🛠️</span> Tools &amp; Workflows: Erlang staffing models</h2><p>Erlang work is done in a spreadsheet or a workforce management tool fed by interval volumes and AHT. The planner owns the inputs and checks the output, not the maths itself. Daily work is a loop of forecast, workload, agents, occupancy and review.</p><table><tr><th>Tool or technique</th><th>Used for</th><th>Example</th></tr><tr><td>Interval volume sheet</td><td>Holds contacts and AHT per 30-minute block</td><td>9:00 to 9:30: 120 contacts, AHT 240 s</td></tr><tr><td>Erlang C calculator</td><td>Finds agents for a service target</td><td>20 Erlangs at 80 in 20 gives 25 agents</td></tr><tr><td>Occupancy check</td><td>Tests burnout or idle risk</td><td>20 ÷ 25 = 80%</td></tr><tr><td>What-if table</td><td>Shows effect of AHT, volume or target change</td><td>AHT 300 s to 270 s saves 3 agents</td></tr><tr><td>Intraday tracker</td><td>Compares plan and actual each interval</td><td>Planned 25 on duty, 23 logged in</td></tr><tr><td>Pooling test</td><td>Checks whether merging queues saves agents</td><td>Two teams of 14 vs one of 25</td></tr></table><h3>Working procedure</h3><ol><li>Collect forecast contacts and AHT for each interval of the day.</li><li>Convert every interval to workload in Erlangs using the same time unit.</li><li>Set the service target, for example 80 percent in 20 seconds.</li><li>Search upward from just above the workload until the service level meets the target.</li><li>Record agents, occupancy and ASA for each interval.</li><li>Run what-if cases for AHT, volume and target changes.</li><li>Add the result to the roster requirement and note all assumptions.</li><li>Compare predicted and actual service level weekly and correct the inputs.</li></ol></div><div class="section" id="x1-2"><h2><span class="sec-emoji">🛠️</span> Tools &amp; Workflows: Roster / shift scheduling</h2><p>Rostering uses the interval requirement, a library of shift templates and a rules checklist. Most teams work in a spreadsheet or a scheduling tool. Rules on hours, overtime and rest differ by state and industry (illustrative, confirm current rules for each site).</p><table><tr><th>Tool or technique</th><th>Used for</th><th>Example</th></tr><tr><td>Shift template library</td><td>Standard start and end times</td><td>6 to 2, 2 to 10, 10 to 6</td></tr><tr><td>Shift-slot calculator</td><td>Counts workers needed in a week</td><td>3 × 14 × 7 = 294 slots</td></tr><tr><td>Coverage heat map</td><td>Shows over and under cover by interval</td><td>Red when coverage ratio is below 95%</td></tr><tr><td>Rule checker</td><td>Flags rest gap and weekly off breaches</td><td>Gap 9 h against 11 h policy</td></tr><tr><td>Fairness report</td><td>Counts nights and weekends per person</td><td>Nights: 6, 6, 10, 2</td></tr><tr><td>Swap log</td><td>Controls shift changes</td><td>Swap approved only if rules still pass</td></tr></table><h3>Working procedure</h3><ol><li>Take the interval requirement from the staffing model.</li><li>Choose shift templates that follow the demand curve.</li><li>Count shift slots and divide by shifts per worker to get workers needed.</li><li>Assign people to templates, honouring approved leave and skills.</li><li>Run the rule check for weekly offs, maximum hours and rest gaps.</li><li>Run the fairness report on nights, weekends and holidays.</li><li>Fix breaches, then publish the roster at least a week ahead.</li><li>Manage swaps with notice rules and re-check coverage after each change.</li></ol></div><div class="section" id="x1-3"><h2><span class="sec-emoji">🛠️</span> Tools &amp; Workflows: Absenteeism buffering</h2><p>Buffering relies on an attendance tracker, a shrinkage report and a simple cost sheet. The planner measures planned and unplanned shrinkage by shift and weekday, then sizes the roster and the floater pool.</p><table><tr><th>Tool or technique</th><th>Used for</th><th>Example</th></tr><tr><td>Attendance tracker</td><td>Records absence by person and day</td><td>52 absent days out of 650</td></tr><tr><td>Shrinkage report</td><td>Splits planned and unplanned time</td><td>Planned 9%, unplanned 7%</td></tr><tr><td>Roster size formula</td><td>Sets how many to roster</td><td>40 ÷ 0.84 = 48</td></tr><tr><td>Cost comparison sheet</td><td>Compares buffer and shortage cost</td><td>₹3,24,000 against ₹4,36,800</td></tr><tr><td>Statistical buffer</td><td>Sets cover for 95 percent of days</td><td>Mean + 1.645 × SD</td></tr><tr><td>Floater roster</td><td>Names cross-trained standby staff</td><td>Four floaters across three lines</td></tr></table><h3>Working procedure</h3><ol><li>Collect at least 13 weeks of attendance data by shift and weekday.</li><li>Split shrinkage into planned and unplanned parts.</li><li>State the people required at work for each shift.</li><li>Divide required people by one minus shrinkage and round up.</li><li>Compare buffer cost with shortage cost for the month.</li><li>Size a shared floater pool using mean and standard deviation.</li><li>Train and name the floaters, and agree a call-out rule.</li><li>Review shrinkage monthly and update the buffer.</li></ol></div><div class="section" id="x1-4"><h2><span class="sec-emoji">🛠️</span> Tools &amp; Workflows: Demand-forecasting data analysis</h2><p>Forecasting uses a clean history table in a spreadsheet, simple formulas for averages and indices, and a calendar of known events. The planner reviews accuracy every week and shares it with the client.</p><table><tr><th>Tool or technique</th><th>Used for</th><th>Example</th></tr><tr><td>History table</td><td>Holds cleaned volume by day or interval</td><td>Last 13 weeks of contacts</td></tr><tr><td>Moving average</td><td>Smoothing noise</td><td>(400 + 420 + 380 + 400) ÷ 4</td></tr><tr><td>Exponential smoothing</td><td>Responsive forecast</td><td>0.4 × 2,100 + 0.6 × 2,000</td></tr><tr><td>Seasonal index</td><td>Day or hour pattern</td><td>Monday index 1.5</td></tr><tr><td>Event calendar</td><td>Known promotions and festivals</td><td>Diwali sale week</td></tr><tr><td>Accuracy report</td><td>MAPE and bias by week</td><td>MAPE 4.3%, bias +0.6%</td></tr></table><h3>Working procedure</h3><ol><li>Pull history at interval and daily level for at least 13 weeks.</li><li>Clean errors and flag one-off events such as outages.</li><li>Compute weekday and interval seasonal indices.</li><li>Pick the simplest method that tests well on past data.</li><li>Produce the average forecast and apply indices.</li><li>Adjust for known events from the client calendar.</li><li>Convert volume to required FTE and roster size.</li><li>Track MAPE and bias, and investigate the largest misses.</li></ol></div><div class="section" id="x1-5"><h2><span class="sec-emoji">✅</span> Testing &amp; Quality: Erlang staffing models</h2><p>Staffing numbers are tested against what actually happened. The planner checks inputs, then checks whether intervals met the target on the day. Repeated misses point to a wrong forecast, a stale AHT or low adherence.</p><table><tr><th>Check</th><th>How to test it</th><th>Pass standard</th></tr><tr><td>Unit consistency</td><td>Confirm seconds are used for volume, AHT, interval and target</td><td>No mixed units</td></tr><tr><td>Agents greater than workload</td><td>Compare N with A in every interval</td><td>N always greater than A</td></tr><tr><td>Occupancy range</td><td>Review occupancy of the chosen N</td><td>Between 75% and 88% for phone work</td></tr><tr><td>Model against actual</td><td>Compare predicted and actual service level</td><td>Gap within 5 points</td></tr><tr><td>AHT freshness</td><td>Check date of the last AHT refresh</td><td>Within the last 30 days</td></tr></table><div class="formula">Interval hit rate = Intervals meeting the service target ÷ Total intervals × 100</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> In a day with 48 half-hour intervals, 34 met 80 percent in 20 seconds. Hit rate = 34 ÷ 48 × 100 = 70.8%. The target for the site is 85%, so the planner studies the 14 missed intervals for forecast, AHT and adherence causes.</div></div></div><div class="section" id="x1-6"><h2><span class="sec-emoji">✅</span> Testing &amp; Quality: Roster / shift scheduling</h2><p>A roster is tested twice: before publishing, against rules and coverage, and after the week, against actual cover. Rule breaches must be zero. Coverage gaps and fairness gaps are tracked as trends.</p><table><tr><th>Check</th><th>How to test it</th><th>Pass standard</th></tr><tr><td>Coverage</td><td>Scheduled ÷ required for each interval</td><td>Between 95% and 110%</td></tr><tr><td>Rest gap</td><td>Next start minus previous end for every line</td><td>At least policy minimum</td></tr><tr><td>Weekly off</td><td>Count off days per worker per week</td><td>Policy minimum met for all</td></tr><tr><td>Fairness</td><td>Compare each person's nights with the team average</td><td>Within 2 shifts of average</td></tr><tr><td>Notice</td><td>Check days between publish date and first shift</td><td>At least 7 days</td></tr></table><div class="formula">Roster compliance rate = Roster lines passing all rules ÷ Total roster lines × 100</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> A weekly roster has 200 worker lines and 190 pass every rule. Compliance = 190 ÷ 200 × 100 = 95%. The standard is 100 percent, so the 10 failing lines (rest gaps and missing weekly offs) must be fixed before publishing.</div></div></div><div class="section" id="x1-7"><h2><span class="sec-emoji">✅</span> Testing &amp; Quality: Absenteeism buffering</h2><p>A buffer is tested by whether the floor was fully covered, and by how much idle cost it created. The aim is full cover on most days without a large surplus.</p><table><tr><th>Check</th><th>How to test it</th><th>Pass standard</th></tr><tr><td>Cover rate</td><td>Days with all required people present ÷ days</td><td>95% or higher</td></tr><tr><td>Shrinkage accuracy</td><td>Planned shrinkage minus actual shrinkage</td><td>Within 2 points</td></tr><tr><td>Rounding</td><td>Confirm roster size is rounded up</td><td>Always whole people</td></tr><tr><td>Surplus days</td><td>Days with more than 10 percent extra</td><td>Less than 10% of days</td></tr><tr><td>Data freshness</td><td>Date of last shrinkage update</td><td>Within 30 days</td></tr></table><div class="formula">Floor cover rate = Days with full cover ÷ Days in the period × 100</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> In a 26-day month, the shift had all required people on 22 days. Cover rate = 22 ÷ 26 × 100 = 84.6%. The standard is 95%, so the buffer is too small or the floater call-out rule is too slow.</div></div></div><div class="section" id="x1-8"><h2><span class="sec-emoji">✅</span> Testing &amp; Quality: Demand-forecasting data analysis</h2><p>Forecasts are tested by comparing them with actuals using error and bias measures. A forecast that is accurate on average but biased still causes over or under staffing. Tests run by week and by interval type.</p><table><tr><th>Check</th><th>How to test it</th><th>Pass standard</th></tr><tr><td>MAPE</td><td>Average of absolute percent errors</td><td>Daily under 8%, weekly under 5%</td></tr><tr><td>Bias</td><td>Sum of forecast minus actual ÷ sum of actual</td><td>Between −2% and +2%</td></tr><tr><td>Outlier handling</td><td>Review flagged spikes before use</td><td>All spikes explained</td></tr><tr><td>Index stability</td><td>Compare index across two periods</td><td>Change under 0.1</td></tr><tr><td>Event capture</td><td>Check events had a forecast adjustment</td><td>All major events covered</td></tr></table><div class="formula">Within-tolerance rate = Periods with error within ±10% ÷ Total periods × 100</div><div class="callout tip"><div class="callout-icon">🧪</div><div class="callout-body"><strong>Worked example:</strong> Of 48 daily forecasts in a quarter, 40 were within 10 percent of actual. Rate = 40 ÷ 48 × 100 = 83.3%. The target is 90%, so the planner reviews the 8 misses for events and data problems.</div></div></div></section>
+<section class="panel" id="x2" data-toc='[[&quot;x2-1&quot;, &quot;Project: Helpdesk morning staffing plan&quot;], [&quot;x2-2&quot;, &quot;Project: Four-week roster review for a support desk&quot;], [&quot;x2-3&quot;, &quot;Project: Shift buffer for a three-shift unit&quot;], [&quot;x2-4&quot;, &quot;Project: Forecast check and Monday staffing&quot;]]'><div class="panel-header"><div class="panel-eyebrow">Module 7</div><h1 class="panel-title">Real-World Projects</h1><p class="panel-subtitle">One realistic project for each skill, with a full worked solution.</p></div><div class="section" id="x2-1"><h2><span class="sec-emoji">🏗️</span> Project: Helpdesk morning staffing plan</h2><p><b>Skill:</b> Erlang staffing models</p><p>A Pune helpdesk handles four morning half-hour intervals with an 80 in 20 service target. AHT is 300 seconds. An agent costs ₹25,000 a month. You must size each interval, test an AHT improvement and test pooling of two small teams.</p><table><tr><th>Interval</th><th>Contacts</th><th>AHT (s)</th></tr><tr><td>09:00 to 09:30</td><td>60</td><td>300</td></tr><tr><td>09:30 to 10:00</td><td>90</td><td>300</td></tr><tr><td>10:00 to 10:30</td><td>120</td><td>300</td></tr><tr><td>10:30 to 11:00</td><td>150</td><td>300</td></tr></table><h3>Your tasks</h3><ol><li>Calculate the workload in Erlangs for each interval.</li><li>Using the Erlang C search, find the agents needed for each interval and the occupancy.</li><li>At 150 contacts, coaching cuts AHT to 270 seconds. Find the new agents needed and the monthly saving.</li><li>Two teams each carry 10 Erlangs. Compare separate staffing with one pooled team of 20 Erlangs.</li></ol><div class="practice"><h4>Check your work</h4><details><summary>Show worked solution</summary><div class="ans">Task 1: workload = Volume × 300 ÷ 1,800. 60 gives 10, 90 gives 15, 120 gives 20, 150 gives 25 Erlangs. Task 2: Erlang C at 80 in 20 gives 14, 19, 25 and 30 agents. Occupancy = 10 ÷ 14 = 71.4%, 15 ÷ 19 = 78.9%, 20 ÷ 25 = 80.0%, 25 ÷ 30 = 83.3%. Check at 25 Erlangs: 29 agents give 73.9%, 30 give 82.1%, so 30 is needed. Task 3: workload = 150 × 270 ÷ 1,800 = 22.5 Erlangs. 26 agents give 71.0% and 27 give 80.5%, so 27 are needed. Saving = 30 − 27 = 3 agents × ₹25,000 = ₹75,000 a month. Task 4: separate = 14 + 14 = 28 agents. Pooled 20 Erlangs need 25. Pooling gain = 3 agents, or ₹75,000 a month.</div></details></div></div><div class="section" id="x2-2"><h2><span class="sec-emoji">🏗️</span> Project: Four-week roster review for a support desk</h2><p><b>Skill:</b> Roster / shift scheduling</p><p>A 24 by 7 support desk runs 3 shifts a day with 14 people per shift. Each worker does 6 shifts a week and one full-time worker gives 48 hours. Policy asks for at least 11 hours of rest between shifts. A recurring gap of 200 hours a month exists. Base pay is ₹110 an hour; a part-timer costs ₹125 an hour; overtime is twice base (illustrative, confirm current rules).</p><table><tr><th>Worker</th><th>Last shift ended</th><th>Next shift starts</th><th>Nights this month</th></tr><tr><td>Anil</td><td>22:00</td><td>07:00 next day</td><td>6</td></tr><tr><td>Bhavna</td><td>23:00</td><td>10:00 next day</td><td>6</td></tr><tr><td>Chetan</td><td>06:00</td><td>14:00 same day</td><td>10</td></tr><tr><td>Divya</td><td>22:00</td><td>10:00 next day</td><td>2</td></tr></table><h3>Your tasks</h3><ol><li>Calculate the shift slots a week and the workers needed.</li><li>Check the rest gap for each worker and flag violations of the 11-hour rule.</li><li>Compare each worker's nights with the team average and find the largest gap.</li><li>Compare the monthly cost of covering the 200-hour gap with overtime and with a part-timer.</li></ol><div class="practice"><h4>Check your work</h4><details><summary>Show worked solution</summary><div class="ans">Task 1: slots = 3 × 14 × 7 = 294. Workers = 294 ÷ 6 = 49, before an absence buffer. Task 2: Anil 22:00 to 07:00 = 9 hours, violation by 2. Bhavna 23:00 to 10:00 = 11 hours, passes. Chetan 06:00 to 14:00 = 8 hours, violation by 3. Divya 22:00 to 10:00 = 12 hours, passes. Task 3: total nights = 6 + 6 + 10 + 2 = 24, average = 6. Chetan has 10, which is 4 above, or 4 ÷ 6 = 66.7% above average. Divya is 4 below. Task 4: overtime = 200 × 220 = ₹44,000. Part-timer = 200 × 125 = ₹25,000. Saving = ₹19,000 a month.</div></details></div></div><div class="section" id="x2-3"><h2><span class="sec-emoji">🏗️</span> Project: Shift buffer for a three-shift unit</h2><p><b>Skill:</b> Absenteeism buffering</p><p>A unit needs 40, 30 and 20 people at work on its three shifts. Planned shrinkage is 9 percent and unplanned is 7 percent. A rostered person costs ₹18,000 a month. A missing person-day costs ₹1,200 and the unit works 26 days. Without a buffer, 14 people would be missing each day on average. Total absence per shift averages 7 people with SD 2.</p><table><tr><th>Shift</th><th>Required</th><th>Absent mean</th><th>Absent SD</th></tr><tr><td>Morning</td><td>40</td><td>7</td><td>2</td></tr><tr><td>Evening</td><td>30</td><td>7</td><td>2</td></tr><tr><td>Night</td><td>20</td><td>7</td><td>2</td></tr></table><h3>Your tasks</h3><ol><li>Find total shrinkage and the roster size for each shift.</li><li>Find the total buffer in people and its monthly cost.</li><li>Compare with the shortage cost and state which is cheaper and by how much.</li><li>Compute the 95 percent buffer for the three shifts separately and as one pooled floater pool.</li></ol><div class="practice"><h4>Check your work</h4><details><summary>Show worked solution</summary><div class="ans">Task 1: total shrinkage = 9 + 7 = 16%, so divide by 0.84. Morning 40 ÷ 0.84 = 47.6, so 48. Evening 30 ÷ 0.84 = 35.7, so 36. Night 20 ÷ 0.84 = 23.8, so 24. Task 2: total roster = 48 + 36 + 24 = 108 against 90 required, a buffer of 18 people. Cost = 18 × ₹18,000 = ₹3,24,000. Task 3: shortage = 14 × 26 × ₹1,200 = ₹4,36,800. The buffer is cheaper by ₹1,12,800. Task 4: separate: 7 + 1.645 × 2 = 10.29, so 11 each, 33 in total. Pooled: mean 21, SD = √(3 × 4) = 3.46, buffer = 21 + 1.645 × 3.46 = 26.7, so 27. Pooling saves 33 − 27 = 6 heads, or ₹1,08,000 a month at ₹18,000.</div></details></div></div><div class="section" id="x2-4"><h2><span class="sec-emoji">🏗️</span> Project: Forecast check and Monday staffing</h2><p><b>Skill:</b> Demand-forecasting data analysis</p><p>A support team reviews four weeks of forecast accuracy and then plans next Monday. Monday averages 450 contacts against an overall daily average of 300. Next week's average is forecast at 320 a day. AHT is 6 minutes (0.1 hour), productive hours per FTE are 6.5, target occupancy is 85 percent and shrinkage is 15 percent. Smoothing factor α is 0.4.</p><table><tr><th>Week</th><th>Actual</th><th>Forecast</th></tr><tr><td>1</td><td>2,000</td><td>2,100</td></tr><tr><td>2</td><td>2,200</td><td>2,150</td></tr><tr><td>3</td><td>1,900</td><td>2,000</td></tr><tr><td>4</td><td>2,100</td><td>2,000</td></tr></table><h3>Your tasks</h3><ol><li>Calculate MAPE for the four weeks.</li><li>Calculate bias and state whether the forecast is high or low.</li><li>Using week 4 actual and forecast, find the week 5 forecast with exponential smoothing at α = 0.4.</li><li>Find the Monday seasonal index, the Monday forecast, required FTE and roster size.</li></ol><div class="practice"><h4>Check your work</h4><details><summary>Show worked solution</summary><div class="ans">Task 1: errors are 100 ÷ 2,000 = 5.0%, 50 ÷ 2,200 = 2.3%, 100 ÷ 1,900 = 5.3%, 100 ÷ 2,100 = 4.8%. Sum = 17.4, MAPE = 17.4 ÷ 4 = 4.3%. Task 2: forecast minus actual = +100, −50, +100, −100 = +50. Actual total = 8,200. Bias = 50 ÷ 8,200 = +0.6%, a slight over-forecast. Task 3: new forecast = 0.4 × 2,100 + 0.6 × 2,000 = 840 + 1,200 = 2,040. Task 4: index = 450 ÷ 300 = 1.5. Monday forecast = 320 × 1.5 = 480 contacts. Workload = 480 × 0.1 = 48 hours. FTE = 48 ÷ (6.5 × 0.85) = 48 ÷ 5.525 = 8.7, so 9. Roster = 9 ÷ 0.85 = 10.6, so 11.</div></details></div></div></section>
+<section class="panel" id="x3" data-toc='[[&quot;x3-1&quot;, &quot;Best Practices: Erlang staffing models&quot;], [&quot;x3-2&quot;, &quot;Best Practices: Roster / shift scheduling&quot;], [&quot;x3-3&quot;, &quot;Best Practices: Absenteeism buffering&quot;], [&quot;x3-4&quot;, &quot;Best Practices: Demand-forecasting data analysis&quot;], [&quot;x3-5&quot;, &quot;Common Errors &amp; Troubleshooting: Erlang staffing models&quot;], [&quot;x3-6&quot;, &quot;Common Errors &amp; Troubleshooting: Roster / shift scheduling&quot;], [&quot;x3-7&quot;, &quot;Common Errors &amp; Troubleshooting: Absenteeism buffering&quot;], [&quot;x3-8&quot;, &quot;Common Errors &amp; Troubleshooting: Demand-forecasting data analysis&quot;]]'><div class="panel-header"><div class="panel-eyebrow">Module 8</div><h1 class="panel-title">Best Practices &amp; Troubleshooting</h1><p class="panel-subtitle">What good looks like, and how to fix things when they go wrong.</p></div><div class="section" id="x3-1"><h2><span class="sec-emoji">🏅</span> Best Practices: Erlang staffing models</h2><table><tr><th>Do</th><th>Avoid</th></tr><tr><td>Plan by interval, not by day, and keep the same time unit in every input.</td><td>Using a daily average and assuming a flat profile.</td></tr><tr><td>Refresh AHT from recent data each month.</td><td>Reusing an old AHT after a process change.</td></tr><tr><td>Show the occupancy next to every staffing number.</td><td>Accepting 95 percent occupancy because the service level looks fine.</td></tr><tr><td>Run what-if cases before agreeing a tighter service target.</td><td>Promising 90 in 20 without costing it.</td></tr><tr><td>Document assumptions such as shrinkage, abandonment and skills.</td><td>Handing over numbers with no stated basis.</td></tr><tr><td>Test pooling of small teams before adding headcount.</td><td>Splitting queues by habit.</td></tr></table></div><div class="section" id="x3-2"><h2><span class="sec-emoji">🏅</span> Best Practices: Roster / shift scheduling</h2><table><tr><th>Do</th><th>Avoid</th></tr><tr><td>Build shift templates from the demand curve.</td><td>Copying last month's roster without checking demand.</td></tr><tr><td>Run the rule check before publishing.</td><td>Finding rest gap breaches after the roster is live.</td></tr><tr><td>Rotate forward: morning, evening, night.</td><td>Backward rotation with short rest.</td></tr><tr><td>Report nights and weekends per person every cycle.</td><td>Giving the same people the unpopular shifts.</td></tr><tr><td>Cover regular gaps with part-time staff.</td><td>Using overtime for permanent gaps.</td></tr><tr><td>Apply the same rule check to swaps.</td><td>Letting swaps bypass compliance.</td></tr></table></div><div class="section" id="x3-3"><h2><span class="sec-emoji">🏅</span> Best Practices: Absenteeism buffering</h2><table><tr><th>Do</th><th>Avoid</th></tr><tr><td>Divide by one minus shrinkage.</td><td>Adding a percentage to the requirement.</td></tr><tr><td>Measure shrinkage by shift and weekday.</td><td>Using one number for every day.</td></tr><tr><td>Separate planned and unplanned shrinkage.</td><td>Treating all absence as the same.</td></tr><tr><td>Cross-train floaters on two or more tasks.</td><td>Pooling floaters who cannot do the work.</td></tr><tr><td>Cost both buffer and shortage each quarter.</td><td>Judging the buffer on its cost alone.</td></tr><tr><td>Watch for clusters such as post-festival absence.</td><td>Assuming absences are always independent.</td></tr></table></div><div class="section" id="x3-4"><h2><span class="sec-emoji">🏅</span> Best Practices: Demand-forecasting data analysis</h2><table><tr><th>Do</th><th>Avoid</th></tr><tr><td>Clean and flag outliers before modelling.</td><td>Feeding spikes into the average.</td></tr><tr><td>Test methods on past data.</td><td>Picking a complex model without evidence.</td></tr><tr><td>Track bias along with MAPE.</td><td>Reporting only one accuracy number.</td></tr><tr><td>Get event plans from the client in advance.</td><td>Learning of a campaign on the day.</td></tr><tr><td>Keep the forecast as a range.</td><td>Treating one number as certain.</td></tr><tr><td>Convert the forecast to FTE with occupancy and shrinkage.</td><td>Ending at volume only.</td></tr></table></div><div class="section" id="x3-5"><h2><span class="sec-emoji">🔧</span> Common Errors &amp; Troubleshooting: Erlang staffing models</h2><table><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr><tr><td>Service level misses despite enough agents on paper</td><td>Agents on duty lower than planned (shrinkage or low adherence)</td><td>Compare logged-in agents with plan each interval</td></tr><tr><td>Staffing number looks far too low</td><td>Seconds and minutes mixed in the formula</td><td>Convert every input to seconds</td></tr><tr><td>Occupancy above 90 percent</td><td>Target met with the smallest N only</td><td>Add an agent or use a flexible pool</td></tr><tr><td>Plan too high on quiet intervals</td><td>Daily average used for AHT or volume</td><td>Use interval level data</td></tr><tr><td>Results change a lot after a process update</td><td>AHT not refreshed</td><td>Update AHT and rerun the model</td></tr><tr><td>Long queues with many abandons</td><td>Erlang C assumes nobody abandons</td><td>Use Erlang A or add a buffer</td></tr></table></div><div class="section" id="x3-6"><h2><span class="sec-emoji">🔧</span> Common Errors &amp; Troubleshooting: Roster / shift scheduling</h2><table><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr><tr><td>Roster covers total hours but intervals are short</td><td>Shift templates ignore the demand curve</td><td>Add staggered start times</td></tr><tr><td>Many rest gap breaches</td><td>Backward rotation or quick turnarounds</td><td>Rotate forward and add an automatic check</td></tr><tr><td>Complaints about nights</td><td>Uneven allocation</td><td>Use the fairness report to rebalance</td></tr><tr><td>Overtime keeps rising</td><td>Permanent gap treated as a temporary one</td><td>Hire part-time or full-time staff</td></tr><tr><td>Frequent last-minute changes</td><td>Roster published late</td><td>Publish at least 7 days ahead</td></tr><tr><td>Swaps cause under-cover</td><td>No coverage check on swaps</td><td>Approve swaps only if coverage stays above 95%</td></tr></table></div><div class="section" id="x3-7"><h2><span class="sec-emoji">🔧</span> Common Errors &amp; Troubleshooting: Absenteeism buffering</h2><table><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr><tr><td>Floor is short on Mondays</td><td>Weekday pattern ignored</td><td>Set a higher buffer for Mondays</td></tr><tr><td>Buffer large but still short</td><td>Absences cluster after holidays</td><td>Add a contingency plan for those days</td></tr><tr><td>Surplus on most days</td><td>Shrinkage over-estimated</td><td>Refresh data and recalculate</td></tr><tr><td>Floaters cannot cover the gaps</td><td>Cross-training missing</td><td>Train floaters on the key tasks</td></tr><tr><td>Roster size looks low</td><td>Multiplied by 1 plus shrinkage</td><td>Divide by 1 minus shrinkage</td></tr><tr><td>Costs rise after leave season</td><td>Planned shrinkage not in the model</td><td>Add leave and training to shrinkage</td></tr></table></div><div class="section" id="x3-8"><h2><span class="sec-emoji">🔧</span> Common Errors &amp; Troubleshooting: Demand-forecasting data analysis</h2><table><tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr><tr><td>Forecast always too high</td><td>Past spikes left in history</td><td>Remove or cap flagged outliers</td></tr><tr><td>Good weekly accuracy, poor daily accuracy</td><td>Weekday pattern missing</td><td>Add weekday seasonal indices</td></tr><tr><td>Big misses on some days</td><td>Unknown client campaign</td><td>Set up an event feed with the client</td></tr><tr><td>Forecast lags a real trend</td><td>Moving average window too long</td><td>Use exponential smoothing or shorter window</td></tr><tr><td>MAPE low but staffing wrong</td><td>Bias in one direction</td><td>Track and correct bias</td></tr><tr><td>Index changes every month</td><td>Too little history</td><td>Use 13 weeks or more</td></tr></table></div></section>
+<section class="panel" id="x4" data-toc='[[&quot;x4-1&quot;, &quot;Interview Questions: Erlang staffing models&quot;], [&quot;x4-2&quot;, &quot;Interview Questions: Roster / shift scheduling&quot;], [&quot;x4-3&quot;, &quot;Interview Questions: Absenteeism buffering&quot;], [&quot;x4-4&quot;, &quot;Interview Questions: Demand-forecasting data analysis&quot;]]'><div class="panel-header"><div class="panel-eyebrow">Module 9</div><h1 class="panel-title">Interview Preparation</h1><p class="panel-subtitle">Five questions per skill with model answers: concept, scenario and numeric.</p></div><div class="section" id="x4-1"><h2><span class="sec-emoji">💬</span> Interview Questions: Erlang staffing models</h2><div class="practice"><h4>What does one Erlang mean?</h4><details><summary>Show model answer</summary><div class="ans">One Erlang is one person busy for one full hour. Workload in Erlangs is handling time in an interval divided by the interval length. It is the minimum, not the number to roster.</div></details></div><div class="practice"><h4>Why is the Erlang C number higher than the workload?</h4><details><summary>Show model answer</summary><div class="ans">Work arrives randomly, so queues form in bursts even when average capacity matches workload. Extra agents absorb bursts so most contacts are answered in the target time.</div></details></div><div class="practice"><h4>Your manager asks to cut staff by 10 percent because the average service level is 88 percent. What do you do?</h4><details><summary>Show model answer</summary><div class="ans">I check interval level results, not the daily average. Peak intervals may miss while quiet ones are over-served. I run a what-if to show the service level and occupancy after the cut, then recommend shifting hours rather than cutting.</div></details></div><div class="practice"><h4>A client wants 90 in 20 instead of 80 in 20. How do you respond?</h4><details><summary>Show model answer</summary><div class="ans">I run both targets on the same intervals and present the extra agents and monthly cost. The client then decides with the price in view.</div></details></div><div class="practice"><h4>40 contacts arrive in a 15-minute interval with AHT of 180 seconds, and 12 agents are on duty. What are workload and occupancy?</h4><details><summary>Show model answer</summary><div class="ans">Workload = 40 × 180 ÷ 900 = 8 Erlangs. Occupancy = 8 ÷ 12 = 66.7%, which is low, so the interval may be overstaffed.</div></details></div></div><div class="section" id="x4-2"><h2><span class="sec-emoji">💬</span> Interview Questions: Roster / shift scheduling</h2><div class="practice"><h4>What is FTE and why do planners use it?</h4><details><summary>Show model answer</summary><div class="ans">FTE is full-time equivalent, a unit of capacity. A person working half the hours counts as 0.5. Planners use FTE to compare required hours with available hours across different contracts.</div></details></div><div class="practice"><h4>Why is forward rotation preferred?</h4><details><summary>Show model answer</summary><div class="ans">Moving from morning to evening to night lets the body clock shift later, which is easier than moving earlier. It also gives longer rest between shift changes.</div></details></div><div class="practice"><h4>Two people ask to swap shifts the day before. How do you handle it?</h4><details><summary>Show model answer</summary><div class="ans">I check that both still meet rest gap and weekly off rules and that coverage stays above the threshold. If it passes, I approve and log it. If not, I decline and offer another option.</div></details></div><div class="practice"><h4>Overtime is requested every month for the same night gap. What do you recommend?</h4><details><summary>Show model answer</summary><div class="ans">A recurring gap is a staffing problem. I compare overtime cost with a part-timer or a new hire and also count the fatigue risk. Usually I recommend fixed cover.</div></details></div><div class="practice"><h4>A site needs 1,008 hours of work a week and one FTE gives 48 hours. How many FTE are needed?</h4><details><summary>Show model answer</summary><div class="ans">1,008 ÷ 48 = 21 FTE, before adding cover for absence.</div></details></div></div><div class="section" id="x4-3"><h2><span class="sec-emoji">💬</span> Interview Questions: Absenteeism buffering</h2><div class="practice"><h4>What is the difference between absenteeism and shrinkage?</h4><details><summary>Show model answer</summary><div class="ans">Absenteeism is lost days due to absence. Shrinkage is all time scheduled staff are not available for work, including leave, training, meetings and unplanned absence.</div></details></div><div class="practice"><h4>Why divide by one minus shrinkage?</h4><details><summary>Show model answer</summary><div class="ans">Shrinkage is a share of rostered people, not of the requirement. If 15 percent of the roster is away, only 85 percent are present, so required ÷ 0.85 is correct.</div></details></div><div class="practice"><h4>Absence spikes after long weekends. How do you plan for it?</h4><details><summary>Show model answer</summary><div class="ans">I measure absence by weekday and period, raise the buffer for those days, and pre-agree standby and overtime rules. I also review leave approvals around the long weekend.</div></details></div><div class="practice"><h4>Management wants to remove the buffer to save cost. What is your answer?</h4><details><summary>Show model answer</summary><div class="ans">I compare buffer cost with shortage cost using real numbers. If shortage is costlier, I show the numbers. I may propose a smaller pooled buffer as a compromise.</div></details></div><div class="practice"><h4>60 people are required and shrinkage is 10 percent. What is the roster size?</h4><details><summary>Show model answer</summary><div class="ans">60 ÷ 0.90 = 66.7, rounded up to 67. The buffer is 7 people.</div></details></div></div><div class="section" id="x4-4"><h2><span class="sec-emoji">💬</span> Interview Questions: Demand-forecasting data analysis</h2><div class="practice"><h4>What are the parts of a demand pattern?</h4><details><summary>Show model answer</summary><div class="ans">Baseline level, trend, seasonality and noise. Good forecasting separates them so noise is not treated as a pattern.</div></details></div><div class="practice"><h4>Why track bias as well as MAPE?</h4><details><summary>Show model answer</summary><div class="ans">MAPE shows the size of errors but not their direction. Bias shows if forecasts are consistently high or low, which leads to systematic over or under staffing.</div></details></div><div class="practice"><h4>The client plans a promotion next week but gave no volume estimate. What do you do?</h4><details><summary>Show model answer</summary><div class="ans">I ask for the dates, channels and past promotion results. I use the volume uplift from a similar past event, set a range, and hold flexible capacity such as part-timers for the high side.</div></details></div><div class="practice"><h4>Your forecast is accurate on average but peaks are missed. What is the cause and fix?</h4><details><summary>Show model answer</summary><div class="ans">Daily or weekly totals hide the intraday profile. I build interval seasonal indices and forecast at interval level, then compare errors for peak intervals.</div></details></div><div class="practice"><h4>With α = 0.5, the previous forecast was 600 and the actual was 640. What is the new forecast?</h4><details><summary>Show model answer</summary><div class="ans">0.5 × 640 + 0.5 × 600 = 320 + 300 = 620.</div></details></div></div></section>
+<section class="panel" id="t5" data-toc='[["s5-1","Take the Assessment"]]'><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">→ Advanced</span><span class="level-tag adv">→ Expert</span></div><div class="panel-eyebrow">Module 10</div><h1 class="panel-title">Final Assessment</h1><p class="panel-subtitle">50 multiple-choice questions spanning every skill — Erlang staffing models, Roster / shift scheduling, Absenteeism buffering, Demand-forecasting data analysis.</p></div><div class="section" id="s5-1"><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div>
+<div class="assess-intro-text">A timed, exam-style final assessment for the Workforce Capacity &amp; Shift Planner track. Questions cover every skill — from foundations to expert-level scenarios — and are shuffled on every attempt.</div>
+<ul class="assess-intro-list"><li><strong>50 Multiple-Choice questions</strong> — concept checks, calculations and scenario-based judgement calls</li><li>Difficulty ranges from <strong>Basic</strong> to <strong>Expert</strong></li><li>60-minute timer, question palette, mark-for-review, full explanations after you submit</li><li>Your attempts and top score are saved in this browser</li></ul>
+<button class="assess-start-btn" id="assessStartBtn" type="button">▶ Start Assessment</button></div>
+<div id="scoreBoard" class="score-board" style="display:none"></div></div></section>
+<section class="panel" id="x5" data-toc='[[&quot;x5-1&quot;, &quot;What you covered&quot;], [&quot;x5-2&quot;, &quot;Formula sheet&quot;], [&quot;x5-3&quot;, &quot;Self-assessment checklist&quot;], [&quot;x5-4&quot;, &quot;Next steps&quot;]]'><div class="panel-header"><div class="panel-eyebrow">Module 11</div><h1 class="panel-title">Course Summary</h1><p class="panel-subtitle">Workforce Capacity &amp; Shift Planner: key points, formulas and next steps.</p></div><div class="section" id="x5-1"><h2><span class="sec-emoji">📚</span> What you covered</h2><h3>Erlang staffing models</h3><ul><li>Workload in Erlangs = Volume × AHT ÷ Interval seconds.</li><li>Staff above the workload until the service target is met.</li><li>Check occupancy and refresh AHT often.</li><li>Pooling queues reduces agents needed.</li></ul><h3>Roster / shift scheduling</h3><ul><li>Workers needed = Shift slots ÷ Shifts per worker.</li><li>Check rest gap, weekly off and fairness before publishing.</li><li>Use part-time cover for recurring gaps.</li><li>Rules differ by state; confirm current rules.</li></ul><h3>Absenteeism buffering</h3><ul><li>Roster = Required ÷ (1 − Shrinkage), rounded up.</li><li>Separate planned and unplanned shrinkage.</li><li>Compare buffer and shortage cost.</li><li>Pooled floaters need fewer heads.</li></ul><h3>Demand-forecasting data analysis</h3><ul><li>Clean history and use seasonal indices.</li><li>Track MAPE and bias together.</li><li>Convert volume to FTE with occupancy.</li><li>Plan a range, not a single number.</li></ul></div><div class="section" id="x5-2"><h2><span class="sec-emoji">🧮</span> Formula sheet</h2><table><tr><th>Measure</th><th>Formula</th></tr><tr><td>Workload (Erlangs)</td><td>Volume × AHT (seconds) ÷ Interval length (seconds)</td></tr><tr><td>Occupancy</td><td>Workload (Erlangs) ÷ Agents</td></tr><tr><td>Pooling gain</td><td>Agents for separate teams − Agents for pooled team</td></tr><tr><td>Workers needed</td><td>Shift slots per week ÷ Shifts per worker per week</td></tr><tr><td>Rest gap</td><td>Next shift start − Previous shift end</td></tr><tr><td>Overtime cost</td><td>Gap hours × Base rate × 2 (illustrative)</td></tr><tr><td>Roster size</td><td>Required ÷ (1 − Shrinkage), rounded up</td></tr><tr><td>Buffer (95%)</td><td>Mean + 1.645 × SD</td></tr><tr><td>Seasonal index</td><td>Period average ÷ Overall average</td></tr><tr><td>Exponential smoothing</td><td>α × Latest actual + (1 − α) × Previous forecast</td></tr><tr><td>MAPE</td><td>Average of (|Actual − Forecast| ÷ Actual)</td></tr><tr><td>Required FTE</td><td>(Volume × AHT hours) ÷ (Productive hours × Target occupancy)</td></tr></table></div><div class="section" id="x5-3"><h2><span class="sec-emoji">☑️</span> Self-assessment checklist</h2><p>Tick each statement you can honestly say yes to.</p><ul><li>I can convert volume and AHT into workload in Erlangs.</li><li>I can find the agents needed for a service target and check occupancy.</li><li>I can build a roster and count the workers needed.</li><li>I can check a roster for rest gaps and fairness.</li><li>I can size a roster for shrinkage and compare buffer with shortage cost.</li><li>I can calculate MAPE, bias and a seasonal index.</li><li>I can convert a forecast into FTE and roster size.</li><li>I can explain my assumptions and risks to a manager.</li></ul></div><div class="section" id="x5-4"><h2><span class="sec-emoji">🚀</span> Next steps</h2><ul><li>Learn a workforce management tool and practise intraday reforecasting.</li><li>Study Erlang A and simulation for queues with abandonment.</li><li>Move toward a capacity planning or resource planning lead role.</li><li>Learn SQL and basic Python or Excel modelling for forecasting.</li></ul></div></section>
+</main></div>
+<script>
+(function(){
+const tabs=[...document.querySelectorAll('.tab')],panels=[...document.querySelectorAll('.panel')],toc=document.getElementById('toc'),pt=document.getElementById('progressText');
+function act(i){tabs.forEach((t,j)=>t.classList.toggle('active',i===j));panels.forEach((p,j)=>p.classList.toggle('active',i===j));
+ toc.innerHTML=JSON.parse(panels[i].dataset.toc).map(([id,l],k)=>`<li><a href="#${id}" data-target="${id}" class="${k?'':'active'}">${l}</a></li>`).join('');
+ pt.textContent=`Tab ${i+1} of ${tabs.length}`;window.scrollTo(0,0)}
+tabs.forEach((t,i)=>t.onclick=()=>act(i));window.resetProgress=()=>act(0);
+document.addEventListener('click',e=>{const a=e.target.closest('.toc-list a');if(!a)return;e.preventDefault();const el=document.getElementById(a.dataset.target);if(el)window.scrollTo({top:el.getBoundingClientRect().top+scrollY-130,behavior:'smooth'})});
+addEventListener('scroll',()=>{let c=null;document.querySelectorAll('.panel.active .section').forEach(x=>{if(x.getBoundingClientRect().top<180)c=x.id});if(c)toc.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===c))},{passive:true});
+act(0);
+})();
+
+(function(){
+  const C={title:"Workforce Capacity & Shift Planner",slug:"04_workforce-capacity-shift-planner",skills:["Erlang staffing models", "Roster / shift scheduling", "Absenteeism buffering", "Demand-forecasting data analysis"],tot:[12, 13, 12, 13]};
+  const RAW=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob('W3sicSI6ICIxNTAgY29udGFjdHMgYXJyaXZlIGluIGEgMzAtbWludXRlIGludGVydmFsIHdpdGggQUhUIG9mIDI0MCBzZWNvbmRzLiBXb3JrbG9hZCBpbiBFcmxhbmdzPyIsICJvIjogWyIyMCIsICIzMCIsICIxNSIsICIyNSJdLCAiYSI6IDAsICJ4IjogIjE1MCDDlyAyNDAgw7cgMSw4MDAgPSAyMCBFcmxhbmdzLiIsICJzIjogMH0sIHsicSI6ICJUaGUgd29ya2xvYWQgaXMgMTIgRXJsYW5ncyBhbmQgMTYgYWdlbnRzIGFyZSBvbiBkdXR5LiBPY2N1cGFuY3k/IiwgIm8iOiBbIjcwJSIsICI4NSUiLCAiNzUlIiwgIjgwJSJdLCAiYSI6IDIsICJ4IjogIjEyIMO3IDE2ID0gNzUlLiIsICJzIjogMH0sIHsicSI6ICJXaGljaCBtb2RlbCBhc3N1bWVzIGNvbnRhY3RzIHdhaXQgaW4gYSBxdWV1ZSBhbmQgbmV2ZXIgYWJhbmRvbj8iLCAibyI6IFsiRXJsYW5nIEMiLCAiTW92aW5nIGF2ZXJhZ2UiLCAiRXJsYW5nIEIiLCAiRXJsYW5nIEEiXSwgImEiOiAwLCAieCI6ICJFcmxhbmcgQyBpcyB0aGUgc3RhbmRhcmQgcXVldWUgbW9kZWwgd2l0aG91dCBhYmFuZG9ubWVudC4iLCAicyI6IDB9LCB7InEiOiAiQSB3b3JrbG9hZCBvZiAyMCBFcmxhbmdzIGlzIHN0YWZmZWQgd2l0aCAxOCBhZ2VudHMuIFdoYXQgaGFwcGVucz8iLCAibyI6IFsiQWJhbmRvbm1lbnQgc3RvcHMiLCAiU2VydmljZSBsZXZlbCBpcyBleGFjdGx5IDgwJSIsICJUaGUgcXVldWUgZ3Jvd3Mgd2l0aG91dCBsaW1pdCIsICJPY2N1cGFuY3kgaXMgOTAlLCB3aGljaCBpcyBmaW5lIl0sICJhIjogMiwgIngiOiAiQWdlbnRzIG11c3QgZXhjZWVkIHRoZSB3b3JrbG9hZCwgb3IgZGVtYW5kIG91dHJ1bnMgY2FwYWNpdHkgYW5kIHRoZSBxdWV1ZSBrZWVwcyBncm93aW5nLiIsICJzIjogMH0sIHsicSI6ICJXaHkgZG9lcyBvbmUgcG9vbGVkIHRlYW0gbmVlZCBmZXdlciBhZ2VudHMgdGhhbiB0d28gc2VwYXJhdGUgdGVhbXM/IiwgIm8iOiBbIkFnZW50cyB3b3JrIGZhc3RlciIsICJUaGUgdGFyZ2V0IGlzIGxvd2VyIiwgIkFIVCBmYWxscyIsICJSYW5kb20gcGVha3MgaW4gb25lIHF1ZXVlIGFyZSBhYnNvcmJlZCBieSBpZGxlIGFnZW50cyBmcm9tIHRoZSBvdGhlciJdLCAiYSI6IDMsICJ4IjogIlBvb2xpbmcgc21vb3RocyByYW5kb21uZXNzIGFjcm9zcyBtb3JlIGFnZW50cy4iLCAicyI6IDB9LCB7InEiOiAiQSBzaXRlIG5lZWRzIDEsNjgwIGhvdXJzIGEgd2VlayBhbmQgYSBmdWxsLXRpbWUgd29ya2VyIGNvbnRyaWJ1dGVzIDQ4IGhvdXJzLiBGVEUgbmVlZGVkPyIsICJvIjogWyIzNSIsICI0MCIsICI0MiIsICIzMCJdLCAiYSI6IDAsICJ4IjogIjEsNjgwIMO3IDQ4ID0gMzUuIiwgInMiOiAxfSwgeyJxIjogIkFuIGludGVydmFsIHJlcXVpcmVzIDI1IHN0YWZmIGFuZCAyMiBhcmUgc2NoZWR1bGVkLiBXaGF0IGlzIHRoZSBjb3ZlcmFnZSByYXRpbz8iLCAibyI6IFsiOTIlIiwgIjgwJSIsICI4OCUiLCAiMTEwJSJdLCAiYSI6IDIsICJ4IjogIjIyIMO3IDI1ID0gODglLCB3aGljaCBpcyAzIHNob3J0LiIsICJzIjogMX0sIHsicSI6ICIzIHNoaWZ0cyBhIGRheSwgMTUgcGVvcGxlIHBlciBzaGlmdCwgNyBkYXlzLiBFYWNoIHdvcmtlciBkb2VzIDYgc2hpZnRzIGEgd2Vlay4gV29ya2VycyBuZWVkZWQ/IiwgIm8iOiBbIjU1IiwgIjUwIiwgIjUzIiwgIjYwIl0sICJhIjogMiwgIngiOiAiMzE1IHNsb3RzIMO3IDYgPSA1Mi41LCByb3VuZGVkIHVwIHRvIDUzLiIsICJzIjogMX0sIHsicSI6ICJBIGdhcCBvZiAyMDAgaG91cnMgYSBtb250aC4gQmFzZSByYXRlIOKCuTExMCwgb3ZlcnRpbWUgYXQgdHdpY2UgdGhhdC4gQSBwYXJ0LXRpbWVyIGNvc3RzIOKCuTEyNS4gU2F2aW5nIGZyb20gdGhlIHBhcnQtdGltZXI/IiwgIm8iOiBbIuKCuTIyLDAwMCIsICLigrk0NCwwMDAiLCAi4oK5OSwwMDAiLCAi4oK5MTksMDAwIl0sICJhIjogMywgIngiOiAiT3ZlcnRpbWUgPSAyMDAgw5cgMjIwID0g4oK5NDQsMDAwLiBQYXJ0LXRpbWVyID0gMjAwIMOXIDEyNSA9IOKCuTI1LDAwMC4gU2F2aW5nID0g4oK5MTksMDAwLiIsICJzIjogMX0sIHsicSI6ICJBIHdvcmtlciBmaW5pc2hlcyBhdCAyMzowMCBhbmQgc3RhcnRzIGFnYWluIGF0IDA4OjAwLiBUaGUgbWluaW11bSByZXN0IGlzIDExIGhvdXJzLiBXaGF0IGlzIHRoZSByZXN1bHQ/IiwgIm8iOiBbIlZpb2xhdGlvbiwgOSBob3VycyBzaG9ydCIsICJDb21wbGlhbnQiLCAiVmlvbGF0aW9uLCAxIGhvdXIgc2hvcnQiLCAiVmlvbGF0aW9uLCAyIGhvdXJzIHNob3J0Il0sICJhIjogMywgIngiOiAiVGhlIHJlc3QgZ2FwIGlzIDkgaG91cnMsIHdoaWNoIGlzIDIgc2hvcnQgb2YgMTEuIiwgInMiOiAxfSwgeyJxIjogIjQwIHdvcmtlcnMgYXJlIHNjaGVkdWxlZCBmb3IgMjYgZGF5cyBhbmQgNTIgZGF5cyB3ZXJlIGxvc3QuIEFic2VudGVlaXNtIHJhdGU/IiwgIm8iOiBbIjQlIiwgIjUlIiwgIjglIiwgIjYuNSUiXSwgImEiOiAxLCAieCI6ICI0MCDDlyAyNiA9IDEsMDQwLiA1MiDDtyAxLDA0MCA9IDUlLiIsICJzIjogMn0sIHsicSI6ICJQbGFubmVkIHNocmlua2FnZSBpcyAxMiUgYW5kIHVucGxhbm5lZCBpcyA3JS4gVG90YWwgc2hyaW5rYWdlPyIsICJvIjogWyI1JSIsICIxOSUiLCAiODQlIiwgIjEyJSJdLCAiYSI6IDEsICJ4IjogIjEyICsgNyA9IDE5JS4iLCAicyI6IDJ9LCB7InEiOiAiMTIwIHBlb3BsZSBhcmUgcmVxdWlyZWQgYW5kIHNocmlua2FnZSBpcyAyMCUuIEhvdyBtYW55IHNob3VsZCBiZSByb3N0ZXJlZD8iLCAibyI6IFsiMTU2IiwgIjE2MCIsICIxNTAiLCAiMTQ0Il0sICJhIjogMiwgIngiOiAiMTIwIMO3IDAuODAgPSAxNTAuIiwgInMiOiAyfSwgeyJxIjogIkEgYnVmZmVyIG9mIDEyIGV4dHJhIHBlb3BsZSBjb3N0cyDigrkxOCwwMDAgZWFjaCBhIG1vbnRoLiBXaXRob3V0IGl0LCA2IHBlb3BsZSB3b3VsZCBiZSBtaXNzaW5nIGRhaWx5IGF0IOKCuTEsNTAwIHBlciBwZXJzb24tZGF5IG92ZXIgMjYgZGF5cy4gV2hpY2ggaXMgY2hlYXBlciBhbmQgYnkgaG93IG11Y2g/IiwgIm8iOiBbIlRoZSBzaG9ydGFnZSBpcyBjaGVhcGVyIGJ5IOKCuTE4LDAwMCIsICJUaGUgYnVmZmVyIGlzIGNoZWFwZXIgYnkg4oK5MTgsMDAwIiwgIlRoZSBidWZmZXIgaXMgY2hlYXBlciBieSDigrkyLDM0LDAwMCIsICJUaGV5IGNvc3QgdGhlIHNhbWUiXSwgImEiOiAxLCAieCI6ICJCdWZmZXIgPSDigrkyLDE2LDAwMC4gU2hvcnRhZ2UgPSA2IMOXIDI2IMOXIDEsNTAwID0g4oK5MiwzNCwwMDAuIFRoZSBidWZmZXIgaXMgY2hlYXBlciBieSDigrkxOCwwMDAuIiwgInMiOiAyfSwgeyJxIjogIkFic2VuY2VzIGF2ZXJhZ2UgMTUgd2l0aCBTRCA1LiBXaGF0IGlzIHRoZSA5NSUgYnVmZmVyIChtZWFuICsgMS42NDUgw5cgU0QpLCByb3VuZGVkIHVwPyIsICJvIjogWyIzMCIsICIyNyIsICIyMCIsICIyNCJdLCAiYSI6IDMsICJ4IjogIjE1ICsgMS42NDUgw5cgNSA9IDIzLjIsIHJvdW5kZWQgdXAgdG8gMjQuIiwgInMiOiAyfSwgeyJxIjogIlRoZSBsYXN0IDMgd2Vla2x5IHZvbHVtZXMgd2VyZSA1MDAsIDUyMCBhbmQgNDgwLiBUaGUgMy13ZWVrIG1vdmluZyBhdmVyYWdlPyIsICJvIjogWyI1MDAiLCAiNDgwIiwgIjUyMCIsICI1MTAiXSwgImEiOiAwLCAieCI6ICIoNTAwICsgNTIwICsgNDgwKSDDtyAzID0gNTAwLiIsICJzIjogM30sIHsicSI6ICJXaXRoIM6xID0gMC40LCB0aGUgcHJldmlvdXMgZm9yZWNhc3Qgd2FzIDMwMCBhbmQgdGhlIGFjdHVhbCB3YXMgMzUwLiBOZXcgZm9yZWNhc3Q/IiwgIm8iOiBbIjMyMCIsICIzMzAiLCAiMzUwIiwgIjMxMCJdLCAiYSI6IDAsICJ4IjogIjAuNCDDlyAzNTAgKyAwLjYgw5cgMzAwID0gMTQwICsgMTgwID0gMzIwLiIsICJzIjogM30sIHsicSI6ICJUdWVzZGF5IGF2ZXJhZ2VzIDkwIGFnYWluc3QgYW4gb3ZlcmFsbCBhdmVyYWdlIG9mIDEwMCwgYW5kIG5leHQgd2VlaydzIGF2ZXJhZ2UgaXMgZm9yZWNhc3QgYXQgMTUwIGEgZGF5LiBUdWVzZGF5IGZvcmVjYXN0PyIsICJvIjogWyIxNTAiLCAiMTM1IiwgIjEyMCIsICIxNjUiXSwgImEiOiAxLCAieCI6ICJJbmRleCA9IDAuOS4gMTUwIMOXIDAuOSA9IDEzNS4iLCAicyI6IDN9LCB7InEiOiAiQWN0dWFscyBhcmUgMTAwIGFuZCAyMDAgYW5kIGZvcmVjYXN0cyBhcmUgMTEwIGFuZCAxODAuIE1BUEU/IiwgIm8iOiBbIjUlIiwgIjEwJSIsICIyMCUiLCAiMTUlIl0sICJhIjogMSwgIngiOiAiRXJyb3JzIGFyZSAxMCUgYW5kIDEwJSwgc28gTUFQRSA9IDEwJS4iLCAicyI6IDN9LCB7InEiOiAiMSw4MDAgY29udGFjdHMgYSBkYXkgYXQgQUhUIDAuMiBob3VyLCA2IHByb2R1Y3RpdmUgaG91cnMgcGVyIEZURSBhbmQgODAlIG9jY3VwYW5jeS4gRlRFIHJlcXVpcmVkPyIsICJvIjogWyIxMDAiLCAiOTAiLCAiNzUiLCAiNjAiXSwgImEiOiAyLCAieCI6ICJXb3JrbG9hZCA9IDM2MCBob3Vycy4gRlRFID0gMzYwIMO3ICg2IMOXIDAuOCkgPSAzNjAgw7cgNC44ID0gNzUuIiwgInMiOiAzfSwgeyJzIjogMCwgInEiOiAiMTM1IGNvbnRhY3RzIGFycml2ZSBpbiBhIDMwLW1pbnV0ZSBpbnRlcnZhbCBhbmQgQUhUIGlzIDI0MCBzZWNvbmRzLiBXaGF0IGlzIHRoZSB3b3JrbG9hZCBpbiBFcmxhbmdzPyIsICJvIjogWyIxOCIsICI5IiwgIjM2IiwgIjE1Il0sICJhIjogMCwgIngiOiAiMTM1IMOXIDI0MCDDtyAxLDgwMCA9IDE4IEVybGFuZ3MuIERpdmlkaW5nIGJ5IDMsNjAwIChhbiBob3VyKSBnaXZlcyA5LCB3aGljaCBpZ25vcmVzIHRoYXQgdGhlIGludGVydmFsIGlzIDMwIG1pbnV0ZXM7IGRpdmlkaW5nIGJ5IDkwMCBnaXZlcyAzNi4ifSwgeyJzIjogMCwgInEiOiAiSW4gdGhlIEVybGFuZyBDIGNhbGN1bGF0aW9uLCB3aGljaCBpbnB1dCBtdXN0IGJlIGluIHRoZSBzYW1lIHVuaXQgYXMgQUhUPyIsICJvIjogWyJUaGUgbnVtYmVyIG9mIGFnZW50cyBvbiBkdXR5IiwgIlRoZSB0YXJnZXQgYW5zd2VyIHRpbWUsIHN1Y2ggYXMgMjAgc2Vjb25kcyIsICJUaGUgb2NjdXBhbmN5IHBlcmNlbnRhZ2UiLCAiVGhlIHNocmlua2FnZSBwZXJjZW50YWdlIl0sICJhIjogMSwgIngiOiAiVGhlIHNlcnZpY2UtbGV2ZWwgZm9ybXVsYSB1c2VzIGVeKOKIkihO4oiSQSnDl1QvQUhUKSwgc28gVCBhbmQgQUhUIG11c3QgYm90aCBiZSBpbiBzZWNvbmRzIChvciBib3RoIGluIG1pbnV0ZXMpLiBBZ2VudHMsIG9jY3VwYW5jeSBhbmQgc2hyaW5rYWdlIGFyZSBwbGFpbiBjb3VudHMgb3IgcmF0aW9zIGFuZCBjYXJyeSBubyB0aW1lIHVuaXQuIn0sIHsicyI6IDAsICJxIjogIlRoZSB3b3JrbG9hZCBpcyAxMiBFcmxhbmdzLCBBSFQgaXMgMjQwIHMgYW5kIHRoZSB0YXJnZXQgaXMgODAlIGluIDIwIHMuIFNlcnZpY2UgbGV2ZWwgaXMgNzUuMSUgYXQgMTUgYWdlbnRzIGFuZCA4NS4zJSBhdCAxNiBhZ2VudHMuIEhvdyBtYW55IGFnZW50cyBhcmUgbmVlZGVkIGFuZCB3aGF0IGlzIG9jY3VwYW5jeT8iLCAibyI6IFsiMTUgYWdlbnRzLCA4MC4wJSBvY2N1cGFuY3kiLCAiMTcgYWdlbnRzLCA3MC42JSBvY2N1cGFuY3kiLCAiMTYgYWdlbnRzLCA3NS4wJSBvY2N1cGFuY3kiLCAiMTYgYWdlbnRzLCA4MC4wJSBvY2N1cGFuY3kiXSwgImEiOiAyLCAieCI6ICIxNSBhZ2VudHMgZ2l2ZSA3NS4xJSwgYmVsb3cgODAlLCBzbyAxNiBhcmUgbmVlZGVkLiBPY2N1cGFuY3kgPSAxMiDDtyAxNiA9IDc1LjAlLiBDaG9vc2luZyAxNSB1c2VzIGEgcGxhbiB0aGF0IG1pc3NlcyB0aGUgdGFyZ2V0OyAxMiDDtyAxNSA9IDgwJSBpcyB0aGF0IHBsYW4ncyBvY2N1cGFuY3ksIG5vdCB0aGUgcmlnaHQgb25lLiJ9LCB7InMiOiAwLCAicSI6ICJDdXN0b21lcnMgaW4gYSBsb25nIHF1ZXVlIG9mdGVuIGhhbmcgdXAgYWZ0ZXIgYWJvdXQgYSBtaW51dGUuIENvbXBhcmVkIHdpdGggc3VjaCBhIHJlYWwgb3BlcmF0aW9uLCB3aGF0IGRvZXMgYW4gRXJsYW5nIEMgcmVzdWx0IHRlbmQgdG8gZG8/IiwgIm8iOiBbIlVuZGVyc3RhdGUgdGhlIGFnZW50cyBuZWVkZWQsIGJlY2F1c2UgYWJhbmRvbm1lbnQgYWRkcyB3b3JrbG9hZCIsICJNYXRjaCByZWFsaXR5IGV4YWN0bHksIGJlY2F1c2UgaXQgdXNlcyByZWFsIEFIVCIsICJPdmVyc3RhdGUgYWJhbmRvbm1lbnQsIGJlY2F1c2UgaXQgYXNzdW1lcyB0aGUgcXVldWUgaXMgZW1wdHkiLCAiT3ZlcnN0YXRlIHRoZSBhZ2VudHMgbmVlZGVkLCBiZWNhdXNlIGl0IGFzc3VtZXMgbm9ib2R5IGFiYW5kb25zIl0sICJhIjogMywgIngiOiAiRXJsYW5nIEMgYXNzdW1lcyBldmVyeSBjb250YWN0IHdhaXRzIHVudGlsIHNlcnZlZC4gSW4gcmVhbGl0eSBhYmFuZG9uZXJzIGxlYXZlIHRoZSBxdWV1ZSwgd2hpY2ggc2hvcnRlbnMgd2FpdHMgZm9yIG90aGVycywgc28gRXJsYW5nIEMgaXMgcGVzc2ltaXN0aWMgYWJvdXQgd2FpdHMgYW5kIHRlbmRzIHRvIG92ZXItc3RhZmYuIEVybGFuZyBBIG9yIHNpbXVsYXRpb24gbW9kZWxzIGFiYW5kb25tZW50LiJ9LCB7InMiOiAwLCAicSI6ICJBSFQgZHJpZnRzIGZyb20gMjQwIHMgdG8gMjcwIHMgb24gdGhlIHNhbWUgdm9sdW1lLCBzbyB3b3JrbG9hZCByaXNlcyBmcm9tIDE2IHRvIDE4IEVybGFuZ3MuIEF0IDE4IEVybGFuZ3MsIDIyIGFnZW50cyBnaXZlIDc5LjMlIGFuZCAyMyBnaXZlIDg2LjglICh0YXJnZXQgODAlIGluIDIwIHMpLiBCZWZvcmUsIDIwIGFnZW50cyB3ZXJlIG5lZWRlZC4gRXh0cmEgbW9udGhseSBjb3N0IGF0IOKCuTI1LDAwMCBwZXIgYWdlbnQ/IiwgIm8iOiBbIuKCuTUwLDAwMCIsICLigrk3NSwwMDAiLCAi4oK5MSwwMCwwMDAiLCAi4oK5MjUsMDAwIl0sICJhIjogMSwgIngiOiAiMjIgYWdlbnRzIGdpdmUgNzkuMyUsIHNvIDIzIGFyZSBuZWVkZWQ6IDIzIOKIkiAyMCA9IDMgZXh0cmEgYWdlbnRzIMOXIOKCuTI1LDAwMCA9IOKCuTc1LDAwMC4gQWRkaW5nIG9ubHkgdGhlIDIgZXh0cmEgRXJsYW5ncyAo4oK5NTAsMDAwKSBhc3N1bWVzIHN0YWZmaW5nIHJpc2VzIG9uZSBmb3Igb25lIHdpdGggd29ya2xvYWQsIGJ1dCB0aGUgcXVldWUgZWZmZWN0IG1ha2VzIGl0IHJpc2UgZmFzdGVyLiJ9LCB7InMiOiAwLCAicSI6ICJBbiBpbnRlcnZhbCByYW4gYXQgOTMlIG9jY3VwYW5jeSBhbmQgNjglIHNlcnZpY2UgbGV2ZWwgYWdhaW5zdCBhbiA4MCUgdGFyZ2V0LiBUaGUgdm9sdW1lIGFuZCBBSFQgZm9yZWNhc3RzIG1hdGNoZWQgYWN0dWFscy4gV2hhdCBpcyB0aGUgbW9zdCBzZW5zaWJsZSBmaXggZm9yIHRoZSBuZXh0IHBsYW4/IiwgIm8iOiBbIkxvd2VyIHRoZSBzZXJ2aWNlLWxldmVsIHRhcmdldCBmb3IgZXZlcnkgaW50ZXJ2YWwiLCAiUmVidWlsZCB0aGUgdm9sdW1lIGZvcmVjYXN0LCBzaW5jZSBpdCBtdXN0IGJlIHdyb25nIiwgIlJhaXNlIHRoZSBzdGFmZmluZyByZXF1aXJlbWVudCBmb3IgdGhhdCBpbnRlcnZhbCwgYXMgdGhlIHBsYW4gd2FzIHRvbyBsZWFuIiwgIkFzayBhZ2VudHMgdG8gc2tpcCBicmVha3MgaW4gdGhhdCBpbnRlcnZhbCJdLCAiYSI6IDIsICJ4IjogIldpdGggYWNjdXJhdGUgaW5wdXRzLCB0aGUgbWlzcyBtZWFucyB0aGUgc3RhZmZpbmcgbnVtYmVyIHdhcyB0b28gbG93IGZvciB0aGUgdGFyZ2V0OyA5MyUgb2NjdXBhbmN5IGNvbmZpcm1zIG5vIHNsYWNrLiBUaGUgZm9yZWNhc3Qgd2FzIHJpZ2h0LCBzbyByZWJ1aWxkaW5nIGl0IGZpeGVzIG5vdGhpbmcuIEN1dHRpbmcgYnJlYWtzIGFkZHMgZmF0aWd1ZSBhbmQgbG93ZXJzIHRoZSB0YXJnZXQgaGlkZXMgdGhlIGdhcC4ifSwgeyJzIjogMCwgInEiOiAiVGVhbXMgb2YgMTIgYW5kIDggRXJsYW5ncyBuZWVkIDE2IGFuZCAxMSBhZ2VudHMuIFBvb2xlZCBhdCAyMCBFcmxhbmdzLCAyNCBhZ2VudHMgZ2l2ZSA3OC42JSBhbmQgMjUgZ2l2ZSA4Ni4yJSAodGFyZ2V0IDgwJSBpbiAyMCBzKS4gQXQg4oK5MjgsMDAwIHBlciBhZ2VudCBwZXIgbW9udGgsIHdoYXQgZG9lcyBwb29saW5nIHNhdmU/IiwgIm8iOiBbIuKCuTg0LDAwMCIsICLigrkyOCwwMDAiLCAi4oK5MSwxMiwwMDAiLCAi4oK5NTYsMDAwIl0sICJhIjogMywgIngiOiAiU2VwYXJhdGUgPSAxNiArIDExID0gMjcuIFBvb2xlZDogMjQgbWlzc2VzIHRoZSB0YXJnZXQsIHNvIDI1IGFyZSBuZWVkZWQuIEdhaW4gPSAyNyDiiJIgMjUgPSAyIGFnZW50cyDDlyDigrkyOCwwMDAgPSDigrk1NiwwMDAuIFRha2luZyAyNCBhcyB0aGUgcG9vbGVkIGFuc3dlciB3b3VsZCB3cm9uZ2x5IGdpdmUgMyBhZ2VudHMgKOKCuTg0LDAwMCkuIn0sIHsicyI6IDEsICJxIjogIkEgc2l0ZSBuZWVkcyAyLDE2MCBob3VycyBvZiB3b3JrIGEgd2VlayBhbmQgYSBmdWxsLXRpbWUgd29ya2VyIGNvbnRyaWJ1dGVzIDQwIGhvdXJzIGEgd2Vlay4gSG93IG1hbnkgRlRFIGFyZSBuZWVkZWQgYmVmb3JlIGFueSBhYnNlbmNlIGFsbG93YW5jZT8iLCAibyI6IFsiNTQiLCAiNDUiLCAiNTIiLCAiNjAiXSwgImEiOiAwLCAieCI6ICJGVEUgPSAyLDE2MCDDtyA0MCA9IDU0LiBVc2luZyA0OCBob3VycyAoYXMgaW4gYW5vdGhlciBzaXRlKSBnaXZlcyA0NSwgd2hpY2ggaXMgdGhlIHdyb25nIGhvdXJzIHBlciBGVEUgZm9yIHRoaXMgc2l0ZS4ifSwgeyJzIjogMSwgInEiOiAiV2hpY2ggcm90YXRpb24gZGlyZWN0aW9uIGlzIGVhc2llciBvbiB0aGUgYm9keSB3aGVuIHJvdGF0aW5nIHNoaWZ0cz8iLCAibyI6IFsiQmFja3dhcmQ6IG5pZ2h0LCB0aGVuIGV2ZW5pbmcsIHRoZW4gbW9ybmluZyIsICJBbHRlcm5hdGluZyBuaWdodCBhbmQgbW9ybmluZyBvbiBjb25zZWN1dGl2ZSBkYXlzIiwgIkZvcndhcmQ6IG1vcm5pbmcsIHRoZW4gZXZlbmluZywgdGhlbiBuaWdodCIsICJSYW5kb20gb3JkZXIgZWFjaCB3ZWVrIl0sICJhIjogMiwgIngiOiAiRm9yd2FyZCByb3RhdGlvbiBtb3ZlcyB0aGUgYm9keSBjbG9jayBsYXRlciwgd2hpY2ggaXMgZWFzaWVyIHRvIGFkYXB0IHRvLiBCYWNrd2FyZCByb3RhdGlvbiBhbmQgcXVpY2sgbmlnaHQtdG8tbW9ybmluZyB0dXJuYXJvdW5kcyBzaG9ydGVuIHJlc3QgYW5kIGRpc3R1cmIgc2xlZXAsIGFuZCByYW5kb20gb3JkZXIgZ2l2ZXMgbm8gY2hhbmNlIHRvIGFkYXB0LiJ9LCB7InMiOiAxLCAicSI6ICJSZXF1aXJlZCBzdGFmZiBpbiB0aHJlZSBpbnRlcnZhbHMgYXJlIDIwLCAzMCBhbmQgNDAuIFRoZSByb3N0ZXIgaGFzIDMwLCAzMCBhbmQgMzAuIFRoZSBtYW5hZ2VyIHNheXMgY292ZXJhZ2UgaXMgMTAwJSBiZWNhdXNlIHRoZSB0b3RhbHMgbWF0Y2guIFdoYXQgaXMgdGhlIGZsYXc/IiwgIm8iOiBbIlRoZXJlIGlzIG5vIGZsYXcsIGFzIGVxdWFsIHRvdGFscyBtZWFuIHRoZSByb3N0ZXIgZml0cyBkZW1hbmQiLCAiQ292ZXJhZ2UgbXVzdCBiZSBtZWFzdXJlZCB3ZWVrbHksIG5vdCBieSBpbnRlcnZhbCIsICJUaGUgcm9zdGVyIGlzIG92ZXJzdGFmZmVkIGluIGV2ZXJ5IGludGVydmFsIiwgIlRvdGFscyBoaWRlIHRoZSBtaXNtYXRjaDogdGhlIGZpcnN0IGludGVydmFsIGlzIG92ZXJzdGFmZmVkIGFuZCB0aGUgdGhpcmQgaXMgb25seSA3NSUgY292ZXJlZCJdLCAiYSI6IDMsICJ4IjogIkNvdmVyYWdlIGlzIHN0YWZmIHNjaGVkdWxlZCDDtyBzdGFmZiByZXF1aXJlZCBwZXIgaW50ZXJ2YWw6IDMwIMO3IDIwID0gMTUwJSwgMzAgw7cgMzAgPSAxMDAlLCAzMCDDtyA0MCA9IDc1JS4gU3VycGx1cyBpbiBhIHF1aWV0IGludGVydmFsIGNhbm5vdCBzZXJ2ZSB0aGUgYnVzeSBvbmUsIHNvIHRoZSB0b3RhbCBvZiA5MCBhZ2FpbnN0IDkwIGhpZGVzIGEgMTAtcGVyc29uIHNob3J0ZmFsbC4ifSwgeyJzIjogMSwgInEiOiAiQSBzaXRlIHJ1bnMgMiBzaGlmdHMgYSBkYXkgd2l0aCAxNCBwZW9wbGUgcGVyIHNoaWZ0IGZvciA3IGRheXMuIEVhY2ggd29ya2VyIGRvZXMgNSBzaGlmdHMgYSB3ZWVrLiBIb3cgbWFueSB3b3JrZXJzIGFyZSBuZWVkZWQsIGJlZm9yZSBhbnkgYWJzZW5jZSBidWZmZXI/IiwgIm8iOiBbIjQwIiwgIjM5IiwgIjI4IiwgIjQ5Il0sICJhIjogMCwgIngiOiAiU2hpZnQgc2xvdHMgPSAyIMOXIDE0IMOXIDcgPSAxOTYuIDE5NiDDtyA1ID0gMzkuMiwgd2hpY2ggbXVzdCBiZSByb3VuZGVkIHVwIHRvIDQwIGJlY2F1c2UgMzkgd29ya2VycyBsZWF2ZSAxIHNsb3QgdW5jb3ZlcmVkLiBEaXZpZGluZyBieSA3IGdpdmVzIDI4IGFuZCBieSA0IGdpdmVzIDQ5LCBib3RoIHdpdGggdGhlIHdyb25nIHNoaWZ0cyBwZXIgd29ya2VyLiJ9LCB7InMiOiAxLCAicSI6ICJBIHJlY3VycmluZyBnYXAgaXMgMTUwIGhvdXJzIGEgbW9udGguIE92ZXJ0aW1lIGlzIHBhaWQgYXQgMS41IHRpbWVzIGEgYmFzZSByYXRlIG9mIOKCuTEyMC4gQSBwYXJ0LXRpbWVyIGNvc3RzIOKCuTE1MCBhbiBob3VyIHBsdXMg4oK5MywwMDAgYSBtb250aCBpbiBvbmJvYXJkaW5nIGFuZCBhZG1pbi4gV2hhdCBkb2VzIHRoZSBwYXJ0LXRpbWVyIHNhdmU/IiwgIm8iOiBbIuKCuTQsNTAwIiwgIuKCuTEsNTAwIiwgIuKCuTEwLDUwMCIsICLigrkzLDAwMCJdLCAiYSI6IDEsICJ4IjogIk92ZXJ0aW1lID0gMTUwIMOXICgxLjUgw5cgMTIwKSA9IDE1MCDDlyAxODAgPSDigrkyNywwMDAuIFBhcnQtdGltZXIgPSAxNTAgw5cgMTUwICsgMywwMDAgPSDigrkyNSw1MDAuIFNhdmluZyA9IOKCuTEsNTAwLiBJZ25vcmluZyB0aGUgZml4ZWQg4oK5MywwMDAgZ2l2ZXMg4oK5NCw1MDAsIGFuZCBhc3N1bWluZyBkb3VibGUtcmF0ZSBvdmVydGltZSBnaXZlcyDigrkxMCw1MDAuIn0sIHsicyI6IDEsICJxIjogIkEgd29ya2VyIGVuZHMgYSBuaWdodCBzaGlmdCBhdCAwNjowMCBvbiBUdWVzZGF5IGFuZCBpcyByb3N0ZXJlZCB0byBzdGFydCBhdCAxNjozMCB0aGUgc2FtZSBkYXkuIFBvbGljeSByZXF1aXJlcyAxMSBob3VycyBvZiByZXN0LiBXaGF0IGlzIHRoZSByZXN1bHQ/IiwgIm8iOiBbIkNvbXBsaWFudCIsICJWaW9sYXRpb24sIDEuNSBob3VycyBzaG9ydCIsICJWaW9sYXRpb24sIDUuNSBob3VycyBzaG9ydCIsICJWaW9sYXRpb24sIDAuNSBob3VyIHNob3J0Il0sICJhIjogMywgIngiOiAiUmVzdCBnYXAgPSBuZXh0IHN0YXJ0IOKIkiBwcmV2aW91cyBlbmQgPSAxNjozMCDiiJIgMDY6MDAgPSAxMC41IGhvdXJzLCB3aGljaCBpcyAwLjUgaG91ciB1bmRlciAxMS4gTWVhc3VyaW5nIGZyb20gdGhlIHNoaWZ0IHN0YXJ0ICgyMjowMCkgd291bGQgd3JvbmdseSBzaG93IDE4LjUgaG91cnMgYW5kIGxvb2sgY29tcGxpYW50LiJ9LCB7InMiOiAxLCAicSI6ICJUd28gd29ya2VycyBhZ3JlZSBhIHN3YXAgdGhhdCBwdXRzIG9uZSBvbiBhIDEzOjAwIHN0YXJ0IGFmdGVyIGEgbmlnaHQgc2hpZnQgZW5kaW5nIGF0IDA1OjAwLiBUaGUgc3VwZXJ2aXNvciB3YW50cyB0byBhcHByb3ZlIGl0IGZhc3QgYmVjYXVzZSBib3RoIGFncmVlLiBXaGF0IGlzIHRoZSBiZXN0IGFjdGlvbj8iLCAibyI6IFsiUnVuIHRoZSByZXN0LWdhcCBhbmQgcnVsZXMgY2hlY2sgZmlyc3QgYW5kIHJlamVjdCBvciBhZGp1c3QgaXQgaWYgdGhlIG1pbmltdW0gcmVzdCBpcyBicm9rZW4iLCAiQXBwcm92ZSBpdCwgc2luY2UgYm90aCB3b3JrZXJzIGNvbnNlbnRlZCIsICJBcHByb3ZlIGl0IGFuZCBwYXkgb3ZlcnRpbWUgZm9yIHRoZSBzaG9ydCB0dXJuYXJvdW5kIiwgIkFwcHJvdmUgaXQgaWYgdGhlIHdvcmtlciBoYXMgbWFkZSBmZXdlciB0aGFuIHRocmVlIHN3YXBzIHRoaXMgbW9udGgiXSwgImEiOiAwLCAieCI6ICJUaGUgZ2FwIGlzIG9ubHkgOCBob3Vycywgc28gaXQgbGlrZWx5IGJyZWFrcyBhIHR5cGljYWwgMTEtaG91ciBydWxlLiBDb25zZW50IGRvZXMgbm90IHdhaXZlIHdvcmtpbmctdGltZSBydWxlcyBhbmQgb3ZlcnRpbWUgcGF5IGRvZXMgbm90IHJlc3RvcmUgcmVzdC4gU3dhcHMgbXVzdCBnbyB0aHJvdWdoIHRoZSBzYW1lIGF1dG9tYXRpYyBydWxlcyBjaGVjayBhcyB0aGUgb3JpZ2luYWwgcm9zdGVyLiJ9LCB7InMiOiAxLCAicSI6ICJBIHNpdGUgcnVucyAzIHNoaWZ0cyBhIGRheSB3aXRoIDkgcGVvcGxlIHBlciBzaGlmdCBmb3IgNyBkYXlzLiBFYWNoIHdvcmtlciBkb2VzIDYgc2hpZnRzIGEgd2Vlay4gV2l0aCAyMCUgc2hyaW5rYWdlLCBob3cgbWFueSB3b3JrZXJzIHNob3VsZCBiZSByb3N0ZXJlZD8iLCAibyI6IFsiMzgiLCAiNDAiLCAiMzkiLCAiMzIiXSwgImEiOiAxLCAieCI6ICJTbG90cyA9IDMgw5cgOSDDlyA3ID0gMTg5LiBXb3JrZXJzID0gMTg5IMO3IDYgPSAzMS41LiBSb3N0ZXIgPSAzMS41IMO3IDAuOCA9IDM5LjQsIHJvdW5kZWQgdXAgdG8gNDAuIE11bHRpcGx5aW5nIGJ5IDEuMiBnaXZlcyAzNy44ICgzOCksIHRvbyBsb3csIGFuZCAzOSByb3VuZHMgZG93bjsgMzIgaWdub3JlcyBzaHJpbmthZ2UuIn0sIHsicyI6IDIsICJxIjogIldoaWNoIG9mIHRoZXNlIGNvdW50cyBhcyB1bnBsYW5uZWQgc2hyaW5rYWdlPyIsICJvIjogWyJBbm51YWwgbGVhdmUgYXBwcm92ZWQgbGFzdCBtb250aCIsICJBIHNjaGVkdWxlZCB0d28taG91ciB0cmFpbmluZyBzZXNzaW9uIiwgIlNpY2tuZXNzIG9uIHRoZSBkYXkiLCAiVGhlIHdlZWtseSB0ZWFtIG1lZXRpbmciXSwgImEiOiAyLCAieCI6ICJVbnBsYW5uZWQgc2hyaW5rYWdlIGNhbm5vdCBiZSBzY2hlZHVsZWQgYXJvdW5kLCBzdWNoIGFzIHNpY2tuZXNzLCBuby1zaG93cyBhbmQgbGF0ZW5lc3MuIExlYXZlLCB0cmFpbmluZyBhbmQgbWVldGluZ3MgYXJlIHBsYW5uZWQgYW5kIGNhbiBiZSBidWlsdCBpbnRvIHRoZSByb3N0ZXIuIn0sIHsicyI6IDIsICJxIjogIldoeSBpcyB0aGUgcm9zdGVyIHNpemUgY2FsY3VsYXRlZCBhcyBSZXF1aXJlZCDDtyAoMSDiiJIgc2hyaW5rYWdlKSByYXRoZXIgdGhhbiBSZXF1aXJlZCDDlyAoMSArIHNocmlua2FnZSk/IiwgIm8iOiBbIlNocmlua2FnZSBpcyBhIHNoYXJlIG9mIHJvc3RlcmVkIHBlb3BsZSwgc28gb25seSAoMSDiiJIgc2hyaW5rYWdlKSBvZiB0aGUgcm9zdGVyIGlzIHByZXNlbnQiLCAiU2hyaW5rYWdlIGlzIGEgc2hhcmUgb2YgdGhlIHJlcXVpcmVtZW50LCBzbyBpdCBpcyBhZGRlZCBvbiB0b3AiLCAiRGl2aWRpbmcgYWx3YXlzIGdpdmVzIGEgc21hbGxlciwgY2hlYXBlciByb3N0ZXIiLCAiVGhlIHR3byBmb3JtdWxhcyBnaXZlIGlkZW50aWNhbCBhbnN3ZXJzIGlmIHJvdW5kZWQgdXAiXSwgImEiOiAwLCAieCI6ICJJZiAyMCUgb2YgdGhlIHJvc3RlciBpcyBhd2F5LCBvbmx5IDgwJSBvZiBpdCBpcyBhdCB3b3JrLCBzbyBSb3N0ZXIgw5cgMC44ID0gUmVxdWlyZWQuIE11bHRpcGx5aW5nIGJ5IDEuMiB0cmVhdHMgc2hyaW5rYWdlIGFzIGEgc2hhcmUgb2YgdGhlIHJlcXVpcmVtZW50IGFuZCB1bmRlci1yb3N0ZXJzOyB0aGUgdHdvIG1ldGhvZHMgZGlmZmVyLCBmb3IgZXhhbXBsZSAxMDAgw7cgMC44NSA9IDExOCBhZ2FpbnN0IDExNS4ifSwgeyJzIjogMiwgInEiOiAiNjAgcGVvcGxlIG11c3QgYmUgYXQgd29yayBvbiBhIHNoaWZ0IGFuZCB0b3RhbCBzaHJpbmthZ2UgaXMgMjUlLiBIb3cgbWFueSBzaG91bGQgYmUgcm9zdGVyZWQ/IiwgIm8iOiBbIjc1IiwgIjgwIiwgIjcyIiwgIjg1Il0sICJhIjogMSwgIngiOiAiUm9zdGVyID0gNjAgw7cgKDEg4oiSIDAuMjUpID0gNjAgw7cgMC43NSA9IDgwLiBBZGRpbmcgMjUlICg2MCDDlyAxLjI1ID0gNzUpIGxlYXZlcyBvbmx5IDU2LjI1IHByZXNlbnQgYWZ0ZXIgMjUlIG9mIDc1IGFyZSBhYnNlbnQsIHdoaWNoIGlzIHNob3J0LiJ9LCB7InMiOiAyLCAicSI6ICJBIGNlbnRyZSBzZXQgaXRzIGFic2VuY2UgYnVmZmVyIGZyb20gdGhlIHllYXJseSBhdmVyYWdlIG9mIDYlLiBJbiB0aGUgd2VlayBhZnRlciBhIG1ham9yIGZlc3RpdmFsLCBhYnNlbmNlIHJlZ3VsYXJseSBoaXRzIDE0JSBhbmQgc2hpZnRzIHJ1biBzaG9ydC4gV2hhdCBpcyB0aGUgYmVzdCByZXNwb25zZT8iLCAibyI6IFsiUmFpc2UgdGhlIGJ1ZmZlciB0byAxNCUgZm9yIGV2ZXJ5IHdlZWsgb2YgdGhlIHllYXIiLCAiS2VlcCBpdCwgYmVjYXVzZSBhdmVyYWdlcyBldmVuIG91dCBvdmVyIHRoZSB5ZWFyIiwgIlRyYWNrIHNocmlua2FnZSBieSB3ZWVrIGFuZCBkYXkgdHlwZSBhbmQgc2V0IGEgaGlnaGVyIGJ1ZmZlciBmb3Iga25vd24gcGVhayB3ZWVrcyIsICJDb3ZlciB0aGUgZ2FwIHdpdGggb3ZlcnRpbWUgYW5kIGNoYW5nZSBub3RoaW5nIGluIHRoZSBwbGFuIl0sICJhIjogMiwgIngiOiAiQWJzZW5jZSBjbHVzdGVycyBhcm91bmQgZXZlbnRzLCBzbyBhIHNpbmdsZSB5ZWFybHkgYXZlcmFnZSBpcyB0b28gbG93IGZvciB0aG9zZSB3ZWVrcy4gQSAxNCUgYnVmZmVyIGFsbCB5ZWFyIHdhc3RlcyBtb25leSwgYW4gYXZlcmFnZSBkb2VzIG5vdCBoZWxwIG9uIHRoZSBkYXksIGFuZCByb3V0aW5lIG92ZXJ0aW1lIGlzIGNvc3RseSBhbmQgdGlyaW5nLiBNZWFzdXJlIGJ5IHBlcmlvZCBhbmQgcGxhbiBhaGVhZC4ifSwgeyJzIjogMiwgInEiOiAiQSBidWZmZXIgb2YgOSBleHRyYSBwZW9wbGUgY29zdHMg4oK5MTYsMDAwIGVhY2ggYSBtb250aC4gV2l0aG91dCBpdCwgNiBwZW9wbGUgd291bGQgYmUgbWlzc2luZyBkYWlseSBhdCDigrkxLDEwMCBwZXIgcGVyc29uLWRheSBvdmVyIDI0IHdvcmtpbmcgZGF5cy4gV2hpY2ggaXMgY2hlYXBlciBhbmQgYnkgaG93IG11Y2g/IiwgIm8iOiBbIlRoZSBidWZmZXIsIGJ5IOKCuTI3LDYwMCIsICJUaGUgc2hvcnRhZ2UsIGJ5IOKCuTE0LDQwMCIsICJUaGUgYnVmZmVyLCBieSDigrkxLDU4LDQwMCIsICJUaGUgYnVmZmVyLCBieSDigrkxNCw0MDAiXSwgImEiOiAzLCAieCI6ICJCdWZmZXIgPSA5IMOXIDE2LDAwMCA9IOKCuTEsNDQsMDAwLiBTaG9ydGFnZSA9IDYgw5cgMjQgw5cgMSwxMDAgPSDigrkxLDU4LDQwMC4gVGhlIGJ1ZmZlciBpcyBjaGVhcGVyIGJ5IOKCuTE0LDQwMC4gVXNpbmcgMjYgZGF5cyB3b3VsZCBnaXZlIOKCuTI3LDYwMCwgYnV0IHRoZSBxdWVzdGlvbiBzdGF0ZXMgMjQgd29ya2luZyBkYXlzLiJ9LCB7InMiOiAyLCAicSI6ICJEYWlseSBhYnNlbmNlcyBhdmVyYWdlIDIwIHdpdGggU0QgNCBhbmQgYXJlIHJvdWdobHkgbm9ybWFsLiBXaGF0IDk1JSBidWZmZXIgKG1lYW4gKyAxLjY0NSDDlyBTRCkgc2hvdWxkIGJlIHBsYW5uZWQsIHJvdW5kZWQgdXAgdG8gYSB3aG9sZSBwZXJzb24/IiwgIm8iOiBbIjI2IiwgIjI3IiwgIjI0IiwgIjI5Il0sICJhIjogMSwgIngiOiAiMjAgKyAxLjY0NSDDlyA0ID0gMjAgKyA2LjU4ID0gMjYuNTguIFBlb3BsZSBhcmUgd2hvbGUsIHNvIHJvdW5kIHVwIHRvIDI3OyAyNiB3b3VsZCBsZWF2ZSB0aGUgdGFyZ2V0IHNsaWdodGx5IHVubWV0LiAyNCBpcyBvbmx5IGFib3V0IG9uZSBTRCBhYm92ZSB0aGUgbWVhbi4ifSwgeyJzIjogMiwgInEiOiAiVHdvIGluZGVwZW5kZW50IGxpbmVzIGVhY2ggYXZlcmFnZSAxNiBhYnNlbnQgd2l0aCBTRCA0LiBBdCA5NSUgKG1lYW4gKyAxLjY0NSDDlyBTRCksIGhvdyBtYW55IGhlYWRzIGRvZXMgYSBzaGFyZWQgcG9vbCBzYXZlIGFnYWluc3Qgc2VwYXJhdGUgYnVmZmVycywgcm91bmRlZCB1cD8iLCAibyI6IFsiMCIsICIyIiwgIjQiLCAiNiJdLCAiYSI6IDIsICJ4IjogIlNlcGFyYXRlOiAxNiArIDYuNTggPSAyMi41OCwgc28gMjMgZWFjaCA9IDQ2LiBQb29sZWQ6IG1lYW4gMzIsIFNEID0g4oiaKDE2ICsgMTYpID0gNS42Niwgc28gMzIgKyA5LjMxID0gNDEuMywgc28gNDIuIFNhdmluZyA9IDQuIEFkZGluZyB0aGUgU0RzICg0ICsgNCA9IDgpIHdyb25nbHkgZ2l2ZXMgNDUuMiwgc28gNDYgYW5kIHplcm8gc2F2aW5nLiJ9LCB7InMiOiAzLCAicSI6ICJEZW1hbmQgc3RlcHMgdXAgcGVybWFuZW50bHkgYnkgMjAlLiBXaGljaCBmb3JlY2FzdCByZWFjdHMgZmFzdGVyPyIsICJvIjogWyJUaGUgNC13ZWVrIG1vdmluZyBhdmVyYWdlLCBiZWNhdXNlIGl0IHVzZXMgbW9yZSBkYXRhIiwgIlRoZXkgcmVhY3QgYXQgdGhlIHNhbWUgc3BlZWQiLCAiTmVpdGhlciBjYW4gcmVhY3QgdW50aWwgNCB3ZWVrcyBoYXZlIHBhc3NlZCIsICJFeHBvbmVudGlhbCBzbW9vdGhpbmcgd2l0aCDOsSA9IDAuNiByZWFjdHMgZmFzdGVyIHRoYW4gYSA0LXdlZWsgbW92aW5nIGF2ZXJhZ2UiXSwgImEiOiAzLCAieCI6ICJXaXRoIGEgbGV2ZWwgb2YgMTAwIGp1bXBpbmcgdG8gMTIwLCDOsSA9IDAuNiBnaXZlcyAwLjYgw5cgMTIwICsgMC40IMOXIDEwMCA9IDExMiBpbiB3ZWVrIG9uZSwgd2hpbGUgdGhlIDQtd2VlayBhdmVyYWdlIGdpdmVzIG9ubHkgMTA1LiBBIGhpZ2ggzrEgd2VpZ2h0cyB0aGUgbGF0ZXN0IGFjdHVhbCBoZWF2aWx5LCBzbyBpdCBmb2xsb3dzIGEgcmVhbCBzaGlmdCBxdWlja2x5IChidXQgYWxzbyBjb3BpZXMgbm9pc2UpLiJ9LCB7InMiOiAzLCAicSI6ICJXaXRoIM6xID0gMC4yNSwgdGhlIHByZXZpb3VzIGZvcmVjYXN0IHdhcyA0MDAgYW5kIHRoZSBhY3R1YWwgd2FzIDQ4MC4gV2hhdCBpcyB0aGUgbmV3IGV4cG9uZW50aWFsIHNtb290aGluZyBmb3JlY2FzdD8iLCAibyI6IFsiNDIwIiwgIjQ2MCIsICI0NDAiLCAiNDgwIl0sICJhIjogMCwgIngiOiAiMC4yNSDDlyA0ODAgKyAwLjc1IMOXIDQwMCA9IDEyMCArIDMwMCA9IDQyMC4gU3dhcHBpbmcgdGhlIHdlaWdodHMgZ2l2ZXMgNDYwLCBhIHBsYWluIGF2ZXJhZ2UgZ2l2ZXMgNDQwLCBhbmQgNDgwIGlzIHRoZSBuYWl2ZSBmb3JlY2FzdC4ifSwgeyJzIjogMywgInEiOiAiQSB3ZWVrZGF5IHNlYXNvbmFsIGluZGV4IG9mIDAuODUgZm9yIFRodXJzZGF5IG1lYW5zIHdoYXQ/IiwgIm8iOiBbIlRodXJzZGF5IHZvbHVtZSBpcyAwLjg1IGNvbnRhY3RzIGFib3ZlIGF2ZXJhZ2UiLCAiVGh1cnNkYXkgZm9yZWNhc3RzIGFyZSAxNSUgd3Jvbmcgb24gYXZlcmFnZSIsICJUaHVyc2RheSB0eXBpY2FsbHkgY2FycmllcyA4NSUgb2YgdGhlIHZvbHVtZSBvZiBhbiBhdmVyYWdlIGRheSIsICJUaHVyc2RheSB2b2x1bWUgaXMgODUlIGhpZ2hlciB0aGFuIGF2ZXJhZ2UiXSwgImEiOiAyLCAieCI6ICJJbmRleCA9IFRodXJzZGF5IGF2ZXJhZ2Ugw7cgb3ZlcmFsbCBkYWlseSBhdmVyYWdlLCBzbyAwLjg1IG1lYW5zIFRodXJzZGF5IHJ1bnMgYXQgODUlIG9mIGFuIGF2ZXJhZ2UgZGF5LCAxNSUgYmVsb3cgaXQuIE11bHRpcGx5aW5nIHRoZSBhdmVyYWdlIGZvcmVjYXN0IGJ5IDAuODUgZ2l2ZXMgdGhlIFRodXJzZGF5IGZvcmVjYXN0LiJ9LCB7InMiOiAzLCAicSI6ICJBY3R1YWxzIGFyZSA4MCBhbmQgMTIwIGFuZCBmb3JlY2FzdHMgYXJlIDkwIGFuZCAxMDAuIFdoYXQgaXMgdGhlIE1BUEUgKGF2ZXJhZ2Ugb2YgfGFjdHVhbCDiiJIgZm9yZWNhc3R8IMO3IGFjdHVhbCk/IiwgIm8iOiBbIjE1LjAlIiwgIjE1LjYlIiwgIjEyLjUlIiwgIjE0LjYlIl0sICJhIjogMywgIngiOiAiRXJyb3JzOiAxMCDDtyA4MCA9IDEyLjUlIGFuZCAyMCDDtyAxMjAgPSAxNi43JS4gQXZlcmFnZSA9IDE0LjYlLiBEaXZpZGluZyBieSBmb3JlY2FzdCBnaXZlcyAxNS42JSwgYW5kIHRvdGFsIGVycm9yIG92ZXIgdG90YWwgYWN0dWFsICgzMCDDtyAyMDApIGdpdmVzIDE1LjAlLCB3aGljaCBpcyBhIGRpZmZlcmVudCBtZWFzdXJlLiJ9LCB7InMiOiAzLCAicSI6ICJBIGZvcmVjYXN0IHJ1bnMgYWJvdXQgOCUgYWJvdmUgYWN0dWFsIGluIGV2ZXJ5IHBlcmlvZC4gTUFQRSBpcyA4JSBhbmQgYSBtYW5hZ2VyIGNhbGxzIHRoYXQgZ29vZCBlbm91Z2guIFdoYXQgaXMgdGhlIHJlYWwgaXNzdWUgYW5kIGZpeD8iLCAibyI6IFsiQmlhcyBpcyArOCUsIHNvIGV2ZXJ5IHBlcmlvZCBpcyBvdmVyc3RhZmZlZDsgY29ycmVjdCB0aGUgZm9yZWNhc3QgZG93bndhcmQiLCAiTm8gaXNzdWUsIHNpbmNlIDglIE1BUEUgaXMgYWx3YXlzIGFjY2VwdGFibGUiLCAiRXJyb3JzIGNhbmNlbCBvdXQsIHNvIHRoZSBwbGFuIGlzIGJhbGFuY2VkIiwgIlRoZSBtb2RlbCBoYXMgbm8gYmlhcywgb25seSByYW5kb20gbm9pc2UiXSwgImEiOiAwLCAieCI6ICJFcnJvcnMgaW4gdGhlIHNhbWUgZGlyZWN0aW9uIGRvIG5vdCBjYW5jZWw6IGJpYXMgPSDOoyhmb3JlY2FzdCDiiJIgYWN0dWFsKSDDtyDOoyBhY3R1YWwgPSArOCUuIFJhbmRvbSBub2lzZSB3b3VsZCBzd2luZyBib3RoIHdheXMuIFN5c3RlbWF0aWMgb3Zlci1mb3JlY2FzdGluZyBtZWFucyBwYXlpbmcgZm9yIGlkbGUgc3RhZmYgZWFjaCBwZXJpb2QsIHNvIGZpbmQgdGhlIGNhdXNlIGFuZCBjb3JyZWN0IGl0LiJ9LCB7InMiOiAzLCAicSI6ICI0LDUwMCBjb250YWN0cyBhIGRheSBhdCBBSFQgOCBtaW51dGVzLCA2IHByb2R1Y3RpdmUgaG91cnMgcGVyIEZURSwgODUlIG9jY3VwYW5jeSBhbmQgMjAlIHNocmlua2FnZS4gSG93IG1hbnkgcGVvcGxlIHNob3VsZCBiZSByb3N0ZXJlZD8iLCAibyI6IFsiMTQyIiwgIjE0OCIsICIxMTgiLCAiMTQ3Il0sICJhIjogMSwgIngiOiAiV29ya2xvYWQgPSA0LDUwMCDDlyA4IMO3IDYwID0gNjAwIGhvdXJzLiBGVEUgPSA2MDAgw7cgKDYgw5cgMC44NSkgPSAxMTcuNiwgc28gMTE4LiBSb3N0ZXIgPSAxMTggw7cgMC44ID0gMTQ3LjUsIHNvIDE0OC4gTXVsdGlwbHlpbmcgYnkgMS4yIGdpdmVzIDE0MiwgMTE4IG9taXRzIHNocmlua2FnZSwgYW5kIDE0NyByb3VuZHMgZG93bi4ifSwgeyJzIjogMywgInEiOiAiQSBmb3JlY2FzdCBvZiAyLDAwMCBjb250YWN0cyBhIGRheSBoYXMgTUFQRSBuZWFyIDEwJSwgc28gdGhlIHRvcCBvZiB0aGUgcmFuZ2UgaXMgMiwyMDAuIEFIVCBpcyA5IG1pbnV0ZXMsIHByb2R1Y3RpdmUgaG91cnMgYXJlIDYgcGVyIEZURSBhbmQgb2NjdXBhbmN5IGlzIDgwJS4gSG93IG1hbnkgRlRFIG9mIGZsZXhpYmxlIGNhcGFjaXR5IGNvdmVyIHRoZSBleHRyYSAyMDAgY29udGFjdHM/IiwgIm8iOiBbIjYiLCAiNSIsICIxMyIsICI3Il0sICJhIjogMywgIngiOiAiRXh0cmEgd29ya2xvYWQgPSAyMDAgw5cgMC4xNSA9IDMwIGhvdXJzLiBQZXIgRlRFID0gNiDDlyAwLjggPSA0LjggaG91cnMuIDMwIMO3IDQuOCA9IDYuMjUsIHJvdW5kZWQgdXAgdG8gNy4gVXNpbmcgYm90aCBzaWRlcyBvZiB0aGUgcmFuZ2UgKDQwMCBjb250YWN0cykgZ2l2ZXMgMTMsIHdoaWNoIGlzIG5vdCBuZWVkZWQgdG8gY292ZXIgdGhlIHVwc2lkZS4ifSwgeyJzIjogMywgInEiOiAiVGhlIGNsaWVudCBwbGFucyBhIGZpcnN0LWV2ZXIgcHJvbW90aW9uIG5leHQgd2VlayBhbmQgaGlzdG9yeSBoYXMgbm90aGluZyBzaW1pbGFyLiBXaGF0IGlzIHRoZSBiZXN0IHdheSB0byBmb3JlY2FzdCB0aGUgZXh0cmEgdm9sdW1lPyIsICJvIjogWyJHZXQgdGhlIGNsaWVudCdzIGV4cGVjdGVkIHJlYWNoIGFuZCByZXNwb25zZSwgYWRkIGEganVkZ2VkIHVwbGlmdCB0byB0aGUgYmFzZWxpbmUsIGFuZCByZXZpZXcgaXQgZGFpbHkiLCAiVXNlIHRoZSA0LXdlZWsgbW92aW5nIGF2ZXJhZ2UgYW5kIGlnbm9yZSB0aGUgcHJvbW90aW9uIiwgIldhaXQgZm9yIHZvbHVtZSB0byBhcnJpdmUsIHRoZW4gc3RhZmYgdG8gd2hhdCBpcyBzZWVuIiwgIlNldCDOsSB0byAxIHNvIHRoZSBmb3JlY2FzdCBmb2xsb3dzIGFjdHVhbHMiXSwgImEiOiAwLCAieCI6ICJGb3Igb25lLW9mZiBldmVudHMsIGNsaWVudCBwbGFucyBhbmQgcXVhbGl0YXRpdmUgaW5wdXQgYmVhdCBzdGF0aXN0aWNzLiBBZGQgYSBqdWRnZWQgdXBsaWZ0IHRvIHRoZSBiYXNlbGluZSBhbmQga2VlcCBmbGV4aWJsZSBjb3ZlciBmb3IgdGhlIHJhbmdlLiBBIG1vdmluZyBhdmVyYWdlIGlnbm9yZXMgdGhlIGV2ZW50LCB3YWl0aW5nIG1lYW5zIGJlaW5nIHNob3J0IG9uIHRoZSBkYXksIGFuZCDOsSA9IDEgb25seSBjb3BpZXMgeWVzdGVyZGF5LiJ9XQ=='),c=>c.charCodeAt(0))));
+  const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const BANK=RAW.map((q,i)=>({id:'q'+i,q:q.q,options:q.o,answer:q.a,exp:q.x,s:q.s}));
+  const EXAM_SECONDS=60*60;
+  const LS_KEY='scores_'+C.slug;
+  let items=[],answers={},marked={},cur=0,remaining=EXAM_SECONDS,timerId=null,examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden;user-select:none;-webkit-user-select:none}
+  .exam-overlay.review{user-select:text;-webkit-user-select:text;overflow:auto}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif;overflow:auto}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9;padding:0}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-sk{margin:22px auto 0;max-width:560px;text-align:left}
+  .exam-sk .row{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:13.5px;margin:10px 0;color:#2d3748;font-weight:600}
+  .exam-sk .bar{grid-column:1/3;height:7px;background:#e2e8f0;border-radius:5px;overflow:hidden}.exam-sk .bar>div{height:100%;background:#14213D}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}.exam-q-pane{padding:20px}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+  function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function examDialog(title,msg,okLabel,cancel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">${cancel?'<button class="exam-btn nav" data-a="0">Cancel</button>':''}<button class="exam-btn primary" data-a="1">${okLabel||'OK'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d && cancel){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores(); a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: tab-switch / fullscreen-exit warnings (3 strikes -> auto-submit) ---- */
+  let warns=0, lastWarn=0, proctorOn=false, fsWanted=false;
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function countWarn(quiet){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<1500)return; lastWarn=now;
+    warns++;
+    if(warns>=3){ hideGate(); examDialog('Test submitted','You left the test 3 times. It has been auto-submitted.'); submitExam(true); }
+    else if(!quiet){ examDialog('Warning '+warns+' of 3','Switching tabs, leaving the window, or exiting fullscreen is not allowed. After 3 warnings the test is auto-submitted.'); }
+  }
+  const FSOK=!!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen);
+  const inFS=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
+  function reqFS(){ const el=document.documentElement,f=el.requestFullscreen||el.webkitRequestFullscreen; if(!f)return Promise.resolve();
+    try{ const r=f.call(el,{navigationUI:'hide'}); return (r&&r.then)?r:Promise.resolve(); }catch(e){ return Promise.reject(e); } }
+  function showGate(exited){
+    if(!examOn||!FSOK)return;
+    let g=document.getElementById('examFsGate');
+    if(!g){ g=document.createElement('div'); g.id='examFsGate'; g.className='exam-cover'; g.style.zIndex='100003';
+      g.innerHTML='<div id="examFsHead">&#9888;&#65039; Fullscreen exited</div><div id="examFsMsg" style="font-size:16px;font-weight:500"></div><div id="examFsWarn" style="font-size:14px;font-weight:500;color:#cdd5e5"></div><button id="examFsBtn" style="margin-top:14px;background:#1b2a47;color:#fff;border:1px solid #3a4b6e;border-radius:8px;padding:11px 22px;font:600 15px \'Noto Sans\',system-ui,sans-serif;cursor:pointer">Return to assessment</button>';
+      document.body.appendChild(g);
+      document.getElementById('examFsBtn').addEventListener('click',()=>{ reqFS().then(()=>{ if(inFS())hideGate(); }).catch(()=>{}); }); }
+    document.getElementById('examFsHead').innerHTML=exited?'&#9888;&#65039; Fullscreen exited':'&#128274; Fullscreen required';
+    document.getElementById('examFsMsg').textContent='The assessment must remain in fullscreen mode.';
+    document.getElementById('examFsWarn').textContent=(exited&&warns>0)?('Warning '+Math.min(warns,3)+' of 3'):'';
+    g.style.display='flex';
+  }
+  function hideGate(){ const g=document.getElementById('examFsGate'); if(g)g.style.display='none'; }
+  function fsHandler(){
+    if(!examOn)return;
+    if(inFS()){ fsWanted=true; hideGate(); }
+    else if(fsWanted){ countWarn(true); if(examOn)showGate(true); }
+    else showGate(false);
+  }
+  function visHandler(){ if(document.hidden){ showCover(); countWarn(); } else { hideCover(); } }
+  function blurHandler(){ if(examOn){ showCover(); countWarn(); } }
+  function focusHandler(){ if(!document.hidden)hideCover(); }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function keyGuard(e){ const k=(e.key||'').toLowerCase(), c=e.ctrlKey||e.metaKey;
+    if(k==='f12'||k==='printscreen'||(c&&['c','x','v','a','s','p','u'].includes(k))||(c&&e.shiftKey&&['i','j','c'].includes(k))){ e.preventDefault(); return false; } }
+  function keyUp(e){ if((e.key||'')==='PrintScreen'){ try{navigator.clipboard.writeText('Screenshots are disabled during the test.');}catch(_){} } }
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    document.addEventListener('webkitfullscreenchange',fsHandler);
+    window.addEventListener('blur',blurHandler);
+    window.addEventListener('focus',focusHandler);
+    ['contextmenu','copy','cut','paste','dragstart','selectstart'].forEach(ev=>document.addEventListener(ev,blockEvt,true));
+    document.addEventListener('keydown',keyGuard,true);
+    document.addEventListener('keyup',keyUp,true);
+  }
+  function stopProctor(){
+    proctorOn=false;
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    document.removeEventListener('webkitfullscreenchange',fsHandler);
+    window.removeEventListener('blur',blurHandler);
+    window.removeEventListener('focus',focusHandler);
+    ['contextmenu','copy','cut','paste','dragstart','selectstart'].forEach(ev=>document.removeEventListener(ev,blockEvt,true));
+    document.removeEventListener('keydown',keyGuard,true);
+    document.removeEventListener('keyup',keyUp,true);
+    hideCover(); hideGate(); fsWanted=false;
+  }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; ${esc(C.title)} &mdash; Final Assessment</h2>
+      <p>A timed, exam-style assessment modelled on real enterprise hiring screens.</p>
+      <ul>
+        <li><b>${BANK.length} questions</b>, shuffled every attempt</li>
+        <li><b>60-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Correct answers and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> where your browser allows it</li>
+        <li><b>No tab / window switching</b> &mdash; 3 warnings and the test <b>auto-submits</b></li>
+        <li>Copy, screenshots and right-click are disabled during the test</li>
+      </ul>
+      <div style="display:flex;gap:10px"><button class="exam-btn nav" id="examCancel" style="flex:0 0 auto">Cancel</button>
+      <button class="exam-btn primary" id="examBegin" style="flex:1;padding:14px">Start Test &rarr;</button></div>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examCancel').addEventListener('click',()=>sp.remove());
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      fsWanted=false;
+      const p=reqFS();
+      sp.remove(); enterExam();
+      p.then(()=>{ if(examOn&&inFS())fsWanted=true; }).catch(()=>{}).then(()=>setTimeout(()=>{ if(examOn&&FSOK&&!inFS())showGate(); },400));
+    });
+  }
+
+  function enterExam(){
+    injectCss();
+    items = shuffle(BANK).map(it=>{ const ord=shuffle(it.options.map((_,i)=>i)); return Object.assign({},it,{options:ord.map(i=>it.options[i]),answer:ord.indexOf(it.answer)}); });
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    const ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">${esc(C.title)} &mdash; Final Assessment</div><div class="et-sub">${items.length} questions &middot; one attempt &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${esc(it.q)}</div>
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}" tabindex="0"><span class="k">${String.fromCharCode(65+i)}</span><span>${esc(o)}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>{
+      const pick=()=>{ answers[id]=+el.dataset.i; pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); refreshPalette(); };
+      el.addEventListener('click',pick);
+      el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();} });
+    });
+    document.getElementById('examPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    document.getElementById('examNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();});
+    refreshPalette();
+    pane.scrollTop=0;
+  }
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examDialog('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test', true);
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    let score=0; items.forEach(it=>{ if(answers[it.id]===it.answer) score++; });
+    showResults(score);
+  }
+  function showResults(score){
+    const total=items.length; saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below, revisit the modules and try again.';
+    if(pct>=85)msg='Outstanding &mdash; you are operating at an expert level for this role.';
+    else if(pct>=65)msg='Solid pass. Review the questions you missed and you are interview-ready.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the modules you missed and retake.';
+    const per=C.skills.map(()=>0);
+    items.forEach(it=>{ if(answers[it.id]===it.answer)per[it.s]++; });
+    const skRows=C.skills.map((s,i)=>`<div class="row"><span>${esc(s)}</span><span>${per[i]} / ${C.tot[i]}</span><div class="bar"><div style="width:${Math.round(per[i]/C.tot[i]*100)}%"></div></div></div>`).join('');
+    const rev=items.map((it,n)=>{
+      const you=answers[it.id], attempted=(you!=null), ok=attempted&&you===it.answer;
+      let inner='<div class="rq">Q'+(n+1)+'. '+esc(it.q)+'</div>';
+      inner+= attempted ? '<div class="ra '+(ok?'cor':'wrong')+'">Your answer: '+String.fromCharCode(65+you)+'. '+esc(it.options[you])+'</div>' : '<div class="ra wrong">Your answer: <i>Not answered</i></div>';
+      if(!ok) inner+='<div class="ra cor">Correct: '+String.fromCharCode(65+it.answer)+'. '+esc(it.options[it.answer])+'</div>';
+      if(it.exp) inner+='<div class="rx">'+esc(it.exp)+'</div>';
+      return '<div class="r '+(ok?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.classList.add('review');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; ${esc(C.title)}</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div class="exam-sk"><h4 style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0">Score by skill</h4>${skRows}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another attempt</button></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    document.getElementById('examRetry').addEventListener('click',()=>{ closeExam(); showSplash(); });
+    document.getElementById('examClose').addEventListener('click',closeExam);
+  }
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(inFS()){ try{ (document.exitFullscreen||document.webkitExitFullscreen).call(document); }catch(e){} }
+  }
+  document.addEventListener('keydown',e=>{ if(examOn&&(e.key==='F11')){ e.preventDefault(); } },true);
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',showSplash);
+  renderScoreboard();
+})();
+
+</script></body></html>

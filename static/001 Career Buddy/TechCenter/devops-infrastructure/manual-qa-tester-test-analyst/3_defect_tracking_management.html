@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Defect Tracking &amp; Management — Manual QA Course</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff; --bg-soft:#f7f6f3; --bg-block:#f1f1ef;
+  --ink:#37352f; --ink-soft:#787774; --ink-mute:#9b9a97;
+  --line:#e9e9e7; --line-strong:#d3d3d0;
+  --accent:#14213D; --accent-soft:#eef1f7;
+  --green:#0f7b0f; --green-soft:#ddedea;
+  --orange:#d9730d; --orange-soft:#fadec9;
+  --red:#e03e3e; --red-soft:#ffe2dd;
+  --purple:#22345f; --purple-soft:#eef1f7;
+  --yellow:#dfab01; --yellow-soft:#fdecc8;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body,button,input,textarea,select,table,th,td,h1,h2,h3,h4,p,li,div,span,a,strong,em,small{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
+body{background:var(--bg);color:var(--ink);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+code,pre,pre *,code *{font-family:'Noto Sans Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+
+/* Header */
+.header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand-mark{width:34px;height:34px;display:grid;place-items:center;background:linear-gradient(135deg,#14213D 0%,#2f6fdb 100%);border-radius:8px;color:#fff;font-weight:800;font-size:13px;box-shadow:var(--shadow-sm)}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500;color:var(--ink-soft)}
+.progress-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-soft);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border:1px solid var(--line-strong);border-radius:6px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--bg-soft)}
+.tabbar{display:flex;gap:2px;padding:6px 24px;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--line);background:#fff}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{padding:9px 15px;background:transparent;border:none;border-radius:8px;font-size:13.5px;font-weight:500;color:#4a5568;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.tab:hover{background:var(--accent-soft);color:var(--accent)}
+.tab.active{background:var(--accent);color:#fff;font-weight:700}
+
+/* Layout */
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr)}
+@media (max-width:960px){.layout{grid-template-columns:1fr}.toc{display:none}}
+.toc{position:sticky;top:112px;align-self:start;height:calc(100vh - 124px);overflow-y:auto;padding:30px 16px 30px 28px;border-right:1px solid var(--line);scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);font-weight:700;margin-bottom:12px;padding-left:8px}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{display:block;padding:5px 10px;font-size:13px;color:var(--ink-soft);text-decoration:none;border-radius:4px;line-height:1.4}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{color:#fff;background:#16233f;font-weight:600;border-radius:12px;padding:9px 14px}
+.main{padding:44px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:28px 18px 60px}.header-top{padding:12px 16px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel-header{margin-bottom:34px}
+.panel-eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-mute);margin:0 0 8px}
+.panel-title{font-size:38px;line-height:1.15;font-weight:700;letter-spacing:-.02em;margin:0 0 14px}
+.panel-subtitle{font-size:17px;color:var(--ink-soft);margin:0;max-width:760px;line-height:1.6}
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.level-tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase}
+.level-tag.basic{background:var(--green-soft);color:#0a5f0a}
+.level-tag.inter{background:#e3ecfb;color:#1d4f9f}
+.level-tag.adv{background:#f5e0e9;color:#8c1a63}
+
+.section{margin-top:46px;scroll-margin-top:140px}
+.section h2{font-size:27px;font-weight:700;letter-spacing:-.01em;margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.section h2 .sec-emoji{font-size:23px}
+.section h3{font-size:18px;font-weight:700;margin:26px 0 8px}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:5px 0}
+.lvl{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.03em;text-transform:uppercase}
+.lvl.b{background:var(--green-soft);color:#0a5f0a}
+.lvl.i{background:#e3ecfb;color:#1d4f9f}
+.lvl.e{background:#f5e0e9;color:#8c1a63}
+
+code{font-size:.87em;background:#f6f5f4;border:1px solid var(--line);padding:1px 6px;border-radius:4px;color:#c2410c}
+pre{background:#1f2430;color:#e6e6e3;padding:18px 20px;border-radius:var(--radius);overflow-x:auto;font-size:13px;line-height:1.65;margin:14px 0;box-shadow:var(--shadow-sm);position:relative}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{position:absolute;top:8px;right:12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9aa3b5;font-weight:700}
+.c{color:#7f8ba3;font-style:italic}
+
+.callout{display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start;background:var(--bg-block);border-radius:var(--radius);padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout-icon{width:28px;height:28px;display:grid;place-items:center;background:#fff;border-radius:6px;font-size:16px;border:1px solid var(--line)}
+.callout-body{font-size:14.5px;line-height:1.6}
+.callout.tip{background:var(--accent-soft);border-color:#c7d2ea}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.card-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:8px;font-size:18px;margin-bottom:10px}
+.card-title{font-weight:700;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.55}
+
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;border:1px solid var(--line)}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--bg-soft);font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+.table-wrap{overflow-x:auto}
+
+.diagram{background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin:18px 0;text-align:center}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{font-size:12px;color:var(--ink-soft);margin-top:10px;font-style:italic}
+
+.badge{display:inline-block;padding:2px 8px;font-size:11px;font-weight:700;border-radius:4px}
+.badge.blue{background:var(--accent-soft);color:#1d4f9f}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.red{background:var(--red-soft);color:#a82e2e}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:760px){.compare{grid-template-columns:1fr}}
+.compare-col{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.compare-col h4{margin:0 0 8px;font-size:15px;font-weight:700}
+.compare-col p{font-size:13.5px;margin:6px 0}
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{padding:4px 10px;background:var(--bg-block);border:1px solid var(--line);border-radius:999px;font-size:12px;font-weight:500}
+
+/* stepper (flow list) */
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}
+.flow .st{background:var(--accent);color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600}
+.flow .ar{color:var(--ink-mute);font-weight:700}
+
+/* quiz */
+.quiz-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px 28px;box-shadow:var(--shadow-sm);margin-top:18px}
+.quiz-bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin:10px 0 20px}
+.quiz-bar>div{height:100%;width:0;background:var(--accent);transition:width .3s}
+.qmeta{font-size:12px;font-weight:700;color:var(--ink-soft);letter-spacing:.05em;text-transform:uppercase}
+.qtext{font-size:17px;font-weight:600;margin:6px 0 14px}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;gap:12px;align-items:center;padding:11px 14px;border:1px solid var(--line);border-radius:9px;background:var(--bg-soft);cursor:pointer;font-size:14.5px}
+.opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt .k{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0}
+.opt.correct{background:var(--green-soft);border-color:var(--green);font-weight:600}
+.opt.wrong{background:var(--red-soft);border-color:var(--red);font-weight:600}
+.opts.done .opt{pointer-events:none}
+.qexp{margin-top:14px;padding:12px 14px;border-radius:8px;background:var(--accent-soft);font-size:14px;display:none}
+.qbtn{margin-top:16px;background:var(--accent);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
+.qscore{font-size:44px;font-weight:800;text-align:center;margin:14px 0 4px}
+
+.ex{border:1px solid #c7d2ea;border-left:5px solid var(--accent);background:#fff;border-radius:var(--radius);padding:16px 18px;margin:18px 0;box-shadow:var(--shadow-sm)}
+.ex-h{font-weight:700;font-size:15.5px;margin-bottom:8px}
+.ex-tag{display:inline-block;background:var(--accent);color:#fff;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-right:8px;vertical-align:1px}
+.ex-b p,.ex-s p{margin:6px 0}
+.ex details{margin-top:10px;border-top:1px dashed var(--line-strong);padding-top:10px}
+.ex summary{cursor:pointer;font-weight:700;font-size:13.5px;color:var(--accent)}
+.ex-s{margin-top:8px;background:var(--green-soft);border-radius:8px;padding:10px 14px;font-size:14.5px}
+.ex-s ul,.ex-s ol{margin:6px 0}
+.tool{background:var(--bg-soft);border:1px solid var(--line-strong);border-radius:12px;padding:18px;margin:18px 0}
+.tool input[type=number],.tool input[type=text]{padding:7px 10px;border:1px solid var(--line-strong);border-radius:6px;font-size:14px;width:110px}
+.tool label{font-size:13px;font-weight:600;margin-right:6px}
+.tool .out{margin-top:12px}
+.sm td,.sm th{padding:7px 10px;font-size:13px}
+.kbd{font-family:'Noto Sans Mono',monospace;font-size:.85em;background:#fff;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;padding:0 5px}
+.ok{color:var(--green);font-weight:700}.no{color:var(--red);font-weight:700}
+.takeaway{background:linear-gradient(135deg,#14213D,#22345f);color:#fff;border-radius:var(--radius);padding:16px 20px;margin:20px 0}
+.takeaway strong{color:#fff}.takeaway ul{margin:6px 0;padding-left:20px;color:#fff}.takeaway li{color:#fff}
+@media print{.header,.toc{display:none}.panel{display:block!important}}
+
+/* ===== Secure assessment (AMCAT-style) ===== */
+.qz-hidden{display:none !important}
+.qz-btn{background:var(--accent);color:#fff;border:none;padding:11px 22px;border-radius:8px;font-size:14.5px;font-weight:700;cursor:pointer;font-family:inherit}
+.qz-btn:hover{filter:brightness(1.15)}
+.qz-btn.sec{background:var(--bg-soft);color:var(--ink);border:1px solid var(--line-strong)}
+.qz-btn:disabled{opacity:.5;cursor:not-allowed}
+.qz-center{text-align:center}
+.qz-list{list-style:none;padding:0;margin:14px 0}
+.qz-list li{display:flex;justify-content:space-between;padding:11px 14px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--bg-soft);font-size:14px}
+.qz-list li span{color:var(--ink-soft)}
+.qz-blk{margin:0 0 16px}
+.qz-blk h3{margin:0 0 6px;font-size:15px;color:var(--accent)}
+.qz-blk ul{margin:0;padding-left:20px;color:var(--ink-soft);font-size:14px;line-height:1.7}
+.qz-danger{background:var(--red-soft);border:1px solid #f5c2c2;border-radius:10px;padding:12px 14px;font-size:13.5px;color:#a12626;margin-bottom:16px}
+.qz-note{background:var(--yellow-soft);border:1px solid #f3d9a0;border-radius:10px;padding:12px 14px;font-size:13.5px;color:#7a5c00;margin-bottom:16px}
+.qz-agree{display:flex;gap:10px;align-items:flex-start;padding:14px;border:1px dashed var(--line-strong);border-radius:10px;background:var(--bg-soft);margin-bottom:18px}
+.qz-agree input{margin-top:4px;width:16px;height:16px;accent-color:var(--accent);flex-shrink:0}
+.qz-agree label{font-size:14px;cursor:pointer}
+#qzOverlay{position:fixed;inset:0;z-index:100000;background:var(--bg-soft);overflow-y:auto}
+#qzOverlay .qz-in{max-width:780px;margin:0 auto;padding:20px 16px 60px}
+.qz-exit-row{display:flex;justify-content:flex-end;margin-bottom:10px}
+.qz-exit{background:#fff;color:var(--ink-soft);border:1px solid var(--line-strong);border-radius:8px;padding:8px 14px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit}
+.qz-exit:hover{background:var(--red-soft);color:var(--red);border-color:var(--red)}
+.qz-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.qz-name{font-weight:800;font-size:17px;color:var(--accent)}
+.qz-timer{background:#0b1526;color:#fff;padding:8px 14px;border-radius:8px;font-weight:700;font-variant-numeric:tabular-nums;min-width:78px;text-align:center}
+.qz-timer.warn{background:var(--red);animation:qzp 1s infinite}
+@keyframes qzp{50%{opacity:.6}}
+.qz-bar{height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:18px}
+.qz-bar>div{height:100%;background:var(--accent);width:0;transition:width .2s}
+.qz-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px;box-shadow:var(--shadow-sm)}
+.qz-qn{font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.qz-qt{font-size:17px;font-weight:600;margin-bottom:14px;line-height:1.5}
+.qz-opts{display:flex;flex-direction:column;gap:9px}
+.qz-opt{display:flex;gap:12px;align-items:center;padding:11px 14px;border:1px solid var(--line);border-radius:9px;background:#fff;cursor:pointer;font-size:14.5px}
+.qz-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.qz-opt.sel{border-color:var(--accent);background:var(--yellow-soft);font-weight:600}
+.qz-opt .k{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0}
+.qz-jump{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0}
+.qz-jump span{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:12px;border:1px solid var(--line-strong);cursor:pointer;background:var(--bg-soft)}
+.qz-jump span.ans{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.qz-jump span.cur{outline:2px solid var(--accent)}
+.qz-nav{display:flex;justify-content:space-between;gap:10px;margin-top:20px}
+.qz-nav .r{display:flex;gap:8px}
+.qz-valid{display:none;background:var(--red-soft);color:var(--red);border:1px solid #f5c2c2;border-radius:8px;padding:10px 14px;font-size:13.5px;font-weight:700;margin-top:14px;text-align:center}
+.qz-valid.show{display:block}
+.qz-modal{position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;padding:20px}
+.qz-modal .bd{position:absolute;inset:0;background:rgba(11,21,38,.72)}
+.qz-modal .bx{position:relative;background:#fff;border-radius:14px;padding:30px 26px;max-width:420px;width:100%;text-align:center;box-shadow:var(--shadow-md)}
+.qz-modal h3{margin:8px 0 10px;font-size:17px;line-height:1.4}
+.qz-modal p{margin:0 0 14px;color:var(--ink-soft);font-size:14px}
+.qz-modal .cnt{font-size:13px;font-weight:700;color:var(--ink-soft);margin-bottom:16px}
+.qz-score{font-size:44px;font-weight:800;text-align:center;margin:10px 0 2px}
+.qz-rev{width:100%;border-collapse:collapse;margin-top:12px;font-size:13.5px}
+.qz-rev th,.qz-rev td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.qz-rev th{font-size:12px;color:var(--ink-soft)}
+.qz-tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11.5px;font-weight:700}
+.qz-tag.c{background:var(--green-soft);color:var(--green)}
+.qz-tag.w{background:var(--red-soft);color:var(--red)}
+.qz-tag.s{background:var(--yellow-soft);color:#7a5c00}
+.qz-exp{font-size:12.5px;color:var(--ink-soft);margin-top:4px}
+body.qz-nosel, body.qz-nosel *{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-top">
+    <div class="brand"><div class="brand-mark">DT</div><span>Defect Tracking &amp; Management<span class="brand-sub"> · Manual QA course</span></span></div>
+    <div class="header-actions"><span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 7</span></span><button class="btn" onclick="resetProgress()">↺ Reset</button></div>
+  </div>
+  <nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1">Foundations</button><button class="tab" data-tab="t2">Writing Bug Reports</button><button class="tab" data-tab="t3">Jira · Bugzilla · ADO</button><button class="tab" data-tab="t4">Triage & Metrics</button><button class="tab" data-tab="t5">Expert Practices</button><button class="tab" data-tab="t6">Practice Lab</button><button class="tab" data-tab="t7">Assessment</button></nav>
+</header>
+<div class="layout">
+  <aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside>
+  <main class="main">
+<section class="panel active" id="t1" data-toc='[["s1-1", "What is a defect?"], ["s1-2", "The defect lifecycle"], ["s1-3", "Why track defects formally?"], ["s1-4", "Types of defects"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span></div><p class="panel-eyebrow">Module 01 · Foundations</p><h1 class="panel-title">Defect Fundamentals</h1><p class="panel-subtitle">What a defect is, how it lives and dies in a workflow, and why teams track them formally.</p></div>
+<div class="section" id="s1-1"><h2><span class="sec-emoji">🐞</span> What is a defect? <span class="lvl b">Basic</span></h2>
+<p>A <strong>defect</strong> (bug, fault, issue) is a flaw in a product — in code, configuration, requirements or design — that can cause the product to behave differently from what is expected. When the defect is exercised you see a <strong>failure</strong>.</p>
+<div class="callout tip"><div class="callout-icon">🏥</div><div class="callout-body"><strong>Analogy:</strong> a hospital chart. The patient (software) shows symptoms (failure). The doctor (tester) writes clear notes — symptoms, when they started, what was tried — and passes them to the specialist (developer). A defect report is that chart. Bad notes = wrong or delayed treatment.</div></div>
+<div class="table-wrap"><table class=""><tr><th>Term</th><th>Meaning</th></tr><tr><td>Error / mistake</td><td>Human slip</td></tr><tr><td>Defect / Bug / Fault</td><td>Flaw in an artefact</td></tr><tr><td>Failure</td><td>Observable wrong behaviour</td></tr><tr><td>Incident</td><td>Any unexpected event requiring investigation — may or may not be a defect</td></tr><tr><td>Enhancement / Change request</td><td>New behaviour not in original requirements — <em>not</em> a defect</td></tr></table></div>
+<h3>Why do defects happen? (root-cause categories)</h3>
+<div class="pill-row"><span class="pill">Unclear requirements</span><span class="pill">Coding mistake</span><span class="pill">Design flaw</span><span class="pill">Missing validation</span><span class="pill">Integration mismatch</span><span class="pill">Environment / configuration</span><span class="pill">Data issue</span><span class="pill">Third-party change</span><span class="pill">Time pressure</span><span class="pill">Regression from another change</span></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">♻️</span> The defect lifecycle <span class="lvl b">Basic</span></h2>
+<p>Every defect travels through <strong>statuses</strong> until it is resolved. Names differ per team, the idea is constant.</p>
+<div class="diagram"><svg viewBox="0 0 800 260" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans" font-size="12.5" font-weight="600">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#37352f"/></marker></defs>
+<g stroke="#37352f" stroke-width="1.6" fill="none" marker-end="url(#ar)">
+<line x1="130" y1="60" x2="170" y2="60"/><line x1="280" y1="60" x2="320" y2="60"/><line x1="430" y1="60" x2="470" y2="60"/><line x1="580" y1="60" x2="620" y2="60"/>
+<line x1="710" y1="88" x2="710" y2="140"/><line x1="620" y1="170" x2="580" y2="170"/>
+<path d="M370 88 L370 190 L190 190" stroke="#e03e3e"/><path d="M650 88 C650 140 400 130 400 88" stroke="#e03e3e" stroke-dasharray="4 3"/>
+<path d="M225 88 L225 130 L140 130 L140 88" stroke="#dfab01"/></g>
+<g fill="#eef1f7" stroke="#14213D" stroke-width="1.6"><rect x="20" y="32" width="110" height="56" rx="10"/><rect x="170" y="32" width="110" height="56" rx="10"/><rect x="320" y="32" width="110" height="56" rx="10"/><rect x="470" y="32" width="110" height="56" rx="10"/><rect x="620" y="32" width="180" height="56" rx="10" fill="#ddedea" stroke="#0f7b0f"/></g>
+<g fill="#fdecc8" stroke="#dfab01" stroke-width="1.6"><rect x="470" y="142" width="110" height="56" rx="10"/><rect x="20" y="162" width="170" height="56" rx="10" fill="#ffe2dd" stroke="#e03e3e"/></g>
+<g text-anchor="middle" fill="#14213D"><text x="75" y="65">NEW</text><text x="225" y="65">ASSIGNED</text><text x="375" y="65">IN PROGRESS</text><text x="525" y="65">FIXED</text><text x="710" y="65">VERIFIED → CLOSED</text><text x="525" y="175">RETEST</text><text x="105" y="195">REJECTED / DEFERRED</text></g>
+<g font-weight="400" fill="#37352f" text-anchor="middle"><text x="250" y="213" fill="#a82e2e">not a bug / duplicate / later</text><text x="560" y="122" fill="#a82e2e">retest fails → REOPEN</text><text x="660" y="125">pass</text></g></svg><div class="diagram-caption">A typical defect workflow with the reopen and reject loops.</div></div>
+<div class="table-wrap"><table class="sm"><tr><th>Status</th><th>Meaning</th><th>Who moves it</th></tr><tr><td><strong>New / Open</strong></td><td>Reported, not yet reviewed</td><td>Tester</td></tr><tr><td><strong>Assigned</strong></td><td>Owner chosen</td><td>Lead / triage</td></tr><tr><td><strong>In Progress</strong></td><td>Developer investigating/fixing</td><td>Developer</td></tr><tr><td><strong>Fixed / Resolved</strong></td><td>Fix delivered to a build</td><td>Developer</td></tr><tr><td><strong>Ready for retest</strong></td><td>Fix deployed in test environment</td><td>Developer / build system</td></tr><tr><td><strong>Verified → Closed</strong></td><td>Tester confirmed the fix</td><td>Tester</td></tr><tr><td><strong>Reopened</strong></td><td>Fix did not work or bug returned</td><td>Tester</td></tr><tr><td><strong>Rejected / Not a bug</strong></td><td>Works as designed, cannot reproduce, invalid</td><td>Developer / triage</td></tr><tr><td><strong>Duplicate</strong></td><td>Same as an existing defect</td><td>Triage</td></tr><tr><td><strong>Deferred / Won't fix</strong></td><td>Valid, but postponed or accepted</td><td>Product Owner</td></tr></table></div></div><div class="section" id="s1-3"><h2><span class="sec-emoji">🧱</span> Why track defects formally? <span class="lvl b">Basic</span></h2>
+<div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft)">📚</div><div class="card-title">Single source of truth</div><div class="card-desc">Everyone sees the same status; nothing lost in chat.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft)">🔁</div><div class="card-title">Reproduce & fix</div><div class="card-desc">Developers get what they need to act.</div></div><div class="card"><div class="card-icon" style="background:var(--yellow-soft)">📈</div><div class="card-title">Measure quality</div><div class="card-desc">Trends, density and leakage guide decisions.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft)">🧾</div><div class="card-title">Audit & learning</div><div class="card-desc">History shows what went wrong and how it was fixed.</div></div></div>
+<h3>Defect vs failure vs "works as designed"</h3>
+<ul><li><strong>Defect:</strong> behaviour contradicts the requirement or reasonable expectation.</li><li><strong>Works as designed (WAD):</strong> behaviour matches the requirement but surprises the user → raise it as an <em>improvement/question</em>, not a defect.</li><li><strong>Requirement defect:</strong> the requirement itself is missing or wrong — still a defect, found early.</li></ul></div><div class="section" id="s1-4"><h2><span class="sec-emoji">🔦</span> Types of defects <span class="lvl b">Basic</span></h2>
+<div class="table-wrap"><table class=""><tr><th>Type</th><th>Example</th></tr><tr><td>Functional</td><td>Coupon applies twice</td></tr><tr><td>UI / Visual</td><td>Button overlaps text on mobile</td></tr><tr><td>Usability</td><td>Error message does not explain what to fix</td></tr><tr><td>Performance</td><td>Report takes 40 s</td></tr><tr><td>Security</td><td>Order of another user visible by changing ID in URL</td></tr><tr><td>Compatibility</td><td>Layout broken in Safari</td></tr><tr><td>Data</td><td>Total rounding wrong by 0.01</td></tr><tr><td>Integration</td><td>Email not sent after payment</td></tr><tr><td>Documentation</td><td>Help page shows old screenshot</td></tr></table></div><div class="takeaway"><strong>🎯 Key takeaways</strong><ul><li>A defect is a flaw; a failure is the symptom you see.</li><li>Statuses show where a defect is in its life.</li><li>Track every defect in one tool for visibility and learning.</li><li>Separate defects from change requests and "works as designed".</li></ul></div></div>
+</section>
+<section class="panel" id="t2" data-toc='[["s2-1", "Anatomy of a great bug report"], ["s2-2", "Good vs bad: a live comparison"], ["s2-3", "Reproduce, isolate, minimise"], ["s2-4", "Evidence that helps"], ["s2-5", "Severity vs Priority"], ["s2-6", "Practice"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span></div><p class="panel-eyebrow">Module 02 · Core skill</p><h1 class="panel-title">Writing Clear, Reproducible Bug Reports</h1><p class="panel-subtitle">Anatomy of a perfect report, evidence, isolation, severity vs priority — with good-vs-bad examples.</p></div>
+<div class="section" id="s2-1"><h2><span class="sec-emoji">🧬</span> Anatomy of a great bug report <span class="lvl b">Basic</span></h2>
+<p>A great report lets a developer <strong>reproduce, understand and fix</strong> the problem without asking you a single question.</p>
+<div class="table-wrap"><table class="sm"><tr><th>Field</th><th>What to write</th><th>Tip</th></tr><tr><td><strong>Title / Summary</strong></td><td>What is wrong, where, and under what condition</td><td>"Coupon MOVIE10 applied twice on page refresh — total becomes negative"</td></tr><tr><td><strong>Environment</strong></td><td>Build/version, URL, OS, browser/device, user role</td><td>"QA env, build 2.4.1-rc3, Chrome 126, Windows 11"</td></tr><tr><td><strong>Preconditions</strong></td><td>State needed before step 1</td><td>"Logged in as premium user; cart = ₹1,200"</td></tr><tr><td><strong>Steps to reproduce</strong></td><td>Numbered, exact, minimal</td><td>Start from a known point; one action per step</td></tr><tr><td><strong>Test data</strong></td><td>Exact inputs, accounts, IDs</td><td>Coupon: MOVIE10</td></tr><tr><td><strong>Expected result</strong></td><td>What should happen + reference</td><td>"Total ₹1,080 (AC-3)"</td></tr><tr><td><strong>Actual result</strong></td><td>What really happened</td><td>"Total ₹-120"</td></tr><tr><td><strong>Frequency</strong></td><td>Always / intermittent (3 of 5)</td><td>Intermittent bugs: note conditions</td></tr><tr><td><strong>Severity & Priority</strong></td><td>Impact and urgency</td><td>See next tab</td></tr><tr><td><strong>Evidence</strong></td><td>Screenshot, video, HAR, logs, console errors</td><td>Annotate; hide personal data</td></tr><tr><td><strong>Links</strong></td><td>Requirement, test case, related bugs</td><td>Traceability</td></tr></table></div></div><div class="section" id="s2-2"><h2><span class="sec-emoji">⚖️</span> Good vs bad: a live comparison <span class="lvl b">Basic</span></h2>
+<div class="compare">
+<div class="compare-col" style="background:var(--red-soft)"><h4>❌ Poor report</h4><p><strong>Title:</strong> Coupon not working</p><p><strong>Description:</strong> I tried applying coupon but it is wrong. Please check.</p><p>No steps, no data, no screenshot, no environment.</p><p><em>Developer reply: "Cannot reproduce. Which coupon? Which browser?"</em> → 2 days lost.</p></div>
+<div class="compare-col" style="background:var(--green-soft)"><h4>✅ Strong report</h4><p><strong>Title:</strong> Applying MOVIE10 twice makes cart total negative (₹-120)</p><p><strong>Env:</strong> QA, build 2.4.1, Chrome 126 / Win 11</p><p><strong>Steps:</strong> 1 Add item ₹1,200. 2 Apply MOVIE10 → ₹1,080. 3 Apply MOVIE10 again.</p><p><strong>Expected:</strong> 2nd attempt rejected (AC-3). <strong>Actual:</strong> total ₹-120.</p><p>Video + console log attached. Reproducible 5/5.</p></div></div>
+<h3>Writing the steps</h3>
+<pre><span class="pre-lang">repro steps</span><code>1. Log in as user qa_premium@test.com / password in Vault
+2. Open https://qa.shop.test/products/1001
+3. Click "Add to cart"  (price shown: 1,200.00)
+4. Click Cart icon (top-right)
+5. Enter MOVIE10 in "Coupon" field, click Apply   -&gt; total 1,080.00 (correct)
+6. Click Apply again without changing the field
+Expected: message "Only one coupon allowed"; total remains 1,080.00
+Actual:   total changes to -120.00</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Number the steps, keep them atomic, include the <em>actual</em> data. Re-run your own steps once from a clean state before submitting.</div></div></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🔬</span> Reproduce, isolate, minimise <span class="lvl i">Intermediate</span></h2>
+<div class="flow"><span class="st">Reproduce</span><span class="ar">→</span><span class="st">Find minimal steps</span><span class="ar">→</span><span class="st">Vary one factor</span><span class="ar">→</span><span class="st">Identify scope</span><span class="ar">→</span><span class="st">Collect evidence</span><span class="ar">→</span><span class="st">Write report</span></div>
+<h3>Isolation questions</h3>
+<ul><li>Does it happen on other browsers / devices / users / roles?</li><li>Does it happen with other data (different product, amount)?</li><li>Is it new (regression)? Check the previous build.</li><li>Does it depend on timing, network speed or order of actions?</li><li>Is the UI wrong, or is the API/DB wrong? (see Technical Verification course)</li></ul>
+<h3>Intermittent defects</h3>
+<ul><li>Record frequency ("4 out of 10 runs") and conditions (time, data, load).</li><li>Capture video, network HAR file, console log, timestamps and user ID so developers can search server logs.</li><li>Never close it as "cannot reproduce" — mark <em>intermittent</em> and keep evidence.</li></ul></div><div class="section" id="s2-4"><h2><span class="sec-emoji">📸</span> Evidence that helps <span class="lvl i">Intermediate</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Evidence</th><th>Use for</th><th>Tool</th></tr><tr><td>Screenshot (annotated)</td><td>Visual and message defects</td><td>OS snipping tool, Lightshot, Jira capture</td></tr><tr><td>Screen recording / GIF</td><td>Flows, timing, animations</td><td>Loom, OBS, built-in recorder</td></tr><tr><td>Console errors</td><td>JavaScript failures</td><td>Browser DevTools → Console</td></tr><tr><td>HAR file / network call</td><td>API errors, slow calls</td><td>DevTools → Network → Export HAR</td></tr><tr><td>Request/response body</td><td>Wrong data from API</td><td>Postman / DevTools</td></tr><tr><td>Logs / correlation ID</td><td>Backend errors</td><td>Ask dev/DevOps; note timestamp</td></tr><tr><td>DB screenshot / query</td><td>Data mismatches</td><td>SQL client</td></tr></table></div><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Remove passwords, tokens, card numbers and personal data from screenshots and HAR files before attaching them.</div></div></div><div class="section" id="s2-5"><h2><span class="sec-emoji">🎚️</span> Severity vs Priority <span class="lvl i">Intermediate</span></h2>
+<div class="compare">
+<div class="compare-col"><h4>💥 Severity</h4><p>How badly the defect <strong>affects the system / user</strong>. Usually set by the tester.</p></div>
+<div class="compare-col"><h4>⏰ Priority</h4><p>How soon it must be <strong>fixed</strong> from a business view. Usually set by Product Owner / Lead.</p></div></div>
+<div class="table-wrap"><table class="sm"><tr><th>Severity</th><th>Definition</th><th>Example</th></tr><tr><td><span class="badge red">Critical</span></td><td>System down, data loss, security breach, no workaround</td><td>Payment charged but no order created</td></tr><tr><td><span class="badge orange">High</span></td><td>Major feature broken; workaround difficult</td><td>Cannot apply any coupon</td></tr><tr><td><span class="badge blue">Medium</span></td><td>Feature partly impaired; workaround exists</td><td>Sort by price ignores decimals</td></tr><tr><td><span class="badge green">Low</span></td><td>Minor / cosmetic</td><td>Misaligned icon by 2 px</td></tr></table></div>
+<h3>Priority × Severity examples</h3>
+<div class="table-wrap"><table class="sm"><tr><th>Combination</th><th>Example</th></tr><tr><td>High severity + High priority</td><td>Checkout crashes for all users</td></tr><tr><td>High severity + Low priority</td><td>Crash in a rarely used admin report used once a year</td></tr><tr><td>Low severity + High priority</td><td>Company name misspelled on home page before launch</td></tr><tr><td>Low severity + Low priority</td><td>Tooltip misaligned 1 px on an old browser</td></tr></table></div></div><div class="section" id="s2-6"><h2><span class="sec-emoji">🏋️</span> Practice <span class="lvl b">Basic</span></h2>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 2.1 — Rewrite a bad report</div><div class="ex-b"><p>Bad: <em>"Search is broken. Doesn't show things. Please fix."</em> Rewrite it using the template. Assume: searching "phone" on the home page returns 0 results while the category page lists 40 phones.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p><strong>Title:</strong> Search for "phone" on Home returns 0 results although 40 phones exist</p><p><strong>Env:</strong> Prod-like QA, build 3.1.0, Chrome 126 / macOS</p><p><strong>Steps:</strong> 1 Open home page as guest. 2 Type "phone" in the search box. 3 Press Enter.</p><p><strong>Expected:</strong> list of phones (40 per category page). <strong>Actual:</strong> "No results found".</p><p><strong>Notes:</strong> "Phone" with capital P works; "phones" works → case-sensitive match. Severity High; Priority High. Screenshot + network call attached (API returns <code>total:0</code>).</p></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 2.2 — Set severity and priority</div><div class="ex-b"><p>(a) Typo "Recieve" on About page. (b) App crashes on launch for Android 14 users (20% of users). (c) Invoice shows tax 18% instead of 5% for one product. (d) Footer link opens a blank page on IE11 (0.1% of users).</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><ul><li>(a) Low severity, Low priority (High if brand-sensitive launch page)</li><li>(b) Critical / High</li><li>(c) High (or Critical – legal/financial) / High</li><li>(d) Low / Low</li></ul></div></details></div></div>
+</section>
+<section class="panel" id="t3" data-toc='[["s3-1", "What a defect tracking tool does"], ["s3-2", "Jira \u2014 in depth"], ["s3-3", "Bugzilla \u2014 in depth"], ["s3-4", "Azure DevOps \u2014 in depth"], ["s3-5", "Tool comparison"], ["s3-6", "Practice"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span></div><p class="panel-eyebrow">Module 03 · Tools</p><h1 class="panel-title">Defect Tracking Tools</h1><p class="panel-subtitle">Hands-on concepts, fields, workflows and queries in Jira, Bugzilla and Azure DevOps.</p></div>
+<div class="section" id="s3-1"><h2><span class="sec-emoji">🧰</span> What a defect tracking tool does <span class="lvl b">Basic</span></h2>
+<p>A tracker stores defects, workflows, assignments, history, attachments, comments, searches and reports.</p>
+<div class="table-wrap"><table class="sm"><tr><th>Capability</th><th>Why it matters</th></tr><tr><td>Custom workflow</td><td>Matches your team's lifecycle</td></tr><tr><td>Fields & screens</td><td>Severity, environment, build, component</td></tr><tr><td>Search & filters</td><td>Find defects fast</td></tr><tr><td>Dashboards & reports</td><td>Quality view for managers</td></tr><tr><td>Integrations</td><td>Link to Git, CI, test tools, Slack/Teams</td></tr><tr><td>Notifications & permissions</td><td>Right people informed; secure access</td></tr></table></div>
+<div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft)">🟦</div><div class="card-title">Jira</div><div class="card-desc">Most widely used; flexible issue tracking for Agile teams.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft)">🟧</div><div class="card-title">Bugzilla</div><div class="card-desc">Open-source, purpose-built bug tracker; common in open-source and older enterprises.</div></div><div class="card"><div class="card-icon" style="background:var(--yellow-soft)">🟦</div><div class="card-title">Azure DevOps</div><div class="card-desc">Microsoft ALM: boards, repos, pipelines, test plans, bugs.</div></div></div></div><div class="section" id="s3-2"><h2><span class="sec-emoji">🟦</span> Jira — in depth <span class="lvl b">Basic</span></h2>
+<h3>Core ideas</h3>
+<ul><li><strong>Issue types:</strong> Epic, Story, Task, <strong>Bug</strong>, Sub-task.</li><li><strong>Project</strong> contains issues; <strong>board</strong> (Scrum/Kanban) visualises workflow columns.</li><li><strong>Workflow:</strong> statuses and allowed transitions (e.g. To Do → In Progress → In Review → Done).</li><li><strong>Fields:</strong> Summary, Description, Priority, Assignee, Reporter, Labels, Components, Affects Version, Fix Version, Environment, Attachments, Linked issues.</li></ul>
+<h3>Creating a bug in Jira — step by step</h3>
+<div class="flow"><span class="st">Create</span><span class="ar">→</span><span class="st">Project + Issue type = Bug</span><span class="ar">→</span><span class="st">Summary</span><span class="ar">→</span><span class="st">Description (template)</span><span class="ar">→</span><span class="st">Priority, Components, Versions</span><span class="ar">→</span><span class="st">Attach evidence</span><span class="ar">→</span><span class="st">Assign / Create</span></div>
+<h3>Recommended description template</h3>
+<pre><span class="pre-lang">jira markup</span><code>*Environment*
+QA | Build 2.4.1-rc3 | Chrome 126 | Windows 11 | role: premium
+
+*Preconditions*
+Cart contains item 1001 (Rs 1,200)
+
+*Steps to reproduce*
+<span class="c"># Apply coupon MOVIE10</span>
+<span class="c"># Click Apply again</span>
+
+*Expected result*
+Message "Only one coupon allowed"; total remains 1,080
+
+*Actual result*
+Total becomes -120
+
+*Frequency*  5/5
+*Evidence*   video.mp4, console.log
+*Related*    Story SHOP-512, Test case TC_CART_021</code></pre>
+<h3>Linking issues</h3>
+<div class="pill-row"><span class="pill">blocks / is blocked by</span><span class="pill">relates to</span><span class="pill">duplicates / is duplicated by</span><span class="pill">causes / is caused by</span><span class="pill">tests / is tested by</span></div>
+<h3>JQL — Jira Query Language</h3>
+<pre><span class="pre-lang">JQL</span><code>project = SHOP AND issuetype = Bug AND status != Done        <span class="c">-- all open bugs</span>
+project = SHOP AND priority in (Highest, High) AND resolution = Unresolved
+assignee = currentUser() AND status = "In Progress"
+created &gt;= -7d AND reporter = currentUser() ORDER BY created DESC
+issuetype = Bug AND fixVersion = "2.4.1" AND status = Done          <span class="c">-- fixed in release</span>
+labels = regression AND component = Checkout
+text ~ "coupon" AND issuetype = Bug                                   <span class="c">-- search text</span></code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Save useful JQL as a <strong>filter</strong>, subscribe by email, and chart it on a <strong>dashboard</strong> (Created vs Resolved, Open bugs by priority, Bugs by component).</div></div></div><div class="section" id="s3-3"><h2><span class="sec-emoji">🟧</span> Bugzilla — in depth <span class="lvl i">Intermediate</span></h2>
+<p>Bugzilla is a long-standing open-source tracker, web-based, focused on bugs only.</p>
+<div class="table-wrap"><table class="sm"><tr><th>Concept</th><th>Meaning</th></tr><tr><td>Product / Component / Version</td><td>Hierarchy for classifying bugs</td></tr><tr><td>Status</td><td>UNCONFIRMED → CONFIRMED → IN_PROGRESS → RESOLVED → VERIFIED → CLOSED (REOPENED)</td></tr><tr><td>Resolution</td><td>FIXED, INVALID, WONTFIX, DUPLICATE, WORKSFORME, MOVED</td></tr><tr><td>Severity</td><td>blocker, critical, major, normal, minor, trivial, enhancement</td></tr><tr><td>Priority</td><td>P1 – P5</td></tr><tr><td>Hardware / OS</td><td>Platform fields</td></tr><tr><td>CC list</td><td>Watchers who receive updates</td></tr><tr><td>Depends on / Blocks</td><td>Dependency links</td></tr><tr><td>Keywords, Whiteboard</td><td>Free tagging / notes</td></tr><tr><td>Saved searches</td><td>Reusable queries, can be shared</td></tr></table></div>
+<h3>Bugzilla workflow</h3>
+<div class="flow"><span class="st">UNCONFIRMED</span><span class="ar">→</span><span class="st">CONFIRMED</span><span class="ar">→</span><span class="st">IN_PROGRESS</span><span class="ar">→</span><span class="st">RESOLVED (FIXED)</span><span class="ar">→</span><span class="st">VERIFIED</span><span class="ar">→</span><span class="st">CLOSED</span></div>
+<p>Search with <strong>Advanced Search</strong> (product, status, severity) or the <strong>Quick Search</strong> box: <code>product:Shop severity:critical status:open</code>. Bugzilla also exposes a REST API for automation.</p></div><div class="section" id="s3-4"><h2><span class="sec-emoji">🟦</span> Azure DevOps — in depth <span class="lvl i">Intermediate</span></h2>
+<p>Azure DevOps (ADO) combines <strong>Boards</strong> (work items), <strong>Repos</strong>, <strong>Pipelines</strong> and <strong>Test Plans</strong> in one place.</p>
+<div class="table-wrap"><table class="sm"><tr><th>Concept</th><th>Meaning</th></tr><tr><td>Work item types</td><td>Epic, Feature, User Story / PBI, Task, <strong>Bug</strong>, Test Case, Issue</td></tr><tr><td>Bug fields</td><td>Title, <strong>Repro Steps</strong>, System Info, Severity (1-Critical…4-Low), Priority (1–4), Area Path, Iteration Path, Found in Build, Integrated in Build</td></tr><tr><td>States</td><td>New → Active → Resolved → Closed (Agile process) — Committed/Done in Scrum</td></tr><tr><td>Boards</td><td>Kanban/sprint boards; drag cards between states</td></tr><tr><td>Queries (WIQL)</td><td>Saved work-item queries</td></tr><tr><td>Test Plans</td><td>Manual test execution; "Create bug" from a failed step auto-fills steps and links the test</td></tr><tr><td>Links</td><td>Parent/Child, Related, Tested By, Duplicate Of, Successor/Predecessor</td></tr></table></div>
+<h3>WIQL examples</h3>
+<pre><span class="pre-lang">WIQL</span><code>SELECT [System.Id],[System.Title],[System.State]
+FROM WorkItems
+WHERE [System.TeamProject] = @project
+  AND [System.WorkItemType] = 'Bug'
+  AND [System.State] &lt;&gt; 'Closed'
+  AND [Microsoft.VSTS.Common.Severity] = '1 - Critical'
+ORDER BY [Microsoft.VSTS.Common.Priority] ASC</code></pre><div class="callout tip"><div class="callout-icon">⚡</div><div class="callout-body">From <strong>Test Plans → Run</strong>, mark a step as <em>failed</em> and use <strong>Create bug</strong>: ADO copies the steps, build and system info for you, and attaches screenshots or recordings automatically.</div></div></div><div class="section" id="s3-5"><h2><span class="sec-emoji">⚖️</span> Tool comparison <span class="lvl i">Intermediate</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th></th><th>Jira</th><th>Bugzilla</th><th>Azure DevOps</th></tr><tr><td>Type</td><td>Commercial (Atlassian)</td><td>Open source</td><td>Commercial (Microsoft)</td></tr><tr><td>Focus</td><td>General Agile work + bugs</td><td>Bugs only</td><td>Full ALM (plan→build→test→release)</td></tr><tr><td>Query language</td><td>JQL</td><td>Advanced search / Quick Search</td><td>WIQL + query editor</td></tr><tr><td>Workflow</td><td>Fully customisable</td><td>Configurable, classic</td><td>Process templates (Agile/Scrum/CMMI)</td></tr><tr><td>Test management</td><td>Via plugins (Xray, Zephyr)</td><td>External</td><td>Built-in Test Plans</td></tr><tr><td>Best for</td><td>Product teams, cloud</td><td>Open source, simple trackers</td><td>Microsoft-centric teams</td></tr></table></div><div class="callout note"><div class="callout-icon">📝</div><div class="callout-body">The <strong>skills transfer</strong>: if you can write a clear bug and use filters in one, you can in the others. Learn the field names and workflow of your team's tool on day one.</div></div></div><div class="section" id="s3-6"><h2><span class="sec-emoji">🏋️</span> Practice <span class="lvl b">Basic</span></h2>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 3.1 — Write JQL</div><div class="ex-b"><p>(a) All open High/Highest bugs in project SHOP assigned to you. (b) Bugs created in the last 14 days without an assignee. (c) Bugs with label "regression" fixed in version 2.5.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><pre><code>(a) project = SHOP AND issuetype = Bug AND priority in (High, Highest) AND resolution = Unresolved AND assignee = currentUser()
+(b) project = SHOP AND issuetype = Bug AND created &gt;= -14d AND assignee is EMPTY
+(c) issuetype = Bug AND labels = regression AND fixVersion = "2.5"</code></pre></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 3.2 — Pick the tool</div><div class="ex-b"><p>A 5-person startup wants a free tracker with a REST API, bugs only. A bank wants boards, pipelines and manual test runs in one product. Which tools?</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>Startup → Bugzilla (or free-tier Jira). Bank on Microsoft stack → Azure DevOps (Boards + Pipelines + Test Plans); Jira + Xray is an alternative.</p></div></details></div></div>
+</section>
+<section class="panel" id="t4" data-toc='[["s4-1", "Defect triage"], ["s4-2", "Working with developers"], ["s4-3", "Retest, regression & verification"], ["s4-4", "Defect metrics"], ["s4-5", "Special situations"], ["s4-6", "Practice"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 04 · Management</p><h1 class="panel-title">Triage, Retest &amp; Metrics</h1><p class="panel-subtitle">Run triage, work with developers, verify fixes and measure quality responsibly.</p></div>
+<div class="section" id="s4-1"><h2><span class="sec-emoji">🧑‍⚖️</span> Defect triage <span class="lvl i">Intermediate</span></h2>
+<p><strong>Triage</strong> is the regular meeting (or process) where new defects are reviewed, validated, prioritised and assigned.</p>
+<div class="flow"><span class="st">Validate (real? reproducible?)</span><span class="ar">→</span><span class="st">Check duplicates</span><span class="ar">→</span><span class="st">Set severity/priority</span><span class="ar">→</span><span class="st">Assign owner & target build</span><span class="ar">→</span><span class="st">Decide: fix / defer / reject</span></div>
+<h3>Who attends</h3>
+<p>QA lead/analyst, development lead, product owner (and sometimes support). The tester explains <em>impact</em>; the developer estimates <em>effort</em>; the PO decides <em>business priority</em>.</p>
+<h3>Triage decisions</h3>
+<div class="table-wrap"><table class="sm"><tr><th>Decision</th><th>When</th></tr><tr><td>Fix now</td><td>High business impact or blocking release</td></tr><tr><td>Fix in next release / Defer</td><td>Low impact, workaround exists</td></tr><tr><td>Reject – works as designed</td><td>Matches approved requirement (raise change request if user need is real)</td></tr><tr><td>Reject – cannot reproduce</td><td>Needs more info; return with questions</td></tr><tr><td>Duplicate</td><td>Link to the original and close</td></tr><tr><td>Need info</td><td>Reporter must supply data or evidence</td></tr></table></div></div><div class="section" id="s4-2"><h2><span class="sec-emoji">🤝</span> Working with developers <span class="lvl i">Intermediate</span></h2>
+<ul><li><strong>Be factual:</strong> "Total shows -120; expected 1,080" — never "you broke it".</li><li><strong>Offer help:</strong> sit together (pair debugging), share the session, give a script or data.</li><li><strong>Respond fast</strong> to questions on your bugs; stale bugs rot.</li><li><strong>Disagree with evidence:</strong> cite the requirement, screenshot, API response, not opinion.</li><li><strong>Close the loop:</strong> retest promptly and comment the build and result.</li></ul>
+<div class="callout tip"><div class="callout-icon">💬</div><div class="callout-body"><strong>Phrasing:</strong> "Here's a 20-second video and the failing request. Is this expected after AC-3? If yes I'll update the test; if not, it looks like a regression from build 2.4.0."</div></div></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🔁</span> Retest, regression & verification <span class="lvl i">Intermediate</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Activity</th><th>Purpose</th><th>Scope</th></tr><tr><td>Confirmation (re-test)</td><td>Check the specific defect is fixed</td><td>The exact failing steps</td></tr><tr><td>Regression test</td><td>Check the fix broke nothing else</td><td>Related and high-risk areas</td></tr><tr><td>Smoke test</td><td>Is the build stable enough to test?</td><td>Critical paths</td></tr></table></div>
+<h3>Verification checklist</h3>
+<ul><li>Run the <em>original</em> steps on the <em>fixed build</em> in the <em>same environment</em>.</li><li>Test neighbouring scenarios: other data, roles, browsers.</li><li>Check data layer if the bug affected data (DB values).</li><li>Add or update a regression test case.</li><li>Comment: build number, result, evidence. Close — or reopen with new evidence.</li></ul></div><div class="section" id="s4-4"><h2><span class="sec-emoji">📈</span> Defect metrics <span class="lvl i">Intermediate</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Metric</th><th>Formula / meaning</th><th>Used for</th></tr><tr><td>Defect density</td><td>Defects ÷ size (KLOC, story points, function points)</td><td>Compare module quality</td></tr><tr><td>Defect leakage</td><td>Defects found in production ÷ (found in test + production)</td><td>Test effectiveness</td></tr><tr><td>Defect Removal Efficiency (DRE)</td><td>Defects found before release ÷ total defects</td><td>Quality of process</td></tr><tr><td>Defect age</td><td>Today − date reported</td><td>Backlog health</td></tr><tr><td>Reopen rate</td><td>Reopened ÷ fixed</td><td>Fix quality</td></tr><tr><td>Rejection rate</td><td>Rejected ÷ reported</td><td>Report quality / requirement clarity</td></tr><tr><td>Open defects by severity</td><td>Count per severity</td><td>Release readiness</td></tr><tr><td>Defect trend</td><td>Created vs resolved per week</td><td>Stabilisation</td></tr></table></div>
+<h3>Worked example</h3>
+<p>Testing found 90 defects; production found 10 later. Leakage = 10 ÷ 100 = <strong>10%</strong>; DRE = 90 ÷ 100 = <strong>90%</strong>.</p><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Metrics are for learning, not blaming. Never rank individual testers by bug count — people will log trivial bugs and argue over numbers.</div></div></div><div class="section" id="s4-5"><h2><span class="sec-emoji">🧯</span> Special situations <span class="lvl e">Expert</span></h2>
+<div class="table-wrap"><table class="sm"><tr><th>Situation</th><th>What to do</th></tr><tr><td>Duplicate suspected</td><td>Search by keywords/component first; add your evidence to the existing bug; link, don't duplicate</td></tr><tr><td>Blocked tests</td><td>Mark tests Blocked, link the blocking bug, raise the risk in the status report</td></tr><tr><td>Bug found in production</td><td>Raise with production incident process; note customer impact; add regression test</td></tr><tr><td>Security vulnerability</td><td>Do not publish details broadly; use restricted visibility and follow security policy</td></tr><tr><td>Disagreement on validity</td><td>Escalate to Product Owner with the requirement reference</td></tr><tr><td>Cannot reproduce</td><td>Gather logs/HAR, retry on same build/data/time zone, ask dev for log time range</td></tr></table></div><div class="takeaway"><strong>🎯 Key takeaways</strong><ul><li>Triage decides what, who and when; tester provides impact and evidence.</li><li>Retest the exact steps, then regress neighbours.</li><li>Metrics inform decisions — never use them to blame.</li><li>Handle duplicates, blockers and security bugs by process.</li></ul></div></div><div class="section" id="s4-6"><h2><span class="sec-emoji">🏋️</span> Practice <span class="lvl i">Intermediate</span></h2>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 4.1 — Triage board</div><div class="ex-b"><p>Decide the action: (1) Checkout crashes on submit, all users. (2) Colour of "Help" differs from style guide. (3) Report export fails only for 2 million rows. (4) Same as BUG-120 but on Firefox.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><ol><li>Fix now — Critical / Highest.</li><li>Defer — Low / Low; batch with UI polish.</li><li>Medium; investigate, maybe async export; PO decides.</li><li>Duplicate (link to BUG-120, add Firefox info).</li></ol></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 4.2 — Metric calculation</div><div class="ex-b"><p>Release 5 found 120 defects in QA; 6 were found by customers within 2 weeks. Calculate leakage and DRE.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>Total = 126. Leakage = 6 ÷ 126 = 4.8%; DRE = 120 ÷ 126 = 95.2%.</p></div></details></div></div>
+</section>
+<section class="panel" id="t5" data-toc='[["s5-1", "Root Cause Analysis (RCA)"], ["s5-2", "Defect prevention & process improvement"], ["s5-3", "Dashboards & release readiness"], ["s5-4", "Automation & integrations"], ["s5-5", "Practice"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 05 · Advanced</p><h1 class="panel-title">RCA, Prevention &amp; Release Readiness</h1><p class="panel-subtitle">Root cause analysis, dashboards, go/no-go decisions and integrations.</p></div>
+<div class="section" id="s5-1"><h2><span class="sec-emoji">🔍</span> Root Cause Analysis (RCA) <span class="lvl e">Expert</span></h2>
+<p>Fixing a bug solves <em>one</em> problem. Understanding <em>why it happened</em> prevents a family of them.</p>
+<h3>5 Whys</h3>
+<pre><span class="pre-lang">5-whys</span><code>Bug: Order total became negative after applying a coupon twice
+Why 1: The discount was subtracted twice.
+Why 2: The coupon-applied flag was not checked on the second call.
+Why 3: The check was in the UI only; the API did not validate.
+Why 4: Backend requirement did not state "one coupon per order".
+Why 5: Story refinement did not include the tester/PO conversation about limits.
+Action: Add AC "one coupon per order" + API validation + automated API test.</code></pre>
+<h3>Fishbone (Ishikawa) categories</h3>
+<div class="pill-row"><span class="pill">People</span><span class="pill">Process</span><span class="pill">Requirements</span><span class="pill">Code</span><span class="pill">Environment</span><span class="pill">Tools</span><span class="pill">Data</span><span class="pill">Third parties</span></div>
+<h3>Defect injection source & detection phase</h3>
+<div class="table-wrap"><table class="sm"><tr><th>Injected in</th><th>Found in</th><th>Relative cost</th></tr><tr><td>Requirements</td><td>Requirements review</td><td>1×</td></tr><tr><td>Requirements</td><td>System test</td><td>~10×</td></tr><tr><td>Requirements</td><td>Production</td><td>~50–100×</td></tr></table></div></div><div class="section" id="s5-2"><h2><span class="sec-emoji">🧬</span> Defect prevention & process improvement <span class="lvl e">Expert</span></h2>
+<ul><li><strong>Categorise root causes</strong> for every High/Critical bug; review trends monthly.</li><li>Update <strong>checklists</strong> (requirement review, code review, test design) with each learning.</li><li>Add <strong>regression tests</strong> for escaped defects (manual first, automate when stable).</li><li>Feed lessons into the <strong>retrospective</strong> with actions, owners, dates.</li><li><strong>Clustering:</strong> if 60% of bugs come from one module, add targeted reviews, pairing or refactoring.</li></ul></div><div class="section" id="s5-3"><h2><span class="sec-emoji">📊</span> Dashboards & release readiness <span class="lvl e">Expert</span></h2>
+<p>Typical dashboard gadgets:</p>
+<div class="pill-row"><span class="pill">Created vs Resolved (trend)</span><span class="pill">Open defects by severity</span><span class="pill">Open defects by component</span><span class="pill">Average defect age</span><span class="pill">Defects by root cause</span><span class="pill">Reopen rate</span><span class="pill">Sprint bug burndown</span></div>
+<h3>Release readiness / go-no-go checklist</h3>
+<div class="table-wrap"><table class="sm"><tr><th>Check</th><th>Target</th></tr><tr><td>Open Critical defects</td><td>0</td></tr><tr><td>Open High defects</td><td>0 or accepted with workaround and PO sign-off</td></tr><tr><td>Execution of planned tests</td><td>≥ 95% (100% P1)</td></tr><tr><td>Pass rate of P1</td><td>100%</td></tr><tr><td>Regression suite</td><td>Passed on release candidate</td></tr><tr><td>Known issues list</td><td>Documented and shared with support</td></tr><tr><td>Rollback plan</td><td>Ready and tested</td></tr></table></div><div class="callout note"><div class="callout-icon">📝</div><div class="callout-body">The tester's role is to <strong>inform the decision</strong>: "Here are the open risks, here is the impact, here is my recommendation". The business makes the release call.</div></div></div><div class="section" id="s5-4"><h2><span class="sec-emoji">🤖</span> Automation & integrations <span class="lvl e">Expert</span></h2>
+<ul><li><strong>Test tools → tracker:</strong> failing automated tests can auto-create bugs with logs and screenshots (e.g. Xray, Zephyr, ADO Test Plans).</li><li><strong>CI → tracker:</strong> link commits/PRs to bugs using IDs (<code>fix SHOP-231: validate coupon</code>); status transitions can be automated (merged → Ready for QA).</li><li><strong>Chat → tracker:</strong> Slack/Teams bots create and post updates.</li><li><strong>Bulk edits & automation rules:</strong> auto-assign by component; auto-comment when no response in 3 days; auto-transition on linked PR merge.</li><li><strong>APIs:</strong> Jira REST / ADO REST / Bugzilla REST for reports and imports.</li></ul>
+<pre><span class="pre-lang">REST</span><code><span class="c"># Example: create a Jira bug via REST (shown for understanding)</span>
+POST /rest/api/3/issue
+{
+  "fields": {
+    "project": {"key":"SHOP"},
+    "issuetype": {"name":"Bug"},
+    "summary": "Applying MOVIE10 twice makes total negative",
+    "priority": {"name":"High"},
+    "labels": ["regression","checkout"]
+  }
+}</code></pre></div><div class="section" id="s5-5"><h2><span class="sec-emoji">🏋️</span> Practice <span class="lvl e">Expert</span></h2>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 5.1 — RCA</div><div class="ex-b"><p>Production bug: users in IST time zone see offers expire 5½ hours early. Do a 5-Whys.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><ol><li>Offer end time was compared in UTC against local midnight.</li><li>Dates stored without time zone information.</li><li>Requirement said "valid till 31-Dec" with no time zone.</li><li>Test environment servers run in IST so the issue never appeared.</li><li>Action: define time zone rules, test with servers in UTC, add boundary tests around midnight in multiple zones.</li></ol></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Exercise 5.2 — Go / no-go</div><div class="ex-b"><p>Open: 0 Critical, 2 High (one with workaround, one blocks Wallet), 14 Medium. P1 pass 100%, execution 97%. Recommendation?</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>Conditional go: release with Wallet disabled (feature flag) if PO accepts, or fix the blocking High first. Document the known issues, workaround and monitoring plan.</p></div></details></div></div>
+</section>
+<section class="panel" id="t6" data-toc='[["s6-1", "Hands-on lab: log 5 bugs"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 06 · Hands-on</p><h1 class="panel-title">Practice Lab</h1><p class="panel-subtitle">Log realistic defects and make triage decisions.</p></div>
+<div class="section" id="s6-1"><h2><span class="sec-emoji">🧪</span> Hands-on lab: log 5 bugs <span class="lvl b">Basic</span></h2>
+<p>Open any practice site (e.g. a demo shop or the app you are testing) and find real defects, or use these <strong>simulated observations</strong>. For each, write a full bug report using the template, choose severity & priority and name the best status/resolution if the dev replies as shown.</p>
+<div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Case 1</div><div class="ex-b"><p>On a flight-booking page, choosing return date earlier than departure date still lets you click "Search" and shows flights.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p><strong>Title:</strong> Search allows return date earlier than departure date. <strong>Steps:</strong> 1 Open Flights. 2 Set departure 20-Dec, return 15-Dec. 3 Click Search. <strong>Expected:</strong> validation error "Return must be after departure". <strong>Actual:</strong> results shown with confusing prices. <strong>Sev:</strong> Medium, <strong>Pri:</strong> Medium.</p></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Case 2</div><div class="ex-b"><p>Developer replies: "Works as designed — product owner said users can book multi-city." What now?</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>Ask for the story/AC reference. If multi-city is the case, this is not a defect; update the test, and raise a usability improvement (clear UI) as an enhancement ticket. Status: Rejected / Works as designed, with a comment linking the AC.</p></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Case 3</div><div class="ex-b"><p>Randomly, 1 in 6 times, "Pay" button does nothing on mobile Safari.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>Intermittent: record 6 tries, device and iOS version, network type. Capture screen recording, Safari console (via Mac). Title: "Pay button unresponsive intermittently (1/6) on iOS 17 Safari". Severity Critical/High (blocks payments), Priority High.</p></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Case 4</div><div class="ex-b"><p>Admin can see another admin's salary field by changing <code>?id=55</code> in the URL.</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>Security defect (IDOR / broken access control). Severity Critical. Restrict visibility, include exact URL and role, no real data in screenshots. Notify security lead through the defined path.</p></div></details></div><div class="ex"><div class="ex-h"><span class="ex-tag">Practice</span>Case 5</div><div class="ex-b"><p>Fix delivered. How do you verify?</p></div><details><summary>▶ Show solution</summary><div class="ex-s"><p>Re-run original steps on the new build; test other roles, IDs and direct API call; confirm response 403 and no data in the page source; add regression test; comment "Verified on build 2.5.0-rc1" and close.</p></div></details></div></div>
+</section>
+<section class="panel" id="t7" data-toc='[["sq", "Knowledge check"]]'>
+<div class="panel-header"><div class="level-row"><span class="level-tag basic">Basic</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 07 · Assessment</p><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">20 timed multiple-choice questions in a secured full-screen test. Answers and explanations are shown after submission.</p></div>
+<div class="section" id="sq"><div class="quiz-card" id="quizRoot"></div></div>
+</section>
+  </main>
+</div>
+<script>
+/* ---------- Tabs, TOC, scroll spy ---------- */
+(function(){
+  const tabs=document.querySelectorAll('.tab'), panels=document.querySelectorAll('.panel');
+  const tocEl=document.getElementById('toc'), total=tabs.length, pt=document.getElementById('progressText');
+  function buildToc(panel){
+    const data=JSON.parse(panel.getAttribute('data-toc')||'[]');
+    tocEl.innerHTML=data.map(([id,l])=>`<li><a href="#${id}" data-target="${id}">${l}</a></li>`).join('');
+    const f=tocEl.querySelector('a'); if(f)f.classList.add('active');
+  }
+  let manual=null;
+  function activate(i){
+    tabs.forEach((t,k)=>t.classList.toggle('active',k===i));
+    panels.forEach((p,k)=>p.classList.toggle('active',k===i));
+    manual=null; buildToc(panels[i]); pt.textContent=`Tab ${i+1} of ${total}`;
+    window.scrollTo({top:0,behavior:'instant'});
+    tabs[i].scrollIntoView({inline:'center',block:'nearest'});
+  }
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('.toc-list a'); if(!a)return; e.preventDefault();
+    const el=document.getElementById(a.dataset.target);
+    manual=a.dataset.target; tocEl.querySelectorAll('a').forEach(x=>x.classList.toggle('active',x===a));
+    if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});
+  });
+  let tick=false;
+  function spy(){
+    if(manual){tick=false;return;}
+    const p=document.querySelector('.panel.active'); if(!p){tick=false;return;}
+    let cur=null; const secs=[...p.querySelectorAll('.section')];
+    secs.forEach(s=>{ if(s.getBoundingClientRect().top-180<0)cur=s.id; });
+    if(secs.length && window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-4) cur=secs[secs.length-1].id;
+    if(cur)tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));
+    tick=false;
+  }
+  window.addEventListener('scroll',()=>{ if(!tick){requestAnimationFrame(spy);tick=true;} },{passive:true});
+  ['wheel','touchstart','keydown','pointerdown'].forEach(ev=>window.addEventListener(ev,e=>{ if(e.target&&e.target.closest&&e.target.closest('.toc-list a'))return; manual=null; },{passive:true}));
+  window.resetProgress=()=>activate(0);
+  activate(0);
+})();
+
+
+const __root=document.getElementById('quizRoot');
+if(__root){__root.innerHTML='<div class="qz-card"><h2 style="margin-top:0">Defect Tracking &amp; Management — Final Assessment</h2>'
++'<p style="color:var(--ink-soft);font-size:14px;line-height:1.6">A timed, proctored, exam-style assessment. Questions are shuffled on every attempt and answers with explanations are shown only after you submit.</p>'
++'<ul class="qz-list"><li><b>Questions</b><span>20 multiple-choice</span></li><li><b>Time limit</b><span>30 min</span></li><li><b>Secure mode</b><span>Fullscreen · 3 warnings → auto-submit</span></li></ul>'
++'<div class="qz-center"><button class="qz-btn" id="assessStartBtn" type="button">▶ Start Assessment</button></div></div><div id="scoreBoard" class="score-board" style="display:none"></div>';}
+window.MT_EXAM = {"slug": "3_defect_tracking_management", "title": "Defect Tracking & Management · Manual Testing", "minPerQ": 1.5, "assess": [{"q": "A defect is best described as:", "options": ["A user complaint", "A flaw in an artefact that may cause failure", "A new feature request", "A slow server"], "answer": 1, "exp": "A defect is a flaw; a failure is the visible symptom."}, {"q": "Which status usually follows 'Fixed' when the tester confirms the fix?", "options": ["New", "Reopened", "Verified / Closed", "Deferred"], "answer": 2, "exp": "After confirmation the defect is Verified and Closed; if it fails, it is reopened."}, {"q": "The most useful bug title is:", "options": ["Bug in checkout", "It's broken", "Applying MOVIE10 twice makes the cart total negative", "Please fix urgent!!!"], "answer": 2, "exp": "It states what, where and the condition."}, {"q": "Steps to reproduce should be:", "options": ["Vague summaries", "Numbered, atomic and with exact data", "Only screenshots", "Omitted if the bug is obvious"], "answer": 1, "exp": "Developers must be able to repeat them exactly."}, {"q": "Severity describes:", "options": ["How soon to fix", "The impact of the defect on the system or user", "Developer workload", "Number of comments"], "answer": 1, "exp": "Priority is urgency; severity is impact."}, {"q": "A typo in the company name on the home page right before launch is typically:", "options": ["High severity, low priority", "Low severity, high priority", "Low, low", "Critical, critical"], "answer": 1, "exp": "Technically minor, but business visibility makes it urgent."}, {"q": "Which Jira query finds unresolved High bugs in project SHOP?", "options": ["project = SHOP AND issuetype = Bug AND priority = High AND resolution = Unresolved", "SELECT * FROM bugs", "find bugs high", "status:open high"], "answer": 0, "exp": "JQL uses field = value with AND/OR operators."}, {"q": "In Azure DevOps, which field holds the steps to reproduce on a Bug?", "options": ["Repro Steps", "Acceptance Criteria", "Remaining Work", "Tags"], "answer": 0, "exp": "The Bug work item has a Repro Steps field plus System Info."}, {"q": "Bugzilla resolution values include:", "options": ["FIXED, INVALID, WONTFIX, DUPLICATE, WORKSFORME", "Done, To Do, Blocked", "Pass, Fail", "Open, Active"], "answer": 0, "exp": "Bugzilla separates status from resolution."}, {"q": "Defect triage is:", "options": ["Fixing the defect", "Reviewing, validating, prioritising and assigning new defects", "Closing all defects", "Writing test cases"], "answer": 1, "exp": "It is a decision process led by QA, dev and product."}, {"q": "A defect marked 'Cannot reproduce' should first be handled by:", "options": ["Closing silently", "Adding more evidence, logs and conditions, or asking for info", "Deleting it", "Raising severity"], "answer": 1, "exp": "Provide frequency, environment, data and logs; clarify rather than argue."}, {"q": "Confirmation testing (re-testing) means:", "options": ["Running the entire regression suite", "Re-running the failing scenario on the fixed build", "Writing new test cases", "Performance testing"], "answer": 1, "exp": "Re-test checks the specific fix; regression checks for side effects."}, {"q": "Defect leakage is calculated as:", "options": ["Production defects ÷ total (test + production) defects", "Test defects ÷ test cases", "Open ÷ closed", "Severity × priority"], "answer": 0, "exp": "It shows how many defects escaped to production."}, {"q": "90 defects found in test, 10 in production. Leakage is:", "options": ["9%", "10%", "90%", "1%"], "answer": 1, "exp": "10 ÷ 100 = 10%."}, {"q": "What should you do with sensitive data in screenshots/HAR files?", "options": ["Attach as is", "Remove or mask it", "Email externally", "Ignore"], "answer": 1, "exp": "Protect passwords, tokens and personal data."}, {"q": "The developer says 'works as designed' and cites approved AC. The right response is:", "options": ["Reopen repeatedly", "Check the AC; if correct, mark rejected and consider raising a change request or usability suggestion", "Increase severity", "Close without comment"], "answer": 1, "exp": "Align on the requirement; real user pain becomes an enhancement."}, {"q": "The 5-Whys technique is used for:", "options": ["Estimating effort", "Root cause analysis", "Writing test data", "Severity classification"], "answer": 1, "exp": "Repeatedly asking why exposes the underlying cause."}, {"q": "Defect clustering suggests you should:", "options": ["Test only that module", "Allocate extra review and testing effort to modules with many defects", "Ignore the module", "Delete its tests"], "answer": 1, "exp": "Bugs tend to concentrate in a few areas."}, {"q": "A security bug should be reported:", "options": ["Publicly in team chat", "Using restricted visibility and the defined security process", "Not at all", "Only after release"], "answer": 1, "exp": "Limit exposure until fixed."}, {"q": "Which statement about metrics is best?", "options": ["Rank testers by bug count", "Use metrics to understand quality and process, not to blame", "Never use metrics", "Only measure Critical bugs"], "answer": 1, "exp": "Metrics inform decisions; punishing counts leads to gaming."}]};
+/* =====================================================================
+   Final assessment — full-screen, timed mock exam (graded in-browser)
+   ===================================================================== */
+(function(){
+  const C = window.MT_EXAM;
+  const BANK = C.assess.map((q,i)=>Object.assign({id:'q'+i}, q));
+  const EXAM_MIN = Math.max(5, Math.ceil(C.assess.length*C.minPerQ));
+  const EXAM_SECONDS = EXAM_MIN*60;
+  const LS_KEY = 'manualtesting_scores_' + C.slug;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash .card:hover{transform:none}
+  .exam-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9;padding:0}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-fswarn{position:fixed;inset:0;z-index:100003;background:rgba(15,23,42,.92);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#fff;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fswarn .fw-box{max-width:520px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .exam-fswarn h3{font-size:30px;font-weight:800;margin:0;display:flex;align-items:center;gap:12px;color:#fff}
+  .exam-fswarn p{margin:0;font-size:16px;color:#e2e8f0;line-height:1.5}
+  .exam-fswarn .fw-count{font-size:16px;font-weight:600;color:#fff}
+  .exam-fswarn .fw-btn{margin-top:6px;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:15px 26px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+  .exam-fswarn .fw-btn:hover{background:#000}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}.exam-q-pane{padding:20px}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+  function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function examDialog(title,msg,okLabel,cancel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">${cancel?'<button class="exam-btn nav" data-a="0">Cancel</button>':''}<button class="exam-btn primary" data-a="1">${okLabel||'OK'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d && cancel){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores(); a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: tab-switch / fullscreen-exit warnings (3 strikes -> auto-submit) ---- */
+  let warns=0, lastWarn=0, proctorOn=false;
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function hideFsWarn(){ const w=document.getElementById('examFsWarn'); if(w)w.remove(); }
+  function showFsWarn(n){
+    injectCss(); hideFsWarn();
+    const w=document.createElement('div'); w.className='exam-fswarn'; w.id='examFsWarn';
+    w.innerHTML='<div class="fw-box"><h3><span>&#9888;&#65039;</span> Fullscreen exited</h3>'+
+      '<p>The assessment must remain in fullscreen mode.</p>'+
+      '<div class="fw-count">Warning '+n+' of 3</div>'+
+      '<button class="fw-btn" id="examFsReturn">Return to assessment</button></div>';
+    document.body.appendChild(w);
+    const btn=document.getElementById('examFsReturn');
+    btn.addEventListener('click',()=>{
+      const el=document.documentElement;
+      const done=()=>{ fsWanted=true; hideFsWarn(); };
+      if(el.requestFullscreen){ el.requestFullscreen().then(done).catch(()=>{}); } else { done(); }
+    });
+    try{btn.focus();}catch(e){}
+  }
+  function countWarn(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<1500)return; lastWarn=now;
+    warns++;
+    if(warns>=3){ hideFsWarn(); examDialog('Test submitted','You left the test 3 times. It has been auto-submitted.'); submitExam(true); }
+    else if(kind==='fs'){ showFsWarn(warns); }
+    else { examDialog('Warning '+warns+' of 3','Switching tabs or leaving the window is not allowed. After 3 warnings the test is auto-submitted.'); }
+  }
+  function fsHandler(){
+    if(!examOn)return;
+    if(document.fullscreenElement){ hideFsWarn(); return; }
+    if(fsWanted){ countWarn('fs'); }
+  }
+  function visHandler(){ if(document.hidden){ showCover(); countWarn(); } else { hideCover(); } }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function keyGuard(e){ const k=(e.key||'').toLowerCase(); if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; } }
+  let fsWanted=false;
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+  }
+  function stopProctor(){
+    proctorOn=false; hideFsWarn();
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    hideCover();
+  }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; ${C.title} &mdash; Final Assessment</h2>
+      <p>A timed, proctored, exam-style assessment for the Manual Testing track.</p>
+      <ul>
+        <li><b>${BANK.length} questions</b>, shuffled every attempt</li>
+        <li><b>${EXAM_MIN}-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Correct answers and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> where your browser allows it</li>
+        <li><b>No tab / window switching</b> and <b>no exiting fullscreen (Esc)</b> &mdash; 3 warnings and the test <b>auto-submits</b></li>
+        <li>Copy and right-click are disabled during the test</li>
+      </ul>
+      <div style="display:flex;gap:10px"><button class="exam-btn nav" id="examCancel" style="flex:0 0 auto">Cancel</button>
+      <button class="exam-btn primary" id="examBegin" style="flex:1;padding:14px">Start Test &rarr;</button></div>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examCancel').addEventListener('click',()=>sp.remove());
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      fsWanted=false;
+      if(document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().then(()=>{fsWanted=true;}).catch(()=>{}); }
+      sp.remove(); enterExam();
+    });
+  }
+
+  function enterExam(){
+    injectCss();
+    items = shuffle(BANK);
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    const ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">${C.title} &mdash; Final Assessment</div><div class="et-sub">${items.length} questions &middot; one attempt &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}</div>
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}" tabindex="0"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>{
+      const pick=()=>{ answers[id]=+el.dataset.i; pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); refreshPalette(); };
+      el.addEventListener('click',pick);
+      el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();} });
+    });
+    document.getElementById('examPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    document.getElementById('examNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();});
+    refreshPalette();
+    pane.scrollTop=0;
+  }
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examDialog('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test', true);
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    let score=0; items.forEach(it=>{ if(answers[it.id]===it.answer) score++; });
+    showResults(score);
+  }
+  function showResults(score){
+    const total=items.length; saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below, revisit the modules and try again.';
+    if(pct>=85)msg='Outstanding &mdash; you have expert-level command of this topic.';
+    else if(pct>=65)msg='Solid pass. Review the questions you missed and you are interview-ready.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the modules you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const you=answers[it.id], attempted=(you!=null), ok=attempted&&you===it.answer;
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+'</div>';
+      inner+= attempted ? '<div class="ra '+(ok?'cor':'wrong')+'">Your answer: '+String.fromCharCode(65+you)+'. '+it.options[you]+'</div>' : '<div class="ra wrong">Your answer: <i>Not answered</i></div>';
+      if(!ok) inner+='<div class="ra cor">Correct: '+String.fromCharCode(65+it.answer)+'. '+it.options[it.answer]+'</div>';
+      if(it.exp) inner+='<div class="rx">'+it.exp+'</div>';
+      return '<div class="r '+(ok?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; ${C.title}</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another attempt</button></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    document.getElementById('examRetry').addEventListener('click',()=>{ closeExam(); showSplash(); });
+    document.getElementById('examClose').addEventListener('click',closeExam);
+  }
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',showSplash);
+  renderScoreboard();
+})();
+
+</script>
+<script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body>
+</html>

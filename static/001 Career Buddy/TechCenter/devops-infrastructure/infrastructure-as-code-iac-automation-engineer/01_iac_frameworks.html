@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IaC Frameworks — Terraform, OpenTofu, Pulumi &amp; AWS CDK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+/* ============= Notion-inspired theme ============= */
+:root{
+  --bg:#ffffff;
+  --bg-soft:#f7f6f3;
+  --bg-block:#f1f1ef;
+  --bg-code:#f6f5f4;
+  --ink:#37352f;
+  --ink-soft:#787774;
+  --ink-mute:#9b9a97;
+  --line:#e9e9e7;
+  --line-strong:#d3d3d0;
+  --accent:#14213D;       /* notion blue */
+  --accent-soft:#eef1f7;
+  --green:#0f7b0f;
+  --green-soft:#ddedea;
+  --orange:#d9730d;
+  --orange-soft:#fadec9;
+  --red:#e03e3e;
+  --red-soft:#ffe2dd;
+  --purple:#22345f;
+  --purple-soft:#eef1f7;
+  --yellow:#dfab01;
+  --yellow-soft:#fdecc8;
+  --pink:#ad1a72;
+  --pink-soft:#f5e0e9;
+  --shadow-sm:0 1px 2px rgba(15,15,15,.06),0 1px 4px rgba(15,15,15,.05);
+  --shadow-md:0 4px 14px rgba(15,15,15,.08);
+  --radius-sm:6px;
+  --radius:10px;
+  --radius-lg:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ============= Sticky header ============= */
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 32px;
+  gap:20px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'Noto Sans',sans-serif;
+  font-weight:600;
+  font-size:18px;
+  letter-spacing:-.01em;
+}
+.brand-mark{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#3776ab 0%,#ffd43b 100%);
+  border-radius:8px;
+  color:#fff;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:var(--shadow-sm);
+}
+.brand-sub{color:var(--ink-soft);font-weight:400;font-family:'Noto Sans',sans-serif;font-size:13px;margin-left:4px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.progress-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 12px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;font-weight:500;
+  color:var(--ink-soft);
+}
+.progress-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px var(--green-soft);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;
+  background:#fff;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s ease;
+  font-family:inherit;
+}
+.btn:hover{background:var(--bg-soft);border-color:var(--ink-mute)}
+.btn svg{width:14px;height:14px}
+
+/* ============= Tab bar ============= */
+.tabbar{
+  display:flex;
+  gap:2px;
+  padding:0 24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-top:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{display:none}
+.tab{
+  position:relative;
+  padding:11px 16px;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:7px;
+  transition:color .15s ease, border-color .15s ease;
+}
+.tab .tab-num{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  color:var(--ink-mute);
+  font-weight:600;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{
+  color:var(--ink);
+  border-bottom-color:var(--ink);
+}
+.tab.active .tab-num{color:var(--accent)}
+
+/* ============= Layout ============= */
+.layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:0;
+  max-width:1400px;
+  margin:0 auto;
+}
+@media (max-width:960px){
+  .layout{grid-template-columns:1fr}
+  .toc{display:none}
+}
+
+/* ============= TOC sidebar ============= */
+.toc{
+  position:sticky;
+  top:118px;
+  align-self:start;
+  height:calc(100vh - 130px);
+  overflow-y:auto;
+  padding:32px 16px 32px 32px;
+  border-right:1px solid var(--line);
+}
+.toc-title{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-mute);
+  font-weight:600;
+  margin-bottom:12px;
+  padding-left:8px;
+}
+.toc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1px}
+.toc-list a{
+  display:block;
+  padding:5px 10px;
+  font-size:13px;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-radius:4px;
+  border-left:2px solid transparent;
+  line-height:1.4;
+  transition:all .15s ease;
+}
+.toc-list a:hover{background:var(--bg-soft);color:var(--ink)}
+.toc-list a.active{
+  color:#fff;
+  background:#16233f;
+  border-left-color:transparent;
+  font-weight:600;
+  border-radius:12px;
+  padding:10px 14px;
+}
+.toc::-webkit-scrollbar{width:6px}
+.toc::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+
+/* ============= Main content ============= */
+.main{padding:48px 56px 80px;min-width:0}
+@media (max-width:720px){.main{padding:32px 20px 60px}}
+
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.panel-header{margin-bottom:36px}
+.panel-eyebrow{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-mute);
+  margin-bottom:8px;
+}
+.panel-title{
+  font-family:'Noto Sans',sans-serif;
+  font-size:42px;
+  line-height:1.1;
+  font-weight:600;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+.panel-subtitle{
+  font-size:17px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:680px;
+  line-height:1.55;
+}
+
+/* Section anchors inside a panel */
+.section{margin-top:48px;scroll-margin-top:140px}
+.section h2{
+  font-family:'Noto Sans',sans-serif;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+}
+.section h2 .sec-emoji{font-size:24px;filter:saturate(1.1)}
+.section h3{
+  font-family:'Noto Sans',sans-serif;
+  font-size:18px;
+  font-weight:600;
+  margin:24px 0 10px;
+  letter-spacing:-.005em;
+}
+.section p{margin:10px 0;color:#3a3833}
+.section ul,.section ol{margin:10px 0;padding-left:22px;color:#3a3833}
+.section li{margin:4px 0}
+.section li::marker{color:var(--ink-mute)}
+
+/* Inline code */
+code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.88em;
+  background:var(--bg-code);
+  border:1px solid var(--line);
+  padding:1px 6px;
+  border-radius:4px;
+  color:#eb5757;
+}
+/* Code blocks */
+pre{
+  font-family:'JetBrains Mono',monospace;
+  background:#2b2a28;
+  color:#e6e6e3;
+  padding:18px 20px;
+  border-radius:var(--radius);
+  overflow-x:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  margin:14px 0;
+  box-shadow:var(--shadow-sm);
+  position:relative;
+}
+pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+.pre-lang{
+  position:absolute;top:8px;right:12px;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:#9b9a97;font-family:'Noto Sans',sans-serif;font-weight:600;
+}
+.tok-k{color:#ff79c6}.tok-s{color:#f1fa8c}.tok-n{color:#bd93f9}.tok-c{color:#6272a4;font-style:italic}.tok-f{color:#50fa7b}.tok-b{color:#8be9fd}
+
+/* Callouts (Notion-style) */
+.callout{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:12px;
+  align-items:start;
+  background:var(--bg-block);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:16px 0;
+  border:1px solid var(--line);
+}
+.callout-icon{
+  width:28px;height:28px;display:grid;place-items:center;
+  background:#fff;border-radius:6px;
+  font-size:16px;
+  border:1px solid var(--line);
+}
+.callout-body{font-size:14.5px;line-height:1.55}
+.callout.tip{background:var(--accent-soft);border-color:#bcdcf5}
+.callout.tip .callout-icon{background:#fff}
+.callout.warn{background:var(--orange-soft);border-color:#f5cc9c}
+.callout.success{background:var(--green-soft);border-color:#bdd9d2}
+.callout.note{background:var(--yellow-soft);border-color:#f0d889}
+
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card-icon{
+  width:36px;height:36px;display:grid;place-items:center;
+  border-radius:8px;font-size:18px;margin-bottom:10px;
+}
+.card-title{font-weight:600;font-size:15px;margin-bottom:4px}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+
+/* Tables */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin:16px 0;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+th,td{
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+th{
+  background:var(--bg-soft);
+  font-weight:600;
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-soft)}
+
+/* SVG diagram wrapper */
+.diagram{
+  background:linear-gradient(180deg,#fafaf8 0%,#f4f3ef 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin:18px 0;
+  text-align:center;
+}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram-caption{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:10px;
+  font-style:italic;
+  letter-spacing:.01em;
+}
+
+/* Quick reference badges */
+.badge{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:4px;
+  letter-spacing:.02em;
+  font-family:'JetBrains Mono',monospace;
+}
+.badge.blue{background:var(--accent-soft);color:#1d6bbf}
+.badge.green{background:var(--green-soft);color:#0a5f0a}
+.badge.orange{background:var(--orange-soft);color:#a85a08}
+.badge.purple{background:var(--purple-soft);color:#73508c}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-mute)}
+
+/* Two-column compare */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.compare-col{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 16px;
+}
+.compare-col h4{margin:0 0 8px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Pill row */
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pill{
+  padding:4px 10px;
+  background:var(--bg-block);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px;
+  font-family:'JetBrains Mono',monospace;
+  color:var(--ink);
+}
+
+/* Level badge on panel header */
+.level-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.level-tag{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+  padding:3px 9px;border-radius:5px;letter-spacing:.03em;text-transform:uppercase;
+}
+.level-tag.inter{background:var(--accent-soft);color:#1d6bbf}
+.level-tag.adv{background:var(--pink-soft);color:#8c1a63}
+.level-tag.fresher{background:var(--green-soft);color:#0a5f0a}
+
+/* ============= Assessment / Quiz components ============= */
+.quiz-progress{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg-block);border:1px solid var(--line);
+  border-radius:var(--radius);padding:14px 18px;margin:18px 0 28px;
+}
+.quiz-score{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px}
+.quiz-bar-track{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.quiz-bar-fill{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.quiz-reset-btn{margin-left:auto}
+
+.mcq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.mcq-q{font-weight:600;font-size:15px;margin-bottom:4px;display:flex;gap:8px}
+.mcq-qnum{
+  font-family:'JetBrains Mono',monospace;color:var(--accent);flex-shrink:0;
+}
+.mcq-opts{list-style:none;padding:0;margin:12px 0 4px;display:flex;flex-direction:column;gap:8px}
+.mcq-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all .15s ease;background:var(--bg-soft);
+}
+.mcq-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mcq-opt .opt-letter{
+  width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;
+  flex-shrink:0;color:var(--ink-soft);
+}
+.mcq.answered .mcq-opt{cursor:default;pointer-events:none;opacity:.75}
+.mcq.answered .mcq-opt.correct{background:var(--green-soft);border-color:var(--green);opacity:1}
+.mcq.answered .mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq.answered .mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);opacity:1}
+.mcq.answered .mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-opt.correct{background:var(--green-soft);border-color:var(--green);color:#0a5f0a;font-weight:700}
+.mcq-opt.correct .opt-letter{background:var(--green);color:#fff;border-color:var(--green)}
+.mcq-opt.incorrect{background:var(--red-soft);border-color:var(--red);color:#a01c1c;font-weight:700}
+.mcq-opt.incorrect .opt-letter{background:var(--red);color:#fff;border-color:var(--red)}
+.mcq-feedback{
+  margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px;
+  display:none;
+}
+.mcq.answered .mcq-feedback{display:block}
+.mcq-feedback.ok{background:var(--green-soft);color:#0a5f0a}
+.mcq-feedback.bad{background:var(--red-soft);color:#a01c1c}
+
+.saq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;margin:16px 0;box-shadow:var(--shadow-sm);
+}
+.saq-q{font-weight:600;font-size:15px;margin-bottom:10px;display:flex;gap:8px}
+.saq-qnum{font-family:'JetBrains Mono',monospace;color:var(--purple);flex-shrink:0}
+.saq textarea{
+  width:100%;min-height:70px;resize:vertical;
+  font-family:'Noto Sans',sans-serif;font-size:14px;padding:10px 12px;
+  border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);
+  background:var(--bg-soft);
+}
+.saq textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.saq-toggle{
+  margin-top:10px;
+}
+.saq-model{
+  display:none;margin-top:12px;padding:12px 14px;
+  background:var(--purple-soft);border:1px solid #d9c3e8;border-radius:8px;
+  font-size:13.5px;line-height:1.55;
+}
+.saq-model.show{display:block}
+
+/* ============= Assessment modal (one question at a time) ============= */
+.assess-start-card{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:28px 30px;box-shadow:var(--shadow-sm);margin-top:18px;
+}
+.assess-intro-title{font-family:'Noto Sans',sans-serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:10px}
+.assess-intro-text{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;max-width:620px}
+.assess-intro-list{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin:0 0 20px 18px}
+.assess-start-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;border:none;
+  padding:12px 26px;border-radius:8px;font-weight:600;font-size:14.5px;
+  cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-start-btn:hover{opacity:.9}
+
+.assess-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:var(--bg);overflow-y:auto;
+}
+.assess-modal-overlay.open{display:block}
+.assess-modal-box{max-width:none;margin:0;padding:0 40px 60px}
+.assess-sticky-header{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:28px;padding-bottom:16px}
+.assess-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.assess-modal-title{font-family:'Noto Sans',sans-serif;font-size:19px;font-weight:600;color:var(--ink)}
+.assess-modal-close{
+  background:var(--bg-block);color:var(--ink-soft);border:1px solid var(--line);
+  width:30px;height:30px;border-radius:50%;font-size:14px;font-weight:700;
+  cursor:pointer;transition:.15s;
+}
+.assess-modal-close:hover{background:var(--line);color:var(--ink)}
+
+@keyframes assessFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.assess-q-wrap{animation:assessFadeIn .35s ease}
+.assess-q{font-weight:600;font-size:16px;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.assess-fb-banner{display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:10px;font-weight:700;font-size:15px;margin-top:14px;border:1px solid transparent}
+.assess-fb-banner.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-fb-banner.bad{background:var(--red-soft);color:#a01c1c;border-color:#f5c2c2}
+.assess-fb-answer{margin-top:10px;padding:12px 18px;border-radius:10px;background:#eef0fb;color:#4a4a68;border:1px solid #dcdcf0;font-size:14px;display:flex;align-items:center;gap:8px;font-weight:700}
+.assess-fb-answer.ok{background:var(--green-soft);color:#0a5f0a;border-color:#bdd9d2}
+.assess-next-btn{
+  background:var(--orange);color:#3a1f00;border:none;padding:10px 22px;border-radius:8px;
+  font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+  margin-top:14px;
+}
+.assess-next-btn:hover{opacity:.9}
+.assess-result-score{font-family:'JetBrains Mono',monospace;font-size:40px;font-weight:700;color:var(--ink);text-align:center;margin:20px 0 6px}
+.assess-result-msg{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:8px;line-height:1.5}
+.assess-result-note{font-size:13px;color:var(--ink-mute);text-align:center;margin-bottom:22px;line-height:1.5;max-width:480px;margin-left:auto;margin-right:auto}
+.assess-retry-btn{
+  display:block;margin:0 auto;background:var(--accent);color:#fff;border:none;
+  padding:11px 26px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:opacity .15s ease;
+}
+.assess-retry-btn:hover{opacity:.9}
+
+.toc,.sidebar,.sidenav{scrollbar-width:thin;scrollbar-color:#cbd2e0 transparent}
+.toc::-webkit-scrollbar{width:9px}
+.toc::-webkit-scrollbar-thumb{background:#cbd2e0;border-radius:8px}
+body,h1,h2,h3,h4,h5,h6,p,a,span,li,ul,ol,td,th,div,section,header,nav,aside,main,label,button,input,select,textarea,strong,b,em,small{font-family:'Noto Sans',system-ui,-apple-system,'Segoe UI',sans-serif !important}
+code,pre,pre *,.pill,.badge,.tab-num,.quiz-score,.mcq-qnum,.opt-letter,.level-tag,.brand-mark{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace !important}
+.pre-lang{font-family:'Noto Sans',sans-serif !important}
+.tab .tab-num{display:none !important}
+.tab{border-radius:8px !important;border-bottom:none !important}
+.tab:not(.active){color:#4a5568 !important;background:transparent !important}
+.tab:not(.active):hover{background:#eef1f7 !important;color:#14213D !important}
+.tab.active{background:#14213D !important;color:#fff !important;font-weight:700 !important}
+.tabbar{position:sticky;top:0;background:#fff;gap:2px}
+.layout,.main{max-width:none}
+.section h3{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.section h2{font-weight:700}
+.panel-title{font-weight:700}
+.assess-fb-expl{margin-top:10px;padding:12px 18px;border-radius:10px;background:var(--bg-block);border:1px solid var(--line);font-size:13.5px;color:var(--ink-soft);line-height:1.55}
+.compare-col{min-width:0}
+.compare-col pre{overflow-x:auto;font-size:12.5px;padding:14px 16px}
+.compare{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.diagram text{font-family:'Noto Sans',sans-serif !important}
+
+.brand-mark{background:linear-gradient(135deg,#14213D 0%,#7b42bc 100%) !important}
+
+</style>
+<style id="cb-hide-tab-counter">/* CareerBuddy: no "Tab N of M" counter in the course header */
+#progressText,#pt,#ptxt,#tabCounter{display:none!important}
+.progress-pill:has(#progressText),.pp:has(#pt),.pill-prog:has(#pt),.status-pill:has(#tabCounter){display:none!important}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-top">
+    <div class="brand"><div class="brand-mark">IaC</div><span>IaC Frameworks<span class="brand-sub"> · Infrastructure as Code / Automation Engineer</span></span></div>
+    <div class="header-actions">
+      <span class="progress-pill"><span class="progress-dot"></span><span id="progressText">Tab 1 of 8</span></span>
+      <button class="btn" onclick="resetProgress()" title="Reset to first tab"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 8a5.5 5.5 0 1 1 1.6 3.9"/><path d="M2 4v3.5h3.5"/></svg>Reset</button>
+    </div>
+  </div>
+  <nav class="tabbar" role="tablist" id="tabbar"><button class="tab active" data-tab="t1" role="tab">IaC Fundamentals</button><button class="tab" data-tab="t2" role="tab">Terraform: Foundations</button><button class="tab" data-tab="t3" role="tab">Terraform: Advanced</button><button class="tab" data-tab="t4" role="tab">OpenTofu</button><button class="tab" data-tab="t5" role="tab">Pulumi</button><button class="tab" data-tab="t6" role="tab">AWS CDK</button><button class="tab" data-tab="t7" role="tab">Choosing &amp; Real-World Patterns</button><button class="tab" data-tab="t8" role="tab">Assessment</button></nav>
+</header>
+<div class="layout">
+  <aside class="toc"><div class="toc-title">On this page</div><ul class="toc-list" id="toc"></ul></aside>
+  <main class="main">
+<section class="panel active" id="t1" data-toc='[["s1-1", "What is IaC?"], ["s1-2", "Declarative vs Imperative"], ["s1-3", "Core Principles"], ["s1-4", "The Tool Landscape"]]'><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Beginner</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 01 · Foundations</p><h1 class="panel-title">What is Infrastructure as Code?</h1><p class="panel-subtitle">Learn the core ideas behind every IaC tool: declarative vs imperative, idempotency, state, and the plan → apply lifecycle. Master these once and every framework becomes easy to pick up.</p></div><div class="section" id="s1-1"><h2><span class="sec-emoji">🏗️</span> What is IaC?</h2><p><strong>Infrastructure as Code (IaC)</strong> means describing servers, networks, databases, permissions and every other piece of infrastructure in <strong>text files</strong> that live in Git, instead of clicking through a cloud console. The files are reviewed, tested, versioned and executed by a tool that makes reality match the files.</p><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d6bbf">📜</div><div class="card-title">Versioned</div><div class="card-desc">Every change is a Git commit: who, what, when, and why.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🔁</div><div class="card-title">Repeatable</div><div class="card-desc">Build identical dev, test and prod environments from the same code.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#22345f">🔍</div><div class="card-title">Reviewable</div><div class="card-desc">Pull requests and plan output replace "who clicked what?".</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">⚡</div><div class="card-title">Fast</div><div class="card-desc">Create or destroy a full environment in minutes, not days.</div></div></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><strong>Mental model:</strong> Console clicking is like cooking without a recipe. IaC is the written recipe <em>plus</em> a robot chef that only changes what is different from the last time.</div></div></div><div class="section" id="s1-2"><h2><span class="sec-emoji">⚖️</span> Declarative vs Imperative</h2><p>This is the most important distinction in the whole course.</p><div class="compare"><div class="compare-col"><h4>Declarative — "what"</h4><ul><li>You describe the <strong>desired end state</strong>.</li><li>The tool works out the steps.</li><li>Terraform, OpenTofu, CloudFormation, Bicep, Kubernetes manifests.</li><li>Easy to reason about; limited logic.</li></ul></div><div class="compare-col"><h4>Imperative — "how"</h4><ul><li>You write the <strong>steps</strong> to run.</li><li>You handle ordering and conditions.</li><li>Shell scripts, AWS CLI, raw SDK calls.</li><li>Flexible; easy to create inconsistent results.</li></ul></div></div><p>Pulumi and AWS CDK sit in between: you write <em>real programming languages</em>, but the program only <strong>declares resources</strong>. The engine still computes a desired state and diffs it, so they behave declaratively.</p><pre><span class="pre-lang">bash</span><code><span class="tok-c"># Imperative: run twice and the second run fails (bucket exists)</span>
+aws s3api create-bucket --bucket my-app-logs --region us-east-<span class="tok-n">1</span></code></pre><pre><span class="pre-lang">hcl</span><code><span class="tok-c"># Declarative: run 100 times, result is identical</span>
+<span class="tok-k">resource</span> <span class="tok-s">"aws_s3_bucket"</span> <span class="tok-s">"logs"</span> {
+  bucket = <span class="tok-s">"my-app-logs"</span>
+}</code></pre></div><div class="section" id="s1-3"><h2><span class="sec-emoji">🔄</span> Core Principles</h2><div style="overflow-x:auto"><table><tr><th>Principle</th><th>Meaning</th><th>Why it matters</th></tr><tr><td><strong>Idempotency</strong></td><td>Running the same code repeatedly gives the same result.</td><td>Safe to re-run after failures or in pipelines.</td></tr><tr><td><strong>Immutability</strong></td><td>Replace resources instead of editing them in place.</td><td>Avoids snowflake servers and hidden changes.</td></tr><tr><td><strong>State</strong></td><td>A record of which real resources belong to your code.</td><td>Lets the tool compute diffs, updates and deletes.</td></tr><tr><td><strong>Drift</strong></td><td>Real infrastructure differs from code (manual change).</td><td>Detected by plan/refresh; fixed by apply or code update.</td></tr><tr><td><strong>Modularity</strong></td><td>Reusable building blocks with inputs and outputs.</td><td>Standardises patterns across teams.</td></tr><tr><td><strong>Least privilege</strong></td><td>The deploy identity can only do what it needs.</td><td>Limits blast radius of a bad apply.</td></tr></table></div><div class="diagram"><svg viewBox="0 0 804 96" xmlns="http://www.w3.org/2000/svg" role="img"><defs><marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#787774"/></marker></defs><rect x="10" y="20" width="128" height="56" rx="10" fill="#14213D" stroke="#14213D" stroke-width="1.2"/><text x="74" y="40" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff" font-family="Noto Sans,sans-serif">Write</text><text x="74" y="56" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff" font-family="Noto Sans,sans-serif">code</text><line x1="141" y1="48" x2="170" y2="48" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/><rect x="174" y="20" width="128" height="56" rx="10" fill="#eef1f7" stroke="#14213D" stroke-width="1.2"/><text x="238" y="40" text-anchor="middle" font-size="12.5" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Plan</text><text x="238" y="56" text-anchor="middle" font-size="12.5" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">(diff)</text><line x1="305" y1="48" x2="334" y2="48" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/><rect x="338" y="20" width="128" height="56" rx="10" fill="#eef1f7" stroke="#14213D" stroke-width="1.2"/><text x="402" y="40" text-anchor="middle" font-size="12.5" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Review</text><text x="402" y="56" text-anchor="middle" font-size="12.5" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">(PR)</text><line x1="469" y1="48" x2="498" y2="48" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/><rect x="502" y="20" width="128" height="56" rx="10" fill="#eef1f7" stroke="#14213D" stroke-width="1.2"/><text x="566" y="40" text-anchor="middle" font-size="12.5" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Apply</text><text x="566" y="56" text-anchor="middle" font-size="12.5" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">(change)</text><line x1="633" y1="48" x2="662" y2="48" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/><rect x="666" y="20" width="128" height="56" rx="10" fill="#14213D" stroke="#14213D" stroke-width="1.2"/><text x="730" y="40" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff" font-family="Noto Sans,sans-serif">Observe</text><text x="730" y="56" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff" font-family="Noto Sans,sans-serif">(state / drift)</text></svg><div class="diagram-caption">The universal IaC loop — every framework in this course follows it.</div></div></div><div class="section" id="s1-4"><h2><span class="sec-emoji">🧰</span> The Tool Landscape</h2><div style="overflow-x:auto"><table><tr><th>Tool</th><th>Style</th><th>Language</th><th>Best for</th></tr><tr><td><strong>Terraform</strong></td><td>Declarative</td><td>HCL</td><td>Multi-cloud standard, huge provider ecosystem</td></tr><tr><td><strong>OpenTofu</strong></td><td>Declarative</td><td>HCL</td><td>Open-source (MPL 2.0) Terraform-compatible fork</td></tr><tr><td><strong>Pulumi</strong></td><td>Declarative engine, real code</td><td>TypeScript, Python, Go, C#, Java, YAML</td><td>Developers who want loops, classes, tests</td></tr><tr><td><strong>AWS CDK</strong></td><td>Real code → CloudFormation</td><td>TypeScript, Python, Java, C#, Go</td><td>AWS-only shops wanting high-level constructs</td></tr><tr><td><strong>CloudFormation</strong></td><td>Declarative</td><td>JSON / YAML</td><td>Native AWS, the engine under CDK</td></tr><tr><td><strong>Bicep</strong></td><td>Declarative</td><td>Bicep DSL</td><td>Native Azure</td></tr></table></div><div class="callout note"><div class="callout-icon">📝</div><div class="callout-body">Provisioning tools (this module) <strong>create</strong> infrastructure. Configuration tools such as Ansible, Salt and Puppet <strong>configure software inside</strong> machines. Most real platforms use both.</div></div></div></section><section class="panel" id="t2" data-toc='[["s2-1", "Install &amp; the Core Workflow"], ["s2-2", "HCL Building Blocks"], ["s2-3", "Variables, Types &amp; Validation"], ["s2-4", "Data Sources, Locals &amp; Outputs"], ["s2-5", "Loops: count vs for_each"], ["s2-6", "Reading a Plan"]]'><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Beginner</span><span class="level-tag inter">Intermediate</span></div><p class="panel-eyebrow">Module 02 · IaC Frameworks · Terraform</p><h1 class="panel-title">Terraform Foundations</h1><p class="panel-subtitle">From your first resource to variables, data sources and loops. By the end you can build a small, parameterised environment safely.</p></div><div class="section" id="s2-1"><h2><span class="sec-emoji">🚀</span> Install & the Core Workflow</h2><h3><span class="badge green">BASIC</span> The four commands</h3><p>Terraform reads <code>.tf</code> files in the current directory (the <strong>root module</strong>), downloads provider plugins, then compares your code with state and reality.</p><pre><span class="pre-lang">bash</span><code>terraform init       <span class="tok-c"># download providers/modules, configure the backend</span>
+terraform fmt        <span class="tok-c"># canonical formatting</span>
+terraform validate   <span class="tok-c"># syntax and internal consistency check</span>
+terraform plan -out=tfplan   <span class="tok-c"># show what WOULD change, save the plan</span>
+terraform apply tfplan       <span class="tok-c"># execute exactly the saved plan</span>
+terraform destroy            <span class="tok-c"># remove everything this config manages</span></code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Always <code>apply</code> a <strong>saved plan file</strong> in automation. It guarantees that what was reviewed is exactly what runs.</div></div></div><div class="section" id="s2-2"><h2><span class="sec-emoji">🧱</span> HCL Building Blocks</h2><h3><span class="badge green">BASIC</span> Your first configuration</h3><pre><span class="pre-lang">hcl</span><code><span class="tok-k">terraform</span> {
+  <span class="tok-k">required_version</span> = <span class="tok-s">"&gt;= 1.6"</span>
+  <span class="tok-k">required_providers</span> {
+    aws = { source = <span class="tok-s">"hashicorp/aws"</span>, version = <span class="tok-s">"~&gt; 5.0"</span> }
+  }
+}
+
+<span class="tok-k">provider</span> <span class="tok-s">"aws"</span> {
+  region = var.region
+}
+
+<span class="tok-k">variable</span> <span class="tok-s">"region"</span> {
+  type    = string
+  default = <span class="tok-s">"ap-south-1"</span>
+}
+
+<span class="tok-k">resource</span> <span class="tok-s">"aws_s3_bucket"</span> <span class="tok-s">"logs"</span> {
+  bucket = <span class="tok-s">"demo-logs-${var.env}"</span>
+  tags   = { Environment = var.env }
+}
+
+<span class="tok-k">output</span> <span class="tok-s">"bucket_arn"</span> {
+  value = aws_s3_bucket.logs.arn
+}</code></pre><div style="overflow-x:auto"><table><tr><th>Block</th><th>Purpose</th></tr><tr><td><code>terraform</code></td><td>Pin Terraform and provider versions, configure backend</td></tr><tr><td><code>provider</code></td><td>Configure a plugin (credentials, region)</td></tr><tr><td><code>resource</code></td><td>Something Terraform creates and manages</td></tr><tr><td><code>data</code></td><td>Read-only lookup of something that already exists</td></tr><tr><td><code>variable</code> / <code>output</code> / <code>locals</code></td><td>Inputs, results, and named expressions</td></tr><tr><td><code>module</code></td><td>Call reusable configuration</td></tr></table></div><div class="callout note"><div class="callout-icon">📝</div><div class="callout-body">Terraform builds a <strong>dependency graph</strong> from references like <code>aws_s3_bucket.logs.arn</code>. Independent resources are created in parallel; you rarely need <code>depends_on</code>.</div></div></div><div class="section" id="s2-3"><h2><span class="sec-emoji">🎚️</span> Variables, Types & Validation</h2><h3><span class="badge green">BASIC</span> Input variables</h3><pre><span class="pre-lang">hcl</span><code><span class="tok-k">variable</span> <span class="tok-s">"instance_type"</span> {
+  type        = string
+  description = <span class="tok-s">"EC2 size"</span>
+  default     = <span class="tok-s">"t3.micro"</span>
+}</code></pre><h3><span class="badge blue">INTERMEDIATE</span> Complex types, validation, sensitive values</h3><pre><span class="pre-lang">hcl</span><code><span class="tok-k">variable</span> <span class="tok-s">"subnets"</span> {
+  type = <span class="tok-f">map</span>(<span class="tok-f">object</span>({
+    cidr = string
+    az   = string
+    public = <span class="tok-f">optional</span>(bool, <span class="tok-k">false</span>)
+  }))
+}
+
+<span class="tok-k">variable</span> <span class="tok-s">"env"</span> {
+  type = string
+  validation {
+    condition     = <span class="tok-f">contains</span>([<span class="tok-s">"dev"</span>, <span class="tok-s">"stage"</span>, <span class="tok-s">"prod"</span>], var.env)
+    error_message = <span class="tok-s">"env must be dev, stage or prod."</span>
+  }
+}
+
+<span class="tok-k">variable</span> <span class="tok-s">"db_password"</span> {
+  type      = string
+  sensitive = <span class="tok-k">true</span>   <span class="tok-c"># hidden in plan output (still stored in state!)</span>
+}</code></pre><p>Supply values via <code>terraform.tfvars</code>, <code>-var-file=prod.tfvars</code>, <code>-var "env=prod"</code>, or <code>TF_VAR_env</code> environment variables.</p><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><code>sensitive = true</code> only hides values in the CLI. They are still written to the <strong>state file</strong> in plain text, so protect your state (see the State &amp; Drift module).</div></div></div><div class="section" id="s2-4"><h2><span class="sec-emoji">🔎</span> Data Sources, Locals & Outputs</h2><h3><span class="badge blue">INTERMEDIATE</span> Look up what already exists</h3><pre><span class="pre-lang">hcl</span><code><span class="tok-k">data</span> <span class="tok-s">"aws_ami"</span> <span class="tok-s">"al2023"</span> {
+  most_recent = <span class="tok-k">true</span>
+  owners      = [<span class="tok-s">"amazon"</span>]
+  filter {
+    name   = <span class="tok-s">"name"</span>
+    values = [<span class="tok-s">"al2023-ami-*-x86_64"</span>]
+  }
+}
+
+<span class="tok-k">locals</span> {
+  name_prefix = <span class="tok-s">"${var.project}-${var.env}"</span>
+  common_tags = {
+    Project     = var.project
+    Environment = var.env
+    ManagedBy   = <span class="tok-s">"terraform"</span>
+  }
+}
+
+<span class="tok-k">resource</span> <span class="tok-s">"aws_instance"</span> <span class="tok-s">"web"</span> {
+  ami           = <span class="tok-k">data</span>.aws_ami.al2023.id
+  instance_type = var.instance_type
+  tags          = <span class="tok-f">merge</span>(local.common_tags, { Name = <span class="tok-s">"${local.name_prefix}-web"</span> })
+}</code></pre></div><div class="section" id="s2-5"><h2><span class="sec-emoji">🔁</span> Loops: count vs for_each</h2><h3><span class="badge blue">INTERMEDIATE</span> Creating many similar resources</h3><pre><span class="pre-lang">hcl</span><code><span class="tok-c"># count: index based (fragile when you remove a middle item)</span>
+<span class="tok-k">resource</span> <span class="tok-s">"aws_instance"</span> <span class="tok-s">"a"</span> {
+  <span class="tok-k">count</span> = <span class="tok-n">3</span>
+  ami   = <span class="tok-k">data</span>.aws_ami.al2023.id
+  instance_type = <span class="tok-s">"t3.micro"</span>
+}
+
+<span class="tok-c"># for_each: key based (stable addresses) -- preferred</span>
+<span class="tok-k">resource</span> <span class="tok-s">"aws_subnet"</span> <span class="tok-s">"s"</span> {
+  <span class="tok-k">for_each</span>          = var.subnets
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = each.value.cidr
+  availability_zone = each.value.az
+  tags              = { Name = each.key }
+}</code></pre><div style="overflow-x:auto"><table><tr><th></th><th><code>count</code></th><th><code>for_each</code></th></tr><tr><td>Address</td><td><code>aws_instance.a[0]</code></td><td><code>aws_subnet.s["public-a"]</code></td></tr><tr><td>Remove item</td><td>Everything after it shifts → recreate</td><td>Only that item is destroyed</td></tr><tr><td>Use when</td><td>Simple on/off: <code>count = var.enabled ? 1 : 0</code></td><td>Any collection of distinct things</td></tr></table></div></div><div class="section" id="s2-6"><h2><span class="sec-emoji">📋</span> Reading a Plan</h2><div style="overflow-x:auto"><table><tr><th>Symbol</th><th>Meaning</th><th>Care level</th></tr><tr><td><code>+</code></td><td>Will be created</td><td>Low</td></tr><tr><td><code>~</code></td><td>Will be updated in place</td><td>Check the changed attributes</td></tr><tr><td><code>-/+</code></td><td>Will be destroyed and recreated</td><td><strong>High</strong> — downtime or data loss risk</td></tr><tr><td><code>-</code></td><td>Will be destroyed</td><td><strong>High</strong> — confirm intent</td></tr></table></div><div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Habit of professionals: read the plan summary line (<em>"Plan: 2 to add, 1 to change, 1 to destroy"</em>) first. Any unexpected destroy means stop and investigate.</div></div></div></section><section class="panel" id="t3" data-toc='[["s3-1", "Modules &amp; Composition"], ["s3-2", "Expressions: for, splat, dynamic blocks"], ["s3-3", "Meta-arguments &amp; Lifecycle"], ["s3-4", "Refactoring Safely: moved, import, removed"], ["s3-5", "Validation: preconditions, postconditions, checks"], ["s3-6", "Multi-Provider &amp; Multi-Region"], ["s3-7", "Testing with terraform test"], ["s3-8", "Scaling Patterns"]]'><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 03 · IaC Frameworks · Terraform</p><h1 class="panel-title">Advanced Terraform</h1><p class="panel-subtitle">Modules, expressions, lifecycle rules, safe refactoring, validation, multi-region patterns, native testing and scaling strategy — the skills that separate a user from an engineer.</p></div><div class="section" id="s3-1"><h2><span class="sec-emoji">📦</span> Modules & Composition</h2><h3><span class="badge blue">INTERMEDIATE</span> Calling a module</h3><pre><span class="pre-lang">hcl</span><code><span class="tok-k">module</span> <span class="tok-s">"network"</span> {
+  source  = <span class="tok-s">"terraform-aws-modules/vpc/aws"</span>
+  version = <span class="tok-s">"~&gt; 5.0"</span>          <span class="tok-c"># always pin</span>
+
+  name = <span class="tok-s">"prod-vpc"</span>
+  cidr = <span class="tok-s">"10.0.0.0/16"</span>
+  azs             = [<span class="tok-s">"ap-south-1a"</span>, <span class="tok-s">"ap-south-1b"</span>]
+  private_subnets = [<span class="tok-s">"10.0.1.0/24"</span>, <span class="tok-s">"10.0.2.0/24"</span>]
+}
+
+<span class="tok-k">resource</span> <span class="tok-s">"aws_instance"</span> <span class="tok-s">"app"</span> {
+  subnet_id = <span class="tok-k">module</span>.network.private_subnets[<span class="tok-n">0</span>]
+  ami = <span class="tok-k">data</span>.aws_ami.al2023.id
+  instance_type = <span class="tok-s">"t3.small"</span>
+}</code></pre><h3><span class="badge purple">EXPERT</span> Composition over giant modules</h3><ul><li>Build <strong>small, single-purpose</strong> modules (network, database, service) and compose them in a root module.</li><li>Expose only what callers need as <code>variable</code>; return what others need as <code>output</code>.</li><li>Prefer passing <strong>IDs and objects in</strong> over modules that look things up themselves.</li><li>Do not hide providers inside reusable modules; let the root module pass them in.</li></ul><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">See the <strong>State &amp; Drift Management</strong> module for full module authoring: structure, semantic versioning, testing and publishing.</div></div></div><div class="section" id="s3-2"><h2><span class="sec-emoji">🧮</span> Expressions: for, splat, dynamic blocks</h2><h3><span class="badge blue">INTERMEDIATE</span> for expressions and conditionals</h3><pre><span class="pre-lang">hcl</span><code><span class="tok-k">locals</span> {
+  upper_names = [<span class="tok-k">for</span> n <span class="tok-k">in</span> var.names : <span class="tok-f">upper</span>(n)]
+  name_to_cidr = { <span class="tok-k">for</span> k, s <span class="tok-k">in</span> var.subnets : k =&gt; s.cidr }
+  public_only  = { <span class="tok-k">for</span> k, s <span class="tok-k">in</span> var.subnets : k =&gt; s <span class="tok-k">if</span> s.public }
+  instance_ids = aws_instance.a[*].id           <span class="tok-c"># splat</span>
+  size = var.env == <span class="tok-s">"prod"</span> ? <span class="tok-s">"m5.large"</span> : <span class="tok-s">"t3.micro"</span>
+}</code></pre><h3><span class="badge purple">EXPERT</span> dynamic blocks and templatefile</h3><pre><span class="pre-lang">hcl</span><code><span class="tok-k">resource</span> <span class="tok-s">"aws_security_group"</span> <span class="tok-s">"web"</span> {
+  name   = <span class="tok-s">"web"</span>
+  vpc_id = aws_vpc.main.id
+
+  <span class="tok-k">dynamic</span> <span class="tok-s">"ingress"</span> {
+    <span class="tok-k">for_each</span> = var.allowed_ports
+    content {
+      from_port   = ingress.value
+      to_port     = ingress.value
+      protocol    = <span class="tok-s">"tcp"</span>
+      cidr_blocks = var.allowed_cidrs
+    }
+  }
+}
+
+user_data = <span class="tok-f">templatefile</span>(<span class="tok-s">"${path.module}/init.sh.tftpl"</span>, {
+  app_version = var.app_version
+})</code></pre><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Use <code>dynamic</code> blocks sparingly. Heavy use makes configuration hard to read; a plain repeated block is often clearer.</div></div></div><div class="section" id="s3-3"><h2><span class="sec-emoji">🛡️</span> Meta-arguments & Lifecycle</h2><pre><span class="pre-lang">hcl</span><code><span class="tok-k">resource</span> <span class="tok-s">"aws_db_instance"</span> <span class="tok-s">"main"</span> {
+  <span class="tok-c"># ...</span>
+  <span class="tok-k">lifecycle</span> {
+    prevent_destroy       = <span class="tok-k">true</span>             <span class="tok-c"># plan fails if it would delete</span>
+    create_before_destroy = <span class="tok-k">true</span>             <span class="tok-c"># new first, then remove old</span>
+    ignore_changes        = [tags[<span class="tok-s">"LastScan"</span>]] <span class="tok-c"># tolerate outside edits</span>
+    replace_triggered_by  = [aws_launch_template.app.latest_version]
+  }
+}</code></pre><div style="overflow-x:auto"><table><tr><th>Setting</th><th>Use it for</th></tr><tr><td><code>prevent_destroy</code></td><td>Databases, state buckets, KMS keys — guard rails against accidents</td></tr><tr><td><code>create_before_destroy</code></td><td>Zero-downtime replacement (watch for name collisions)</td></tr><tr><td><code>ignore_changes</code></td><td>Attributes legitimately managed elsewhere (autoscaling desired count, scanner tags)</td></tr><tr><td><code>replace_triggered_by</code></td><td>Force replacement when another resource or attribute changes</td></tr><tr><td><code>depends_on</code></td><td>Hidden dependencies Terraform cannot see (e.g. IAM policy propagation)</td></tr></table></div></div><div class="section" id="s3-4"><h2><span class="sec-emoji">🧹</span> Refactoring Safely: moved, import, removed</h2><h3><span class="badge purple">EXPERT</span> Change code without destroying infrastructure</h3><pre><span class="pre-lang">hcl</span><code><span class="tok-c"># Rename a resource without recreating it</span>
+<span class="tok-k">moved</span> {
+  from = aws_instance.web
+  to   = aws_instance.app
+}
+
+<span class="tok-c"># Adopt an existing resource into state (Terraform 1.5+)</span>
+<span class="tok-k">import</span> {
+  to = aws_s3_bucket.legacy
+  id = <span class="tok-s">"legacy-company-bucket"</span>
+}
+
+<span class="tok-c"># Stop managing a resource but keep it in the cloud (1.7+)</span>
+<span class="tok-k">removed</span> {
+  from = aws_s3_bucket.old
+  <span class="tok-k">lifecycle</span> { destroy = <span class="tok-k">false</span> }
+}</code></pre><pre><span class="pre-lang">bash</span><code>terraform plan -generate-config-out=generated.tf   <span class="tok-c"># draft HCL for imported resources</span>
+terraform plan -refresh-only                       <span class="tok-c"># see drift without proposing changes</span></code></pre><div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Config-driven <code>moved</code> and <code>import</code> blocks go through <strong>plan and code review</strong>, unlike ad-hoc <code>terraform state mv</code> commands. Prefer them for team work.</div></div></div><div class="section" id="s3-5"><h2><span class="sec-emoji">✅</span> Validation: preconditions, postconditions, checks</h2><pre><span class="pre-lang">hcl</span><code><span class="tok-k">resource</span> <span class="tok-s">"aws_instance"</span> <span class="tok-s">"app"</span> {
+  ami           = <span class="tok-k">data</span>.aws_ami.al2023.id
+  instance_type = var.instance_type
+
+  <span class="tok-k">lifecycle</span> {
+    precondition {
+      condition     = <span class="tok-k">data</span>.aws_ami.al2023.architecture == <span class="tok-s">"x86_64"</span>
+      error_message = <span class="tok-s">"AMI must be x86_64."</span>
+    }
+    postcondition {
+      condition     = self.public_ip == <span class="tok-k">null</span> || var.allow_public
+      error_message = <span class="tok-s">"Public IP not allowed in this environment."</span>
+    }
+  }
+}
+
+<span class="tok-k">check</span> <span class="tok-s">"site_healthy"</span> {
+  <span class="tok-k">data</span> <span class="tok-s">"http"</span> <span class="tok-s">"ping"</span> { url = <span class="tok-s">"https://${aws_lb.app.dns_name}/health"</span> }
+  assert {
+    condition     = <span class="tok-k">data</span>.http.ping.status_code == <span class="tok-n">200</span>
+    error_message = <span class="tok-s">"Health endpoint is not returning 200."</span>
+  }
+}</code></pre><p><code>precondition</code>/<code>postcondition</code> <strong>block</strong> the run; <code>check</code> blocks only <strong>warn</strong>, which makes them ideal for continuous health assertions.</p></div><div class="section" id="s3-6"><h2><span class="sec-emoji">🌍</span> Multi-Provider & Multi-Region</h2><pre><span class="pre-lang">hcl</span><code><span class="tok-k">provider</span> <span class="tok-s">"aws"</span> {
+  region = <span class="tok-s">"ap-south-1"</span>
+}
+<span class="tok-k">provider</span> <span class="tok-s">"aws"</span> {
+  alias  = <span class="tok-s">"dr"</span>
+  region = <span class="tok-s">"ap-southeast-1"</span>
+}
+
+<span class="tok-k">resource</span> <span class="tok-s">"aws_s3_bucket"</span> <span class="tok-s">"replica"</span> {
+  <span class="tok-k">provider</span> = aws.dr
+  bucket   = <span class="tok-s">"demo-replica"</span>
+}
+
+<span class="tok-k">module</span> <span class="tok-s">"dr_network"</span> {
+  source    = <span class="tok-s">"./modules/network"</span>
+  providers = { aws = aws.dr }
+}</code></pre></div><div class="section" id="s3-7"><h2><span class="sec-emoji">🧪</span> Testing with terraform test</h2><p>Terraform 1.6+ ships a native test framework. Files ending in <code>.tftest.hcl</code> run assertions against a plan (fast, free) or a real apply (full integration).</p><pre><span class="pre-lang">hcl</span><code><span class="tok-c"># tests/network.tftest.hcl</span>
+variables {
+  env  = <span class="tok-s">"dev"</span>
+  cidr = <span class="tok-s">"10.10.0.0/16"</span>
+}
+
+run <span class="tok-s">"plan_is_valid"</span> {
+  command = plan
+  assert {
+    condition     = aws_vpc.main.cidr_block == <span class="tok-s">"10.10.0.0/16"</span>
+    error_message = <span class="tok-s">"Unexpected VPC CIDR"</span>
+  }
+}
+
+run <span class="tok-s">"apply_and_check"</span> {
+  command = apply
+  assert {
+    condition     = <span class="tok-k">output</span>.vpc_id != <span class="tok-s">""</span>
+    error_message = <span class="tok-s">"VPC id output missing"</span>
+  }
+}</code></pre><pre><span class="pre-lang">bash</span><code>terraform test                      <span class="tok-c"># run every *.tftest.hcl</span>
+terraform test -filter=tests/network.tftest.hcl</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Test pyramid for IaC: <strong>fmt/validate/lint</strong> (seconds) → <strong>plan-mode tests and policy checks</strong> (minutes) → <strong>apply-mode tests</strong> in a sandbox account (slow, selective) → Terratest for cross-tool scenarios.</div></div></div><div class="section" id="s3-8"><h2><span class="sec-emoji">📈</span> Scaling Patterns</h2><div style="overflow-x:auto"><table><tr><th>Pattern</th><th>How</th><th>Trade-off</th></tr><tr><td><strong>Directory per environment</strong></td><td><code>envs/dev</code>, <code>envs/prod</code> each call shared modules</td><td>Clear isolation; some duplication</td></tr><tr><td><strong>Workspaces</strong></td><td><code>terraform workspace new stage</code></td><td>Same code and backend; easy to mix up. OK for ephemeral copies, risky for prod</td></tr><tr><td><strong>Terragrunt / wrappers</strong></td><td>DRY backend and inputs across many stacks</td><td>Extra tool to learn</td></tr><tr><td><strong>Stack splitting</strong></td><td>Separate state per layer: network, data, apps</td><td>Smaller blast radius; need remote-state or data lookups between layers</td></tr></table></div><div class="callout note"><div class="callout-icon">📝</div><div class="callout-body"><strong>Licensing:</strong> since version 1.6 (August 2023) Terraform uses the Business Source License. It remains free for most internal use, which is why many teams evaluate OpenTofu (next tab).</div></div></div></section><section class="panel" id="t4" data-toc='[["s4-1", "What is OpenTofu?"], ["s4-2", "Migrating from Terraform"], ["s4-3", "What is Different?"], ["s4-4", "State Encryption (Expert)"], ["s4-5", "Early Evaluation &amp; Provider for_each"], ["s4-6", "Choosing Terraform or OpenTofu"]]'><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Beginner</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 04 · IaC Frameworks · OpenTofu</p><h1 class="panel-title">OpenTofu</h1><p class="panel-subtitle">The open-source, Terraform-compatible alternative governed by the Linux Foundation. Learn why it exists, how to migrate, and which features go beyond Terraform.</p></div><div class="section" id="s4-1"><h2><span class="sec-emoji">📖</span> What is OpenTofu?</h2><h3><span class="badge green">BASIC</span> Origin story</h3><p>In August 2023 HashiCorp changed Terraform’s licence from MPL 2.0 to the Business Source License. The community responded with the <strong>OpenTF</strong> manifesto, then a fork now called <strong>OpenTofu</strong>, hosted by the <strong>Linux Foundation</strong> under the open <strong>MPL 2.0</strong> licence. The first stable release (1.6) arrived in January 2024.</p><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d6bbf">🔓</div><div class="card-title">Open governance</div><div class="card-desc">Community steering committee, vendor-neutral foundation.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🤝</div><div class="card-title">HCL compatible</div><div class="card-desc">Same language, same providers, same workflow.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#22345f">🔐</div><div class="card-title">New features</div><div class="card-desc">State encryption, early evaluation, provider iteration.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">🧰</div><div class="card-title">Own registry</div><div class="card-desc">registry.opentofu.org mirrors providers and modules.</div></div></div><pre><span class="pre-lang">bash</span><code>tofu init
+tofu plan -out=tfplan
+tofu apply tfplan</code></pre><div class="callout note"><div class="callout-icon">📝</div><div class="callout-body">The CLI binary is <code>tofu</code>. Commands, flags, files and state format match Terraform, so your Terraform knowledge transfers directly.</div></div></div><div class="section" id="s4-2"><h2><span class="sec-emoji">🚚</span> Migrating from Terraform</h2><h3><span class="badge blue">INTERMEDIATE</span> A safe migration checklist</h3><ol><li>Check your Terraform version against the OpenTofu compatibility notes (migrate from a version OpenTofu supports; do this <strong>before</strong> adopting newer Terraform-only features).</li><li><strong>Back up state</strong> (enable bucket versioning, or copy the state file).</li><li>Install <code>tofu</code> (package manager, container image, or <code>tofu</code> GitHub Action).</li><li>Run <code>tofu init</code> then <code>tofu plan</code> — expect <strong>no changes</strong>.</li><li>Update CI images and pipelines to call <code>tofu</code>; keep Terraform available until the first clean apply.</li><li>Remember that once applied with OpenTofu, going back to an older Terraform may not be supported if newer state features were used.</li></ol><pre><span class="pre-lang">bash</span><code>cp terraform.tfstate backup-$(date +%F).tfstate
+tofu init -upgrade
+tofu plan          <span class="tok-c"># must report: No changes. Your infrastructure matches the configuration.</span></code></pre><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Never test a migration directly on production first. Rehearse in a copy of the stack or a non-production workspace.</div></div></div><div class="section" id="s4-3"><h2><span class="sec-emoji">🆚</span> What is Different?</h2><div style="overflow-x:auto"><table><tr><th>Feature</th><th>Terraform (BSL)</th><th>OpenTofu (MPL 2.0)</th></tr><tr><td>Licence</td><td>Business Source License</td><td>MPL 2.0, Linux Foundation</td></tr><tr><td><strong>State and plan encryption</strong></td><td>Backend-level encryption only</td><td>Built-in client-side encryption (since 1.7)</td></tr><tr><td><strong>Early evaluation</strong></td><td>Variables not allowed in backend config or module sources</td><td>Variables and locals allowed in backend config and module source</td></tr><tr><td><strong>Provider iteration</strong></td><td>Use aliases manually</td><td><code>for_each</code> on provider blocks (since 1.9)</td></tr><tr><td>Override files</td><td><code>.tf</code> / <code>.tf.json</code></td><td>Also <code>.tofu</code> files take priority over <code>.tf</code> of the same name</td></tr><tr><td>Governance</td><td>Single vendor</td><td>Community steering committee</td></tr><tr><td>Ecosystem</td><td>HCP Terraform, Sentinel</td><td>Works with Spacelift, env0, Atlantis, Terragrunt, and others</td></tr></table></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Features evolve quickly on both sides. Always confirm availability in the current release notes before standardising on a feature.</div></div></div><div class="section" id="s4-4"><h2><span class="sec-emoji">🔐</span> State Encryption (Expert)</h2><h3><span class="badge purple">EXPERT</span> Encrypt state and plan files client-side</h3><pre><span class="pre-lang">hcl</span><code><span class="tok-k">terraform</span> {
+  encryption {
+    key_provider <span class="tok-s">"pbkdf2"</span> <span class="tok-s">"main"</span> {
+      passphrase = var.state_passphrase      <span class="tok-c"># &gt;= 16 chars, supplied securely</span>
+    }
+    method <span class="tok-s">"aes_gcm"</span> <span class="tok-s">"default"</span> {
+      keys = key_provider.pbkdf2.main
+    }
+    state {
+      method   = method.aes_gcm.default
+      enforced = <span class="tok-k">true</span>                        <span class="tok-c"># refuse to write unencrypted state</span>
+    }
+    plan {
+      method = method.aes_gcm.default
+    }
+  }
+}</code></pre><p>In production prefer a cloud <strong>KMS key provider</strong> (for example AWS KMS) over a passphrase so key rotation and access are governed by IAM.</p><div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">This closes a long-standing gap: even someone with read access to the state bucket cannot read secrets without the key.</div></div></div><div class="section" id="s4-5"><h2><span class="sec-emoji">♻️</span> Early Evaluation & Provider for_each</h2><h3><span class="badge purple">EXPERT</span> Dynamic configuration earlier in the lifecycle</h3><pre><span class="pre-lang">hcl</span><code><span class="tok-k">variable</span> <span class="tok-s">"state_bucket"</span> { type = string }
+
+<span class="tok-k">terraform</span> {
+  <span class="tok-k">backend</span> <span class="tok-s">"s3"</span> {
+    bucket = var.state_bucket       <span class="tok-c"># variables allowed (OpenTofu)</span>
+    key    = <span class="tok-s">"network/terraform.tfstate"</span>
+    region = <span class="tok-s">"ap-south-1"</span>
+  }
+}
+
+<span class="tok-k">locals</span> { regions = <span class="tok-f">toset</span>([<span class="tok-s">"ap-south-1"</span>, <span class="tok-s">"eu-west-1"</span>]) }
+
+<span class="tok-k">provider</span> <span class="tok-s">"aws"</span> {
+  alias    = <span class="tok-s">"by_region"</span>
+  <span class="tok-k">for_each</span> = local.regions
+  region   = each.key
+}
+
+<span class="tok-k">resource</span> <span class="tok-s">"aws_s3_bucket"</span> <span class="tok-s">"regional"</span> {
+  <span class="tok-k">for_each</span> = local.regions
+  <span class="tok-k">provider</span> = aws.by_region[each.key]
+  bucket   = <span class="tok-s">"demo-${each.key}"</span>
+}</code></pre></div><div class="section" id="s4-6"><h2><span class="sec-emoji">🧭</span> Choosing Terraform or OpenTofu</h2><div class="compare"><div class="compare-col"><h4>Pick OpenTofu when</h4><ul><li>Open-source licensing is a company requirement.</li><li>You want built-in state encryption.</li><li>You want vendor-neutral governance.</li><li>Your tooling (Atlantis, Spacelift, env0, etc.) already supports it.</li></ul></div><div class="compare-col"><h4>Pick Terraform when</h4><ul><li>You rely on HCP Terraform / Sentinel / HashiCorp support contracts.</li><li>You need newest Terraform-only features.</li><li>Your organisation already standardised on it and licence terms are acceptable.</li></ul></div></div><div class="callout note"><div class="callout-icon">📝</div><div class="callout-body">Good news: the skills in this course apply to both. Learn HCL once, choose the binary per organisation.</div></div></div></section><section class="panel" id="t5" data-toc='[["s5-1", "Pulumi Mental Model"], ["s5-2", "First Program &amp; CLI"], ["s5-3", "Config, Secrets &amp; Stacks"], ["s5-4", "Outputs &amp; apply() — the key concept"], ["s5-5", "Components &amp; Stack References"], ["s5-6", "Automation API &amp; Testing (Expert)"], ["s5-7", "State Backends"]]'><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Beginner</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 05 · IaC Frameworks · Pulumi</p><h1 class="panel-title">Pulumi</h1><p class="panel-subtitle">Infrastructure in TypeScript, Python, Go, C#, Java or YAML. Learn projects, stacks, outputs, components, the Automation API and testing.</p></div><div class="section" id="s5-1"><h2><span class="sec-emoji">🎯</span> Pulumi Mental Model</h2><div class="cards"><div class="card"><div class="card-icon" style="background:var(--accent-soft);color:#1d6bbf">📁</div><div class="card-title">Project</div><div class="card-desc">A directory with <code>Pulumi.yaml</code> and your program.</div></div><div class="card"><div class="card-icon" style="background:var(--green-soft);color:#0a5f0a">🌱</div><div class="card-title">Stack</div><div class="card-desc">An isolated instance of a project: dev, staging, prod.</div></div><div class="card"><div class="card-icon" style="background:var(--purple-soft);color:#22345f">🧩</div><div class="card-title">Resource</div><div class="card-desc">An object like <code>aws.s3.BucketV2</code>, created by <code>new</code>.</div></div><div class="card"><div class="card-icon" style="background:var(--orange-soft);color:#a85a08">⚙️</div><div class="card-title">Config</div><div class="card-desc">Per-stack values, with encrypted secrets.</div></div></div><div class="diagram"><svg viewBox="0 0 640 96" xmlns="http://www.w3.org/2000/svg" role="img"><defs><marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#787774"/></marker></defs><rect x="10" y="20" width="128" height="56" rx="10" fill="#14213D" stroke="#14213D" stroke-width="1.2"/><text x="74" y="40" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff" font-family="Noto Sans,sans-serif">Your program</text><text x="74" y="56" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff" font-family="Noto Sans,sans-serif">(TS / Python…)</text><line x1="141" y1="48" x2="170" y2="48" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/><rect x="174" y="20" width="128" height="56" rx="10" fill="#eef1f7" stroke="#14213D" stroke-width="1.2"/><text x="238" y="40" text-anchor="middle" font-size="12.5" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Pulumi engine</text><text x="238" y="56" text-anchor="middle" font-size="12.5" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">(desired state)</text><line x1="305" y1="48" x2="334" y2="48" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/><rect x="338" y="20" width="128" height="56" rx="10" fill="#eef1f7" stroke="#14213D" stroke-width="1.2"/><text x="402" y="40" text-anchor="middle" font-size="12.5" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Provider</text><text x="402" y="56" text-anchor="middle" font-size="12.5" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">(AWS, Azure…)</text><line x1="469" y1="48" x2="498" y2="48" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/><rect x="502" y="20" width="128" height="56" rx="10" fill="#14213D" stroke="#14213D" stroke-width="1.2"/><text x="566" y="40" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff" font-family="Noto Sans,sans-serif">Real cloud</text><text x="566" y="56" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff" font-family="Noto Sans,sans-serif">+ state</text></svg><div class="diagram-caption">Programs run, register resources, and the engine diffs against state.</div></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Compared with Terraform: same plan/apply idea, but your “config language” is a full programming language with loops, functions, packages and unit tests.</div></div></div><div class="section" id="s5-2"><h2><span class="sec-emoji">🚀</span> First Program & CLI</h2><h3><span class="badge green">BASIC</span> Create, preview, deploy</h3><pre><span class="pre-lang">bash</span><code>pulumi new aws-python           <span class="tok-c"># or aws-typescript</span>
+pulumi stack init dev
+pulumi config <span class="tok-k">set</span> aws:region ap-south-<span class="tok-n">1</span>
+pulumi preview                  <span class="tok-c"># like terraform plan</span>
+pulumi up                       <span class="tok-c"># like terraform apply</span>
+pulumi destroy</code></pre><div class="compare"><div class="compare-col"><h4>Python</h4><pre><span class="pre-lang">python</span><code><span class="tok-k">import</span> pulumi
+<span class="tok-k">import</span> pulumi_aws <span class="tok-k">as</span> aws
+
+bucket = aws.s3.<span class="tok-f">BucketV2</span>(<span class="tok-s">"site"</span>,
+    tags={<span class="tok-s">"Env"</span>: <span class="tok-s">"dev"</span>})
+
+pulumi.<span class="tok-f">export</span>(<span class="tok-s">"bucket_name"</span>, bucket.id)</code></pre></div><div class="compare-col"><h4>TypeScript</h4><pre><span class="pre-lang">ts</span><code><span class="tok-k">import</span> * <span class="tok-k">as</span> aws <span class="tok-k">from</span> <span class="tok-s">"@pulumi/aws"</span>;
+
+<span class="tok-k">const</span> bucket = <span class="tok-k">new</span> aws.s3.<span class="tok-f">BucketV2</span>(<span class="tok-s">"site"</span>, {
+  tags: { Env: <span class="tok-s">"dev"</span> },
+});
+
+<span class="tok-k">export</span> <span class="tok-k">const</span> bucketName = bucket.id;</code></pre></div></div></div><div class="section" id="s5-3"><h2><span class="sec-emoji">🔑</span> Config, Secrets & Stacks</h2><pre><span class="pre-lang">bash</span><code>pulumi config <span class="tok-k">set</span> app:instanceCount <span class="tok-n">3</span>
+pulumi config <span class="tok-k">set</span> --secret db:password <span class="tok-s">'S3cr3t!'</span>   <span class="tok-c"># encrypted in Pulumi.dev.yaml</span>
+pulumi stack ls
+pulumi stack select prod</code></pre><pre><span class="pre-lang">python</span><code>cfg = pulumi.<span class="tok-f">Config</span>(<span class="tok-s">"app"</span>)
+count = cfg.<span class="tok-f">require_int</span>(<span class="tok-s">"instanceCount"</span>)
+pw = pulumi.<span class="tok-f">Config</span>(<span class="tok-s">"db"</span>).<span class="tok-f">require_secret</span>(<span class="tok-s">"password"</span>)   <span class="tok-c"># stays secret in outputs</span></code></pre><div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Secrets are encrypted in the stack config <strong>and</strong> in state, and anything derived from a secret is automatically marked secret.</div></div></div><div class="section" id="s5-4"><h2><span class="sec-emoji">⏳</span> Outputs & apply() — the key concept</h2><h3><span class="badge blue">INTERMEDIATE</span> Values that are not known until deploy time</h3><p>A resource’s ID or URL does not exist until the cloud creates it, so Pulumi returns an <code>Output&lt;T&gt;</code> — a promise-like value. You cannot print or concatenate it as a plain string; you transform it.</p><pre><span class="pre-lang">python</span><code>bucket = aws.s3.<span class="tok-f">BucketV2</span>(<span class="tok-s">"site"</span>)
+
+<span class="tok-c"># WRONG: bucket.bucket is an Output, not a str</span>
+<span class="tok-c"># url = "https://" + bucket.bucket + ".s3.amazonaws.com"</span>
+
+url = bucket.bucket.<span class="tok-f">apply</span>(<span class="tok-k">lambda</span> name: f<span class="tok-s">"https://{name}.s3.amazonaws.com"</span>)
+url2 = pulumi.Output.<span class="tok-f">concat</span>(<span class="tok-s">"https://"</span>, bucket.bucket, <span class="tok-s">".s3.amazonaws.com"</span>)
+pulumi.<span class="tok-f">export</span>(<span class="tok-s">"url"</span>, url)</code></pre><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Do not create resources <em>inside</em> <code>apply()</code> callbacks: they will not appear in <code>preview</code>. Pass Outputs directly to other resources instead — Pulumi tracks the dependency for you.</div></div></div><div class="section" id="s5-5"><h2><span class="sec-emoji">🧱</span> Components & Stack References</h2><h3><span class="badge blue">INTERMEDIATE</span> Reusable building blocks</h3><pre><span class="pre-lang">python</span><code><span class="tok-k">class</span> <span class="tok-f">StaticSite</span>(pulumi.ComponentResource):
+    <span class="tok-k">def</span> <span class="tok-f">__init__</span>(self, name, opts=<span class="tok-k">None</span>):
+        <span class="tok-f">super</span>().<span class="tok-f">__init__</span>(<span class="tok-s">"acme:web:StaticSite"</span>, name, <span class="tok-k">None</span>, opts)
+        self.bucket = aws.s3.<span class="tok-f">BucketV2</span>(f<span class="tok-s">"{name}-bucket"</span>,
+            opts=pulumi.<span class="tok-f">ResourceOptions</span>(parent=self))
+        self.<span class="tok-f">register_outputs</span>({<span class="tok-s">"bucket_name"</span>: self.bucket.id})
+
+site = <span class="tok-f">StaticSite</span>(<span class="tok-s">"marketing"</span>)
+pulumi.<span class="tok-f">export</span>(<span class="tok-s">"bucket"</span>, site.bucket.id)</code></pre><h3><span class="badge blue">INTERMEDIATE</span> Share data between stacks</h3><pre><span class="pre-lang">python</span><code>net = pulumi.<span class="tok-f">StackReference</span>(<span class="tok-s">"acme/network/prod"</span>)
+subnet_ids = net.<span class="tok-f">get_output</span>(<span class="tok-s">"private_subnet_ids"</span>)</code></pre><p>Components can be published as packages and consumed from any Pulumi language, giving platform teams a clean way to ship golden-path infrastructure.</p></div><div class="section" id="s5-6"><h2><span class="sec-emoji">🤖</span> Automation API & Testing (Expert)</h2><h3><span class="badge purple">EXPERT</span> Pulumi as a library</h3><p>The <strong>Automation API</strong> lets you drive deployments from code — for self-service portals, test harnesses, or SaaS platforms that provision per-customer infrastructure — without shelling out to the CLI.</p><pre><span class="pre-lang">python</span><code><span class="tok-k">import</span> pulumi_aws <span class="tok-k">as</span> aws
+<span class="tok-k">import</span> pulumi.automation <span class="tok-k">as</span> auto
+
+<span class="tok-k">def</span> <span class="tok-f">program</span>():
+    b = aws.s3.<span class="tok-f">BucketV2</span>(<span class="tok-s">"tenant-data"</span>)
+    <span class="tok-k">import</span> pulumi
+    pulumi.<span class="tok-f">export</span>(<span class="tok-s">"bucket"</span>, b.id)
+
+stack = auto.<span class="tok-f">create_or_select_stack</span>(
+    stack_name=<span class="tok-s">"tenant-42"</span>, project_name=<span class="tok-s">"saas"</span>, program=program)
+stack.<span class="tok-f">set_config</span>(<span class="tok-s">"aws:region"</span>, auto.<span class="tok-f">ConfigValue</span>(<span class="tok-s">"ap-south-1"</span>))
+result = stack.<span class="tok-f">up</span>(on_output=print)
+<span class="tok-f">print</span>(result.outputs[<span class="tok-s">"bucket"</span>].value)</code></pre><h3><span class="badge purple">EXPERT</span> Unit tests with mocks</h3><pre><span class="pre-lang">python</span><code><span class="tok-k">import</span> pulumi
+
+<span class="tok-k">class</span> <span class="tok-f">Mocks</span>(pulumi.runtime.Mocks):
+    <span class="tok-k">def</span> <span class="tok-f">new_resource</span>(self, args):
+        <span class="tok-k">return</span> [args.name + <span class="tok-s">"_id"</span>, args.inputs]
+    <span class="tok-k">def</span> <span class="tok-f">call</span>(self, args):
+        <span class="tok-k">return</span> {}
+
+pulumi.runtime.<span class="tok-f">set_mocks</span>(<span class="tok-f">Mocks</span>())
+
+<span class="tok-k">import</span> infra   <span class="tok-c"># your program, imported AFTER mocks</span>
+
+@pulumi.runtime.test
+<span class="tok-k">def</span> <span class="tok-f">test_bucket_is_tagged</span>():
+    <span class="tok-k">def</span> <span class="tok-f">check</span>(tags):
+        assert <span class="tok-s">"Env"</span> <span class="tok-k">in</span> tags
+    <span class="tok-k">return</span> infra.bucket.tags.<span class="tok-f">apply</span>(check)</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><strong>CrossGuard</strong> (Pulumi policy packs) enforces rules at preview/update time; see the Policy as Code module for the wider picture.</div></div></div><div class="section" id="s5-7"><h2><span class="sec-emoji">🗄️</span> State Backends</h2><div style="overflow-x:auto"><table><tr><th>Backend</th><th>Login command</th><th>Notes</th></tr><tr><td>Pulumi Cloud</td><td><code>pulumi login</code></td><td>Managed state, locking, history, RBAC, secrets management</td></tr><tr><td>Amazon S3 / Azure Blob / GCS</td><td><code>pulumi login s3://my-bucket</code></td><td>Self-managed; you own security and access</td></tr><tr><td>Local file</td><td><code>pulumi login --local</code></td><td>Learning and experiments only</td></tr></table></div></div></section><section class="panel" id="t6" data-toc='[["s6-1", "Core Concepts"], ["s6-2", "Your First App"], ["s6-3", "Grants, Cross-Stack Refs &amp; Environments"], ["s6-4", "Custom Constructs &amp; Aspects"], ["s6-5", "Testing CDK"], ["s6-6", "Pipelines &amp; Escape Hatches (Expert)"]]'><div class="panel-header"><div class="level-row"><span class="level-tag fresher">Beginner</span><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 06 · IaC Frameworks · AWS CDK</p><h1 class="panel-title">AWS Cloud Development Kit</h1><p class="panel-subtitle">Define AWS infrastructure with TypeScript, Python, Java, C# or Go. CDK synthesises CloudFormation, so you get high-level constructs plus AWS’s native deployment engine.</p></div><div class="section" id="s6-1"><h2><span class="sec-emoji">🧬</span> Core Concepts</h2><div class="diagram"><svg viewBox="0 0 804 96" xmlns="http://www.w3.org/2000/svg" role="img"><defs><marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#787774"/></marker></defs><rect x="10" y="20" width="128" height="56" rx="10" fill="#14213D" stroke="#14213D" stroke-width="1.2"/><text x="74" y="40" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff" font-family="Noto Sans,sans-serif">CDK App</text><text x="74" y="56" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff" font-family="Noto Sans,sans-serif">(code)</text><line x1="141" y1="48" x2="170" y2="48" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/><rect x="174" y="20" width="128" height="56" rx="10" fill="#eef1f7" stroke="#14213D" stroke-width="1.2"/><text x="238" y="48" text-anchor="middle" font-size="12.5" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">cdk synth</text><line x1="305" y1="48" x2="334" y2="48" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/><rect x="338" y="20" width="128" height="56" rx="10" fill="#eef1f7" stroke="#14213D" stroke-width="1.2"/><text x="402" y="40" text-anchor="middle" font-size="12.5" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">CloudFormation</text><text x="402" y="56" text-anchor="middle" font-size="12.5" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">template</text><line x1="469" y1="48" x2="498" y2="48" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/><rect x="502" y="20" width="128" height="56" rx="10" fill="#eef1f7" stroke="#14213D" stroke-width="1.2"/><text x="566" y="48" text-anchor="middle" font-size="12.5" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">cdk deploy</text><line x1="633" y1="48" x2="662" y2="48" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/><rect x="666" y="20" width="128" height="56" rx="10" fill="#14213D" stroke="#14213D" stroke-width="1.2"/><text x="730" y="40" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff" font-family="Noto Sans,sans-serif">AWS</text><text x="730" y="56" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff" font-family="Noto Sans,sans-serif">resources</text></svg><div class="diagram-caption">CDK is a template generator on top of CloudFormation.</div></div><div style="overflow-x:auto"><table><tr><th>Level</th><th>Name</th><th>What it is</th><th>Example</th></tr><tr><td><strong>L1</strong></td><td>Cfn constructs</td><td>1:1 mapping to a CloudFormation resource</td><td><code>s3.CfnBucket</code></td></tr><tr><td><strong>L2</strong></td><td>Curated constructs</td><td>Sensible defaults, helper methods (grants, metrics)</td><td><code>s3.Bucket</code>, <code>lambda.Function</code></td></tr><tr><td><strong>L3</strong></td><td>Patterns</td><td>Multi-resource architectures</td><td><code>ecs_patterns.ApplicationLoadBalancedFargateService</code></td></tr></table></div><p>Hierarchy: <strong>App</strong> contains <strong>Stacks</strong> (the deployable unit = one CloudFormation stack) which contain <strong>Constructs</strong> (the building blocks, which can be nested).</p></div><div class="section" id="s6-2"><h2><span class="sec-emoji">🚀</span> Your First App</h2><h3><span class="badge green">BASIC</span> Bootstrap and deploy</h3><pre><span class="pre-lang">bash</span><code>npm install -g aws-cdk
+mkdir infra &amp;&amp; cd infra
+cdk init app --language typescript      <span class="tok-c"># or python</span>
+cdk bootstrap aws://<span class="tok-n">111122223333</span>/ap-south-<span class="tok-n">1</span>   <span class="tok-c"># once per account/region</span>
+cdk synth      <span class="tok-c"># generate template into cdk.out/</span>
+cdk diff       <span class="tok-c"># compare with deployed stack</span>
+cdk deploy
+cdk destroy</code></pre><div class="compare"><div class="compare-col"><h4>TypeScript</h4><pre><span class="pre-lang">ts</span><code><span class="tok-k">import</span> * <span class="tok-k">as</span> cdk <span class="tok-k">from</span> <span class="tok-s">'aws-cdk-lib'</span>;
+<span class="tok-k">import</span> * <span class="tok-k">as</span> s3 <span class="tok-k">from</span> <span class="tok-s">'aws-cdk-lib/aws-s3'</span>;
+<span class="tok-k">import</span> { Construct } <span class="tok-k">from</span> <span class="tok-s">'constructs'</span>;
+
+<span class="tok-k">export</span> <span class="tok-k">class</span> StorageStack <span class="tok-k">extends</span> cdk.Stack {
+  <span class="tok-f">constructor</span>(scope: Construct, id: string, props?: cdk.StackProps) {
+    <span class="tok-f">super</span>(scope, id, props);
+    <span class="tok-k">new</span> s3.<span class="tok-f">Bucket</span>(<span class="tok-k">this</span>, <span class="tok-s">'Logs'</span>, {
+      versioned: <span class="tok-k">true</span>,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+  }
+}
+
+<span class="tok-k">const</span> app = <span class="tok-k">new</span> cdk.<span class="tok-f">App</span>();
+<span class="tok-k">new</span> <span class="tok-f">StorageStack</span>(app, <span class="tok-s">'Storage'</span>);</code></pre></div><div class="compare-col"><h4>Python</h4><pre><span class="pre-lang">python</span><code><span class="tok-k">import</span> aws_cdk <span class="tok-k">as</span> cdk
+<span class="tok-k">from</span> aws_cdk <span class="tok-k">import</span> aws_s3 <span class="tok-k">as</span> s3
+<span class="tok-k">from</span> constructs <span class="tok-k">import</span> Construct
+
+<span class="tok-k">class</span> <span class="tok-f">StorageStack</span>(cdk.Stack):
+    <span class="tok-k">def</span> <span class="tok-f">__init__</span>(self, scope: Construct, id: str, **kw):
+        <span class="tok-f">super</span>().<span class="tok-f">__init__</span>(scope, id, **kw)
+        s3.<span class="tok-f">Bucket</span>(self, <span class="tok-s">"Logs"</span>,
+            versioned=<span class="tok-k">True</span>,
+            encryption=s3.BucketEncryption.S3_MANAGED,
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
+            removal_policy=cdk.RemovalPolicy.RETAIN)
+
+app = cdk.<span class="tok-f">App</span>()
+<span class="tok-f">StorageStack</span>(app, <span class="tok-s">"Storage"</span>)
+app.<span class="tok-f">synth</span>()</code></pre></div></div><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Bootstrapping creates the <code>CDKToolkit</code> stack (asset bucket, ECR repo, deployment roles). Without it, deployments that need assets will fail.</div></div></div><div class="section" id="s6-3"><h2><span class="sec-emoji">🔗</span> Grants, Cross-Stack Refs & Environments</h2><h3><span class="badge blue">INTERMEDIATE</span> L2 helper methods give least privilege for free</h3><pre><span class="pre-lang">ts</span><code><span class="tok-k">const</span> fn = <span class="tok-k">new</span> lambda.<span class="tok-f">Function</span>(<span class="tok-k">this</span>, <span class="tok-s">'Processor'</span>, {
+  runtime: lambda.Runtime.NODEJS_20_X,
+  handler: <span class="tok-s">'index.handler'</span>,
+  code: lambda.Code.<span class="tok-f">fromAsset</span>(<span class="tok-s">'lambda'</span>),
+  environment: { BUCKET: bucket.bucketName },
+});
+bucket.<span class="tok-f">grantRead</span>(fn);        <span class="tok-c">// generates a minimal IAM policy automatically</span></code></pre><h3><span class="badge blue">INTERMEDIATE</span> Pass objects between stacks</h3><pre><span class="pre-lang">ts</span><code><span class="tok-k">interface</span> AppProps <span class="tok-k">extends</span> cdk.StackProps { bucket: s3.IBucket }
+<span class="tok-c">// new AppStack(app, 'App', { bucket: storage.bucket, env: {...} })</span></code></pre><p>CDK turns this into CloudFormation exports/imports for you. Specify <code>env: { account, region }</code> on stacks to enable context lookups (VPCs, AMIs) and cross-region features.</p></div><div class="section" id="s6-4"><h2><span class="sec-emoji">🧩</span> Custom Constructs & Aspects</h2><h3><span class="badge purple">EXPERT</span> Package your organisation’s standards</h3><pre><span class="pre-lang">ts</span><code><span class="tok-k">export</span> <span class="tok-k">class</span> SecureBucket <span class="tok-k">extends</span> Construct {
+  public readonly bucket: s3.Bucket;
+  <span class="tok-f">constructor</span>(scope: Construct, id: string) {
+    <span class="tok-f">super</span>(scope, id);
+    <span class="tok-k">this</span>.bucket = <span class="tok-k">new</span> s3.<span class="tok-f">Bucket</span>(<span class="tok-k">this</span>, <span class="tok-s">'Bucket'</span>, {
+      enforceSSL: <span class="tok-k">true</span>,
+      versioned: <span class="tok-k">true</span>,
+      encryption: s3.BucketEncryption.KMS_MANAGED,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+    });
+  }
+}</code></pre><h3><span class="badge purple">EXPERT</span> Aspects: visit every construct in the tree</h3><pre><span class="pre-lang">ts</span><code><span class="tok-k">class</span> RequireVersioning <span class="tok-k">implements</span> cdk.IAspect {
+  <span class="tok-f">visit</span>(node: IConstruct) {
+    <span class="tok-k">if</span> (node instanceof s3.CfnBucket &amp;&amp; !node.versioningConfiguration) {
+      cdk.Annotations.<span class="tok-f">of</span>(node).<span class="tok-f">addError</span>(<span class="tok-s">'Buckets must enable versioning'</span>);
+    }
+  }
+}
+cdk.Aspects.<span class="tok-f">of</span>(app).<span class="tok-f">add</span>(<span class="tok-k">new</span> <span class="tok-f">RequireVersioning</span>());</code></pre><div class="callout success"><div class="callout-icon">✅</div><div class="callout-body">Aspects run at synth time, so non-compliant infrastructure fails <strong>before</strong> it reaches CloudFormation. The open-source <code>cdk-nag</code> library packages many such rules.</div></div></div><div class="section" id="s6-5"><h2><span class="sec-emoji">🧪</span> Testing CDK</h2><pre><span class="pre-lang">python</span><code><span class="tok-k">import</span> aws_cdk <span class="tok-k">as</span> cdk
+<span class="tok-k">from</span> aws_cdk.assertions <span class="tok-k">import</span> Template
+<span class="tok-k">from</span> infra.storage_stack <span class="tok-k">import</span> StorageStack
+
+<span class="tok-k">def</span> <span class="tok-f">test_bucket_versioned</span>():
+    app = cdk.<span class="tok-f">App</span>()
+    stack = <span class="tok-f">StorageStack</span>(app, <span class="tok-s">"Test"</span>)
+    template = Template.<span class="tok-f">from_stack</span>(stack)
+    template.<span class="tok-f">has_resource_properties</span>(<span class="tok-s">"AWS::S3::Bucket"</span>, {
+        <span class="tok-s">"VersioningConfiguration"</span>: {<span class="tok-s">"Status"</span>: <span class="tok-s">"Enabled"</span>}
+    })
+    template.<span class="tok-f">resource_count_is</span>(<span class="tok-s">"AWS::S3::Bucket"</span>, <span class="tok-n">1</span>)</code></pre><div style="overflow-x:auto"><table><tr><th>Test type</th><th>Use</th></tr><tr><td><strong>Fine-grained assertions</strong></td><td>Check specific resource properties (security-critical settings)</td></tr><tr><td><strong>Snapshot tests</strong></td><td>Detect any unexpected template change; update snapshots deliberately</td></tr><tr><td><strong>Integration tests</strong></td><td>Deploy to a sandbox and verify behaviour</td></tr></table></div></div><div class="section" id="s6-6"><h2><span class="sec-emoji">🚦</span> Pipelines & Escape Hatches (Expert)</h2><h3><span class="badge purple">EXPERT</span> CDK Pipelines</h3><p>The <code>CodePipeline</code> construct in <code>aws-cdk-lib/pipelines</code> builds a <strong>self-mutating pipeline</strong>: when you change the pipeline code, it updates itself first, then deploys your application stages (dev → test → prod) across accounts and regions.</p><h3><span class="badge purple">EXPERT</span> Escape hatches when an L2 lacks a feature</h3><pre><span class="pre-lang">ts</span><code><span class="tok-k">const</span> cfn = bucket.node.defaultChild <span class="tok-k">as</span> s3.CfnBucket;
+cfn.<span class="tok-f">addPropertyOverride</span>(<span class="tok-s">'IntelligentTieringConfigurations'</span>, [{
+  Id: <span class="tok-s">'archive'</span>, Status: <span class="tok-s">'Enabled'</span>,
+  Tierings: [{ AccessTier: <span class="tok-s">'ARCHIVE_ACCESS'</span>, Days: <span class="tok-n">90</span> }],
+}]);</code></pre><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body">Because CDK deploys through CloudFormation, you inherit CloudFormation limits (500 resources per stack, rollback behaviour, slower than direct API calls). Split large apps into several stacks.</div></div></div></section><section class="panel" id="t7" data-toc='[["s7-1", "Side-by-Side Comparison"], ["s7-2", "A Production CI/CD Pipeline"], ["s7-3", "Production Checklist"], ["s7-4", "Learning Roadmap"]]'><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">Expert</span></div><p class="panel-eyebrow">Module 07 · IaC Frameworks · Putting it together</p><h1 class="panel-title">Choosing a Framework & Production Patterns</h1><p class="panel-subtitle">A decision guide, a CI/CD pipeline you can copy, and a checklist for production-grade IaC.</p></div><div class="section" id="s7-1"><h2><span class="sec-emoji">⚔️</span> Side-by-Side Comparison</h2><div style="overflow-x:auto"><table><tr><th></th><th>Terraform</th><th>OpenTofu</th><th>Pulumi</th><th>AWS CDK</th></tr><tr><td>Language</td><td>HCL</td><td>HCL</td><td>TS, Python, Go, C#, Java, YAML</td><td>TS, Python, Java, C#, Go</td></tr><tr><td>Clouds</td><td>Thousands of providers</td><td>Same providers</td><td>Many (bridges Terraform providers)</td><td>AWS only</td></tr><tr><td>State</td><td>Tfstate (remote backends)</td><td>Tfstate (+ encryption)</td><td>Pulumi Cloud or self-hosted</td><td>CloudFormation stacks</td></tr><tr><td>Licence</td><td>BSL</td><td>MPL 2.0</td><td>Apache 2.0 (engine)</td><td>Apache 2.0</td></tr><tr><td>Learning curve</td><td>Gentle DSL</td><td>Gentle DSL</td><td>Easy if you code</td><td>Easy if you code + know AWS</td></tr><tr><td>Testing</td><td><code>terraform test</code>, Terratest</td><td>Same</td><td>Unit tests with mocks, native frameworks</td><td>Assertions, snapshots</td></tr><tr><td>Best for</td><td>Multi-cloud standard</td><td>Open-source requirement</td><td>App-developer-led platforms</td><td>AWS-centric teams</td></tr></table></div><div class="diagram"><svg viewBox="0 0 804 96" xmlns="http://www.w3.org/2000/svg" role="img"><defs><marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#787774"/></marker></defs><rect x="10" y="20" width="128" height="56" rx="10" fill="#14213D" stroke="#14213D" stroke-width="1.2"/><text x="74" y="40" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff" font-family="Noto Sans,sans-serif">Single</text><text x="74" y="56" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff" font-family="Noto Sans,sans-serif">AWS cloud?</text><line x1="141" y1="48" x2="170" y2="48" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/><rect x="174" y="20" width="128" height="56" rx="10" fill="#eef1f7" stroke="#14213D" stroke-width="1.2"/><text x="238" y="40" text-anchor="middle" font-size="12.5" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Devs prefer</text><text x="238" y="56" text-anchor="middle" font-size="12.5" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">real code?</text><line x1="305" y1="48" x2="334" y2="48" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/><rect x="338" y="20" width="128" height="56" rx="10" fill="#eef1f7" stroke="#14213D" stroke-width="1.2"/><text x="402" y="48" text-anchor="middle" font-size="12.5" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">CDK</text><line x1="469" y1="48" x2="498" y2="48" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/><rect x="502" y="20" width="128" height="56" rx="10" fill="#eef1f7" stroke="#14213D" stroke-width="1.2"/><text x="566" y="48" text-anchor="middle" font-size="12.5" font-weight="600" fill="#14213D" font-family="Noto Sans,sans-serif">Pulumi</text><line x1="633" y1="48" x2="662" y2="48" stroke="#787774" stroke-width="1.6" marker-end="url(#ar)"/><rect x="666" y="20" width="128" height="56" rx="10" fill="#14213D" stroke="#14213D" stroke-width="1.2"/><text x="730" y="40" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff" font-family="Noto Sans,sans-serif">Terraform /</text><text x="730" y="56" text-anchor="middle" font-size="12.5" font-weight="600" fill="#fff" font-family="Noto Sans,sans-serif">OpenTofu</text></svg><div class="diagram-caption">Rough guide — team skills and existing estate usually matter more than features.</div></div></div><div class="section" id="s7-2"><h2><span class="sec-emoji">🔧</span> A Production CI/CD Pipeline</h2><h3><span class="badge purple">EXPERT</span> Plan on pull request, apply on merge</h3><pre><span class="pre-lang">yaml</span><code><span class="tok-b">name</span>: terraform
+<span class="tok-b">on</span>:
+  <span class="tok-b">pull_request</span>:
+  <span class="tok-b">push</span>: { branches: [main] }
+
+<span class="tok-b">permissions</span>:
+  <span class="tok-b">id-token</span>: write       <span class="tok-c"># OIDC to AWS, no long-lived keys</span>
+  <span class="tok-b">contents</span>: read
+  <span class="tok-b">pull-requests</span>: write
+
+<span class="tok-b">jobs</span>:
+  <span class="tok-b">plan</span>:
+    <span class="tok-b">runs-on</span>: ubuntu-latest
+    <span class="tok-b">steps</span>:
+      - <span class="tok-b">uses</span>: actions/checkout@v4
+      - <span class="tok-b">uses</span>: aws-actions/configure-aws-credentials@v4
+        <span class="tok-b">with</span>:
+          <span class="tok-b">role-to-assume</span>: arn:aws:iam::<span class="tok-n">111122223333</span>:role/ci-plan
+          <span class="tok-b">aws-region</span>: ap-south-<span class="tok-n">1</span>
+      - <span class="tok-b">uses</span>: hashicorp/setup-terraform@v3
+      - <span class="tok-b">run</span>: terraform init -input=<span class="tok-k">false</span>
+      - <span class="tok-b">run</span>: terraform fmt -check
+      - <span class="tok-b">run</span>: terraform validate
+      - <span class="tok-b">run</span>: terraform plan -input=<span class="tok-k">false</span> -out=tfplan
+      - <span class="tok-b">uses</span>: actions/upload-artifact@v4
+        <span class="tok-b">with</span>: { name: tfplan, path: tfplan }
+
+  <span class="tok-b">apply</span>:
+    <span class="tok-b">needs</span>: plan
+    <span class="tok-b">if</span>: github.ref == <span class="tok-s">'refs/heads/main'</span>
+    <span class="tok-b">environment</span>: production        <span class="tok-c"># manual approval gate</span>
+    <span class="tok-b">runs-on</span>: ubuntu-latest
+    <span class="tok-b">steps</span>:
+      - <span class="tok-b">uses</span>: actions/checkout@v4
+      - <span class="tok-b">uses</span>: actions/download-artifact@v4
+        <span class="tok-b">with</span>: { name: tfplan }
+      - <span class="tok-b">uses</span>: hashicorp/setup-terraform@v3
+      - <span class="tok-b">run</span>: terraform init -input=<span class="tok-k">false</span>
+      - <span class="tok-b">run</span>: terraform apply -input=<span class="tok-k">false</span> tfplan</code></pre><div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body">Use <strong>OIDC federation</strong> to assume cloud roles. Give the plan role read-only access and the apply role write access, behind an approval gate.</div></div></div><div class="section" id="s7-3"><h2><span class="sec-emoji">✅</span> Production Checklist</h2><div style="overflow-x:auto"><table><tr><th>Area</th><th>Practice</th></tr><tr><td>Versions</td><td>Pin tool, provider and module versions; commit the lock file (<code>.terraform.lock.hcl</code>)</td></tr><tr><td>State</td><td>Remote backend, encryption, versioning, locking, restricted access</td></tr><tr><td>Structure</td><td>Small stacks per layer/environment; shared modules versioned with semver</td></tr><tr><td>Quality gates</td><td>fmt, validate, tflint, policy checks (Checkov/OPA), tests</td></tr><tr><td>Delivery</td><td>Plan on PR, approval, apply from CI only, no laptop applies</td></tr><tr><td>Security</td><td>No secrets in code; OIDC; least-privilege roles; encrypted state</td></tr><tr><td>Operations</td><td>Scheduled drift detection; tagging standards; cost estimates in PRs</td></tr></table></div></div><div class="section" id="s7-4"><h2><span class="sec-emoji">🗺️</span> Learning Roadmap</h2><div style="overflow-x:auto"><table><tr><th>Stage</th><th>Goal</th><th>Milestone project</th></tr><tr><td><span class="badge green">BASIC</span></td><td>Write and apply a single configuration</td><td>VPC + EC2 + security group from scratch</td></tr><tr><td><span class="badge blue">INTERMEDIATE</span></td><td>Modules, remote state, environments</td><td>Reusable network module consumed by dev and prod</td></tr><tr><td><span class="badge purple">EXPERT</span></td><td>Pipelines, testing, policy, multi-account</td><td>Self-service platform with CI/CD, tests, policy gates and drift detection</td></tr></table></div></div></section><section class="panel" id="t8" data-toc='[["s8-1","Take the Assessment"]]'><div class="panel-header"><div class="level-row"><span class="level-tag inter">Intermediate</span><span class="level-tag adv">→ Expert</span></div><p class="panel-eyebrow">Module 08</p><h1 class="panel-title">Assessment</h1><p class="panel-subtitle">Check your understanding of IaC principles, Terraform, OpenTofu, Pulumi and AWS CDK.</p></div><div class="section" id="s8-1"><div class="assess-start-card"><div class="assess-intro-title">Test what you've learned</div><div class="assess-intro-text">A timed, exam-style secured assessment for the IaC Frameworks module. Questions are shuffled on every attempt.</div><ul class="assess-intro-list"><li><strong>10 multiple-choice questions</strong> — concept checks plus scenario-based judgement calls</li><li>15-minute timer, question palette, mark-for-review, full explanations after you submit</li><li>Full-screen proctoring: 3 warnings for leaving the test and it auto-submits</li><li>Your attempts and top score are saved in this browser</li></ul><button class="assess-start-btn" id="assessStartBtn" type="button">▶ Start Assessment</button></div><div id="scoreBoard" class="score-board" style="display:none"></div></div></section>
+  </main>
+</div>
+<script>
+(function(){
+  const tabs=document.querySelectorAll('.tab'),panels=document.querySelectorAll('.panel');
+  const tocEl=document.getElementById('toc'),total=tabs.length,progressText=document.getElementById('progressText');
+  function buildToc(panel){
+    const data=JSON.parse(panel.getAttribute('data-toc')||'[]');
+    tocEl.innerHTML=data.map(([id,label])=>`<li><a href="#${id}" data-target="${id}">${label}</a></li>`).join('');
+    const first=tocEl.querySelector('a'); if(first) first.classList.add('active');
+  }
+  let manual=null;
+  function activate(idx){
+    tabs.forEach((t,i)=>t.classList.toggle('active',i===idx));
+    panels.forEach((p,i)=>p.classList.toggle('active',i===idx));
+    manual=null;
+    buildToc(panels[idx]);
+    progressText.textContent=`Tab ${idx+1} of ${total}`;
+    window.scrollTo({top:0,behavior:'instant'});
+  }
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>activate(i)));
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('.toc-list a'); if(!a) return; e.preventDefault();
+    const el=document.getElementById(a.getAttribute('data-target'));
+    manual=a.getAttribute('data-target'); tocEl.querySelectorAll('a').forEach(x=>x.classList.toggle('active',x===a));
+    if(el) window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'});
+  });
+  let ticking=false;
+  function spy(){
+    if(manual){ticking=false;return;}
+    const ap=document.querySelector('.panel.active'); if(!ap){ticking=false;return;}
+    let cur=null; const secs=[...ap.querySelectorAll('.section')];
+    secs.forEach(s=>{ if(s.getBoundingClientRect().top-180<0) cur=s.id; });
+    if(secs.length && window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-4) cur=secs[secs.length-1].id;
+    if(cur) tocEl.querySelectorAll('a').forEach(a=>a.classList.toggle('active',a.dataset.target===cur));
+    ticking=false;
+  }
+  window.addEventListener('scroll',()=>{ if(!ticking){requestAnimationFrame(spy);ticking=true;} },{passive:true});
+  ['wheel','touchstart','keydown','pointerdown'].forEach(ev=>window.addEventListener(ev,e=>{if(e.target&&e.target.closest&&e.target.closest('.toc-list a'))return;manual=null},{passive:true}));
+  window.resetProgress=function(){activate(0)};
+  activate(0);
+})();
+
+</script>
+<script>
+window.COURSE = {"slug": "iac-frameworks", "title": "IaC Frameworks", "assess": [{"q": "Which statement best describes a <em>declarative<\/em> IaC tool?", "options": ["You write the exact steps to run in order", "You describe the desired end state and the tool works out the steps", "It only works with shell scripts", "It never uses state"], "answer": 1, "exp": "Declarative tools compute a diff between desired and current state. Imperative scripts specify steps."}, {"q": "Why is <code>for_each<\/code> usually preferred over <code>count<\/code> for collections?", "options": ["It is faster to type", "Resources are addressed by key, so removing one item does not shift the others", "It disables state", "It creates resources in the wrong order"], "answer": 1, "exp": "With count, removing a middle item shifts indexes and can recreate later resources."}, {"q": "A plan shows <code>-/+<\/code> on a database. What should you do?", "options": ["Ignore it, it is normal", "Stop and investigate — it will be destroyed and recreated", "Run destroy", "Delete the state file"], "answer": 1, "exp": "-/+ is replacement. For stateful resources it can mean data loss, so use prevent_destroy and investigate."}, {"q": "Which block lets you rename a resource in code without recreating it?", "options": ["<code>lifecycle<\/code>", "<code>moved<\/code>", "<code>check<\/code>", "<code>locals<\/code>"], "answer": 1, "exp": "moved blocks record the address change in state during the next apply, and they go through code review."}, {"q": "Which feature is built into OpenTofu to protect secrets inside state files?", "options": ["Sentinel", "Client-side state and plan encryption", "Workspaces", "Provisioners"], "answer": 1, "exp": "Introduced in OpenTofu 1.7: encrypts state and plan files with a configured key provider."}, {"q": "In Pulumi, why can’t you concatenate <code>bucket.bucket<\/code> into a string directly?", "options": ["Strings are not supported", "It is an Output whose value is only known after deployment", "Python forbids it", "It is encrypted"], "answer": 1, "exp": "Use apply() or Output.concat() to transform Outputs."}, {"q": "What does <code>cdk bootstrap<\/code> do?", "options": ["Deletes old stacks", "Creates the toolkit resources (asset bucket, roles) CDK needs in an account/region", "Runs unit tests", "Generates documentation"], "answer": 1, "exp": "Bootstrapping is a one-time setup per account and region."}, {"q": "What is a CDK L2 construct?", "options": ["A raw 1:1 CloudFormation resource", "A curated construct with sensible defaults and helper methods", "A deployment pipeline", "A text template"], "answer": 1, "exp": "L1 = Cfn*, L2 = curated (s3.Bucket), L3 = patterns."}, {"q": "What is the safest way to run <code>apply<\/code> in automation?", "options": ["Apply without a plan", "Apply a saved plan file that was reviewed", "Run from a laptop", "Use -auto-approve with a new plan each time"], "answer": 1, "exp": "A saved plan guarantees the reviewed changes are exactly the applied changes."}, {"q": "Which CI practice avoids long-lived cloud credentials?", "options": ["Store access keys in the repo", "OIDC federation to assume short-lived roles", "Share one admin key", "Use root credentials"], "answer": 1, "exp": "OIDC lets the pipeline obtain temporary credentials for a specific role."}]};
+</script>
+<script>
+/* =====================================================================
+   Final assessment — full-screen, timed mock exam (graded in-browser)
+   ===================================================================== */
+(function(){
+  const C = window.COURSE;
+  const BANK = C.assess.map((q,i)=>Object.assign({id:'q'+i}, q));
+  const EXAM_SECONDS = Math.ceil(BANK.length*1.5)*60; // 1.5 min per question
+  const LS_KEY = 'iac_scores_' + C.slug;
+  let items=[], answers={}, marked={}, cur=0, remaining=EXAM_SECONDS, timerId=null, examOn=false;
+
+  const css=`
+  .exam-overlay{position:fixed;inset:0;z-index:99999;background:#f4f6fb;color:#161c27;font-family:'Noto Sans',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+  .exam-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#14213D;color:#fff;padding:12px 22px;flex-wrap:wrap}
+  .exam-top .et-title{font-size:16px;font-weight:800}
+  .exam-top .et-sub{font-size:12px;color:#cdd5e5}
+  .exam-timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:21px;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:10px;border:1px solid rgba(252,163,17,.5)}
+  .exam-timer.warn{background:#e53e3e;border-color:#e53e3e;animation:etpulse 1s infinite}
+  @keyframes etpulse{50%{opacity:.5}}
+  .exam-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 290px}
+  .exam-q-pane{padding:28px 36px;overflow:auto}
+  .exam-side{border-left:1px solid #e2e8f0;background:#fff;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:16px}
+  .exam-qnum{font-size:12px;font-weight:800;color:#b9720a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+  .exam-qtext{font-size:19px;font-weight:700;line-height:1.5;margin-bottom:22px;max-width:820px}
+  .exam-opts{display:flex;flex-direction:column;gap:10px;max-width:820px}
+  .exam-opt{display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .exam-opt:hover{border-color:#14213D;background:#f9f9ff}
+  .exam-opt.sel{border-color:#14213D;background:#eef1f8;box-shadow:inset 0 0 0 2px #14213D}
+  .exam-opt .k{width:26px;height:26px;flex:0 0 26px;border-radius:7px;background:#f1f3ff;color:#14213D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .exam-opt.sel .k{background:#14213D;color:#fff}
+  .exam-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:820px;align-items:center}
+  .exam-btn{border:none;border-radius:9px;padding:11px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+  .exam-btn.nav{background:#fff;border:1px solid #e2e8f0;color:#14213D}
+  .exam-btn.nav:disabled{opacity:.4;cursor:not-allowed}
+  .exam-btn.mark{background:#fff;border:1px solid #FCA311;color:#b9720a}
+  .exam-btn.mark.on{background:#FCA311;color:#14213D}
+  .exam-btn.submit{background:#FCA311;color:#14213D}
+  .exam-btn.primary{background:#14213D;color:#fff}
+  .exam-side h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0}
+  .exam-count{font-size:13px;color:#4a5568;font-weight:600}
+  .exam-count b{color:#14213D}
+  .exam-palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pal{aspect-ratio:1;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#14213D;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .pal.answered{background:#14213D;color:#fff;border-color:#14213D}
+  .pal.marked{background:#FCA311;color:#14213D;border-color:#FCA311}
+  .pal.cur{outline:2px solid #14213D;outline-offset:1px}
+  .exam-legend{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#64748b}
+  .exam-legend span{display:inline-flex;align-items:center;gap:8px}
+  .exam-legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #e2e8f0}
+  .exam-splash{position:fixed;inset:0;z-index:100000;background:#14213D;display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-splash .card{background:#fff;color:#161c27;border-radius:16px;max-width:560px;width:100%;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .exam-splash .card:hover{transform:none}
+  .exam-splash h2{font-size:25px;font-weight:800;margin:0 0 8px}
+  .exam-splash p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}
+  .exam-splash ul{margin:0 0 22px 18px;color:#4a5568;font-size:13.5px;line-height:1.9;padding:0}
+  .exam-result{max-width:840px;margin:0 auto;text-align:center;padding:24px 10px 60px}
+  .exam-score{font-size:56px;font-weight:800;color:#14213D;line-height:1}
+  .exam-rmsg{font-size:15px;color:#4a5568;margin:10px 0 4px}
+  .exam-rev{margin-top:26px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .exam-rev .r{border:1px solid #e2e8f0;border-left:4px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff}
+  .exam-rev .r.ok{border-left-color:#38a169}.exam-rev .r.no{border-left-color:#e53e3e}
+  .exam-rev .rq{font-weight:700;margin-bottom:6px}
+  .exam-rev .ra{font-size:13px;margin:2px 0}
+  .exam-rev .ra.wrong{color:#c53030}.exam-rev .ra.cor{color:#276749}
+  .exam-rev .rx{font-size:12.5px;color:#64748b;margin-top:6px}
+  .exam-confirm{position:fixed;inset:0;z-index:100001;background:rgba(11,21,38,.55);display:flex;align-items:center;justify-content:center;padding:24px;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-confirm .box{background:#fff;color:#161c27;border-radius:14px;max-width:430px;width:100%;padding:26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .exam-confirm h3{font-size:18px;font-weight:800;margin:0 0 8px}
+  .exam-confirm p{font-size:14px;color:#4a5568;line-height:1.55;margin:0 0 20px}
+  .exam-confirm .row{display:flex;gap:10px;justify-content:flex-end}
+  .exam-fswarn{position:fixed;inset:0;z-index:100003;background:rgba(15,23,42,.92);display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#fff;font-family:'Noto Sans',system-ui,sans-serif}
+  .exam-fswarn .fw-box{max-width:520px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .exam-fswarn h3{font-size:30px;font-weight:800;margin:0;display:flex;align-items:center;gap:12px;color:#fff}
+  .exam-fswarn p{margin:0;font-size:16px;color:#e2e8f0;line-height:1.5}
+  .exam-fswarn .fw-count{font-size:16px;font-weight:600;color:#fff}
+  .exam-fswarn .fw-btn{margin-top:6px;background:#0b1220;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:15px 26px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+  .exam-fswarn .fw-btn:hover{background:#000}
+  .exam-cover{position:fixed;inset:0;z-index:100002;background:#0b1526;color:#fff;display:none;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;font-family:'Noto Sans',system-ui,sans-serif;font-size:20px;font-weight:700;padding:24px}
+  .exam-cover small{font-weight:500;color:#cdd5e5;font-size:14px}
+  @media(max-width:820px){.exam-main{grid-template-columns:1fr}.exam-side{border-left:none;border-top:1px solid #e2e8f0}.exam-q-pane{padding:20px}}
+  `;
+  function injectCss(){ if(document.getElementById('examCss'))return; const s=document.createElement('style'); s.id='examCss'; s.textContent=css; document.head.appendChild(s); }
+  function fmt(t){const m=Math.floor(t/60),s=t%60;return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+  function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function examDialog(title,msg,okLabel,cancel){
+    return new Promise(res=>{
+      injectCss();
+      const d=document.createElement('div'); d.className='exam-confirm';
+      d.innerHTML=`<div class="box"><h3>${title}</h3><p>${msg}</p><div class="row">${cancel?'<button class="exam-btn nav" data-a="0">Cancel</button>':''}<button class="exam-btn primary" data-a="1">${okLabel||'OK'}</button></div></div>`;
+      document.body.appendChild(d);
+      d.addEventListener('click',e=>{
+        if(e.target===d && cancel){d.remove();res(false);return;}
+        const b=e.target.closest('[data-a]'); if(!b)return;
+        d.remove(); res(b.dataset.a==='1');
+      });
+    });
+  }
+
+  function loadScores(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+  function saveScore(score,total){
+    const a=loadScores(); a.unshift({score,total,pct:Math.round(score/total*100),ts:Date.now()});
+    try{localStorage.setItem(LS_KEY,JSON.stringify(a.slice(0,50)));}catch(e){}
+    renderScoreboard();
+  }
+  function renderScoreboard(){
+    const el=document.getElementById('scoreBoard'); if(!el)return;
+    const a=loadScores();
+    if(!a.length){ el.style.display='none'; return; }
+    el.style.display='block';
+    const best=a.reduce((m,x)=>x.pct>m.pct?x:m,a[0]);
+    const last5=a.slice(0,5);
+    const fmtd=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+    el.innerHTML=`
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:18px">
+        <div style="flex:0 0 auto;min-width:150px;background:#14213D;color:#fff;border-radius:14px;padding:18px 22px;text-align:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#FCA311">Top score</div>
+          <div style="font-size:34px;font-weight:800;line-height:1.1;margin-top:4px">${best.score}<span style="font-size:18px;color:#cdd5e5">/${best.total}</span></div>
+          <div style="font-size:12px;color:#cdd5e5">${best.pct}%</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px">Last ${last5.length} attempt${last5.length>1?'s':''}</div>
+          ${last5.map(x=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #f1f3ff;font-size:13px">
+              <span style="font-weight:700;color:#14213D">${x.score}/${x.total} <span style="color:#64748b;font-weight:600">&middot; ${x.pct}%</span></span>
+              <span style="color:#94a3b8">${fmtd(x.ts)}</span></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ---- proctoring: tab-switch / fullscreen-exit warnings (3 strikes -> auto-submit) ---- */
+  let warns=0, lastWarn=0, proctorOn=false;
+  function showCover(){
+    if(!examOn)return;
+    let c=document.getElementById('examCover');
+    if(!c){ c=document.createElement('div'); c.id='examCover'; c.className='exam-cover';
+      c.innerHTML='<div>&#9888;&#65039; Test paused &mdash; return to this window</div><small>Leaving the test counts as a warning.</small>';
+      document.body.appendChild(c); }
+    c.style.display='flex';
+  }
+  function hideCover(){ const c=document.getElementById('examCover'); if(c)c.style.display='none'; }
+  function hideFsWarn(){ const w=document.getElementById('examFsWarn'); if(w)w.remove(); }
+  function showFsWarn(n){
+    injectCss(); hideFsWarn();
+    const w=document.createElement('div'); w.className='exam-fswarn'; w.id='examFsWarn';
+    w.innerHTML='<div class="fw-box"><h3><span>&#9888;&#65039;</span> Fullscreen exited</h3>'+
+      '<p>The assessment must remain in fullscreen mode.</p>'+
+      '<div class="fw-count">Warning '+n+' of 3</div>'+
+      '<button class="fw-btn" id="examFsReturn">Return to assessment</button></div>';
+    document.body.appendChild(w);
+    const btn=document.getElementById('examFsReturn');
+    btn.addEventListener('click',()=>{
+      const el=document.documentElement;
+      const done=()=>{ fsWanted=true; hideFsWarn(); };
+      if(el.requestFullscreen){ el.requestFullscreen().then(done).catch(()=>{}); } else { done(); }
+    });
+    try{btn.focus();}catch(e){}
+  }
+  function countWarn(kind){
+    if(!proctorOn||!examOn)return;
+    const now=Date.now(); if(now-lastWarn<1500)return; lastWarn=now;
+    warns++;
+    if(warns>=3){ hideFsWarn(); examDialog('Test submitted','You left the test 3 times. It has been auto-submitted.'); submitExam(true); }
+    else if(kind==='fs'){ showFsWarn(warns); }
+    else { examDialog('Warning '+warns+' of 3','Switching tabs or leaving the window is not allowed. After 3 warnings the test is auto-submitted.'); }
+  }
+  function fsHandler(){
+    if(!examOn)return;
+    if(document.fullscreenElement){ hideFsWarn(); return; }
+    if(fsWanted){ countWarn('fs'); }
+  }
+  function visHandler(){ if(document.hidden){ showCover(); countWarn(); } else { hideCover(); } }
+  function blockEvt(e){ e.preventDefault(); return false; }
+  function keyGuard(e){ const k=(e.key||'').toLowerCase(); if((e.ctrlKey||e.metaKey)&&['c','x','s','p','u'].includes(k)){ e.preventDefault(); return false; } }
+  let fsWanted=false;
+  function startProctor(){
+    warns=0; lastWarn=0; proctorOn=true;
+    document.addEventListener('visibilitychange',visHandler);
+    document.addEventListener('fullscreenchange',fsHandler);
+    document.addEventListener('contextmenu',blockEvt,true);
+    document.addEventListener('copy',blockEvt,true);
+    document.addEventListener('keydown',keyGuard,true);
+  }
+  function stopProctor(){
+    proctorOn=false; hideFsWarn();
+    document.removeEventListener('visibilitychange',visHandler);
+    document.removeEventListener('fullscreenchange',fsHandler);
+    document.removeEventListener('contextmenu',blockEvt,true);
+    document.removeEventListener('copy',blockEvt,true);
+    document.removeEventListener('keydown',keyGuard,true);
+    hideCover();
+  }
+
+  function showSplash(){
+    injectCss();
+    const sp=document.createElement('div'); sp.className='exam-splash'; sp.id='examSplash';
+    sp.innerHTML=`<div class="card">
+      <h2>&#127919; ${C.title} &mdash; Secured Assessment</h2>
+      <p>A timed, exam-style secured assessment for this module.</p>
+      <ul>
+        <li><b>${BANK.length} questions</b>, shuffled every attempt</li>
+        <li><b>${Math.round(EXAM_SECONDS/60)}-minute</b> timer &mdash; the test auto-submits when time is up</li>
+        <li>Navigate freely, <b>mark questions for review</b>, then submit</li>
+        <li>Correct answers and explanations are shown only after you submit</li>
+      </ul>
+      <p style="font-weight:700;color:#14213D;margin-bottom:6px">Exam rules</p>
+      <ul style="margin-top:0">
+        <li>The test runs in <b>fullscreen</b> where your browser allows it</li>
+        <li><b>No tab / window switching</b> and <b>no exiting fullscreen (Esc)</b> &mdash; 3 warnings and the test <b>auto-submits</b></li>
+        <li>Copy and right-click are disabled during the test</li>
+      </ul>
+      <div style="display:flex;gap:10px"><button class="exam-btn nav" id="examCancel" style="flex:0 0 auto">Cancel</button>
+      <button class="exam-btn primary" id="examBegin" style="flex:1;padding:14px">Start Test &rarr;</button></div>
+    </div>`;
+    document.body.appendChild(sp);
+    document.getElementById('examCancel').addEventListener('click',()=>sp.remove());
+    document.getElementById('examBegin').addEventListener('click',()=>{
+      fsWanted=false;
+      if(document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen().then(()=>{fsWanted=true;}).catch(()=>{}); }
+      sp.remove(); enterExam();
+    });
+  }
+
+  function enterExam(){
+    injectCss();
+    items = shuffle(BANK);
+    answers={}; marked={}; cur=0; remaining=EXAM_SECONDS; examOn=true;
+    const ov=document.createElement('div'); ov.className='exam-overlay'; ov.id='examOverlay';
+    ov.innerHTML=`
+      <div class="exam-top">
+        <div><div class="et-title">${C.title} &mdash; Secured Assessment</div><div class="et-sub">${items.length} questions &middot; good luck</div></div>
+        <div class="exam-timer" id="examTimer">${fmt(remaining)}</div>
+      </div>
+      <div class="exam-main">
+        <div class="exam-q-pane" id="examQ"></div>
+        <div class="exam-side">
+          <div class="exam-count">Answered <b id="examAnsN">0</b> / ${items.length}</div>
+          <h4>Question palette</h4>
+          <div class="exam-palette" id="examPal"></div>
+          <div class="exam-legend">
+            <span><i style="background:#14213D;border-color:#14213D"></i> Answered</span>
+            <span><i style="background:#FCA311;border-color:#FCA311"></i> Marked for review</span>
+            <span><i></i> Not answered</span>
+          </div>
+          <button class="exam-btn submit" id="examSubmit" style="width:100%">Submit Test</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.body.style.overflow='hidden';
+    document.getElementById('examSubmit').addEventListener('click',()=>submitExam(false));
+    buildPalette(); renderQ();
+    timerId=setInterval(tick,1000);
+    window.addEventListener('beforeunload',beforeUnload);
+    startProctor();
+  }
+  function beforeUnload(e){ if(examOn){e.preventDefault();e.returnValue='';} }
+  function tick(){
+    remaining--; const el=document.getElementById('examTimer');
+    if(el){ el.textContent=fmt(Math.max(remaining,0)); if(remaining<=300)el.classList.add('warn'); }
+    if(remaining<=0){ submitExam(true); }
+  }
+  function buildPalette(){
+    const pal=document.getElementById('examPal'); pal.innerHTML='';
+    items.forEach((it,n)=>{
+      const b=document.createElement('button'); b.className='pal'; b.textContent=n+1; b.dataset.n=n;
+      b.addEventListener('click',()=>{cur=n;renderQ();});
+      pal.appendChild(b);
+    });
+    refreshPalette();
+  }
+  function refreshPalette(){
+    document.querySelectorAll('#examPal .pal').forEach(b=>{
+      const n=+b.dataset.n, id=items[n].id;
+      b.classList.toggle('answered', id in answers);
+      b.classList.toggle('marked', !!marked[id]);
+      b.classList.toggle('cur', n===cur);
+    });
+    const el=document.getElementById('examAnsN'); if(el)el.textContent=Object.keys(answers).length;
+  }
+  function renderQ(){
+    const it=items[cur], id=it.id, pane=document.getElementById('examQ');
+    pane.innerHTML=`
+      <div class="exam-qnum">Question ${cur+1} of ${items.length}</div>
+      <div class="exam-qtext">${it.q}${it.code?'<pre><code>'+it.code+'</code></pre>':''}</div>
+      <div class="exam-opts" id="examOpts">${it.options.map((o,i)=>`<div class="exam-opt${answers[id]===i?' sel':''}" data-i="${i}" tabindex="0"><span class="k">${String.fromCharCode(65+i)}</span><span>${o}</span></div>`).join('')}</div>
+      <div class="exam-actions">
+        <button class="exam-btn nav" id="examPrev" ${cur===0?'disabled':''}>&larr; Previous</button>
+        <button class="exam-btn mark${marked[id]?' on':''}" id="examMark">${marked[id]?'★ Marked':'☆ Mark for review'}</button>
+        <button class="exam-btn nav" id="examNext" ${cur===items.length-1?'disabled':''}>Next &rarr;</button>
+      </div>`;
+    pane.querySelectorAll('#examOpts .exam-opt').forEach(el=>{
+      const pick=()=>{ answers[id]=+el.dataset.i; pane.querySelectorAll('#examOpts .exam-opt').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); refreshPalette(); };
+      el.addEventListener('click',pick);
+      el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();} });
+    });
+    document.getElementById('examPrev').addEventListener('click',()=>{if(cur>0){cur--;renderQ();}});
+    document.getElementById('examNext').addEventListener('click',()=>{if(cur<items.length-1){cur++;renderQ();}});
+    document.getElementById('examMark').addEventListener('click',()=>{marked[id]=!marked[id];renderQ();});
+    refreshPalette();
+    pane.scrollTop=0;
+  }
+  async function submitExam(auto){
+    if(!examOn)return;
+    const unanswered=items.length-Object.keys(answers).length;
+    if(!auto){
+      const ok=await examDialog('Submit test?', unanswered>0
+        ? 'You have '+unanswered+' unanswered question(s). Once submitted, you can\'t change your answers.'
+        : 'Once submitted, you can\'t change your answers.', 'Submit test', true);
+      if(!ok)return;
+    }
+    examOn=false; clearInterval(timerId);
+    window.removeEventListener('beforeunload',beforeUnload);
+    stopProctor();
+    let score=0; items.forEach(it=>{ if(answers[it.id]===it.answer) score++; });
+    showResults(score);
+  }
+  function showResults(score){
+    const total=items.length; saveScore(score,total);
+    const pct=Math.round(score/total*100);
+    let msg='Keep practicing &mdash; review the explanations below, revisit the modules and try again.';
+    if(pct>=85)msg='Outstanding &mdash; you are operating at an expert level for this role.';
+    else if(pct>=65)msg='Solid pass. Review the questions you missed and you are interview-ready.';
+    else if(pct>=50)msg='Borderline &mdash; revisit the modules you missed and retake.';
+    const rev=items.map((it,n)=>{
+      const you=answers[it.id], attempted=(you!=null), ok=attempted&&you===it.answer;
+      let inner='<div class="rq">Q'+(n+1)+'. '+it.q+(it.code?'<pre><code>'+it.code+'</code></pre>':'')+'</div>';
+      inner+= attempted ? '<div class="ra '+(ok?'cor':'wrong')+'">Your answer: '+String.fromCharCode(65+you)+'. '+it.options[you]+'</div>' : '<div class="ra wrong">Your answer: <i>Not answered</i></div>';
+      if(!ok) inner+='<div class="ra cor">Correct: '+String.fromCharCode(65+it.answer)+'. '+it.options[it.answer]+'</div>';
+      if(it.exp) inner+='<div class="rx">'+it.exp+'</div>';
+      return '<div class="r '+(ok?'ok':'no')+'">'+inner+'</div>';
+    }).join('');
+    const ov=document.getElementById('examOverlay');
+    ov.innerHTML=`
+      <div class="exam-top"><div class="et-title">Result &mdash; ${C.title}</div>
+        <button class="exam-btn" id="examClose" style="background:rgba(255,255,255,.15);color:#fff">&#10005; Close</button></div>
+      <div class="exam-q-pane" style="grid-column:1/-1">
+        <div class="exam-result">
+          <div class="exam-score">${score} / ${total}</div>
+          <div class="exam-rmsg">${pct}% correct &mdash; ${msg}</div>
+          <div style="margin-top:16px"><button class="exam-btn primary" id="examRetry">&#8635; Take another attempt</button></div>
+          <div class="exam-rev">${rev}</div>
+        </div>
+      </div>`;
+    document.getElementById('examRetry').addEventListener('click',()=>{ closeExam(); showSplash(); });
+    document.getElementById('examClose').addEventListener('click',closeExam);
+  }
+  function closeExam(){
+    stopProctor();
+    const ov=document.getElementById('examOverlay'); if(ov)ov.remove();
+    document.body.style.overflow='';
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+  }
+  const startBtn=document.getElementById('assessStartBtn');
+  if(startBtn)startBtn.addEventListener('click',showSplash);
+  renderScoreboard();
+})();
+</script><script>/* CareerBuddy hub: the final assessment opens in its own tab */
+(function(){
+  var SEL='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self;
+  document.addEventListener('click',function(e){
+    if(!framed)return;
+    var b=e.target.closest&&e.target.closest(SEL); if(!b)return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.open(location.pathname+'?assess=1','_blank');
+  },true);
+  if(!framed&&/[?&]assess=1(&|$)/.test(location.search)){
+    window.addEventListener('load',function(){
+      var b=document.querySelector(SEL); if(!b)return;
+      var panel=b.closest('.panel');
+      if(panel){ var i=[].indexOf.call(document.querySelectorAll('.panel'),panel), t=document.querySelectorAll('.tab')[i]; if(t)t.click(); }
+      b.click();
+    });
+  }
+})();
+</script>
+<script>/* CareerBuddy: screenshots are not allowed during the assessment */
+(function(){
+  // A web page cannot stop the operating system from taking a screenshot, so this makes
+  // screenshots hard to take and useless if taken: the screen blanks while a capture tool
+  // has focus or a screenshot key is pressed, the clipboard is overwritten after
+  // Print Screen, printing is blocked, and every view carries a watermark with the
+  // candidate's name and the time. Active in the assessment tab (?assess=1) and once an
+  // assessment is started on a page opened outside the hub.
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,.assess-start-btn,.assessment-page-start,.assessment-start-page-btn';
+  var framed=window.top!==window.self, on=false, cover=null, mark=null, hideT=null;
+  // In the hub frame: remember who is signed in, so the assessment tab (which inherits this
+  // tab's sessionStorage) can watermark with the candidate's name. Window capture runs
+  // before the new-tab handler on document.
+  window.addEventListener('click',function(e){
+    if(!framed||!(e.target.closest&&e.target.closest(START)))return;
+    try{var r=window.parent.document.getElementById('riya-assistant-root');
+      if(r&&r.dataset.riyaUsername)sessionStorage.setItem('cbCandidate',r.dataset.riyaUsername);}catch(_){}
+  },true);
+  if(framed)return;
+
+  function css(){
+    var st=document.createElement('style');
+    st.textContent='@media print{html,body{display:none!important}}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover.on{display:flex}'
+      +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
+      +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
+      +'body.cb-shot-guard{-webkit-user-select:none;user-select:none}';
+    document.head.appendChild(st);
+  }
+  function watermark(){
+    var who='', when=new Date().toLocaleString();
+    try{who=sessionStorage.getItem('cbCandidate')||'';}catch(_){}
+    var text='CareerBuddy assessment · '+(who?who+' · ':'')+when+' · Screenshots not allowed';
+    mark=document.createElement('div');mark.id='cbShotMark';mark.setAttribute('aria-hidden','true');
+    var html='';
+    for(var y=-10;y<110;y+=14)for(var x=-20;x<110;x+=38)html+='<span style="left:'+x+'%;top:'+y+'%"></span>';
+    mark.innerHTML=html;
+    [].forEach.call(mark.children,function(s){s.textContent=text;});
+    document.body.appendChild(mark);
+  }
+  function show(msg,ms){
+    if(!cover)return;
+    cover.textContent=msg||'Screenshots are not allowed during the assessment.';
+    cover.classList.add('on');
+    clearTimeout(hideT); hideT=null;
+    if(ms)hideT=setTimeout(function(){hideT=null;if(document.hasFocus())cover.classList.remove('on');},ms);
+  }
+  function hide(){if(cover&&!hideT)cover.classList.remove('on');}
+  function scrub(){ // overwrite whatever Print Screen put on the clipboard
+    try{navigator.clipboard&&navigator.clipboard.writeText('Screenshots are not allowed during the CareerBuddy assessment.');}catch(_){}
+  }
+  function isShotKey(e){
+    var k=(e.key||'').toLowerCase();
+    if(k==='printscreen'||e.keyCode===44)return true;                         // Print Screen (Windows / Linux)
+    if(e.metaKey&&e.shiftKey&&['3','4','5','6','s'].indexOf(k)>=0)return true; // macOS Cmd+Shift+3/4/5/6, Win+Shift+S
+    if((e.ctrlKey||e.metaKey)&&(k==='p'||(e.shiftKey&&k==='s')))return true;   // print / save-as
+    return false;
+  }
+  function activate(){
+    if(on)return; on=true;
+    css();
+    cover=document.createElement('div');cover.id='cbShotCover';cover.setAttribute('role','alert');
+    document.body.appendChild(cover);
+    document.body.classList.add('cb-shot-guard');
+    watermark();
+    window.addEventListener('keydown',function(e){
+      if(isShotKey(e)){e.preventDefault();e.stopPropagation();scrub();show(null,2500);return;}
+      if(e.key==='Meta'||e.key==='OS')show('Screenshots are not allowed during the assessment.',0); // Windows key: blank before Win+Shift+S
+    },true);
+    window.addEventListener('keyup',function(e){
+      if(isShotKey(e)){e.preventDefault();scrub();show(null,2500);return;}  // Print Screen only reports keyup on Windows
+      if(e.key==='Meta'||e.key==='OS'){hideT=null;hide();}
+    },true);
+    // Snipping Tool, Xbox Game Bar and similar capture tools take focus: blank the screen until it returns.
+    window.addEventListener('blur',function(){show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('focus',function(){hideT=null;hide();});
+    document.addEventListener('visibilitychange',function(){if(document.hidden)show('The assessment is hidden while another window is active.',0);});
+    window.addEventListener('beforeprint',function(){show(null,0);});
+    window.addEventListener('afterprint',function(){hideT=null;hide();});
+  }
+  if(/[?&]assess=1(&|$)/.test(location.search))document.readyState==='loading'?document.addEventListener('DOMContentLoaded',activate):activate();
+  window.addEventListener('click',function(e){if(e.target.closest&&e.target.closest(START))activate();},true);
+})();
+</script>
+</body>
+</html>
