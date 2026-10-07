@@ -505,6 +505,26 @@
         }
     };
     const WELCOME_CONTEXT = {
+        // Landing-page-only guest pill set (task spec's 5 named items). Kept
+        // separate from WELCOME_CONTEXT.guest (used on every other guest
+        // page) so this doesn't change Buddy anywhere except "/" for a
+        // signed-out visitor. actionKeys are real, already-allowlisted guest
+        // actions (see getAllowedActionKeys) -- resume/jobs/interview route
+        // through sign-up since those pages are @login_required server-side;
+        // Skill Up is genuinely public so "Improve My Skills" and "Explore
+        // Certifications" go straight there.
+        guestLanding: {
+            heading: "Click on your preferred option:",
+            recommendationHeading: "",
+            quickActions: [
+                { id: "gl-resume", actionKey: "register_job_seeker", icon: "resume", title: "Build My Resume", description: "Create a free account to start", context: "Building your resume starts with a free Job Seeker account -- it only takes a minute." },
+                { id: "gl-jobs", actionKey: "register_job_seeker", icon: "briefcase", title: "Find Jobs", description: "Sign up to see matched roles", context: "Job matches are personalized to your profile once you sign up." },
+                { id: "gl-skills", actionKey: "browse_all", icon: "book", title: "Improve My Skills", description: "Browse Skill Up, open to everyone", context: "Skill Up's English, aptitude and tech modules are open to browse right now." },
+                { id: "gl-interview", actionKey: "register_job_seeker", icon: "interview", title: "Practice Interview", description: "Sign up for AI mock interviews", context: "AI mock interviews are available once you create your free account." },
+                { id: "gl-certs", actionKey: "browse_all", icon: "cap", title: "Explore Certifications", description: "See what you can earn", context: "Certifications are earned in Skill Up by scoring well on a module's assessment." },
+            ],
+            recommendations: [],
+        },
         guest: {
             heading: "What would you like to do?",
             recommendationHeading: "Explore CareerBuddy",
@@ -2884,24 +2904,124 @@
         const panel = getWelcomePanel();
         if (!panel) return;
 
+        const role = getAssistantRole();
+        const section0 = getAssistantSection();
+        // Landing-page-only override: a signed-out visitor on "/" gets the
+        // 5-item guestLanding set; a signed-out visitor anywhere else still
+        // gets the normal WELCOME_CONTEXT.guest cards (unchanged, matches
+        // "scope to Landing Page only").
+        const roleContext = role === "guest"
+            ? (section0 === "home" ? WELCOME_CONTEXT.guestLanding : WELCOME_CONTEXT.guest)
+            : (WELCOME_CONTEXT[role] || WELCOME_CONTEXT.guest);
+        const section = role === "guest" ? "" : section0;
+        const context = SECTION_CONTEXT[section] || roleContext;
+        const lang = getSelectedAssistantLanguage();
+        const isGuestLanding = roleContext === WELCOME_CONTEXT.guestLanding || role === "student";
+
+        // guestLanding renders ONCE into the SAME scrollable flow as the
+        // greeting/conversation (#riya-response-slot), not into the
+        // separate persistent panel -- per spec, it must behave like
+        // normal scrollable content that naturally scrolls out of view as
+        // the conversation grows, never collapsed/removed/replaced. Guard
+        // against duplicating it on repeat calls (language change, etc.):
+        // if it's already in the scroll flow, leave it alone entirely and
+        // only let every OTHER role continue using the unchanged
+        // panel-replace behavior below.
+        if (isGuestLanding) {
+            if (!assistant.responseSlot) return;
+            if (assistant.responseSlot.querySelector(".riya-visual-wrap")) return;
+            // Also guard against running before the greeting exists yet --
+            // resetToContextView() calls this at page-load time (its own
+            // comment: "do NOT render the greeting here", for state-reset
+            // only), well before openChat() has added anything. Inserting
+            // into an empty response-slot then would put the visual BEFORE
+            // the greeting once openChat() later adds it. Skipping here is
+            // safe: openChat() calls this again right after the greeting
+            // card is actually in the DOM, which is the real, correct
+            // insertion point.
+            if (!assistant.responseSlot.querySelector(".riya-response-card:not(.is-placeholder)")) return;
+        }
+
         let pillsContainer = panel.querySelector(".riya-suggestion-pills");
         if (pillsContainer) {
             pillsContainer.remove();
         }
 
-        const role = getAssistantRole();
-        const roleContext = WELCOME_CONTEXT[role] || WELCOME_CONTEXT.guest;
-        // A signed-out visitor gets the role cards wherever they are: the
-        // section cards all lead somewhere that needs an account.
-        const section = role === "guest" ? "" : getAssistantSection();
-        const context = SECTION_CONTEXT[section] || roleContext;
-        const lang = getSelectedAssistantLanguage();
-
         pillsContainer = document.createElement("div");
         pillsContainer.className = "riya-suggestion-pills";
 
+        // guestLanding only -- compact, pure CSS/JS premium intro visual.
+        // No image swap, no external GIF: orbit rings + glow + the
+        // existing Buddy image + label, sized small (~160px desktop /
+        // ~130px mobile, CSS below) so recommendations stay visible. Lives
+        // permanently in the normal scroll flow (see the isGuestLanding
+        // append branch below) -- NOT collapsed, removed, or replaced on
+        // interaction. It simply scrolls out of view as the conversation
+        // grows, and back into view if the user scrolls up, exactly like
+        // any other content in this same scrollable area.
+        if (roleContext === WELCOME_CONTEXT.guestLanding || role === "student") {
+            // Application-oriented animation: Buddy at the center, 5 small
+            // feature nodes (own icons, own layout -- not the reference
+            // image's artwork) orbiting it, replacing the earlier plain
+            // rings/particles. Fits the SAME existing .riya-visual-stage
+            // container (CSS height unchanged) -- only what's drawn inside
+            // it changed, per this round's "animation-only" requirement.
+            const launcherSrc = assistant.root ? assistant.root.querySelector(".riya-launcher-img")?.src : "";
+            const features = [
+                { icon: "resume", label: "Resume Builder", pos: "n", d: "0.5s" },
+                { icon: "briefcase", label: "Find Jobs", pos: "ne", d: "0.7s" },
+                { icon: "cap", label: "Skill Up", pos: "nw", d: "0.9s" },
+                { icon: "interview", label: "Interview Practice", pos: "sw", d: "1.1s" },
+                { icon: "sparkle", label: "Certifications", pos: "se", d: "1.3s" },
+            ];
+            const nodesHtml = features.map((f) => `
+                <span class="riya-visual-node riya-visual-node--${f.pos}" style="--d:${f.d}" title="${f.label}">
+                    <span class="riya-visual-node-content">
+                        <span class="riya-visual-node-icon">${WELCOME_ICONS[f.icon] || WELCOME_ICONS.briefcase}</span>
+                        <span class="riya-visual-node-label">${f.label}</span>
+                    </span>
+                </span>`).join("");
+            const stageWrap = document.createElement("div");
+            stageWrap.className = "riya-visual-wrap";
+            stageWrap.innerHTML = `
+                <div class="riya-visual-stage" aria-hidden="true">
+                    <svg class="riya-visual-orbit-svg" viewBox="0 0 300 160" preserveAspectRatio="xMidYMid meet">
+                        <ellipse cx="150" cy="80" rx="105" ry="40" class="orbit-ring" />
+                        <ellipse cx="150" cy="80" rx="50" ry="18" class="orbit-ring" style="stroke-dasharray: 2 6; opacity: 0.5;" />
+                        <path d="M150,80 Q150,47 150,15" class="orbit-link orbit-link--n" />
+                        <path d="M150,80 Q202,72 255,65" class="orbit-link orbit-link--ne" />
+                        <path d="M150,80 Q97,72 45,65" class="orbit-link orbit-link--nw" />
+                        <path d="M150,80 Q197,105 245,130" class="orbit-link orbit-link--se" />
+                        <path d="M150,80 Q102,105 55,130" class="orbit-link orbit-link--sw" />
+                        <circle cx="150" cy="40" r="2.5" class="orbit-particle orbit-particle--1" />
+                        <circle cx="150" cy="120" r="2.5" class="orbit-particle orbit-particle--2" />
+                    </svg>
+                    <span class="riya-visual-glow"></span>
+                    ${nodesHtml}
+                    <div class="riya-visual-mascot-container">
+                        ${launcherSrc ? `<img src="${launcherSrc}" alt="" class="riya-visual-mascot">` : ""}
+                        <div class="riya-visual-mascot-label">CareerBuddy</div>
+                    </div>
+                </div>`;
+            pillsContainer.appendChild(stageWrap);
+            requestAnimationFrame(() => stageWrap.querySelector(".riya-visual-stage")?.classList.add("is-playing"));
+        }
+
+        // guestLanding only (not other roles/pages): a short caption right
+        // above the options, matching the "Click on your preferred option"
+        // beat from the reference widget. roleContext.heading already
+        // existed as a config field but was never actually rendered by this
+        // function for any role -- wiring it up ONLY for this one case
+        // keeps every other page's pill panel exactly as it was.
+        if ((roleContext === WELCOME_CONTEXT.guestLanding || role === "student") && roleContext.heading) {
+            const caption = document.createElement("div");
+            caption.className = "riya-welcome-caption";
+            caption.textContent = roleContext.heading;
+            pillsContainer.appendChild(caption);
+        }
+
         const quickGrid = document.createElement("div");
-        quickGrid.className = "riya-welcome-grid";
+        quickGrid.className = "riya-welcome-grid riya-welcome-grid--landing";
         context.quickActions.forEach((card) => {
             const node = buildWelcomeCard(card, lang, "action");
             if (node) quickGrid.appendChild(node);
@@ -2918,7 +3038,20 @@
             pillsContainer.appendChild(visibleGrid);
         }
 
-        panel.appendChild(pillsContainer);
+        if (isGuestLanding && assistant.responseSlot) {
+            // Normal scrollable content, appended after whatever's already
+            // there (the greeting, rendered just before this call) -- not
+            // the separate persistent panel. This is what makes it scroll
+            // away naturally as later messages are appended below it,
+            // and scroll back INTO view when the user scrolls up, with no
+            // special-case logic of its own.
+            assistant.responseSlot.appendChild(pillsContainer);
+            requestAnimationFrame(() => {
+                assistant.responseSlot.scrollTop = assistant.responseSlot.scrollHeight;
+            });
+        } else {
+            panel.appendChild(pillsContainer);
+        }
         prefetchCardSpeech([...context.quickActions, ...(context.recommendations || [])], lang);
     }
 
@@ -3586,6 +3719,19 @@
             speak();
         } else {
             window.speechSynthesis.onvoiceschanged = () => speak();
+            // Safety net, not a behavior change: on a normal browser with
+            // system voices installed, onvoiceschanged fires almost
+            // immediately and this timer is cleared/made a no-op by the
+            // generation check below. It only matters when the voice list
+            // never loads at all (confirmed case: headless browsers with
+            // zero installed voices) -- without it, ttsSpeaking stays true
+            // forever and commitNavigation()'s pending navigation never
+            // fires, silently stranding the user on the current page.
+            setTimeout(() => {
+                if (generation === assistant.ttsGeneration && assistant.ttsSpeaking) {
+                    finishIfCurrent();
+                }
+            }, 1500);
         }
     }
 
@@ -5851,8 +5997,6 @@
         // FIRST OPEN ONLY:
         // Show and speak the greeting once.
         // ---------------------------------------------------------
-        renderPersistentWelcome();
-
         if (!hasHistory) {
 
             // Remove the HTML placeholder.
@@ -5901,6 +6045,15 @@
                 afterSpeak: null
             });
 
+            // Render welcome content AFTER the greeting card above, so
+            // guestLanding's visual+pills (which insert into this SAME
+            // #riya-response-slot, not the separate panel) land in the
+            // correct order: greeting first, then the visual, then
+            // whatever conversation follows. Every other role still
+            // renders into the separate panel as before, where order
+            // relative to the greeting never mattered.
+            renderPersistentWelcome();
+
             return;
         }
 
@@ -5910,6 +6063,8 @@
         // Do NOT add or speak another greeting.
         // Go directly to listening.
         // ---------------------------------------------------------
+        renderPersistentWelcome();
+
         setAssistantState(
             AssistantState.RESPONDING
         );
