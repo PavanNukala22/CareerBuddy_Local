@@ -2047,6 +2047,10 @@
             return true;
         }
 
+        if (!assistant.isEmployer && actionKey === "industries_nav") {
+            return true;
+        }
+
         return getAllowedActionKeys().includes(actionKey);
     }
 
@@ -4749,6 +4753,65 @@
                 }
             }, 350);
             return;
+        }
+
+        // ============================================================
+        // INDUSTRIES KNOWLEDGE CHECK (Guest & Student only)
+        // ============================================================
+        if (getAssistantRole() === "guest" || getAssistantRole() === "student") {
+            if (typeof CareerBuddyIndustriesKnowledge !== "undefined") {
+                const isNavReq = hasNavigationVerb(cleanText) || cleanText.toLowerCase().includes("take me") || cleanText.toLowerCase().includes("open");
+                if (isNavReq && assistant.lastIndustriesContext && (cleanText.toLowerCase().includes("there") || cleanText.toLowerCase().includes("them") || cleanText.toLowerCase().includes("it") || cleanText.toLowerCase().includes("page"))) {
+                    if (inputMode === "voice") {
+                        assistant.voiceTurnHandled = true;
+                    }
+                    addConversationMessage("user", cleanText);
+                    const navRoute = assistant.lastIndustriesContext[0].route;
+                    const reply = "Taking you there...";
+                    addConversationMessage("assistant", reply);
+                    
+                    renderPayload(
+                        { reply: reply, source: "industries_knowledge" },
+                        { speak: true, autoResumeListening: inputMode === "voice", statusText: "Navigating..." }
+                    );
+                    commitNavigation({ route: navRoute });
+                    return;
+                }
+
+                const industriesAnswer = CareerBuddyIndustriesKnowledge.answerIndustriesQuestion(cleanText);
+                if (industriesAnswer) {
+                    if (inputMode === "voice") {
+                        assistant.voiceTurnHandled = true;
+                    }
+                    addConversationMessage("user", cleanText);
+                    addConversationMessage("assistant", industriesAnswer.reply);
+
+                    if (industriesAnswer.navigation && industriesAnswer.navigation.length > 0) {
+                        assistant.lastIndustriesContext = industriesAnswer.navigation;
+                    }
+
+                    const actions = [];
+                    if (industriesAnswer.navigation) {
+                        industriesAnswer.navigation.forEach(function(nav) {
+                            actions.push({ key: 'industries_nav', label: nav.label, route: nav.route });
+                        });
+                    }
+
+                    renderPayload(
+                        {
+                            reply: industriesAnswer.reply,
+                            actions: actions,
+                            source: "industries_knowledge"
+                        },
+                        {
+                            speak: true,
+                            autoResumeListening: inputMode === "voice",
+                            statusText: "Found industry information."
+                        }
+                    );
+                    return;
+                }
+            }
         }
 
         // ============================================================
