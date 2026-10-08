@@ -16,6 +16,7 @@ from __future__ import annotations
 import html
 import os
 import re
+from functools import lru_cache
 from dataclasses import dataclass
 from difflib import SequenceMatcher
 from typing import Any
@@ -114,9 +115,10 @@ def _stem(token: str) -> str:
     return token
 
 
-def _tokens(value: str) -> set[str]:
+@lru_cache(maxsize=16384)
+def _tokens(value: str) -> frozenset[str]:
     raw = {t for t in normalize_key(value).split() if t and t not in _STOPWORDS}
-    return raw | {_stem(t) for t in raw}
+    return frozenset(raw | {_stem(t) for t in raw})
 
 
 # ── match result ───────────────────────────────────────────────────────────
@@ -282,7 +284,8 @@ class SkillUpKnowledgeService:
         qflat, tflat = query.replace(" ", ""), tnorm.replace(" ", "")
         if qflat and tflat and (qflat in tflat or tflat in qflat):
             return True
-        return SequenceMatcher(None, qflat, tflat).ratio() >= 0.8
+        sm = SequenceMatcher(None, qflat, tflat)
+        return sm.real_quick_ratio() >= 0.8 and sm.quick_ratio() >= 0.8 and sm.ratio() >= 0.8
 
     def _score_lesson(self, query: str, expanded: str, qtokens: set[str], lesson: Lesson) -> float:
         title_norm = normalize_key(lesson.title)
@@ -338,6 +341,18 @@ class SkillUpKnowledgeService:
         return best
 
     def resolve(self, query: str, limit: int = 6, threshold: float = 0.5) -> list[Match]:
+        memo = self.manifest.__dict__.setdefault("_resolve_memo", {}) if self.available else None
+        key = (query, limit, threshold)
+        if memo is not None and key in memo:
+            return list(memo[key])
+        found = self._resolve(query, limit, threshold)
+        if memo is not None:
+            if len(memo) > 2000:
+                memo.clear()
+            memo[key] = found
+        return list(found)
+
+    def _resolve(self, query: str, limit: int = 6, threshold: float = 0.5) -> list[Match]:
         """Rank real Skill Up entities against a free-text query.
 
         Returns only entities that exist. An empty list means 'not found' — it

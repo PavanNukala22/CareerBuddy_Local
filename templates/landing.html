@@ -7452,12 +7452,14 @@
 
     // Closing the mobile menu after a tap is handled in static/js/site_nav.js.
 
-    /* ===== Tutorials: edit this array to add / replace videos. video:null shows "coming soon". Put new files in assets/tutorials/ ===== */
+    /* ===== Tutorials: edit this array to add / replace videos. video:null shows "coming soon".
+       Put <video>.mp4 (and an optional <video>.jpg poster) in static/tutorials/ ===== */
+    const TUT = '{% static "tutorials/" %}';
     const CB_CATS = ['Getting Started', 'Skill Up', 'Resume & Career Tools', 'For Job Seekers', 'For Employers', 'Buddy', 'Certifications'];
     const CB_ICON = { 'Getting Started': 'compass', 'Skill Up': 'graduation-cap', 'Resume & Career Tools': 'file-invoice', 'For Job Seekers': 'briefcase', 'For Employers': 'building', 'Buddy': 'robot', 'Certifications': 'certificate', 'Plans': 'crown' };
-    const T = (id, title, description, category, duration, video, ctaLabel, ctaRoute, featured, where) => ({ id, title, description, category, duration, thumbnail: video ? 'assets/posters/' + video + '.jpg' : null, video: video ? 'assets/videos/' + video + '.mp4' : null, ctaLabel, ctaRoute, featured: !!featured, where: where || '', note: video ? 'Recorded from the CareerBuddy demo app with sample data. Captions explain each step; there is no audio.' : '' });
+    const T = (id, title, description, category, duration, video, ctaLabel, ctaRoute, featured, where) => ({ id, title, description, category, duration, thumbnail: video ? TUT + video + '.jpg' : null, video: video ? TUT + video + '.mp4' : null, ctaLabel, ctaRoute, featured: !!featured, where: where || '', note: video ? 'Recorded from the CareerBuddy demo app with sample data.' : '' });
     const careerBuddyTutorials = [
-      T('welcome', 'Welcome to CareerBuddy', 'Choose IT or Non-IT, then Technical or Non-Technical, and tour your dashboard.', 'Getting Started', '1:13', 'welcome', 'Get Started Free', '/users/register/', 1, 'Home page'),
+      T('welcome', 'Welcome to CareerBuddy', 'Choose IT or Non-IT, then Technical or Non-Technical, and tour your dashboard.', 'Getting Started', '1:57', 'welcome', 'Get Started Free', '/users/register/', 1, 'Home page'),
       T('journey', 'Your Career Journey with CareerBuddy', 'See how exploring careers, skills, resume, interviews and jobs connect in one platform.', 'Getting Started', '', '', 'Get Started Free', '/users/register/', 1, 'Home page'),
       T('navigate', 'How to Navigate CareerBuddy', 'Find Skill Up, Activities, resume tools, jobs, certifications and Buddy from the main menu.', 'Getting Started', '', '', 'Open Sitemap', '/skill-up/#section-sitemap', 0, 'Resources menu'),
       T('path', 'Choosing Your Career Path', 'Pick an industry, a category and a role and see exactly what the job needs.', 'Getting Started', '0:49', 'explorer', 'Explore Industries', '/users/register/', 0, 'Industries menu'),
@@ -7504,7 +7506,7 @@
       let watched = {}, pos = {}; try { watched = JSON.parse(localStorage.getItem('cbTutWatched') || '{}'); pos = JSON.parse(localStorage.getItem('cbTutPos') || '{}'); } catch (e) { }
       const save = () => { try { localStorage.setItem('cbTutWatched', JSON.stringify(watched)); localStorage.setItem('cbTutPos', JSON.stringify(pos)); } catch (e) { } };
       const card = (d, i) => `<button type="button" class="tt-card${d.video ? '' : ' soon'}" data-id="${d.id}" aria-label="${d.video ? 'Watch tutorial' : 'Open tutorial details'}: ${esc(d.title)}${d.duration ? ', ' + d.duration : ''}">
-   <span class="tt-th">${d.thumbnail ? `<img src="${esc(d.thumbnail)}" alt="" width="640" height="360" loading="lazy" decoding="async">` : `<svg class="ic big" aria-hidden="true"><use href="#i-${CB_ICON[d.category]}"></use></svg><span class="tt-name">${esc(d.title)}</span>`}<span class="tt-brand">CAREERBUDDY</span><span class="tt-play" aria-hidden="true"><svg viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20"/></svg></span>${d.duration ? `<span class="tt-dur">${d.duration}</span>` : ''}</span>
+   <span class="tt-th">${d.thumbnail ? `<img src="${esc(d.thumbnail)}" alt="" width="640" height="360" loading="lazy" decoding="async" onerror="this.remove()">` : `<svg class="ic big" aria-hidden="true"><use href="#i-${CB_ICON[d.category]}"></use></svg><span class="tt-name">${esc(d.title)}</span>`}<span class="tt-brand">CAREERBUDDY</span><span class="tt-play" aria-hidden="true"><svg viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20"/></svg></span>${d.duration ? `<span class="tt-dur">${d.duration}</span>` : ''}</span>
    <span class="tt-body"><span class="tt-cat"><span>${esc(d.category)}</span>${watched[d.id] ? '<span style="color:var(--success)">✓ Watched</span>' : (d.video ? '' : '<span style="color:var(--slate)">Video coming soon</span>')}</span><h3>${esc(d.title)}</h3><p>${esc(d.description)}</p><span class="tt-go">${d.video ? 'Watch Tutorial' : 'View details'} &rarr;</span></span></button>`;
       $('ttCan').innerHTML = CB_CAN.map(c => `<button type="button" data-id="${c[2]}" aria-label="${c[0]}: watch tutorial"><span class="ti">${ic(c[3])}</span><h4>${c[0]}</h4><p>${c[1]}</p><b>Watch Tutorial →</b></button>`).join('');
       $('ttFeat').innerHTML = D.filter(d => d.featured).map(card).join('');
@@ -7542,7 +7544,7 @@
         else if (d.ctaRoute[0] === '#') { c.onclick = () => close(); }
         $('tmN').textContent = 'Tutorial ' + (i + 1) + ' of ' + D.length; $('tmP').disabled = i === 0; $('tmNx').disabled = i === D.length - 1;
         if (!d.video) { S.innerHTML = soon(d); return; }
-        const v = document.createElement('video'); v.controls = true; v.playsInline = true; v.preload = 'none'; v.poster = d.thumbnail; v.setAttribute('aria-label', d.title + ' tutorial video');
+        const v = document.createElement('video'); v.controls = true; v.playsInline = true; v.preload = 'metadata'; v.poster = d.thumbnail; v.setAttribute('aria-label', d.title + ' tutorial video');
         v.addEventListener('error', () => { S.innerHTML = soon(d); vid = null; });
         v.addEventListener('ended', () => { watched[d.id] = 1; delete pos[d.id]; save(); render(); });
         v.addEventListener('timeupdate', () => { if (v.currentTime > 2) { pos[d.id] = Math.floor(v.currentTime); } });

@@ -3200,7 +3200,8 @@
     // well above any real synthesis time; a short cap (8s) once showed the
     // text seconds before a slow voice began.
     // ============================================================
-    const SPEECH_REVEAL_CAP_MS = 20000;
+    // The reply is never held back longer than this: text first, voice catches up.
+    const SPEECH_REVEAL_CAP_MS = 400;
 
     function revealPendingCard() {
         if (assistant.pendingRevealTimer) {
@@ -3423,19 +3424,32 @@
         // UNSPOKEN REMAINDER to the destination page so it RESUMES from where
         // it stopped rather than restarting. Normal "speak fully, then
         // navigate" has ttsSpeaking false here, so this does nothing.
-        if (assistant.ttsSpeaking) {
+        // A fragment-only route ("#depth-tech") stays on this page. Assigned as is it
+        // resolves against <base>, which on Skill Up is the static folder (404).
+        const target = String(action.route).charAt(0) === "#"
+            ? window.location.pathname + window.location.search + action.route
+            : action.route;
+        // Same page, new #hash: nothing unloads, so speech just carries on here.
+        // Stashing it would replay it later on some other page (a repeat loop).
+        let samePage = false;
+        try {
+            const url = new URL(target, window.location.href);
+            samePage = url.origin === window.location.origin &&
+                url.pathname === window.location.pathname && url.search === window.location.search;
+        } catch (e) { }
+
+        if (!samePage) {
             const full = assistant.speechText || assistant.lastResponseText || "";
-            const remaining = full.slice(getSpokenIndex(full));
-            if (remaining.trim()) {
-                stashPendingSpeech(remaining);
+            if (assistant.ttsSpeaking) {
+                const remaining = full.slice(getSpokenIndex(full));
+                if (remaining.trim()) {
+                    stashPendingSpeech(remaining);
+                }
+                stopSpeaking();
             }
         }
 
-        // A fragment-only route ("#depth-tech") stays on this page. Assigned as is it
-        // resolves against <base>, which on Skill Up is the static folder (404).
-        window.location.href = String(action.route).charAt(0) === "#"
-            ? window.location.pathname + window.location.search + action.route
-            : action.route;
+        window.location.href = target;
     }
 
     // How many characters of the current utterance have already been spoken —
@@ -3592,24 +3606,26 @@
         assistant.navigationDone = false;
 
         const committedAt = Date.now();
+        assistant.navigationCommittedAt = committedAt;
 
-        // While Buddy is speaking, leave the move to finalizeSpeech(): it runs
-        // on the audio's own 'ended' event, which is as immediate as it gets.
-        // This watcher exists only to catch the case where speech never began.
+        // Navigate only once Buddy's reply is complete. While it is speaking,
+        // finalizeSpeech() moves the moment the audio ends (no polling lag).
+        // This watcher covers a reply that is never spoken (voice off or TTS
+        // failed): then the move follows shortly after the text is shown.
         const watch = () => {
             assistant.navigationDeadline = window.setTimeout(() => {
                 if (!assistant.pendingNavigation || assistant.navigationDone) {
                     return;
                 }
                 if (assistant.ttsSpeaking || assistant.microphoneBlockedByTTS) {
-                    watch();            // speaking — finalizeSpeech will take it
+                    watch();            // speaking - finalizeSpeech will take it
                     return;
                 }
                 if (Date.now() - committedAt >= NAVIGATION_NO_SPEECH_TIMEOUT_MS) {
                     runNavigationCommitment();
                     return;
                 }
-                watch();                // TTS may still be on its way
+                watch();                // voice may still be starting
             }, NAVIGATION_POLL_MS);
         };
 
@@ -3625,6 +3641,7 @@
 
         assistant.navigationDone = true;
         clearNavigationCommitment(true);
+        revealPendingCard();          // the reply is on screen before the page changes
         performAction(action);
     }
 
@@ -4886,7 +4903,10 @@
                 replyText = `${bestMatch.label} is available in ${bestMatch.location}.`;
                 autoNavigate = false;
             } else if (hasVerb) {
-                replyText = `Opening ${bestMatch.label}.`;
+                // "Opening the activities page." — not "Opening Go to Activities."
+                const known = bestMatch.key && ACTION_DEFINITIONS[bestMatch.key];
+                replyText = (known && known.response) ||
+                    `Opening ${bestMatch.label.replace(/^(go to|open|view|explore|browse|visit|start)\s+/i, "")}.`;
                 autoNavigate = true;
             } else {
                 return null;

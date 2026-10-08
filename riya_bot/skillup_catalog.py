@@ -18,6 +18,8 @@ from __future__ import annotations
 import html
 import os
 import re
+from functools import lru_cache
+import time
 import unicodedata
 from dataclasses import dataclass, field, asdict
 from typing import Any, Iterable
@@ -79,6 +81,7 @@ def _text(fragment: str) -> str:
     return _WS_RE.sub(" ", html.unescape(_TAG_RE.sub(" ", fragment or ""))).strip()
 
 
+@lru_cache(maxsize=16384)
 def normalize_key(value: str) -> str:
     """Aggressive normalisation used for alias and fuzzy matching.
 
@@ -496,6 +499,7 @@ def _places(markup: str) -> list[Place]:
 # ── cached accessor ────────────────────────────────────────────────────────
 
 _MEMO: dict[str, Any] = {"manifest": None, "fingerprint": None}
+FINGERPRINT_EVERY_S = 5.0
 
 
 def get_manifest(force: bool = False) -> Manifest | None:
@@ -509,6 +513,12 @@ def get_manifest(force: bool = False) -> Manifest | None:
     if root is None:
         return None
 
+    # Scanning the ~650 lesson files for changes costs ~0.1s; once every few
+    # seconds is plenty for picking up edits, and keeps every message fast.
+    now = time.monotonic()
+    if not force and _MEMO.get("manifest") is not None and now - _MEMO.get("checked", 0) < FINGERPRINT_EVERY_S:
+        return _MEMO["manifest"]
+    _MEMO["checked"] = now
     fingerprint = _fingerprint(root)
 
     if not force:
