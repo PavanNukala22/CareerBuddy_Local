@@ -28,10 +28,10 @@ def fields(errors):
 
 
 JOB_OLD = {'company': 'Older Co', 'title': 'Site Engineer', 'start_month': '6', 'start_year': '2018',
-           'end_month': '3', 'end_year': '2021', 'responsibilities': 'Supervised site work'}
+           'end_month': '3', 'end_year': '2021', 'responsibilities': 'Supervised daily site work for a crew of 20'}
 JOB_NOW = {'company': 'ABC Infra', 'title': 'Project Manager', 'type': 'Full-time', 'start_month': '4',
            'start_year': '2021', 'current': True, 'responsibilities': '- Led 12 engineers\nControlled budgets',
-           'achievements': 'Delivered early', 'tools': 'MS Project'}
+           'achievements': 'Delivered the tower two weeks early', 'tools': 'MS Project'}
 
 
 class ValidationTests(TestCase):
@@ -45,9 +45,9 @@ class ValidationTests(TestCase):
 
     def test_email_phone_and_url_formats(self):
         errors = validate(normalize(state(personal=personal(email='x@', phone='12', linkedin='not a url',
-                                                            github='github.com/me'))))
-        self.assertTrue({'personal.email', 'personal.phone', 'personal.linkedin'} <= fields(errors))
-        self.assertNotIn('personal.github', fields(errors))
+                                                            github='github.com/me', portfolio='https://me.dev'))))
+        self.assertTrue({'personal.email', 'personal.phone'} <= fields(errors))
+        self.assertFalse({'personal.linkedin', 'personal.github', 'personal.portfolio'} & fields(errors))   # URLs never block
 
     def test_optional_sections_are_never_required(self):
         # No experience, education, skills or projects: a fresher may download.
@@ -77,6 +77,85 @@ class ValidationTests(TestCase):
         self.assertEqual(len(s['experience']), 20)
         self.assertEqual(s['experience'][0]['type'], '')
         self.assertEqual(s['skills']['technical'], ['A'])     # de-duplicated
+
+
+class FieldRuleTests(TestCase):
+    def errs(self, **kw):
+        return {e['field']: e['message'] for e in validate(normalize(state(**kw)))}
+
+    def test_personal_lengths(self):
+        e = self.errs(personal=personal(name='A', title='x' * 101, city='H', address='short'))
+        self.assertTrue({'personal.name', 'personal.title', 'personal.city', 'personal.address'} <= set(e))
+        self.assertEqual(self.errs(personal=personal(name='x' * 80, address='12 MG Road, Hyderabad')), {})
+
+    def test_phone_counts_digits_only(self):
+        for ok in ('+91 98765 43210', '9876543210', '(040) 2345-6789'):
+            self.assertNotIn('personal.phone', self.errs(personal=personal(phone=ok)), ok)
+        for bad in ('98765 4321', '98765abc43210', '+91 98765 43210 12345', '9876+543210'):
+            self.assertIn('personal.phone', self.errs(personal=personal(phone=bad)), bad)
+        self.assertEqual(self.errs(personal=personal(phone='12345'))['personal.phone'],
+                         'Enter a valid phone number with at least 10 digits.')
+
+    def test_email_rules(self):
+        for bad in ('a b@x.com', 'a@x', 'a@@x.com', 'a@' + 'x' * 250 + '.com'):
+            self.assertIn('personal.email', self.errs(personal=personal(email=bad)), bad)
+
+    def test_urls_are_not_validated(self):
+        for value in ('www.linkedin.com/in/name', 'linkedin.com/name', 'anything', 'javascript:alert(1)'):
+            self.assertEqual(self.errs(personal=personal(linkedin=value),
+                                       projects=[{'title': 'Tracker', 'url': value}]), {}, value)
+
+    def test_url_links_are_safe(self):
+        links = build_document(normalize(state(personal=personal(
+            linkedin='www.linkedin.com/in/name', github='javascript:alert(1)', website='https://a b.com'))))['links']
+        self.assertEqual([l['href'] for l in links], ['https://www.linkedin.com/in/name'])
+
+    def test_summary_optional_but_meaningful(self):
+        self.assertEqual(self.errs(summary=''), {})
+        self.assertEqual(self.errs(summary='Good developer')['summary'],
+                         'Professional summary should contain at least 50 characters.')
+
+    def test_entry_field_limits_and_bullets(self):
+        job = dict(JOB_NOW, responsibilities='Too short', location='x' * 101,
+                   achievements='\n'.join(f'Achievement number {i}' for i in range(16)))
+        e = self.errs(experience=[job])
+        self.assertTrue({'experience.0.responsibilities', 'experience.0.location', 'experience.0.achievements'} <= set(e))
+
+    def test_end_date_required_unless_current(self):
+        e = self.errs(experience=[dict(JOB_OLD, end_year='', end_month='')],
+                      internships=[{'organization': 'XYZ', 'title': 'Intern', 'start_year': '2020'}])
+        self.assertIn('experience.0.end_year', e)
+        self.assertIn('internships.0.end_year', e)
+        self.assertIn('internships.0.start_year', self.errs(internships=[{'organization': 'XYZ', 'title': 'Intern'}]))
+        self.assertNotIn('experience.0.end_year', self.errs(experience=[JOB_NOW]))
+
+    def test_optional_entry_fields_empty_ok(self):
+        self.assertEqual(self.errs(education=[{'qualification': 'Diploma', 'institution': 'JNTU'}],
+                                   certifications=[{'name': 'PMP', 'issuer': 'PMI'}]), {})
+
+    def test_graduation_before_start(self):
+        e = self.errs(education=[{'qualification': 'Diploma', 'institution': 'JNTU', 'start_year': '2020', 'end_year': '2018'}])
+        self.assertIn('education.0.end_year', e)
+
+    def test_skills_per_item(self):
+        e = self.errs(skills={'technical': ['C', 'Python'], 'soft': [f'Skill {i}' for i in range(31)]})
+        self.assertIn('skills.technical', e)
+        self.assertIn('skills.soft', e)
+        self.assertEqual(normalize({'skills': {'tools': ' Excel , excel,, Jira '}})['skills']['tools'], ['Excel', 'Jira'])
+
+    def test_languages_need_proficiency_and_no_duplicates(self):
+        e = self.errs(languages=[{'name': 'English', 'proficiency': 'Native'}, {'name': 'english', 'proficiency': 'Basic'},
+                                 {'name': 'Hindi'}])
+        self.assertIn('languages.1.name', e)
+        self.assertIn('languages.2.proficiency', e)
+
+    def test_additional_limits(self):
+        e = self.errs(additional={'hobbies': 'x' * 501, 'publications': 'Paper'})
+        self.assertTrue({'additional.hobbies', 'additional.publications'} <= set(e))
+
+    def test_invalid_urls_never_linked(self):
+        doc = build_document(normalize(state(projects=[{'title': 'Tracker', 'url': 'javascript:alert(1)'}])))
+        self.assertIsNone(doc['sections'][1]['items'][0]['link'])
 
 
 class DocumentTests(TestCase):
@@ -109,13 +188,13 @@ class DocumentTests(TestCase):
     def test_all_sections_render(self):
         s = normalize(state(
             experience=[JOB_NOW], skills={'technical': ['Python'], 'functional': ['Budgeting'], 'soft': ['Leadership'], 'tools': ['Excel']},
-            projects=[{'title': 'Tracker', 'type': 'Personal Project', 'url': 'github.com/x/y', 'technologies': 'Django', 'outcomes': 'Used on 2 sites'}],
+            projects=[{'title': 'Tracker', 'type': 'Personal Project', 'url': 'https://github.com/x/y', 'technologies': 'Django', 'outcomes': 'Used on two live construction sites'}],
             education=[{'qualification': "Bachelor's Degree", 'degree': 'B.Tech', 'specialization': 'Civil', 'institution': 'JNTU',
                         'start_year': '2022', 'end_year': '2026', 'current': True}],
             certifications=[{'name': 'PMP', 'issuer': 'PMI', 'issue_year': '2022', 'url': 'https://pmi.org'}],
             achievements=[{'title': 'Best Project', 'year': '2023'}],
-            internships=[{'organization': 'XYZ', 'title': 'Intern'}], volunteering=[{'organization': 'NGO', 'role': 'Volunteer'}],
-            languages=[{'name': 'English', 'proficiency': 'Professional'}], additional={'memberships': 'IEI'}))
+            internships=[{'organization': 'XYZ', 'title': 'Intern', 'start_year': '2020', 'end_year': '2020'}], volunteering=[{'organization': 'NGO', 'role': 'Volunteer'}],
+            languages=[{'name': 'English', 'proficiency': 'Professional'}], additional={'memberships': 'Member, Institution of Engineers'}))
         doc = build_document(s)
         keys = [x['key'] for x in doc['sections']]
         for k in ('summary', 'skills', 'experience', 'projects', 'internships', 'education', 'certifications',
@@ -145,8 +224,8 @@ class EndpointTests(TestCase):
         for template in ('classic', 'modern', 'minimal'):
             with self.subTest(template=template):
                 res = self.post('create_resume_pdf', state(template=template, experience=[JOB_NOW],
-                                personal=personal(name='Zoë Ñandú', linkedin='linkedin.com/in/zoe'),
-                                summary='Résumé with “quotes” – and ₹.'))
+                                personal=personal(name='Zoë Ñandú', linkedin='https://linkedin.com/in/zoe'),
+                                summary='Résumé with “quotes” – and ₹. Project manager with six years of delivery.'))
                 self.assertEqual(res.status_code, 200)
                 self.assertEqual(res['Content-Type'], 'application/pdf')
                 self.assertIn('Zoe_Nandu_Project_Manager_Resume.pdf', res['Content-Disposition'])

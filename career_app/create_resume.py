@@ -2,7 +2,7 @@
 
 Candidates type every word of their resume. This module only:
   * normalises the posted form state (types, lengths, list sizes),
-  * validates it with fixed rules (required fields, email / phone / URL
+  * validates it with fixed rules (required fields, email / phone
     formats, date ranges),
   * arranges the entered content into ATS-friendly sections in a standard
     order, omitting anything left empty.
@@ -15,7 +15,7 @@ import re
 import unicodedata
 from datetime import date
 
-from .resume_document import _clean, _lines, _list, is_valid_email, is_valid_phone
+from .resume_document import _clean, _lines, _list, is_valid_email
 
 TEMPLATES = ('classic', 'modern', 'minimal')
 EMPLOYMENT_TYPES = ('Full-time', 'Part-time', 'Internship', 'Contract', 'Freelance', 'Apprenticeship', 'Other')
@@ -35,8 +35,72 @@ REPEATABLE = ('experience', 'education', 'projects', 'certifications', 'achievem
               'volunteering', 'languages')
 
 SUMMARY_LIMIT = 1200
+SUMMARY_MIN = 50
 MAX_ENTRIES = 20
-URL_RE = re.compile(r'^(https?://)?([\w-]+\.)+[a-z]{2,}(:\d+)?(/[^\s<>"]*)?$', re.I)
+MAX_BULLETS = 15
+MAX_SKILLS_PER_CATEGORY = 30
+SKILL_MIN, SKILL_MAX = 2, 50
+EMAIL_MAX = 254
+PHONE_MIN_DIGITS, PHONE_MAX_DIGITS = 10, 15
+# Normalisation ceilings: generous bounds for untrusted input. The real per-field
+# limits below are enforced by validate(), so over-long text is reported, not cut.
+CLIP_SHORT, CLIP_LONG = 600, 3000
+EMAIL_RE = re.compile(r'^[^@\s]+@([a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,63}$', re.I)
+PHONE_RE = re.compile(r'^\+?[0-9\s\-()]+$')
+
+# Per-field rules: field -> (min length if entered, max length, label).
+# Required-ness is declared separately (PERSONAL_REQUIRED / ENTRY_REQUIRED);
+# an empty optional field is never an error.
+PERSONAL_RULES = {
+    'name': (2, 80, 'Full name'), 'title': (2, 100, 'Professional title'),
+    'city': (2, 80, 'City'), 'state': (2, 80, 'State'), 'country': (2, 80, 'Country'),
+    'address': (10, 250, 'Address'),
+}
+PERSONAL_REQUIRED = {
+    'name': 'Please enter your full name.', 'title': 'Please enter your professional title or target role.',
+    'email': 'Please enter your email address.', 'phone': 'Please enter your contact number.',
+    'city': 'Please enter your current city.', 'state': 'Please enter your state.', 'country': 'Please enter your country.',
+}
+ENTRY_RULES = {
+    'experience': {'company': (2, 120, 'Company name'), 'title': (2, 100, 'Job title'),
+                   'location': (0, 100, 'Location'), 'department': (0, 100, 'Department'),
+                   'responsibilities': (30, 1500, 'Roles & responsibilities'),
+                   'projects': (20, 1000, 'Projects handled'), 'achievements': (20, 1000, 'Key achievements'),
+                   'tools': (0, 500, 'Tools & technologies')},
+    'education': {'degree': (0, 100, 'Degree'), 'specialization': (0, 100, 'Specialization'),
+                  'institution': (2, 150, 'Institution'), 'location': (0, 100, 'College location'),
+                  'grade': (0, 50, 'Grade'), 'coursework': (10, 500, 'Relevant coursework'),
+                  'achievements': (20, 800, 'Academic achievements')},
+    'projects': {'title': (2, 120, 'Project title'), 'organization': (0, 150, 'Organisation'),
+                 'overview': (30, 1200, 'Project overview'), 'role': (0, 100, 'Your role'),
+                 'responsibilities': (20, 1000, 'Responsibilities'), 'technologies': (0, 500, 'Technologies / tools'),
+                 'outcomes': (20, 1000, 'Project outcomes')},
+    'certifications': {'name': (2, 150, 'Certification name'), 'issuer': (2, 150, 'Issuing organisation'),
+                       'credential_id': (0, 100, 'Credential ID'), 'description': (20, 600, 'Description')},
+    'achievements': {'title': (2, 150, 'Achievement title'), 'organization': (0, 150, 'Organisation'),
+                     'description': (20, 800, 'Description')},
+    'internships': {'organization': (2, 150, 'Organisation'), 'title': (2, 100, 'Internship title'),
+                    'location': (0, 100, 'Location'), 'responsibilities': (20, 1000, 'Responsibilities'),
+                    'projects': (20, 1000, 'Projects'), 'skills': (0, 500, 'Skills & tools'),
+                    'achievements': (20, 800, 'Achievements')},
+    'volunteering': {'organization': (2, 150, 'Organisation'), 'role': (2, 100, 'Role'),
+                     'location': (0, 100, 'Location'), 'responsibilities': (20, 1000, 'Responsibilities'),
+                     'contributions': (20, 1000, 'Contributions'), 'achievements': (20, 800, 'Achievements')},
+    'languages': {'name': (2, 50, 'Language')},
+}
+ADDITIONAL_RULES = {
+    'memberships': (10, 800, 'Professional memberships'), 'publications': (20, 1200, 'Publications'),
+    'research': (20, 1200, 'Research'), 'activities': (10, 800, 'Extracurricular activities'),
+    'hobbies': (3, 500, 'Hobbies & interests'), 'other': (10, 800, 'Other relevant information'),
+}
+# Text areas entered one point per line (max MAX_BULLETS points each).
+BULLET_FIELDS = {
+    'experience': ('responsibilities', 'projects', 'achievements'), 'education': ('achievements',),
+    'projects': ('responsibilities', 'outcomes'), 'internships': ('responsibilities', 'projects', 'achievements'),
+    'volunteering': ('responsibilities', 'contributions', 'achievements'),
+}
+# Entries whose end date is required unless the "current / ongoing" box is ticked.
+END_REQUIRED = {'experience': 'Currently working here', 'internships': 'Ongoing internship'}
 
 PERSONAL_FIELDS = ('name', 'title', 'email', 'phone', 'city', 'state', 'country', 'linkedin', 'github',
                    'portfolio', 'website', 'profile_url', 'address')
@@ -62,16 +126,19 @@ ENTRY_FIELDS = {
 # Fields that make an entry meaningful; an entry that has content but lacks
 # these must be completed or removed before the PDF is generated.
 ENTRY_REQUIRED = {
-    'experience': (('company', 'Company name'), ('title', 'Job title'), ('start_year', 'Start year')),
+    'experience': (('company', 'Company name'), ('title', 'Job title'), ('start_year', 'Start date')),
     'education': (('qualification', 'Qualification'), ('institution', 'Institution')),
     'projects': (('title', 'Project title'),),
     'certifications': (('name', 'Certification name'), ('issuer', 'Issuing organisation')),
     'achievements': (('title', 'Achievement title'),),
-    'internships': (('organization', 'Organisation'), ('title', 'Internship title')),
+    'internships': (('organization', 'Organisation'), ('title', 'Internship title'), ('start_year', 'Start date')),
     'volunteering': (('organization', 'Organisation'), ('role', 'Role')),
-    'languages': (('name', 'Language'),),
+    'languages': (('name', 'Language'), ('proficiency', 'Proficiency')),
 }
 SECTION_OF = {'volunteering': 'internships'}   # volunteering lives in the Internships & Volunteering step
+NOUN = {'experience': 'experience', 'education': 'education', 'projects': 'project', 'certifications': 'certification',
+        'achievements': 'achievement', 'internships': 'internship', 'volunteering': 'volunteering',
+        'languages': 'language'}
 
 
 # --------------------------------------------------------------------------- #
@@ -98,9 +165,9 @@ def _entry(raw, kind):
         elif f.endswith('_month') or f == 'month':
             entry[f] = _month(raw.get(f))
         else:
-            entry[f] = _clean(raw.get(f), 200 if f != 'url' else 300)
+            entry[f] = _clean(raw.get(f), CLIP_SHORT)
     for f in long_:
-        entry[f] = _clean(raw.get(f), 2000)
+        entry[f] = _clean(raw.get(f), CLIP_LONG)
     for f in flags:
         entry[f] = bool(raw.get(f))
     if kind == 'experience' and entry['type'] not in EMPLOYMENT_TYPES:
@@ -123,10 +190,10 @@ def normalize(raw):
     order = raw.get('order') if isinstance(raw.get('order'), dict) else {}
     state = {
         'template': raw.get('template') if raw.get('template') in TEMPLATES else 'classic',
-        'personal': {f: _clean(personal.get(f), 300 if f in dict(URL_FIELDS) else 160) for f in PERSONAL_FIELDS},
+        'personal': {f: _clean(personal.get(f), CLIP_SHORT).replace('\n', ' ') for f in PERSONAL_FIELDS},
         'summary': _clean(raw.get('summary'), SUMMARY_LIMIT),
         'skills': {key: _list(skills.get(key), 40) for key, _ in SKILL_CATEGORIES},
-        'additional': {key: _clean(additional.get(key), 2000) for key, _ in ADDITIONAL_FIELDS},
+        'additional': {key: _clean(additional.get(key), CLIP_LONG) for key, _ in ADDITIONAL_FIELDS},
         'order': {k: ('manual' if order.get(k) == 'manual' else 'auto') for k in REPEATABLE},
     }
     for kind in REPEATABLE:
@@ -143,8 +210,35 @@ def _err(field, section, message):
     return {'field': field, 'section': section, 'message': message}
 
 
-def is_valid_url(value):
-    return bool(URL_RE.match(value or ''))
+def is_valid_email_address(value):
+    value = value or ''
+    return len(value) <= EMAIL_MAX and bool(EMAIL_RE.match(value)) and is_valid_email(value)
+
+
+def phone_digits(value):
+    return sum(ch.isdigit() for ch in value or '')
+
+
+def is_valid_phone_number(value):
+    value = value or ''
+    return bool(PHONE_RE.match(value)) and PHONE_MIN_DIGITS <= phone_digits(value) <= PHONE_MAX_DIGITS
+
+
+def _text_lines(value):
+    return [line for line in (value or '').split('\n') if line.strip()]
+
+
+def _length_error(value, rule):
+    """Message for a value outside its (min, max) rule, or '' — empty values are left to the required check."""
+    lo, hi, label = rule
+    if not value:
+        return ''
+    n = len('\n'.join(_text_lines(value)))
+    if lo and n < lo:
+        return f'{label} should contain at least {lo} characters.'
+    if n > hi:
+        return f'{label} can be at most {hi} characters (currently {n}).'
+    return ''
 
 
 def _ym(year, month, end=False):
@@ -161,35 +255,79 @@ def validate(state):
     """Fixed rules only. Returns a list of errors; empty means ready to download."""
     errors = []
     p = state['personal']
-    required = (('name', 'Please enter your full name.'), ('title', 'Please enter your professional title or target role.'),
-                ('city', 'Please enter your current city.'), ('state', 'Please enter your state.'),
-                ('country', 'Please enter your country.'))
-    for field, message in required[:2]:
-        if len(p[field]) < 2:
-            errors.append(_err(f'personal.{field}', 'personal', message))
-    if not is_valid_email(p['email']):
-        errors.append(_err('personal.email', 'personal', 'Please enter a valid email address.'))
-    if not is_valid_phone(p['phone']):
-        errors.append(_err('personal.phone', 'personal', 'Please enter a valid contact number (7–15 digits).'))
-    for field, message in required[2:]:
-        if not p[field]:
-            errors.append(_err(f'personal.{field}', 'personal', message))
-    for field, label in URL_FIELDS:
-        if p[field] and not is_valid_url(p[field]):
-            errors.append(_err(f'personal.{field}', 'personal', f'Please enter a valid {label} URL.'))
+    for field in PERSONAL_FIELDS:
+        value, path = p[field], f'personal.{field}'
+        if not value:
+            if field in PERSONAL_REQUIRED:
+                errors.append(_err(path, 'personal', PERSONAL_REQUIRED[field]))
+            continue
+        if field == 'email':
+            if len(value) > EMAIL_MAX:
+                message = f'Email address can be at most {EMAIL_MAX} characters.'
+            else:
+                message = '' if is_valid_email_address(value) else 'Enter a valid email address (e.g. name@example.com).'
+        elif field == 'phone':
+            message = '' if is_valid_phone_number(value) else (
+                f'Phone number can have at most {PHONE_MAX_DIGITS} digits.'
+                if PHONE_RE.match(value) and phone_digits(value) > PHONE_MAX_DIGITS
+                else 'Enter a valid phone number with at least 10 digits.')
+        elif field in dict(URL_FIELDS):
+            message = ''   # URLs are not validated; unsafe ones are simply never linked (see _href)
+        else:
+            message = _length_error(value, PERSONAL_RULES[field])
+        if message:
+            errors.append(_err(path, 'personal', message))
+
+    if state['summary']:
+        n = len(state['summary'])
+        if n < SUMMARY_MIN:
+            errors.append(_err('summary', 'summary', f'Professional summary should contain at least {SUMMARY_MIN} characters.'))
+        elif n > SUMMARY_LIMIT:
+            errors.append(_err('summary', 'summary', f'Professional summary can be at most {SUMMARY_LIMIT} characters.'))
+
+    for key, label in SKILL_CATEGORIES:
+        items, path = state['skills'][key], f'skills.{key}'
+        bad = [x for x in items if not SKILL_MIN <= len(x) <= SKILL_MAX]
+        if bad:
+            errors.append(_err(path, 'skills', f'Each skill must be {SKILL_MIN}–{SKILL_MAX} characters — fix “{bad[0]}”.'))
+        elif len(items) > MAX_SKILLS_PER_CATEGORY:
+            errors.append(_err(path, 'skills', f'{label}: add at most {MAX_SKILLS_PER_CATEGORY} skills.'))
+
+    for key, rule in ADDITIONAL_RULES.items():
+        value, path = state['additional'][key], f'additional.{key}'
+        message = _length_error(value, rule)
+        if not message and len(_text_lines(value)) > MAX_BULLETS:
+            message = f'{rule[2]}: add at most {MAX_BULLETS} points (one per line).'
+        if message:
+            errors.append(_err(path, 'languages', message))
 
     today = (date.today().year, date.today().month)
     for kind in REPEATABLE:
         section = SECTION_OF.get(kind, kind)
+        seen_languages = set()
         for i, e in enumerate(state[kind]):
             if not _touched(e):
                 continue
+            missing = set()
             for field, label in ENTRY_REQUIRED[kind]:
                 if not e.get(field):
+                    missing.add(field)
                     errors.append(_err(f'{kind}.{i}.{field}', section,
-                                       f'{label} is required for {kind.rstrip("s")} entry {i + 1} (or remove the entry).'))
-            if e.get('url') and not is_valid_url(e['url']):
-                errors.append(_err(f'{kind}.{i}.url', section, 'Please enter a valid URL.'))
+                                       f'{label} is required for {NOUN[kind]} entry {i + 1} (or remove the entry).'))
+            for field, rule in ENTRY_RULES[kind].items():
+                message = _length_error(e.get(field), rule) if field not in missing else ''
+                if not message and field in BULLET_FIELDS.get(kind, ()) and len(_text_lines(e.get(field))) > MAX_BULLETS:
+                    message = f'{rule[2]}: add at most {MAX_BULLETS} points (one per line).'
+                if message:
+                    errors.append(_err(f'{kind}.{i}.{field}', section, message))
+            if kind == 'languages' and e.get('name'):
+                key = e['name'].casefold()
+                if key in seen_languages:
+                    errors.append(_err(f'languages.{i}.name', section, f'{e["name"]} is already listed.'))
+                seen_languages.add(key)
+            if kind in END_REQUIRED and e.get('start_year') and not e.get('current') and not e.get('end_year'):
+                errors.append(_err(f'{kind}.{i}.end_year', section,
+                                   f'End date is required unless “{END_REQUIRED[kind]}” is ticked.'))
             if 'start_year' in e:
                 start = _ym(e['start_year'], e.get('start_month'))
                 end = None if e.get('current') else _ym(e.get('end_year'), e.get('end_month'), end=True)
@@ -219,12 +357,12 @@ def section_status(state, errors):
         'personal': all(p[f] for f in ('name', 'title', 'email', 'phone', 'city', 'state', 'country')),
         'summary': bool(state['summary']),
         'skills': any(state['skills'].values()),
-        'languages': bool(state['languages']) or any(state['additional'].values()),
-        'internships': bool(state['internships'] or state['volunteering']),
+        'languages': any(_touched(e) for e in state['languages']) or any(state['additional'].values()),
+        'internships': any(_touched(e) for e in state['internships'] + state['volunteering']),
     }
     out = {}
     for s in SECTIONS:
-        has = filled.get(s, bool(state.get(s)))
+        has = filled[s] if s in filled else any(_touched(e) for e in state[s])
         out[s] = 'error' if s in bad else ('complete' if has else 'empty')
     return out
 
@@ -262,10 +400,21 @@ def _ordered(state, kind, entries):
 
 
 def _href(url):
+    """Link target for a typed URL. 'www.x.com' gets https://; any other scheme
+    (javascript:, data:, ...) or a value with spaces / markup is never linked."""
+    url = (url or '').strip()
     if not url:
         return ''
-    href = url if re.match(r'^https?://', url, re.I) else f'https://{url}'
-    return href if re.match(r'^https?://[^\s<>"]+$', href) else ''
+    if not re.match(r'^https?://', url, re.I):
+        if re.match(r'^[a-z][a-z0-9+.-]*:(?!\d)', url, re.I):
+            return ''
+        url = f'https://{url}'
+    return url if re.match(r'^https?://[^\s<>"\'`]+$', url, re.I) else ''
+
+
+def _link(url, text=None):
+    href = _href(url)
+    return {'text': text or _shown_url(url), 'href': href} if href else None
 
 
 def _shown_url(url):
@@ -281,7 +430,7 @@ def build_document(state):
     p = state['personal']
     contact = []
     if p['email']:
-        contact.append({'text': p['email'], 'href': f"mailto:{p['email']}" if is_valid_email(p['email']) else ''})
+        contact.append({'text': p['email'], 'href': f"mailto:{p['email']}" if is_valid_email_address(p['email']) else ''})
     if p['phone']:
         contact.append({'text': p['phone'], 'href': ''})
     place = ', '.join(x for x in (p['city'], p['state'], p['country']) if x)
@@ -289,8 +438,9 @@ def build_document(state):
         contact.append({'text': place, 'href': ''})
     links = []
     for field, _label in URL_FIELDS:
-        if p[field] and is_valid_url(p[field]):
-            links.append({'text': _shown_url(p[field]), 'href': _href(p[field])})
+        link = _link(p[field])
+        if link:
+            links.append(link)
 
     sections = {}
     if state['summary']:
@@ -343,7 +493,7 @@ def build_document(state):
     for e in _ordered(state, 'projects', _complete('projects', state['projects'])):
         item = {'title': e['title'], 'subtitle': e.get('type'),
                 'meta': ' | '.join(x for x in (e.get('organization'), date_span(e, 'Ongoing')) if x),
-                'link': {'text': _shown_url(e['url']), 'href': _href(e['url'])} if e.get('url') else None,
+                'link': _link(e.get('url')),
                 'paragraphs': [x for x in (e.get('overview') or '').split('\n') if x.strip()],
                 'bullets': _lines(e.get('responsibilities')), 'groups': [], 'notes': []}
         if e.get('role'):
@@ -389,7 +539,7 @@ def build_document(state):
             parts.append(f"Credential ID: {e['credential_id']}")
         certs.append({'title': e['name'], 'text': ' | '.join(parts),
                       'detail': e.get('description') or '',
-                      'link': {'text': 'Verify credential', 'href': _href(e['url'])} if e.get('url') else None})
+                      'link': _link(e.get('url'), 'Verify credential')})
     if certs:
         sections['certifications'] = {'heading': 'Certifications & Training', 'kind': 'items', 'items': certs}
 
@@ -397,12 +547,15 @@ def build_document(state):
     for e in _ordered(state, 'achievements', _complete('achievements', state['achievements'])):
         meta = ' | '.join(x for x in (e.get('organization'), fmt_month_year(e.get('month'), e.get('year'))) if x)
         achievements.append({'title': e['title'], 'text': meta, 'detail': e.get('description') or '',
-                             'link': {'text': _shown_url(e['url']), 'href': _href(e['url'])} if e.get('url') else None})
+                             'link': _link(e.get('url'))})
     if achievements:
         sections['achievements'] = {'heading': 'Achievements & Awards', 'kind': 'items', 'items': achievements}
 
-    languages = [f"{e['name']} ({e['proficiency']})" if e.get('proficiency') else e['name']
-                 for e in state['languages'] if e.get('name')]
+    languages, seen = [], set()
+    for e in _complete('languages', state['languages']):
+        if e['name'].casefold() not in seen:
+            seen.add(e['name'].casefold())
+            languages.append(f"{e['name']} ({e['proficiency']})")
     extra = []
     if languages:
         extra.append({'label': 'Languages', 'text': ', '.join(languages)})

@@ -23,6 +23,31 @@
   var PTYPE = ['Academic Project', 'Personal Project', 'Professional Project', 'Internship Project', 'Research Project', 'Other'];
   var PROF = ['Basic', 'Conversational', 'Intermediate', 'Professional', 'Native'];
   var SUMMARY_LIMIT = 1200;
+  var SKILL_MIN = 2, SKILL_MAX = 50, SKILLS_PER_CAT = 30;
+  // Maximum characters per field (path without the entry index). Mirrors the
+  // rules in career_app/create_resume.py, which validates them again server side.
+  var URL_MAX = 500, URL_KEYS = ['linkedin', 'github', 'portfolio', 'website', 'profile_url'];
+  var MAX = {
+    'personal.name': 80, 'personal.title': 100, 'personal.email': 254, 'personal.phone': 25, 'personal.city': 80,
+    'personal.state': 80, 'personal.country': 80, 'personal.address': 250, 'summary': SUMMARY_LIMIT,
+    'experience.company': 120, 'experience.title': 100, 'experience.location': 100, 'experience.department': 100,
+    'experience.responsibilities': 1500, 'experience.projects': 1000, 'experience.achievements': 1000, 'experience.tools': 500,
+    'education.degree': 100, 'education.specialization': 100, 'education.institution': 150, 'education.location': 100,
+    'education.grade': 50, 'education.coursework': 500, 'education.achievements': 800,
+    'projects.title': 120, 'projects.organization': 150, 'projects.overview': 1200, 'projects.role': 100,
+    'projects.responsibilities': 1000, 'projects.technologies': 500, 'projects.outcomes': 1000,
+    'certifications.name': 150, 'certifications.issuer': 150, 'certifications.credential_id': 100, 'certifications.description': 600,
+    'achievements.title': 150, 'achievements.organization': 150, 'achievements.description': 800,
+    'internships.organization': 150, 'internships.title': 100, 'internships.location': 100, 'internships.responsibilities': 1000,
+    'internships.projects': 1000, 'internships.skills': 500, 'internships.achievements': 800,
+    'volunteering.organization': 150, 'volunteering.role': 100, 'volunteering.location': 100,
+    'volunteering.responsibilities': 1000, 'volunteering.contributions': 1000, 'volunteering.achievements': 800,
+    'languages.name': 50,
+    'additional.memberships': 800, 'additional.publications': 1200, 'additional.research': 1200,
+    'additional.activities': 800, 'additional.hobbies': 500, 'additional.other': 800
+  };
+  URL_KEYS.forEach(function (k) { MAX['personal.' + k] = URL_MAX; });
+  ['projects', 'certifications', 'achievements'].forEach(function (k) { MAX[k + '.url'] = URL_MAX; });
   var THIS_YEAR = new Date().getFullYear();
 
   var SECTIONS = [
@@ -144,7 +169,7 @@
 
   var S = empty();
   var openSec = 'personal', openEntry = {}, dirty = false, draftId = null, drafts = [];
-  var lastErrors = [], lastStatus = {}, lastDoc = null, touched = {}, showAll = false;
+  var lastErrors = [], lastStatus = {}, lastDoc = null, touched = {}, showAll = false, skNote = {};
   var zoom = 0, mode = 'live', pageImgs = [], pageIdx = 0, pvTimer = null, pvSeq = 0;
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -206,7 +231,6 @@
           '<button type="button" class="cr-ib" data-act="page-next" aria-label="Next page">›</button></span><span class="sp"></span>' +
           '<button type="button" class="cr-btn sm" data-act="edit">Edit Details</button>' +
           '<button type="button" class="cr-btn sm" data-act="print-preview" id="crPPBtn">Print Preview</button>' +
-          '<button type="button" class="cr-btn sm" data-act="print">Print</button>' +
           '<button type="button" class="cr-btn sm primary" data-act="pdf">Download PDF</button>' +
         '</div>' +
         '<div class="cr-pv-mode" id="crMode"></div>' +
@@ -219,7 +243,10 @@
   function mark(o) { return o.req ? ' <span class="req" aria-hidden="true">*</span>' : (o.opt ? ' <span class="opt">(optional)</span>' : ''); }
   function fld(path, label, o) {
     o = o || {};
-    if (!o.ph && !o.select) o = Object.assign({ ph: PLACEHOLDER[path.replace(/\.\d+\./, '.')] }, o);
+    var norm = path.replace(/\.\d+\./, '.');
+    if (!o.ph && !o.select) o = Object.assign({ ph: PLACEHOLDER[norm] }, o);
+    if (MAX[norm]) o = Object.assign({}, o, { max: MAX[norm] });
+    if (o.area) o.count = 1;
     var v = get(path), id = fid(path), a = ' id="' + id + '" data-k="' + path + '" aria-describedby="' + id + '_m"' + (o.req ? ' aria-required="true"' : '') + (o.dis ? ' disabled' : '');
     var input;
     if (o.select) {
@@ -234,7 +261,7 @@
         (o.ph ? ' placeholder="' + esc(o.ph) + '"' : '') + (o.ac ? ' autocomplete="' + o.ac + '"' : '') + '>';
     }
     return '<div class="cr-f' + (o.full ? ' full' : '') + '"><label for="' + id + '">' + esc(label) + mark(o) + '</label>' + input +
-      (o.count ? '<span class="cr-count" id="' + id + '_c"></span>' : '') + '<span class="cr-msg" id="' + id + '_m" data-msg="' + path + '"></span></div>';
+      (o.count ? '<span class="cr-count" id="' + id + '_c" data-c="' + path + '" data-max="' + (o.max || 2000) + '"></span>' : '') + '<span class="cr-msg" id="' + id + '_m" data-msg="' + path + '"></span></div>';
   }
   function years(future) {
     var out = [], top = THIS_YEAR + (future ? 8 : 0);
@@ -313,22 +340,22 @@
     switch (key) {
       case 'personal':
         return '<div class="cr-fields">' +
-          fld('personal.name', 'Full name', { req: 1, ac: 'name', max: 100 }) +
-          fld('personal.title', 'Professional title / target role', { req: 1, max: 100 }) +
-          fld('personal.email', 'Email address', { req: 1, type: 'email', ac: 'email', max: 120 }) +
-          fld('personal.phone', 'Contact number', { req: 1, type: 'tel', ac: 'tel', max: 40 }) +
-          fld('personal.city', 'Current city', { req: 1, ac: 'address-level2', max: 80 }) +
-          fld('personal.state', 'State', { req: 1, ac: 'address-level1', max: 80 }) +
-          fld('personal.country', 'Country', { req: 1, ac: 'country-name', max: 80 }) +
+          fld('personal.name', 'Full name', { req: 1, ac: 'name' }) +
+          fld('personal.title', 'Professional title / target role', { req: 1 }) +
+          fld('personal.email', 'Email address', { req: 1, type: 'email', ac: 'email' }) +
+          fld('personal.phone', 'Contact number', { req: 1, type: 'tel', ac: 'tel' }) +
+          fld('personal.city', 'Current city', { req: 1, ac: 'address-level2' }) +
+          fld('personal.state', 'State', { req: 1, ac: 'address-level1' }) +
+          fld('personal.country', 'Country', { req: 1, ac: 'country-name' }) +
           fld('personal.linkedin', 'LinkedIn profile URL', { opt: 1, type: 'url' }) +
           fld('personal.github', 'GitHub profile URL', { opt: 1, type: 'url' }) +
           fld('personal.portfolio', 'Portfolio website', { opt: 1, type: 'url' }) +
           fld('personal.website', 'Personal website', { opt: 1, type: 'url' }) +
           fld('personal.profile_url', 'Professional profile URL', { opt: 1, type: 'url' }) +
-          fld('personal.address', 'Address (only if you want it on your resume)', { opt: 1, full: 1, max: 160 }) + '</div>';
+          fld('personal.address', 'Address (only if you want it on your resume)', { opt: 1, full: 1 }) + '</div>';
       case 'summary':
         return '<p class="cr-help">Write in your own words: your background, main areas of expertise, relevant experience, key strengths and, if you like, your career objective.</p>' +
-          '<div class="cr-fields">' + fld('summary', 'Professional summary', { full: 1, area: 7, max: SUMMARY_LIMIT, count: 1 }) + '</div>';
+          '<div class="cr-fields">' + fld('summary', 'Professional summary', { full: 1, area: 7 }) + '</div>';
       case 'experience':
         return '<p class="cr-help">Optional — freshers can leave this empty. Add each role separately; tick “Currently working here” for your present job.</p>' + entryList('experience');
       case 'education':
@@ -344,7 +371,8 @@
                   '<button type="button" data-act="sk-right" data-cat="' + s[0] + '" data-i="' + i + '" aria-label="Move ' + esc(x) + ' later"' + (i === S.skills[s[0]].length - 1 ? ' disabled' : '') + '>→</button>' +
                   '<button type="button" data-act="sk-del" data-cat="' + s[0] + '" data-i="' + i + '" aria-label="Remove ' + esc(x) + '">✕</button></li>';
               }).join('') + '</ul><div class="cr-sk-add"><input type="text" data-skadd="' + s[0] + '" placeholder="Add a skill (or several, comma separated)" aria-label="Add ' + esc(s[1]) + '" maxlength="300">' +
-              '<button type="button" class="cr-btn sm" data-act="sk-add" data-cat="' + s[0] + '">Add skill</button></div></div>';
+              '<button type="button" class="cr-btn sm" data-act="sk-add" data-cat="' + s[0] + '">Add skill</button></div>' +
+              '<span class="cr-msg" data-msg="skills.' + s[0] + '" aria-live="polite"></span></div>';
           }).join('');
       case 'projects':
         return '<p class="cr-help">Academic, personal, professional, internship or research projects. Latest first by default.</p>' + entryList('projects');
@@ -358,7 +386,7 @@
       case 'languages':
         var langs = S.languages.map(function (l, i) {
           return '<div class="cr-entry"><div class="cr-entry-b" style="border:0;border-radius:12px"><div class="cr-fields">' +
-            fld('languages.' + i + '.name', 'Language', { req: 1, max: 60 }) + fld('languages.' + i + '.proficiency', 'Proficiency', { select: PROF }) +
+            fld('languages.' + i + '.name', 'Language', { req: 1 }) + fld('languages.' + i + '.proficiency', 'Proficiency', { req: 1, select: PROF }) +
             '</div><div class="cr-order" style="justify-content:flex-end">' +
             '<button type="button" class="cr-ib" data-act="up" data-kind="languages" data-i="' + i + '" aria-label="Move up"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
             '<button type="button" class="cr-ib" data-act="down" data-kind="languages" data-i="' + i + '" aria-label="Move down"' + (i === S.languages.length - 1 ? ' disabled' : '') + '>↓</button>' +
@@ -380,7 +408,7 @@
       '<div class="cr-sec-b" id="cr-b-' + sec.key + '"' + (open ? '' : ' hidden') + '>' + (open ? body(sec.key) : '') +
       '<div class="cr-sec-foot"><button type="button" class="cr-btn sm danger" data-act="reset" data-sec="' + sec.key + '">Reset section</button><span>' +
       (n > 1 ? '<button type="button" class="cr-btn sm" data-act="go" data-sec="' + SECTIONS[n - 2].key + '">‹ Previous</button> ' : '') +
-      (n < SECTIONS.length ? '<button type="button" class="cr-btn sm primary" data-act="go" data-sec="' + SECTIONS[n].key + '">Next section ›</button>' :
+      (n < SECTIONS.length ? '<button type="button" class="cr-btn sm primary" data-act="next" data-from="' + sec.key + '" data-sec="' + SECTIONS[n].key + '">Next section ›</button>' :
         '<button type="button" class="cr-btn sm primary" data-act="show-preview">Preview Resume</button>') +
       '</span></div></div></div>';
   }
@@ -391,9 +419,12 @@
     $$('[data-act="tpl"]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.t === S.template)); });
     updateCounter(); applyStatus();
   }
-  function updateCounter() {
-    var c = document.getElementById(fid('summary') + '_c');
-    if (c) { var n = S.summary.length; c.textContent = n + ' / ' + SUMMARY_LIMIT + ' characters'; c.classList.toggle('near', n > SUMMARY_LIMIT * 0.9); }
+  function updateCounter(path) {
+    $$(path ? '.cr-count[data-c="' + path + '"]' : '.cr-count[data-c]').forEach(function (c) {
+      var n = String(get(c.dataset.c)).length, max = +c.dataset.max;
+      c.textContent = n + ' / ' + max + ' characters';
+      c.classList.toggle('near', n > max * 0.9);
+    });
   }
 
   /* ───────────────────────── status, progress & messages ───────────────────────── */
@@ -414,7 +445,7 @@
     var by = {};
     lastErrors.forEach(function (e) { if (!by[e.field]) by[e.field] = e.message; });
     $$('[data-msg]').forEach(function (m) {
-      var f = m.getAttribute('data-msg'), msg = (showAll || touched[f]) ? (by[f] || '') : '';
+      var f = m.getAttribute('data-msg'), msg = ((showAll || touched[f]) ? by[f] : '') || skNote[f] || '';
       m.textContent = msg;
       var w = m.closest('.cr-f'); if (w) w.classList.toggle('invalid', !!msg);
       var input = w && w.querySelector('[data-k]');
@@ -537,11 +568,21 @@
     var parts = err.field.split('.');
     if (parts.length > 2 && S[parts[0]] && S[parts[0]][+parts[1]]) openEntry[S[parts[0]][+parts[1]]._id] = true;
     openSection(section, false);
-    var el = $('[data-k="' + err.field + '"]') || document.getElementById('cr-sec-' + section);
+    var el = $('[data-k="' + err.field + '"]') || (parts[0] === 'skills' && $('[data-skadd="' + parts[1] + '"]')) ||
+      document.getElementById('cr-sec-' + section);
     var box = el.closest('.cr-f') || el;
     box.scrollIntoView({ behavior: 'smooth', block: 'center' });
     try { el.focus({ preventScroll: true }); } catch (e) {}
     box.classList.remove('cr-hl'); void box.offsetWidth; box.classList.add('cr-hl');
+  }
+  function nextSection(from, to) {
+    clearTimeout(pvTimer);
+    requestPreview().then(function () {
+      var errs = lastErrors.filter(function (e) { return e.section === from; });
+      if (!errs.length) { openSection(to, true); return; }
+      errs.forEach(function (e) { touched[e.field] = true; });
+      goToError(errs[0]);
+    });
   }
   function ensureValid() {
     clearTimeout(pvTimer);
@@ -568,13 +609,6 @@
         return r.json().then(function (d) { status(esc(((d.errors || [])[0] || {}).message || 'The PDF could not be generated.'), 'err'); });
       }).catch(function () { status('The PDF could not be generated. Please check your connection and try again.', 'err'); })
         .then(function () { btn.disabled = false; btn.textContent = label; });
-    });
-  }
-  function printPdf() {
-    ensureValid().then(function (ok) {
-      if (!ok) return;
-      var f = document.getElementById('crPrintForm'); f.payload.value = JSON.stringify(S); f.submit();
-      status('Your resume PDF opened in a new tab — use the print button there. (Allow pop-ups if nothing opened.)', 'ok');
     });
   }
   function printPreview(btn) {
@@ -615,7 +649,7 @@
     });
   }
   function useState(s) {
-    S = s; dirty = false; touched = {}; showAll = false; openEntry = {}; openSec = 'personal'; mode = 'live';
+    S = s; dirty = false; touched = {}; showAll = false; skNote = {}; openEntry = {}; openSec = 'personal'; mode = 'live';
     var pp = document.getElementById('crPPBtn'); if (pp) pp.textContent = 'Print Preview';
     renderForm(); schedulePreview(true);
   }
@@ -636,25 +670,44 @@
   function confirmDiscard() { return !dirty || window.confirm('You have unsaved changes. Discard them?'); }
 
   /* skills */
+  function cleanSkill(x) { return String(x).replace(/\s+/g, ' ').trim(); }
+  function skillProblem(x) {
+    return x.length < SKILL_MIN || x.length > SKILL_MAX ? 'Each skill must be ' + SKILL_MIN + '–' + SKILL_MAX + ' characters — “' + x + '” has ' + x.length + '.' : '';
+  }
+  // Comma / semicolon / line separated input → individual skills: trimmed,
+  // de-duplicated, empty items dropped, each 2–50 characters, max 30 per category.
+  // Rejected items stay in the box so they can be corrected.
   function addSkills(cat) {
-    var input = $('[data-skadd="' + cat + '"]'), list = S.skills[cat];
-    var lower = list.map(function (x) { return x.toLowerCase(); });
-    input.value.split(/[,\n;]/).map(function (x) { return x.trim().slice(0, 80); }).filter(Boolean).forEach(function (x) {
-      if (lower.indexOf(x.toLowerCase()) < 0 && list.length < 40) { list.push(x); lower.push(x.toLowerCase()); }
+    var input = $('[data-skadd="' + cat + '"]'), list = S.skills[cat], key = 'skills.' + cat;
+    var lower = list.map(function (x) { return x.toLowerCase(); }), rejected = [], full = false;
+    input.value.split(/[,\n;]/).map(cleanSkill).filter(Boolean).forEach(function (x) {
+      if (skillProblem(x)) { rejected.push(x); return; }
+      if (lower.indexOf(x.toLowerCase()) > -1) return;
+      if (list.length >= SKILLS_PER_CAT) { full = true; rejected.push(x); return; }
+      list.push(x); lower.push(x.toLowerCase());
     });
-    input.value = ''; changed(); renderForm();
-    var again = $('[data-skadd="' + cat + '"]'); if (again) again.focus();
+    skNote[key] = full ? 'You can add up to ' + SKILLS_PER_CAT + ' skills in this category.' :
+      rejected.length ? skillProblem(rejected[0]) : '';
+    changed(); renderForm();
+    var again = $('[data-skadd="' + cat + '"]'); if (again) { again.value = rejected.join(', '); again.focus(); }
   }
   function editSkill(cat, i) {
     var li = $('[data-skill="' + cat + '"] li[data-i="' + i + '"]'); if (!li) return;
-    li.innerHTML = '<input type="text" data-skedit="' + cat + '" data-i="' + i + '" value="' + esc(S.skills[cat][i]) + '" aria-label="Edit skill" maxlength="80">';
+    li.innerHTML = '<input type="text" data-skedit="' + cat + '" data-i="' + i + '" value="' + esc(S.skills[cat][i]) + '" aria-label="Edit skill" maxlength="' + SKILL_MAX + '">';
     var inp = li.querySelector('input'); inp.focus(); inp.select();
   }
   function commitSkill(inp, cancel) {
     if (inp._done) return;
     inp._done = true;
-    var cat = inp.dataset.skedit, i = +inp.dataset.i, v = inp.value.trim();
-    if (!cancel) { if (v) S.skills[cat][i] = v; else S.skills[cat].splice(i, 1); changed(); }
+    var cat = inp.dataset.skedit, i = +inp.dataset.i, v = cleanSkill(inp.value), key = 'skills.' + cat;
+    skNote[key] = '';
+    if (!cancel) {
+      var dup = S.skills[cat].some(function (x, j) { return j !== i && x.toLowerCase() === v.toLowerCase(); });
+      if (!v || dup) S.skills[cat].splice(i, 1);
+      else if (skillProblem(v)) skNote[key] = skillProblem(v);
+      else S.skills[cat][i] = v;
+      changed();
+    }
     renderForm();
   }
 
@@ -667,6 +720,7 @@
         schedulePreview(true); break;
       case 'sec': openSection(openSec === b.dataset.sec ? '' : b.dataset.sec, false); break;
       case 'go': openSection(b.dataset.sec, true); break;
+      case 'next': nextSection(b.dataset.from, b.dataset.sec); break;
       case 'add':
         var n = copy(BLANK[kind]); n._id = uid(); list.push(n); openEntry[n._id] = true; changed(); renderForm();
         var f = $('[data-k^="' + kind + '.' + (list.length - 1) + '."]');
@@ -706,7 +760,6 @@
       case 'page-prev': goPage(pageIdx - 1); break;
       case 'page-next': goPage(pageIdx + 1); break;
       case 'print-preview': printPreview(b); break;
-      case 'print': printPdf(); break;
       case 'pdf': downloadPdf(b); break;
       case 'save': saveDraft(b); break;
       case 'new':
@@ -726,7 +779,7 @@
     var t = e.target, k = t.getAttribute('data-k');
     if (!k || t.tagName === 'SELECT') return;
     set(k, t.getAttribute('data-bool') ? t.checked : t.value);
-    if (k === 'summary') updateCounter();
+    updateCounter(k);
     changed();
   });
   app.addEventListener('change', function (e) {

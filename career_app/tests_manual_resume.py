@@ -23,7 +23,7 @@ def base_state(**overrides):
         'projects': [{'name': 'Construction schedule for a G+4 building', 'context': 'Academic project',
                       'bullets': 'Prepared the WBS\nBuilt a 12-month schedule'}],
         'education': [{'degree': 'B.Tech, Civil Engineering', 'institution': 'JNTU Hyderabad', 'year': '2024'}],
-        'summary': 'Entry-level project management candidate.',
+        'summary': 'Entry-level project management candidate with academic scheduling experience.',
     }
     state.update(overrides)
     return state
@@ -99,10 +99,33 @@ class ValidationTests(TestCase):
         errors, _ = self.check()
         self.assertEqual(errors, [])
 
+    def test_empty_form_is_zero_percent(self):
+        self.assertEqual(completeness(normalize_state({}), self.role)['overall'], 0)
+        name_only = completeness(normalize_state({'personal': {'name': 'Anita Sharma'}}), self.role)['overall']
+        bad_email = completeness(normalize_state({'personal': {'name': 'Anita Sharma', 'email': 'a@'}}), self.role)['overall']
+        self.assertGreater(name_only, 0)
+        self.assertEqual(bad_email, name_only)      # an invalid email does not count
+
+    def test_field_rules(self):
+        cases = [
+            ({'personal': {'name': '12345', 'email': 'a b@x.com', 'phone': '12345', 'linkedin': 'javascript:alert(1)'}},
+             {'personal.name', 'personal.email', 'personal.phone', 'personal.linkedin'}),
+            ({'summary': 'good'}, {'summary'}),
+            ({'projects': [{'name': 'Tracker', 'bullets': 'Short'}]}, {'projects.0.bullets'}),
+            ({'employment': [{'title': 'P', 'company': 'X' * 121}]}, {'employment.0.title', 'employment.0.company'}),
+            ({'skills': {'groups': {'project-planning': ['Scheduling', 'X']}}}, {'skills'}),
+        ]
+        for overrides, expected in cases:
+            errors, _ = self.check(**overrides)
+            self.assertTrue(expected <= fields(errors), (overrides, fields(errors)))
+        errors, _ = self.check(personal={'name': "Anne-Marie O'Neil", 'email': 'a@example.com', 'phone': '+91 (987) 654-3210',
+                                         'linkedin': 'www.linkedin.com/in/anne', 'website': 'https://anne.dev'})
+        self.assertEqual(errors, [])
+
     def test_mandatory_messages(self):
         errors = validate_state(normalize_state({}), None)
         messages = {e['message'] for e in errors}
-        for msg in ('Please enter your full name.', 'Please provide a valid email address.',
+        for msg in ('Please enter your full name.', 'Please enter a valid email address.',
                     'Please select your experience level.', 'Please add your education details.',
                     'Please provide your employment details or relevant projects.', 'Please select a job role.'):
             self.assertIn(msg, messages)
@@ -187,7 +210,7 @@ class DocumentTests(TestCase):
                                    'location': 'Hyderabad, India', 'dob': '2002-04-18', 'passport': 'y1234567'},
             employment=[{'title': 'Associate Software Engineer', 'company': 'Royal International Staffing',
                          'start': '2025-08', 'end': '2026-01'}],
-            projects=[{'name': 'Kraftudio Portal', 'tools': 'React, Django', 'bullets': '**Built** dashboards'}],
+            projects=[{'name': 'Kraftudio Portal', 'tools': 'React, Django', 'bullets': '**Built** admin dashboards for the client portal'}],
             declaration=True, decl_date='2026-07-01'))
         self.assertEqual(validate_state(state, self.role), [])
         doc = build_document(state, self.role)
@@ -334,6 +357,28 @@ class CustomRoleTests(TestCase):
     def state(self):
         return base_state(role='custom-frontend-developer', role_def=self.SPEC,
                           skills={'groups': {'core-web-technologies': ['HTML5', 'CSS3']}, 'soft': ['Teamwork']})
+
+    def test_role_profiles_give_role_specific_content(self):
+        role = custom_role(self.SPEC)
+        self.assertIn('Frontend Developers', role['description'])
+        self.assertTrue(role['responsibilities'] and role['career_path'] and role['certifications'])
+        self.assertIn('React', role['recommended_skills'])
+        self.assertTrue(role['levels']['fresher']['projects'])
+        welder = custom_role({'title': 'welder', 'category': 'tech'})       # case-insensitive, no groups sent
+        self.assertIn('Welders', welder['description'])
+        self.assertTrue(welder['fields'])
+        self.assertEqual(custom_role({'title': 'Product Owner'})['description'],
+                         custom_role({'title': 'Product Owner (PO)'})['description'])   # alias
+        self.assertEqual(custom_role({'title': 'Unknown Role'})['description'], '')
+
+    def test_every_profile_is_distinct_and_complete(self):
+        from .resume_roles import _role_profiles
+        profiles, _aliases = _role_profiles()
+        self.assertGreater(len(profiles), 280)
+        self.assertEqual(len({p['about'] for p in profiles.values()}), len(profiles))
+        for name, p in profiles.items():
+            for key in ('responsibilities', 'career_path', 'keywords', 'projects', 'certifications'):
+                self.assertTrue(p[key], (name, key))
 
     def test_custom_role_is_built_and_bounded(self):
         role = custom_role(self.SPEC)
