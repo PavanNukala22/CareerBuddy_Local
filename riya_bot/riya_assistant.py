@@ -2503,8 +2503,29 @@ def riya_chat_logic(message: str, page: str = "unknown", user_name: str | None =
         skillup = None                      # never break chat on a Skill Up fault
     if skillup is not None:
         if "_skillup_grounding" not in skillup:
-            return skillup
-        skillup_grounding = skillup.get("_skillup_grounding")
+            # CHECK ACCESS BEFORE RETURNING
+            from core.skillup_access import has_full_skillup, is_locked_lesson
+            if skillup.get("actions") and not has_full_skillup(user):
+                allowed = True
+                for act in skillup["actions"]:
+                    route = act.get("route", "")
+                    if "#load=" in route:
+                        load_path = route.split("#load=")[-1]
+                        if is_locked_lesson(load_path):
+                            allowed = False
+                            break
+                    elif "/skill-up/#" in route:
+                        fragment = route.split("#")[-1].lower()
+                        if "aptitude" in fragment or "tech" in fragment or "non_it" in fragment:
+                            allowed = False
+                            break
+                if not allowed:
+                    skillup = None
+
+            if skillup is not None:
+                return skillup
+        else:
+            skillup_grounding = skillup.get("_skillup_grounding")
     # ─────────────────────────────────────────────────────────────────────
 
     # PREMIUM NAVIGATION MUST BE CHECKED FIRST.

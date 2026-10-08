@@ -1779,11 +1779,10 @@
     }
 
     function readAssistantSession() {
-        // Guests do not use persisted chatbot sessions.
-        // Their selected role and conversation exist only in memory.
-        if (isGuestUser()) {
-            return null;
-        }
+        // Guests now use persisted chatbot sessions to keep history across public navigation.
+        // if (isGuestUser()) {
+        //     return null;
+        // }
 
         try {
             const raw = sessionStorage.getItem(getAssistantStorageKey());
@@ -1878,11 +1877,10 @@
             return;
         }
 
-        // NEVER persist a guest's role, conversation, or session.
-        // Logged-in Student/Employer sessions continue to persist normally.
-        if (isGuestUser()) {
-            return;
-        }
+        // Guest sessions now persist across public pages so chat history isn't lost.
+        // if (isGuestUser()) {
+        //     return;
+        // }
 
         try {
             const previous = readAssistantSession() || {};
@@ -5340,7 +5338,7 @@
 
                 const roleQuestion = {
                     english:
-                        "Hello there! Are you a Job Seeker or an Employer?",
+                        "Are you a Job Seeker or an Employer?",
 
                     vietnam:
                         "Xin chào! Bạn là Người tìm việc hay Nhà tuyển dụng?",
@@ -6453,6 +6451,21 @@
             );
 
         // ---------------------------------------------------------
+        // Custom Time-Based Guest Greeting
+        // ---------------------------------------------------------
+        let chatBubbleGreeting = GREETING_TEXT;
+
+        if (isGuest && lang === "english" && sessionStorage.getItem("careerbuddy_guest_greeting_shown") !== "true") {
+            const hour = new Date().getHours();
+            let timeStr = "Good Evening";
+            if (hour >= 5 && hour < 12) timeStr = "Good Morning";
+            else if (hour >= 12 && hour < 17) timeStr = "Good Afternoon";
+            
+            chatBubbleGreeting = "Hi, " + timeStr + "! Are you a Job Seeker or an Employer?";
+            sessionStorage.setItem("careerbuddy_guest_greeting_shown", "true");
+        }
+
+        // ---------------------------------------------------------
         // FIRST OPEN ONLY:
         // Show and speak the greeting once.
         // ---------------------------------------------------------
@@ -6470,38 +6483,25 @@
                 }
             }
 
-            assistant.lastResponseText =
-                GREETING_TEXT;
+            assistant.lastResponseText = chatBubbleGreeting;
 
-            addConversationMessage(
-                "assistant",
-                GREETING_TEXT
-            );
+            addConversationMessage("assistant", chatBubbleGreeting);
 
             renderResponseCard({
-                reply: GREETING_TEXT,
+                reply: chatBubbleGreeting,
                 source: "greeting"
             }, { waitForSpeech: true });
 
-            // Language changed.
-            // Keep the existing conversation history.
-            // Do not add or speak another greeting.
+            setAssistantState(AssistantState.GREETING);
+            setStatus("Buddy is greeting you.");
 
-            setAssistantState(
-                AssistantState.GREETING
-            );
-
-            setStatus(
-                "Buddy is greeting you."
-            );
-
-            speakText(GREETING_TEXT, {
+            speakText(chatBubbleGreeting, {
                 state: AssistantState.GREETING,
                 statusText: "Buddy is greeting you.",
-                instantBrowserVoice: true,
+            instantBrowserVoice: true,
 
-                // Do NOT automatically start the microphone.
-                afterSpeak: null
+            // Do NOT automatically start the microphone.
+            afterSpeak: null
             });
 
             // Render welcome content AFTER the greeting card above, so
@@ -6541,6 +6541,9 @@
 
             // Also remove any role-specific active state so the next
             // guest cannot reopen the previous Student/Employer chat.
+            sessionStorage.removeItem(
+                "career_buddy_riya_guest_state_v3_guest"
+            );
             sessionStorage.removeItem(
                 "career_buddy_riya_student_state_v3_guest"
             );
@@ -7434,20 +7437,8 @@
             rawUsername.toLowerCase() === "there";
 
         if (userIsGuest) {
-            try {
-                // Clean up guest-state keys created by older versions.
-                sessionStorage.removeItem(
-                    "career_buddy_riya_student_state_v3_guest"
-                );
-                sessionStorage.removeItem(
-                    "career_buddy_riya_employer_state_v3_guest"
-                );
-                sessionStorage.removeItem(
-                    "riya_active_conversation_id"
-                );
-            } catch (_error) {
-                // Ignore storage errors.
-            }
+            // We no longer clear guest-state keys on page load because guests
+            // now retain their conversation history across public pages.
         }
 
         const employerPage =
