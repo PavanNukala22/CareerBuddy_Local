@@ -61,9 +61,20 @@ def _roles():
     return out
 
 
+@lru_cache(maxsize=1)
+def _template_roles():
+    """Predefined resume templates (resume_roles.py). Their role cards send the
+    template's subtitle as the department, e.g. ('Frontend, backend, full-stack', 'Software Developer')."""
+    from .resume_roles import client_payload
+    return {('tech' if r['category'] == 'it' else 'nonit', _key(r['subtitle']), _key(r['title'])):
+            (r['subtitle'], r['title'], list(r.get('required_skills') or []))
+            for r in client_payload()['roles']}
+
+
 def find_role(track, dept, role):
     """(dept, role, skills) for a role picked on the career-path page, or None."""
-    return _roles().get((track, _key(dept), _key(role)))
+    key = (track, _key(dept), _key(role))
+    return _roles().get(key) or _template_roles().get(key)
 
 
 def role_text(dept, role, skills):

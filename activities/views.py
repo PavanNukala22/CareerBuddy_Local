@@ -87,11 +87,26 @@ def home(request):
         'featured_activities': activities,
         'total_activities': total_activities,
     }
+    # "Build Resume" on a low ATS result (/?build=role): the landing page opens the
+    # role-actions popup's resume builder for the role picked before the resume check.
+    target = request.session.get('rb_role') if request.GET.get('build') == 'role' else None
+    if target:
+        from career_app.role_fit import find_role
+        found = find_role(target.get('track', 'tech'), target['dept'], target['role'])
+        context['build_role'] = {
+            'role': target['role'], 'dept': target['dept'], 'track': target.get('track', 'tech'),
+            'lines': found[2] if found else [],   # "Category: skill, skill" (IT roles)
+        }
     # The public entry point is the CareerBuddy landing page. Its Skill Up and
     # Resources menus link to /go/<key>/ (core/navigation.py), which handles the
     # candidate-login check, so the same markup serves signed-in and anonymous
     # visitors. The previous home.html is left in place, unused by this view.
-    return render(request, 'landing.html', context)
+    response = render(request, 'landing.html', context)
+    if target:
+        # Same URL for every role: never let the browser reuse a page built for the last one.
+        from django.utils.cache import add_never_cache_headers
+        add_never_cache_headers(response)
+    return response
 
 
 CAREER_TRACKS = {

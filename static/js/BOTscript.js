@@ -2080,6 +2080,16 @@
             return null;
         }
 
+        // "open Lead Technical Recruiter (Engineering)" names a Skill Up role, not the
+        // Employer portal: guard only when little else is said. The server keeps its
+        // own portal guard for anything that gets past this one.
+        const otherWords = normalized
+            .replace(/\b(employer|employeer|recruiter|company|hiring|candidates?|post job|job openings|applications|open|go|take|show|navigate|to|the|a|an|me|my|please|portal|page|login|log in|sign in|i|want|need)\b/g, " ")
+            .split(/\s+/).filter(Boolean);
+        if (!assistant.isEmployer && otherWords.length >= 2) {
+            return null;
+        }
+
         if (!(isQuestion || asksToNavigate)) {
             return null;
         }
@@ -2149,6 +2159,9 @@
         Object.entries(ACTION_DEFINITIONS).forEach(([key, definition]) => {
             // Role isolation: never resolve an action belonging to the other portal.
             if (!isActionAllowedForCurrentRole(key)) {
+                return;
+            }
+            if (isSkillUpRoute(definition.route)) {
                 return;
             }
 
@@ -3418,7 +3431,11 @@
             }
         }
 
-        window.location.href = action.route;
+        // A fragment-only route ("#depth-tech") stays on this page. Assigned as is it
+        // resolves against <base>, which on Skill Up is the static folder (404).
+        window.location.href = String(action.route).charAt(0) === "#"
+            ? window.location.pathname + window.location.search + action.route
+            : action.route;
     }
 
     // How many characters of the current utterance have already been spoken —
@@ -4728,8 +4745,20 @@
         return null;
     }
 
+    // Skill Up destinations are resolved by the server only: it knows every
+    // department, role and course ("lead technical recruiter" is a role, not
+    // the Tech section the keyword "technical" would pick) and checks the plan.
+    function isSkillUpRoute(route) {
+        return /^\/(skill-up|go)\//.test(String(route || ""));
+    }
+
     function detectSiteNavigationIntent(text) {
         if (assistant.isEmployer) return null;
+        // On Skill Up the page's own links are lessons and locked sections
+        // ("Core Web Technologies" -> #load=..., "Tech" -> #depth-tech). Matching
+        // them here skipped the server's Skill Up layer and its plan check, so
+        // stand down and let the server resolve, refuse or ask.
+        if (String(window.location.pathname || "").toLowerCase().indexOf("/skill-up/") === 0) return null;
 
         const normalizedInput = normalizeText(text);
         if (!normalizedInput) return null;
@@ -4744,7 +4773,7 @@
         document.querySelectorAll('a').forEach(a => {
             let label = (a.textContent || "").replace(/\s+/g, " ").trim();
             const href = a.getAttribute("href");
-            if (label && href && !href.startsWith("javascript:") && href !== "#") {
+            if (label && href && !href.startsWith("javascript:") && href !== "#" && !isSkillUpRoute(href)) {
                 let location = "the page";
                 const parentNav = a.closest('.cb-nav');
                 const parentFooter = a.closest('footer') || a.closest('.footer') || a.closest('#contact');
@@ -4775,6 +4804,10 @@
 
         Object.keys(ACTION_DEFINITIONS).forEach(key => {
             const def = ACTION_DEFINITIONS[key];
+            if (isSkillUpRoute(def.route)) return;
+            // Role isolation, as in resolveLocalNavigationIntent: a student saying
+            // "HR Recruiter" must not be sent to the employer login.
+            if (!isActionAllowedForCurrentRole(key)) return;
             
             siteLinks.push({
                 key: key,
@@ -4968,6 +5001,13 @@
         let cleanQ = stripped.replace(/\s+(roles|jobs|departments|department)$/i, "").trim();
         let baseAns = knowledge.answerIndustriesQuestion(cleanQ) || knowledge.answerIndustriesQuestion(stripped) || knowledge.answerIndustriesQuestion(q);
         
+        // "open / take me to <department or role>" goes to the server, which opens that
+        // department or role in Skill Up (and sends a Free plan to the plans page).
+        // Questions about a role ("tell me about ...") are still answered here.
+        if (baseAns && (/^(take me to|open|show me|show) /i.test(q) || hasNavigationVerb(normalizeText(text)))) {
+            return null;
+        }
+
         if (baseAns) {
             let navLabel = "the requested section";
             if (baseAns.navigation && baseAns.navigation.length > 0) {

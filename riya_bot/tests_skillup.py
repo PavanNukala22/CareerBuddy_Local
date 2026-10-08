@@ -69,7 +69,7 @@ class SkillUpResolutionTests(SimpleTestCase):
 
     def test_nonexistent_content_resolves_to_nothing(self):
         """PART 63: the model must never be handed a fabricated match."""
-        for query in ["java spring boot", "solidity", "xyz course",
+        for query in ["cobol mainframe", "solidity", "xyz course",
                       "kubernetes helm charts", "rust ownership"]:
             with self.subTest(query=query):
                 self.assertEqual(self.service.resolve(query), [],
@@ -118,7 +118,7 @@ class SkillUpIntentTests(SimpleTestCase):
     def test_missing_content_is_refused_not_invented(self):
         for message in ["Is there a Solidity course in skill up?",
                         "Open the XYZ course.",
-                        "How many Java lessons are in skill up?"]:
+                        "How many COBOL lessons are in skill up?"]:
             with self.subTest(message=message):
                 result = try_handle(message, path=HUB)
                 self.assertIsNotNone(result)
@@ -250,7 +250,7 @@ class SkillUpNamedButMissingTests(SimpleTestCase):
         whenever the named subject failed to resolve, so Buddy confidently
         described "AI - ML - agents" to someone who asked about Java.
         """
-        for message in ["How many Java lessons are in Skill Up?",
+        for message in ["How many COBOL lessons are in Skill Up?",
                         "How many Solidity lessons are there?",
                         "How many Kubernetes courses are in Skill Up?"]:
             with self.subTest(message=message):
@@ -335,7 +335,7 @@ class SkillUpMultilingualTests(SimpleTestCase):
 
     def test_missing_subject_is_still_refused(self):
         """Relaxing the filter must not reopen the hallucination hole."""
-        for message in ["How many Java lessons are in Skill Up?",
+        for message in ["How many COBOL lessons are in Skill Up?",
                         "How many Solidity courses are in Skill Up?"]:
             with self.subTest(message=message):
                 self.assertIn("couldn't find",

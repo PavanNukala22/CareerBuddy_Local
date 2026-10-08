@@ -150,3 +150,78 @@ class RoleSkillSplitTests(TestCase):
         role = ['Vendor-neutral management', 'VMS administration', 'Supplier performance scorecards']
         have, missing = split_role_skills(DEV_RESUME, role)
         self.assertEqual((have, missing), ([], role))
+
+
+class LowAtsButtonsTests(TestCase):
+    """Below-90 ATS on a paid plan: Build Resume (role skills as chips in Create
+    Resume) and Skill up yourself (the role's Skill Up content)."""
+    def setUp(self):
+        self.user = User.objects.create_user('low', 'low@x.com', 'pw12345!')
+        self.client.force_login(self.user)
+        self.client.get(reverse('resume_builder'), {
+            'role': 'Frontend Developer', 'dept': 'Development', 'track': 'tech'})
+        s = self.client.session
+        s['rb_analysis'] = {'match_percentage': 60, 'career_advice': ['Add projects.']}
+        s.save()
+
+    def test_paid_user_sees_both_buttons(self):
+        _set_plan(self.user, 'normal')
+        resp = self.client.get(reverse('resume_job_match'))
+        self.assertContains(resp, '/?build=role#create-resume')
+        self.assertContains(resp, '/skill-up/?section=role-tech-development--frontend-developer')
+        home = self.client.get(reverse('home') + '?build=role')
+        self.assertContains(home, 'id="cbBuildRole"')
+        self.assertContains(home, 'Core Web Technologies: HTML5')
+        self.assertNotContains(self.client.get(reverse('home')), 'id="cbBuildRole"')
+
+    def test_free_user_sees_neither(self):
+        resp = self.client.get(reverse('resume_job_match'))
+        self.assertNotContains(resp, '/?build=role#create-resume')
+        self.assertNotContains(resp, 'Skill up yourself')
+
+
+class UnmatchedRoleScoreTests(TestCase):
+    """A resume that doesn't match the chosen role scores 0% ATS for it, even
+    when the general ATS read said 100%."""
+    def _fit(self, role, dept, track):
+        from types import SimpleNamespace
+        from django.contrib.sessions.backends.db import SessionStore
+        from career_app.views import _check_role_fit
+        request = SimpleNamespace(session=SessionStore())
+        request.session['rb_analysis'] = {'match_percentage': 100, 'analysis': 'Highly optimized resume.'}
+        request.session['rb_role'] = {'role': role, 'dept': dept, 'track': track, 'section': 'x'}
+        fit = _check_role_fit(request, DEV_RESUME)
+        self.summary = request.session['rb_analysis']['analysis']
+        return fit, request.session['rb_analysis']['match_percentage']
+
+    def test_unmatched_resume_scores_zero(self):
+        fit, score = self._fit('Refinery Operations', 'Oil & Gas / Energy Skills', 'nonit')
+        self.assertFalse(fit['ok'])
+        self.assertEqual(score, 0)
+        self.assertIn("doesn't match the Refinery Operations role", self.summary)
+
+    def test_unmatched_template_role_scores_zero(self):
+        # Predefined resume-template roles (resume_roles.py) send their subtitle as the department.
+        fit, score = self._fit('HR Manager', 'Lead people strategy and policy', 'nonit')
+        self.assertTrue(fit['known'])
+        self.assertEqual(score, 0)
+
+    def test_matching_resume_keeps_its_score(self):
+        fit, score = self._fit('Software Developer', 'Development', 'tech')
+        self.assertTrue(fit['ok'])
+        self.assertEqual(score, 100)
+        self.assertEqual(self.summary, 'Highly optimized resume.')
+
+    def test_result_page_hides_unmatched_percentage(self):
+        user = User.objects.create_user('um', 'um@x.com', 'pw12345!')
+        _set_plan(user, 'normal')
+        self.client.force_login(user)
+        s = self.client.session
+        s['rb_analysis'] = {'match_percentage': 0}
+        s['rb_role'] = {'role': 'Software Developer', 'dept': 'Development', 'track': 'tech', 'section': 'x'}
+        s['rb_role_fit'] = {'known': True, 'ok': False, 'coverage': 11, 'matching_skills': [], 'missing_skills': ['Python']}
+        s.save()
+        resp = self.client.get(reverse('resume_job_match'))
+        self.assertContains(resp, 'Doesn&rsquo;t match Software Developer')
+        self.assertNotContains(resp, '11%')
+        self.assertContains(resp, '/?build=role#create-resume')

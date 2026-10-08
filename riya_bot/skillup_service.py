@@ -27,6 +27,7 @@ from .skillup_catalog import (
     SKILLUP_DIRNAME,
     Lesson,
     Manifest,
+    Place,
     Section,
     Subsection,
     get_manifest,
@@ -355,6 +356,9 @@ class SkillUpKnowledgeService:
                 score = max(
                     self._similarity(norm, normalize_key(section.title)),
                     1.0 if normalize_key(section.title) == norm else 0.0,
+                    # same words ("english and vocabulary" = "English & Vocabulary",
+                    # "non it center" = "Non-IT Center"): the section, above any lesson
+                    1.6 if qtokens and _tokens(section.title) == qtokens else 0.0,
                 )
                 stoks = _tokens(section.title)
                 if qtokens and stoks:
@@ -385,6 +389,48 @@ class SkillUpKnowledgeService:
             score = self._score_lesson(norm, expanded, qtokens, lesson)
             if score >= threshold:
                 matches.append(Match("lesson", lesson, score, lesson.title, lesson.route))
+
+        # Departments and roles (Tech and Non-IT). Their exact name outranks every
+        # course, so "open frontend developer" opens the role, not one of its courses.
+        compact = norm.replace(" ", "")
+        # "open the development department" / "frontend developer role"
+        ptarget = (qtokens - _tokens("department departments dept role roles")) or qtokens
+        for place in self.manifest.places:
+            ptitle = normalize_key(place.title)
+            # Same words count as the exact name: the message arrives with filler
+            # such as "of" stripped ("head of pmc ..." -> "head pmc ...").
+            ptoks = _tokens(place.title)
+            base = _tokens(re.sub(r"\(.*?\)", " ", place.title))   # "(PMM)" is optional
+            abbrevs = [_tokens(x) for x in re.findall(r"\(([^)]*)\)", place.title)]   # "(SDE)"
+            is_dept = place.place_id.startswith("grp-")
+            if ptitle == norm or ptitle.replace(" ", "") == compact or (ptarget and ptoks == ptarget):
+                # typed as written: clearly above everything else ("Product Owner"
+                # over "Product Owner (PO)", "Fire Safety" over the HSE department)
+                score = 1.6
+            elif ptarget and (base == ptarget or ptarget in abbrevs):
+                score = 1.45
+            elif place.department and base and base < ptarget and ptarget - base <= _tokens(place.department):
+                # "devops engineer in devops infrastructure": role name + its department.
+                # Below an exact name, so the department "Quality & Inspection Skills"
+                # still wins over its role "Quality Inspection".
+                score = 1.3
+            elif len(ptarget) >= 2 and ptarget <= ptoks:
+                # Every word given is in this name: "agile and delivery" ->
+                # "Project Management / Agile & Delivery". Tighter names rank higher,
+                # and a department ranks above a role that shares the words
+                # ("customer success" -> the department, not Customer Success Manager).
+                score = 1.2 - 0.02 * len(ptoks - ptarget) + (0.2 if is_dept else 0.0)
+            elif is_dept and len(ptarget) == 1 and ptarget <= ptoks:
+                # One word of a department name ("payroll", "design"). Kept just
+                # below an exact lesson name, so "writing" still opens the lesson.
+                score = 0.95
+            elif not self._lexically_related(qtokens, norm, place.title):
+                continue
+            else:
+                score = max(self._similarity(norm, ptitle) * 0.85,
+                            (len(qtokens & ptoks) / len(qtokens)) * 0.8 if qtokens and ptoks else 0.0)
+            if score >= threshold:
+                matches.append(Match("place", place, score, place.title, place.route))
 
         matches.sort(key=lambda m: (-m.score, m.kind != "lesson", m.title))
         return matches[:limit]
@@ -592,7 +638,7 @@ class SkillUpKnowledgeService:
         """Trusted route for a catalog entity. Never accepts a raw string URL."""
         if isinstance(entity, Lesson):
             return entity.route
-        if isinstance(entity, Section):
+        if isinstance(entity, (Section, Place)):
             return entity.route
         if isinstance(entity, Subsection):
             section = next(
@@ -607,4 +653,5 @@ class SkillUpKnowledgeService:
             return False
         known = {s.route for s in self.manifest.sections}
         known |= {l.route for l in self.manifest.lessons_by_id.values()}
+        known |= {p.route for p in self.manifest.places}
         return route in known

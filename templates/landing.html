@@ -7127,6 +7127,7 @@
             <p>Please enable JavaScript to use the resume builder.</p>
           </noscript>
         </div>
+        {% if build_role %}{{ build_role|json_script:"cbBuildRole" }}{% endif %}
         <form id="crPrintForm" method="post" action="{% url 'create_resume_pdf' %}" target="_blank" hidden>{% csrf_token %}<input type="hidden" name="payload" value=""><input type="hidden" name="inline" value="1"></form>
         <p style="text-align:center;margin-top:1.2rem"><a class="btn btn-outline"
             href="{% url 'nav_go' 'resume-builder' %}">Check ATS score</a></p>
@@ -8660,6 +8661,23 @@
         if (idx < 0) return; // no role data: follow the link to the general builder
         e.preventDefault(); ra.close(); openRole(idx, lastBtn, true);
       });
+      /* "Build Resume" on a below-90 ATS result (/?build=role): open the same builder the
+         popup's Build Resume opens, for the role picked before the resume check. */
+      (function () {
+        var br = null; try { br = JSON.parse(($('cbBuildRole') || {}).textContent || 'null') } catch (e) { }
+        if (!br) return;
+        var idx = -1, n = br.role.toLowerCase(), d = br.dept.toLowerCase();
+        for (var j = 0; j < ROLES.length; j++) if (ROLES[j].n.toLowerCase() === n && String(ROLES[j].sub).toLowerCase() === d) { idx = j; break }
+        if (idx >= 0) { var r = ROLES[idx]; if (!r.slug) { idx = slugFor(r.n); if (idx < 0) idx = customRole(r.n, r.c, r.sub, [['Role skills', r.sk]]) } }
+        else if (br.lines.length) {
+          idx = slugFor(br.role);
+          if (idx < 0) idx = customRole(br.role, 'it', br.dept, br.lines.map(function (line) {
+            var at = line.indexOf(':');
+            return [at > 0 ? line.slice(0, at).trim() : 'Role skills', splitSk(at > 0 ? line.slice(at + 1) : line)];
+          }), 'Information Technology');
+        }
+        if (idx >= 0) openRole(idx, null, true); // else the #create-resume fallback stays
+      })();
       $('rmClose').addEventListener('click', closeRole);
       rm.addEventListener('click', function (e) { if (e.target === rm) closeRole() });
       document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && rm.classList.contains('open')) closeRole() });
@@ -8912,7 +8930,7 @@
     })();
   </script>
 
-  <script src="{% static 'js/create_resume.js' %}?v=3" defer></script>
+  <script src="{% static 'js/create_resume.js' %}?v=5" defer></script>
   <script>
     /* Career journey: start the step animations when the list scrolls into view. */
     (function () {
