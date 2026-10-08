@@ -18,6 +18,7 @@ from django.templatetags.static import static
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from core.navigation import ALLOWED_SECTIONS
+from core.skillup_access import FREE_FILES, FREE_PREFIXES, has_full_skillup
 
 from .skillup_catalog import SKILLUP_DIRNAME, SKILLUP_INDEX, skillup_root
 
@@ -92,4 +93,9 @@ def skillup_hub(request):
         "skillup_head": skillup_head,
         "skillup_body": skillup_body,
         "skillup_section": section,
+        # Free plan: English & Vocabulary only (core/skillup_access.py). The
+        # server refuses the other lessons; the hub shows the lock up front.
+        "skillup_locked": not has_full_skillup(request.user),
+        "skillup_free_prefixes": list(FREE_PREFIXES),
+        "skillup_free_files": sorted(FREE_FILES),
     })

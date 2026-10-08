@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Workforce Readiness Program Coordinator | Skill Development &amp; Workforce Readiness — CareerBuddy</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300..800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"><style>
+<!DOCTYPE html><html lang="en"><head>
+<script src="/static/js/exam_guard.js?v=1"></script><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Workforce Readiness Program Coordinator | Skill Development &amp; Workforce Readiness — CareerBuddy</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300..800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"><style>
 /* ============= Notion-inspired theme ============= */
 :root{
   --bg:#ffffff;
@@ -671,7 +672,7 @@ tr:hover td{background:var(--bg-soft)}
   function css(){
     var st=document.createElement('style');
     st.textContent='@media print{html,body{display:none!important}}'
-      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
+      +'#cbShotCover{position:fixed;inset:0;z-index:2147483647;background:#000;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:600 18px/1.5 system-ui,sans-serif;padding:24px}'
       +'#cbShotCover.on{display:flex}'
       +'#cbShotMark{position:fixed;inset:0;z-index:2147483646;pointer-events:none;overflow:hidden;opacity:.11}'
       +'#cbShotMark span{position:absolute;white-space:nowrap;font:700 15px system-ui,sans-serif;color:#0b1220;transform:rotate(-24deg)}'
@@ -741,7 +742,7 @@ tr:hover td{background:var(--bg-soft)}
   if(!/[?&](assess=1|mode=exam)(&|$)/.test(location.search))return;
   var CANCEL='#examCancel,#exC,#cbExamCancel,#cancelAssessmentButton,#cancelAssessment,[onclick*="closeAssessment"],.cb-exam-cancel';
   var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton';
-  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX'; // #examExit is the in-test Close (exam top bar), not a results button
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX,.cb-results-close'; // #examExit is the in-test Close (exam top bar), not a results button
   var AUTO_CLOSE=30, docs=[], timer=null, left=0, note=null;
   function leave(rules,home){
     try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
@@ -750,9 +751,15 @@ tr:hover td{background:var(--bg-soft)}
     setTimeout(function(){if(window.closed)return;if(rules&&rules.parentNode)rules.remove();else if(home)location.replace('/skill-up/');},150);
   }
   function shown(d,sel){var e=d.querySelector(sel);return !!(e&&e.getClientRects().length);}
-  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,'#resultScreen');});}
+  var RESULT_SCREEN='#resultScreen,#assessmentResult';
+  function resultsShown(){return docs.some(function(d){return shown(d,RESULT_CLOSE)||shown(d,RESULT_SCREEN);});}
+  // Results shown inline with no Close button of their own: add one, so every results screen can return to the course.
+  function addClose(){docs.forEach(function(d){if(shown(d,RESULT_CLOSE))return;var s=[].filter.call(d.querySelectorAll(RESULT_SCREEN),function(e){return e.getClientRects().length;})[0];if(!s||s.querySelector('.cb-results-close'))return;
+    var b=d.createElement('button');b.type='button';b.className='cb-results-close';b.textContent='✕ Close';
+    b.style.cssText='display:block;margin:18px auto 0;border:none;border-radius:9px;padding:12px 26px;background:#14213d;color:#fff;font:700 14px system-ui,sans-serif;cursor:pointer';s.appendChild(b);});}
   function countdown(){
     var done=resultsShown();
+    if(done)addClose();
     if(done&&!timer){
       left=AUTO_CLOSE;
       note=document.createElement('div');note.id='cbAutoClose';note.setAttribute('role','status');
@@ -787,6 +794,245 @@ tr:hover td{background:var(--bg-soft)}
   }
   function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);}catch(_){}};h();f.addEventListener('load',h);});}
   function init(){hook(document);frames();}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script><script id="cb-exam-rules">/* One rules popup for every assessment: whenever this page's own assessment start screen appears, it is
+   covered by the standard CareerBuddy popup (same text and layout on every module). Start ticks the page's own
+   agree box if it has one and presses its real start button inside the same click, so the page's fullscreen
+   and proctoring run as before; Cancel closes the assessment tab (or just hides the start screen). */
+(function(){
+  var BEGIN='#examBegin,#cbExamBegin,#beginExam,#startButton,#begin,#exStart,#beginAssessment,#exB,#startTestButton,button[onclick^="startAssessment("]';
+  var PASS=70, open=null, passed=null, docs=[];
+  var esc=function(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+  function css(){
+    if(document.getElementById('cbRulesCss'))return;
+    var s=document.createElement('style');s.id='cbRulesCss';
+    s.textContent='#cbRules{position:fixed;inset:0;z-index:2147483600;display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto;background:#000;font-family:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif}'
+     +'#cbRules .card{background:#fff;color:#161c27;border-radius:16px;max-width:580px;width:100%;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:left;margin:auto}'
+     +'#cbRules h2{font-size:24px;font-weight:800;line-height:1.25;margin:0 0 8px;color:#161c27}'
+     +'#cbRules p{color:#4a5568;font-size:14px;line-height:1.6;margin:0 0 12px}'
+     +'#cbRules ul{margin:0 0 18px 18px;padding:0;color:#4a5568;font-size:13.5px;line-height:1.85;list-style:disc}'
+     +'#cbRules li{margin:0}#cbRules b{color:#161c27}'
+     +'#cbRules .h{font-weight:700;color:#14213D;margin-bottom:6px}'
+     +'#cbRules label{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:#14213D;font-weight:600;margin:4px 0 16px;cursor:pointer;line-height:1.5}'
+     +'#cbRules label input{margin-top:3px;width:16px;height:16px;accent-color:#14213D;flex-shrink:0}'
+     +'#cbRules .row{display:flex;gap:10px}'
+     +'#cbRules button{border:none;border-radius:9px;padding:14px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}'
+     +'#cbRules .ghost{flex:1;background:#fff;border:1px solid #e2e8f0;color:#4a5568}'
+     +'#cbRules .primary{flex:2;background:#14213D;color:#fff}'
+     +'#cbRules .primary:disabled{opacity:.45;cursor:not-allowed}';
+    document.head.appendChild(s);
+  }
+  function shown(b){return !!(b&&b.isConnected&&b.getClientRects().length&&(b.ownerDocument.defaultView||window).getComputedStyle(b).visibility!=='hidden');}
+  function beginBtn(){for(var i=0;i<docs.length;i++){var b=docs[i].querySelector(BEGIN);if(shown(b))return b;}return null;}
+  // The page's own start screen: the nearest fixed-position box around the start button.
+  function screenOf(b){var W=b.ownerDocument.defaultView||window;for(var e=b;e&&e.nodeType===1;e=e.parentElement)if(W.getComputedStyle(e).position==='fixed')return e;return b.closest('.card,section,div')||b.parentElement;}
+  function facts(box){
+    var txt=(box.innerText||box.textContent||'').replace(/\s+/g,' ');
+    var q=txt.match(/(\d{1,3})\s*(?:multiple[- ]choice\s*)?questions/i), m=txt.match(/(\d{1,3})\s*[- ]?\s*min(?:ute)?s?\b(\s*(?:per|each|\/|a)\s*question|\s*each)?/i);
+    if(m&&m[2]&&q)m=[m[0],String(+m[1]*+q[1])]; // '1 minute per question' -> total minutes
+    var h=box.querySelector('h1,h2,h3'), name=h?h.textContent:'';
+    // keep the whole heading (e.g. 'Backend Developer — API Architecture'); drop only a leading emoji and a trailing '— Assessment'
+    name=name.replace(/^[^A-Za-z0-9(.]+/,'').replace(/\s*[—–|:-]?\s*(Final\s+)?(Assessment|Mock Test|Test|Exam)\s*$/i,'').trim();
+    if(!name)name=document.title.split(/\s+[—–|]\s+/)[0].trim();
+    return {name:name||'Assessment',q:q?q[1]:'50',min:m?m[1]:'60'};
+  }
+  function leave(box){
+    try{if(window.opener&&!window.opener.closed)window.opener.focus();}catch(_){}
+    window.close();
+    setTimeout(function(){if(window.closed)return; // a tab the browser will not let a script close: hide the start screen
+      var c=box.querySelector('#examCancel,#cbExamCancel,#exC,#cancelAssessmentButton,#cancelAssessment,.cb-exam-cancel');
+      if(c)c.click();else if(box!==document.body&&box.parentNode)box.style.display='none';},150);
+  }
+  function show(b){
+    css(); var box=screenOf(b), f=facts(box), prevVis=box.style.visibility;
+    box.style.visibility='hidden';
+    open=document.createElement('div');open.id='cbRules';open.setAttribute('role','dialog');open.setAttribute('aria-modal','true');open.setAttribute('aria-labelledby','cbRulesT');
+    open.innerHTML='<div class="card"><h2 id="cbRulesT">&#127919; '+esc(f.name)+' &mdash; Assessment</h2>'
+      +'<p>A timed, full-screen assessment covering the whole '+esc(f.name)+' program.</p>'
+      +'<ul><li><b>'+f.q+' questions</b></li><li><b>'+f.min+'-minute</b> timer</li><li>Pass mark <b>'+PASS+'%</b>; answers are locked after submission</li><li>Navigate freely and <b>mark questions for review</b></li></ul>'
+      +'<p class="h">Assessment rules</p>'
+      +'<ul style="margin-top:0"><li>Stay in <b>fullscreen</b>; do not switch tabs/windows, refresh or go back.</li><li><b>3 warnings</b> auto-submit the assessment.</li>'
+      +'<li>Copy, cut, paste, right-click and print/save/source shortcuts are blocked.</li><li>These controls discourage misuse but cannot make a browser test fully secure.</li></ul>'
+      +'<label><input type="checkbox" id="cbRulesAgree"> I have read the rules and will complete this assessment on my own.</label>'
+      +'<div class="row"><button type="button" class="ghost" id="cbRulesCancel">Cancel</button><button type="button" class="primary" id="cbRulesStart" disabled>Start Assessment &rarr;</button></div></div>';
+    document.body.appendChild(open);
+    var html=document.documentElement, prevOv=html.style.overflow; html.style.overflow='hidden'; // no page scrollbar beside the black backdrop
+    var agree=open.querySelector('#cbRulesAgree'), start=open.querySelector('#cbRulesStart');
+    agree.addEventListener('change',function(){start.disabled=!agree.checked;});
+    function close(){if(open){open.remove();open=null;}html.style.overflow=prevOv;box.style.visibility=prevVis;passed=b;}
+    open.querySelector('#cbRulesCancel').addEventListener('click',function(){close();leave(box);});
+    start.addEventListener('click',function(){
+      if(!agree.checked)return;
+      // Skill Development's exam sits in a frame, which cannot go fullscreen from this click: do it here.
+      if(b.ownerDocument!==document&&document.documentElement.requestFullscreen&&!document.fullscreenElement){try{document.documentElement.requestFullscreen().catch(function(){});}catch(_){}}
+      [].forEach.call(box.querySelectorAll('input[type=checkbox]'),function(c){if(!c.checked){c.checked=true;c.dispatchEvent(new Event('input',{bubbles:true}));c.dispatchEvent(new Event('change',{bubbles:true}));}});
+      close(); b.disabled=false; b.click();
+      document.dispatchEvent(new CustomEvent('cb-exam-start',{detail:{q:+f.q}})); // exam protection + score history start here
+    });
+    setTimeout(function(){agree.focus();},0);
+  }
+  function check(){
+    var b=beginBtn();
+    if(!b){passed=null;return;}           // start screen gone: the next one (e.g. another attempt) gets the popup again
+    if(open||b===passed)return;
+    show(b);
+  }
+  function hook(doc){
+    if(!doc||!doc.documentElement||doc.__cbRules)return; doc.__cbRules=1; docs.push(doc);
+    new MutationObserver(check).observe(doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});
+  }
+  function frames(){[].forEach.call(document.querySelectorAll('iframe'),function(f){var h=function(){try{hook(f.contentDocument);check();}catch(_){}};h();f.addEventListener('load',h);});}
+  function init(){hook(document);frames();check();setInterval(check,800);}
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();
+</script><script id="cb-exam-proctor">/* Same exam protection and score history on every assessment:
+   - while a test runs (from Start on the rules popup to its results): no copy/cut/paste/right-click/selection/shortcuts;
+     a tab switch, leaving the window or leaving fullscreen is a warning; the 3rd warning submits the test. If the
+     page's own engine already shows a warning, it is left to do so (no double dialogs).
+   - the screenshot cover and watermark stay visible when a test puts one element into fullscreen.
+   - every result is saved in this browser, and the Assessment tab shows the last 3 scores. */
+(function(){
+  var KEY='cb-scores:'+location.pathname.toLowerCase();
+  var RESULT_CLOSE='#examClose,#cbClose,#resultClose,#closeResults,#exX,#cbClose2,#exDone,#close,.cb-results-close';
+  var RESULT_SCREEN='#resultScreen,#assessmentResult';
+  var START='#assessStartBtn,#startAssessmentButton,#cbAssessStart,#startAssessment,#launchFinalAssessment,#startTopicAssessment,.assess-start-btn:not([data-goto]),.assessment-page-start,button[onclick^="beginAssessmentFromPage"]';
+  var OURS=['cbShotCover','cbShotMark','cbProctorWarn','cbAutoClose','cbRules'];
+  var MAX=3, docs=[document], examOn=false, warns=0, lastWarn=0, wasFS=false, away=false, recorded=false, expectQ=0;
+  var esc=function(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+
+  /* ---------- score history (all pages) ---------- */
+  function load(){try{return JSON.parse(localStorage.getItem(KEY)||'[]');}catch(_){return [];}}
+  function save(a){try{localStorage.setItem(KEY,JSON.stringify(a.slice(0,10)));}catch(_){}}
+  function fmtDate(ts){var d=new Date(ts);return d.toLocaleDateString(undefined,{day:'numeric',month:'short'})+', '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});}
+  function css(){
+    if(document.getElementById('cbProctorCss'))return;
+    var s=document.createElement('style');s.id='cbProctorCss';
+    s.textContent='#scoreBoard,#cbHistory{display:none!important}'
+     +'.cb-last3{margin:18px 0 0;padding:16px 18px;border:1px solid #e2e8f0;border-radius:12px;background:#fff;font-family:"Noto Sans",system-ui,sans-serif;max-width:560px;text-align:left}'
+     +'.cb-last3 h4{margin:0 0 10px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b}'
+     +'.cb-last3 .r{display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid #f1f5f9;font-size:14px;color:#334155}'
+     +'.cb-last3 .r:first-of-type{border-top:0}'
+     +'.cb-last3 .n{width:24px;height:24px;border-radius:7px;background:#eef1f6;color:#14213d;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}'
+     +'.cb-last3 .s{font-weight:800;color:#14213d}.cb-last3 .p{font-weight:700;color:#14213d;background:#eef1f6;border-radius:999px;padding:1px 9px;font-size:12.5px}'
+     +'.cb-last3 .d{margin-left:auto;color:#94a3b8;font-size:12.5px}.cb-last3 .e{font-size:13.5px;color:#64748b;margin:0}'
+     +'#cbProctorWarn{position:fixed;inset:0;z-index:2147483645;background:#000;display:flex;align-items:center;justify-content:center;padding:24px;font-family:"Noto Sans",system-ui,sans-serif;text-align:center;color:#fff}'
+     +'#cbProctorWarn .b{max-width:560px;display:flex;flex-direction:column;align-items:center;gap:14px}'
+     +'#cbProctorWarn h3{margin:0;font-size:28px;font-weight:800;color:#fff}#cbProctorWarn p{margin:0;font-size:16px;line-height:1.5;color:#e2e8f0}'
+     +'#cbProctorWarn .w{font-weight:700;color:#FCA311}'
+     +'#cbProctorWarn button{margin-top:6px;border:none;border-radius:10px;padding:14px 26px;background:#fff;color:#14213d;font:700 15px system-ui,sans-serif;cursor:pointer}';
+    (document.head||document.documentElement).appendChild(s);
+  }
+  function render(){
+    var b=document.querySelector(START); if(!b)return;
+    var box=document.getElementById('cbLast3');
+    if(!box){
+      box=document.createElement('div');box.id='cbLast3';box.className='cb-last3';box.setAttribute('aria-live','polite');
+      var p=b.parentElement, flex=/flex|grid/.test(getComputedStyle(p).display);
+      (flex?p:b).insertAdjacentElement('afterend',box);
+    }
+    var a=load().slice(0,3);
+    box.innerHTML='<h4>Your last 3 scores</h4>'+(a.length?a.map(function(x,i){
+      return '<div class="r"><span class="n">'+(i+1)+'</span><span class="s">'+x.s+' / '+x.t+'</span><span class="p">'+x.p+'%</span><span class="d">'+esc(fmtDate(x.ts))+'</span></div>';}).join('')
+      :'<p class="e">No attempts yet. Your last 3 scores will appear here.</p>');
+  }
+  function shown(e){return !!(e&&e.isConnected&&e.getClientRects().length&&(e.ownerDocument.defaultView||window).getComputedStyle(e).visibility!=='hidden');}
+  function resultsBox(){
+    for(var i=0;i<docs.length;i++){var d=docs[i];
+      var s=[].filter.call(d.querySelectorAll(RESULT_SCREEN),shown)[0]; if(s)return s;
+      var c=[].filter.call(d.querySelectorAll(RESULT_CLOSE),shown)[0];
+      if(c){var W=d.defaultView||window;for(var e=c;e&&e.nodeType===1;e=e.parentElement)if(W.getComputedStyle(e).position==='fixed')return e;return c.parentElement;}}
+    return null;
+  }
+  function pairs(txt){var re=/(\d{1,3})\s*(?:\/|out of)\s*(\d{1,3})/gi,m,out=[];while((m=re.exec(txt))){var s=+m[1],t=+m[2];if(t>=5&&s<=t)out.push([s,t]);}return out;}
+  function record(box){
+    var scoreEls=[].filter.call(box.querySelectorAll('[id*=core],[class*=core]'),function(e){return pairs(e.textContent).length;});
+    var cand=scoreEls.length?pairs(scoreEls[0].textContent):pairs((box.textContent||'').replace(/\s+/g,' '));
+    var hit=cand.filter(function(x){return expectQ&&x[1]===expectQ;})[0]||cand[0]; if(!hit)return;
+    var a=load();a.unshift({s:hit[0],t:hit[1],p:Math.round(hit[0]/hit[1]*100),ts:Date.now()});save(a);render();
+  }
+
+  /* ---------- exam protection (assessment runs) ---------- */
+  function block(e){if(examOn){e.preventDefault();e.stopPropagation();return false;}}
+  function keys(e){
+    if(!examOn)return;
+    var k=(e.key||'').toLowerCase(), mod=e.ctrlKey||e.metaKey;
+    if((mod&&['c','x','v','a','p','s','u'].indexOf(k)>=0)||k==='f12'||(mod&&e.shiftKey&&['i','j','c'].indexOf(k)>=0)){e.preventDefault();e.stopPropagation();}
+  }
+  function hookDoc(d){
+    if(!d||d.__cbProctor)return; d.__cbProctor=1; if(docs.indexOf(d)<0)docs.push(d);
+    ['copy','cut','paste','contextmenu','selectstart','dragstart'].forEach(function(t){d.addEventListener(t,block,true);});
+    d.addEventListener('keydown',keys,true);
+  }
+  function nativeWarningShown(){
+    for(var i=0;i<docs.length;i++){var all=docs[i].querySelectorAll('body *');
+      for(var j=0;j<all.length;j++){var e=all[j]; if(OURS.indexOf(e.id)>=0||e.closest('#cbProctorWarn,#cbShotCover'))continue;
+        if(e.children.length>3||!shown(e))continue;
+        var t=e.textContent; if(t.length<200&&/warning\s*\d|tab switch|switch(ed|ing) tabs|fullscreen (required|exited)|exited fullscreen|violation|test paused|left the (test|assessment)|leaving the/i.test(t))return true;}}
+    return false;
+  }
+  function submitNow(){
+    if(!examOn)return;
+    var oc=window.confirm; window.confirm=function(){return true;};
+    var z=function(e){var m=0;for(;e&&e.nodeType===1;e=e.parentElement){var v=parseInt((e.ownerDocument.defaultView||window).getComputedStyle(e).zIndex);if(v>m)m=v;}return m;};
+    var btns=function(re){var out=[];docs.forEach(function(d){[].forEach.call(d.querySelectorAll('button'),function(b){if(shown(b)&&!b.disabled&&re.test(b.textContent.trim()))out.push(b);});});return out.sort(function(a,b){return z(b)-z(a);});};
+    var s=btns(/submit/i)[0]; if(s)s.click();
+    setTimeout(function(){var c=docs.map(function(d){return d.getElementById('exConfY');}).filter(shown)[0]||btns(/^(submit|yes|confirm|ok)/i).filter(function(b){return b!==s;})[0];if(c)c.click();window.confirm=oc;},500);
+  }
+  function warnDialog(msg){
+    var w=document.getElementById('cbProctorWarn'); if(w)w.remove();
+    w=document.createElement('div');w.id='cbProctorWarn';w.setAttribute('role','alertdialog');
+    w.innerHTML='<div class="b"><h3>&#9888;&#65039; '+esc(msg)+'</h3><p>Switching tabs or windows, copying and leaving fullscreen are not allowed during the assessment.</p>'
+      +'<div class="w">Warning '+warns+' of '+MAX+(warns>=MAX?' &mdash; the assessment is being submitted':'')+'</div>'
+      +(warns>=MAX?'':'<button type="button" id="cbProctorBack">Return to assessment</button>')+'</div>';
+    (document.fullscreenElement&&document.fullscreenElement!==document.documentElement?document.fullscreenElement:document.body).appendChild(w);
+    var b=w.querySelector('#cbProctorBack');
+    if(b)b.addEventListener('click',function(){w.remove();if(wasFS&&!document.fullscreenElement&&document.documentElement.requestFullscreen){try{document.documentElement.requestFullscreen().catch(function(){});}catch(_){}}});
+  }
+  function violation(msg){
+    if(!examOn)return; var now=Date.now(); if(now-lastWarn<1500)return; lastWarn=now; warns++;
+    setTimeout(function(){
+      if(!examOn)return;
+      if(warns>=MAX){warnDialog(msg);setTimeout(function(){submitNow();var w=document.getElementById('cbProctorWarn');setTimeout(function(){if(w)w.remove();},1500);},800);return;}
+      if(!nativeWarningShown())warnDialog(msg);
+    },450);
+  }
+  // /static/js/exam_guard.js groups the blur / tab-switch / fullscreen-exit events of ONE act (e.g. one screenshot)
+  // into one incident, and lets the page's own engine see it once. When that engine shows its own warnings, it is
+  // the only counter; this script counts (and shows its dialog) only on pages whose engine has none.
+  var G=window.CBExamGuard, own=function(f){return G?G.own(f):f;};
+  if(G){
+    G.onIncident(function(e){
+      if(!examOn||G.engineWarns())return;
+      if(e.type==='fullscreenchange'&&!wasFS)return;
+      violation(e.type==='fullscreenchange'?'Fullscreen exited':e.type==='visibilitychange'?'Tab switch detected':'You left the assessment window');
+    });
+  }else{
+    document.addEventListener('visibilitychange',function(){if(!examOn)return;if(document.hidden)away=true;else if(away){away=false;violation('Tab switch detected');}});
+    window.addEventListener('blur',function(){if(!examOn)return;setTimeout(function(){var a=document.activeElement;if(a&&a.tagName==='IFRAME'&&document.hasFocus())return;if(!document.hidden)away=true;},0);});
+    window.addEventListener('focus',function(){if(examOn&&away&&!document.hidden){away=false;violation('You left the assessment window');}});
+  }
+  document.addEventListener('fullscreenchange',own(function(){
+    var fe=document.fullscreenElement;
+    // keep the screenshot cover, watermark and warnings inside whatever element is fullscreen, or they would not show
+    var host=(fe&&fe!==document.documentElement&&fe!==document.body)?fe:document.body;
+    OURS.forEach(function(id){var e=document.getElementById(id);if(e&&e.parentNode!==host)host.appendChild(e);});
+    if(fe)wasFS=true; else if(!G&&examOn&&wasFS)violation('Fullscreen exited');
+  }));
+
+  /* ---------- exam state ---------- */
+  document.addEventListener('cb-exam-start',function(e){
+    expectQ=(e.detail&&e.detail.q)||0; examOn=true; warns=0; recorded=false; wasFS=!!document.fullscreenElement;
+    // engines that never ask for fullscreen: ask here (still inside the Start click)
+    if(!document.fullscreenElement&&document.documentElement.requestFullscreen){try{document.documentElement.requestFullscreen().then(function(){wasFS=true;}).catch(function(){});}catch(_){}}
+  });
+  function tick(){
+    [].forEach.call(document.querySelectorAll('iframe'),function(f){try{if(f.contentDocument&&f.contentDocument.body)hookDoc(f.contentDocument);}catch(_){}});
+    if(examOn){var r=resultsBox();if(r){examOn=false;if(!recorded){recorded=true;record(r);}var w=document.getElementById('cbProctorWarn');if(w)w.remove();}}
+    var fe=document.fullscreenElement;if(fe&&fe!==document.documentElement&&fe!==document.body)OURS.forEach(function(id){var e=document.getElementById(id);if(e&&e.parentNode!==fe)fe.appendChild(e);});
+  }
+  function init(){css();hookDoc(document);render();setInterval(tick,500);}
+  window.addEventListener('storage',function(e){if(e.key===KEY)render();});
   document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
 })();
 </script></body></html>

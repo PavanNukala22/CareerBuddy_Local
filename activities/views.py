@@ -256,11 +256,11 @@ def dashboard(request):
     total_score = round(exercise_total + score_record_total)
 
     # Job recommendations, surfaced in the student portal once the candidate has
-    # scored above 70 in the AI mock interview. How many they see depends on the
+    # scored 90 or above in the AI mock interview. How many they see depends on the
     # plan: Normal (₹499) gets 5, Pro (₹999) unlimited. Imported locally to keep
     # the activities app free of a hard dependency on career_app.
     from career_app.views import (_get_matched_jobs, _job_recommendation_limit,
-                                  _can_access_interview)
+                                  _can_access_interview, PASSING_SCORE)
     from career_app.models import ResumeInterviewSession
     from career_app.resume_utils import extract_experience_years
 
@@ -270,7 +270,9 @@ def dashboard(request):
         # recommendations their old interview unlocked.
         passed_session = (
             ResumeInterviewSession.objects
-            .filter(resume__user=request.user, is_passed=True)
+            # By score, not is_passed: sessions passed under the old 70 mark
+            # must not keep unlocking recommendations.
+            .filter(resume__user=request.user, total_score__gte=PASSING_SCORE)
             .select_related('resume')
             .order_by('-start_time')
             .first()
@@ -1811,6 +1813,9 @@ def _load_bank(name):
 def quiz_questions(request, subject):
     if subject not in _QUIZ_SUBJECTS:
         return JsonResponse({"error": "unknown subject"}, status=404)
+    from core.skillup_access import FREE_QUIZ_SUBJECTS, has_full_skillup
+    if subject not in FREE_QUIZ_SUBJECTS and not has_full_skillup(request.user):
+        return JsonResponse({"error": "locked", "message": "Upgrade your plan to take this test."}, status=403)
     pool = _usable_questions(_load_bank(subject))
     pick = _random.sample(pool, min(50, len(pool)))
     salt = _quiz_salt(request, create=True)
@@ -1827,6 +1832,9 @@ def quiz_questions(request, subject):
 def quiz_submit(request, subject):
     if subject not in _QUIZ_SUBJECTS:
         return JsonResponse({"error": "unknown subject"}, status=404)
+    from core.skillup_access import FREE_QUIZ_SUBJECTS, has_full_skillup
+    if subject not in FREE_QUIZ_SUBJECTS and not has_full_skillup(request.user):
+        return JsonResponse({"error": "locked", "message": "Upgrade your plan to take this test."}, status=403)
     try:
         data = json.loads(request.body or b'{}')
     except (ValueError, TypeError):

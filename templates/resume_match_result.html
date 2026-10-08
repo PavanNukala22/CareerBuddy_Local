@@ -212,9 +212,23 @@
                         Detected Experience:
                         {% if years_exp >= 1 %}{{ years_exp|floatformat:"-1" }} year{{ years_exp|pluralize }}{% else %}Fresher{% endif %}
                     </span>
+                    {% if target_role and role_fit and role_fit.known %}
+                    <span class="badge border d-inline-flex align-items-center gap-2 {% if role_fit.ok %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %}" style="font-size:0.82rem;font-weight:600;padding:.5rem .85rem;">
+                        <i class="fas {% if role_fit.ok %}fa-circle-check{% else %}fa-circle-xmark{% endif %}"></i>
+                        {% if role_fit.ok %}Matches{% else %}Doesn&rsquo;t match{% endif %} {{ target_role.role }} &middot; {{ role_fit.coverage }}% of role skills
+                    </span>
+                    {% endif %}
                 </div>
                 <div class="d-flex flex-wrap gap-2">
-                    {% if can_interview %}
+                    {% if can_interview and not ats_ok %}
+                    <span class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 rounded-3 disabled" aria-disabled="true">
+                        <i class="fas fa-lock"></i> Interview unlocks at {{ ats_threshold }}% ATS score
+                    </span>
+                    {% elif can_interview and role_fit and not role_fit.ok %}
+                    <span class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 rounded-3 disabled" aria-disabled="true">
+                        <i class="fas fa-lock"></i> Resume doesn&rsquo;t match {{ target_role.role }}
+                    </span>
+                    {% elif can_interview %}
                     <a href="{% url 'resume_start_interview' %}" class="btn btn-success d-inline-flex align-items-center gap-2 rounded-3 shadow-sm {% if not resume_valid %}disabled{% endif %}" {% if not resume_valid %}aria-disabled="true" tabindex="-1"{% endif %}>
                         <i class="fas fa-play-circle"></i> Try Interview
                     </a>
@@ -244,14 +258,22 @@
                     <span style="width:32px;height:32px;background:#dbeafe;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#1d4ed8;font-size:0.9rem;">
                         <i class="fas fa-check"></i>
                     </span>
-                    Matching Skills
+                    {% if role_fit.known %}Skills You Have for {{ target_role.role }}{% else %}Matching Skills{% endif %}
                 </div>
                 <div>
+                    {% if role_fit.known %}
+                    {% for skill in role_fit.matching_skills %}
+                    <span class="skill-chip chip-found">{{ skill }}</span>
+                    {% empty %}
+                    <span class="text-muted fst-italic small">Your resume doesn&rsquo;t show any of the skills this role needs yet.</span>
+                    {% endfor %}
+                    {% else %}
                     {% for skill in analysis.matching_skills %}
                     <span class="skill-chip chip-found">{{ skill }}</span>
                     {% empty %}
                     <span class="text-muted fst-italic small">No exact matches found.</span>
                     {% endfor %}
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -262,21 +284,59 @@
                     <span style="width:32px;height:32px;background:#fee2e2;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#dc2626;font-size:0.9rem;">
                         <i class="fas fa-times"></i>
                     </span>
-                    Missing Skills
+                    {% if role_fit.known %}Skills Missing for {{ target_role.role }}{% else %}Missing Skills{% endif %}
                 </div>
                 <div>
+                    {% if role_fit.known %}
+                    {% for skill in role_fit.missing_skills %}
+                    <span class="skill-chip chip-gap">{{ skill }}</span>
+                    {% empty %}
+                    <span class="text-muted fst-italic small">Your resume covers every skill this role lists.</span>
+                    {% endfor %}
+                    {% else %}
                     {% for skill in analysis.missing_skills %}
                     <span class="skill-chip chip-gap">{{ skill }}</span>
                     {% empty %}
                     <span class="text-muted fst-italic small">No significant gaps found!</span>
                     {% endfor %}
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Complete Interview to Unlock Jobs Banner -->
-    {% if can_interview %}
+    {% if can_interview and not ats_ok %}
+    <div class="result-card mb-4" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1.5px solid #fcd34d;">
+        <div class="d-flex align-items-center gap-3">
+            <div style="width:48px;height:48px;background:#f59e0b;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-lock text-white fa-lg"></i>
+            </div>
+            <div>
+                <h6 class="fw-bold mb-1" style="color:#b45309;font-family:'Outfit',sans-serif;">🔒 Reach {{ ats_threshold }}% ATS Score to Unlock the AI Interview</h6>
+                <p class="text-muted mb-0 small">Your resume scored <strong>{{ analysis.match_percentage|default:0 }}%</strong>. Add the missing skills and follow the advice below, then analyse your resume again.</p>
+            </div>
+            <a href="{% url 'resume_builder' %}" class="btn btn-warning rounded-3 fw-bold ms-auto" style="white-space:nowrap;">
+                <i class="fas fa-redo me-1"></i> Analyse Again
+            </a>
+        </div>
+    </div>
+    {% elif can_interview and role_fit and not role_fit.ok %}
+    <div class="result-card mb-4" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border:1.5px solid #fca5a5;">
+        <div class="d-flex align-items-center gap-3">
+            <div style="width:48px;height:48px;background:#dc2626;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-user-slash text-white fa-lg"></i>
+            </div>
+            <div>
+                <h6 class="fw-bold mb-1" style="color:#b91c1c;font-family:'Outfit',sans-serif;">This resume doesn&rsquo;t match the {{ target_role.role }} role</h6>
+                <p class="text-muted mb-0 small">It covers only <strong>{{ role_fit.coverage }}%</strong> of the skills {{ target_role.role }} ({{ target_role.dept }}) needs, so the AI Interview for this role is locked &mdash; its questions would be about skills your resume doesn&rsquo;t show. Upload a resume written for this role, or pick the role that fits your resume.</p>
+            </div>
+            <a href="{% url 'resume_builder' %}" class="btn btn-danger rounded-3 fw-bold ms-auto" style="white-space:nowrap;">
+                <i class="fas fa-upload me-1"></i> Upload Another
+            </a>
+        </div>
+    </div>
+    {% elif can_interview %}
     <div class="result-card mb-4" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;">
         <div class="d-flex align-items-center gap-3">
             <div style="width:48px;height:48px;background:#22c55e;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -284,7 +344,7 @@
             </div>
             <div>
                 <h6 class="fw-bold mb-1" style="color:#15803d;font-family:'Outfit',sans-serif;">🎯 Complete the Interview to Unlock Job Recommendations</h6>
-                <p class="text-muted mb-0 small">Score <strong>70 or above out of 100</strong> in the AI-powered mock interview to get personalised, experience-matched job opportunities.</p>
+                <p class="text-muted mb-0 small">Score <strong>90 or above out of 100</strong> in the AI-powered mock interview to get personalised, experience-matched job opportunities.</p>
             </div>
             <a href="{% url 'resume_start_interview' %}" class="btn btn-success rounded-3 fw-bold ms-auto" style="white-space:nowrap;">
                 <i class="fas fa-play me-1"></i> Take Interview
@@ -299,7 +359,7 @@
             </div>
             <div>
                 <h6 class="fw-bold mb-1" style="color:#b45309;font-family:'Outfit',sans-serif;">🚀 Upgrade to Unlock the AI Interview &amp; Job Recommendations</h6>
-                <p class="text-muted mb-0 small">Your Free plan includes Resume Parsing &amp; ATS analysis. Upgrade to <strong>Normal (₹499/yr)</strong> for the 20-question AI mock interview — score 70 or above to unlock 5 experience-matched job opportunities.</p>
+                <p class="text-muted mb-0 small">Your Free plan includes Resume Parsing &amp; ATS analysis. Upgrade to <strong>Normal (₹499/yr)</strong> for the 20-question AI mock interview — score 90 or above to unlock experience-matched job opportunities.</p>
             </div>
             <a href="{% url 'pro_page' %}" class="btn btn-warning rounded-3 fw-bold ms-auto" style="white-space:nowrap;">
                 <i class="fas fa-crown me-1"></i> View Plans
@@ -462,7 +522,16 @@
             </span>
             AI Suggestions
         </div>
-        {% if analysis.missing_skills %}
+        {% if role_fit.known and role_fit.missing_skills %}
+        <div class="mb-3 pb-3" style="border-bottom:1px solid #f1f5f9;">
+            <p class="text-muted small fw-semibold mb-2">Skills {{ target_role.role }} needs that your resume doesn&rsquo;t show:</p>
+            <div>
+                {% for skill in role_fit.missing_skills %}
+                <span class="skill-chip chip-gap">{{ skill }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% elif not role_fit.known and analysis.missing_skills %}
         <div class="mb-3 pb-3" style="border-bottom:1px solid #f1f5f9;">
             <p class="text-muted small fw-semibold mb-2">Skills missing or not matched with your resume:</p>
             <div>

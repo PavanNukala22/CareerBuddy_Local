@@ -1783,7 +1783,51 @@ def _sample_hr_block(rows, resume_text, skills, years, seen, stale, count=5,
     return [(row, tier_of.get(row.difficulty, 'Easy')) for row in picked[:count]]
 
 
-def generate_interview_questions(resume_text, job_description, skills=None, user=None, domain_count=10):
+def _role_focus(focus):
+    """The target role, if the question bank covers it (has topics for it)."""
+    return focus if (focus and focus.get('text') and focus.get('topics')) else None
+
+
+def _domain_inputs(resume_text, skills, focus=None):
+    """(text, skills, industries) the domain questions (Q11-20) are chosen from.
+
+    With a target role the bank covers (`focus`, see
+    career_app.role_fit.assess_role_fit) the domain questions come from the
+    ROLE's skills and industries, so a candidate is only asked about the role
+    they chose. Otherwise the resume's own skills and industries decide.
+    """
+    focus = _role_focus(focus)
+    if focus:
+        return focus['text'], [], list(focus.get('industries') or []) or detect_resume_industries(focus['text'])
+    return resume_text, skills, detect_resume_industries(resume_text, skills)
+
+
+def _focus_skill_ids(skill_ids, focus=None):
+    """With a target role, keep only skill questions inside the role's topics,
+    or whose topic IS the skill ("python" for an SRE whose role lists Python).
+    A skill word otherwise pulls sibling programmes in ("payroll" ->
+    "Payroll & Workforce Administration Support" for a Vendor Manager)."""
+    focus = _role_focus(focus)
+    if not focus or not skill_ids:
+        return skill_ids
+    from career_app.models import FAQQuestion
+    allowed = set(focus['topics'])
+    topic_of = dict(FAQQuestion.objects.filter(id__in=sum(skill_ids.values(), [])).values_list('id', 'topic'))
+    kept = {}
+    for skill, ids in skill_ids.items():
+        ok = [i for i in ids if topic_of.get(i) in allowed or (topic_of.get(i) or '').lower() == skill]
+        if ok:
+            kept[skill] = ok
+    return kept
+
+
+def _domain_topics(text, skills, focus=None):
+    """Bank topics for the domain questions: the role's own, else the text's."""
+    focus = _role_focus(focus)
+    return list(focus['topics']) if focus else _matching_bank_topics(text, skills)
+
+
+def generate_interview_questions(resume_text, job_description, skills=None, user=None, domain_count=10, focus=None):
     """Build a mock interview from the FAQQuestion bank in the database.
 
     No LLM/API call is made here — that was costing tokens on every interview.
@@ -1824,7 +1868,8 @@ def generate_interview_questions(resume_text, job_description, skills=None, user
     logger = logging.getLogger(__name__)
 
     skills = skills or []
-    is_it = _is_it_profile(resume_text, skills)
+    domain_text, domain_skills, relevant_industries = _domain_inputs(resume_text, skills, focus)
+    is_it = _is_it_profile(domain_text, domain_skills)
 
     # Difficulty mix for the domain questions, calibrated to experience.
     years = extract_experience_years(resume_text)
@@ -1921,14 +1966,14 @@ def generate_interview_questions(resume_text, job_description, skills=None, user
                           fresher=True)
 
     # ── Q11-20: Domain questions from the candidate's own topics ──────────────
-    matched_topics = _matching_bank_topics(resume_text, skills)
+    matched_topics = _domain_topics(domain_text, domain_skills, focus)
     # Gate the domain pool to the candidate's actual industries FIRST. Without
     # this, a Civil-Engineering resume matched IT subtopics like "storage &
     # backup", "monitoring & logging" or "lists" (Python) purely on a shared
     # generic word, and got served Python/IT questions. Restricting the pool to
     # the resume's industries makes even the widen-to-"general" fallback stay
     # on-domain instead of pulling a random unrelated topic to reach 20.
-    relevant_industries = detect_resume_industries(resume_text, skills)
+    # (relevant_industries comes from _domain_inputs above.)
     logger.info(
         "Interview bank: matched %d topic(s) (IT=%s) in industries %s: %s",
         len(matched_topics), is_it, relevant_industries or 'ALL',
@@ -1959,6 +2004,13 @@ def generate_interview_questions(resume_text, job_description, skills=None, user
         list(own_qs.values_list('topic', flat=True).distinct()) if matched_topics else []
     )
     per_topic_cap = max(2, math.ceil(domain_count / max(3, len(distinct_topics))))
+    if _role_focus(focus) and distinct_topics:
+        # A chosen role stays inside its own topics: one bank industry can hold
+        # sibling programmes as separate topics (Workforce Outsourcing also holds
+        # RPO, Shutdown & Turnaround, PMC ...), and spreading across them drifted
+        # the paper off the role. No per-topic cap, no widening to the siblings.
+        general_qs = own_qs
+        per_topic_cap = domain_count
     domain_counts = Counter()
 
     def _add_domain(row, diff_label, respect_cap=True):
@@ -1972,7 +2024,8 @@ def generate_interview_questions(resume_text, job_description, skills=None, user
 
     # Resume skills first: each slot goes to the skill asked about least so far,
     # so the questions spread across everything the candidate listed.
-    skill_ids = _skill_question_ids(resume_text, skills, relevant_industries, is_it=is_it)
+    skill_ids = _focus_skill_ids(
+        _skill_question_ids(domain_text, domain_skills, relevant_industries, is_it=is_it), focus)
     skill_cap = max(2, math.ceil(domain_count / max(1, len(skill_ids)))) if skill_ids else 0
     skill_counts = Counter()
 
@@ -2138,19 +2191,22 @@ def select_next_domain_question(session, difficulty):
 
     resume_text = session.resume.extracted_text or ''
     skills = session.matching_skills or []
-    is_it = _is_it_profile(resume_text, skills)
+    domain_text, domain_skills, relevant_industries = _domain_inputs(
+        resume_text, skills, getattr(session, 'target_role', None))
+    is_it = _is_it_profile(domain_text, domain_skills)
     years = extract_experience_years(resume_text)
     candidate_type = classify_candidate_type(resume_text, skills, years=years)
 
     seen = set(session.questions.values_list('question_text', flat=True))
     stale = _previously_asked_texts(getattr(session.resume, 'user', None))
 
-    matched_topics = _matching_bank_topics(resume_text, skills)
-    relevant_industries = detect_resume_industries(resume_text, skills)
+    matched_topics = _domain_topics(domain_text, domain_skills, getattr(session, 'target_role', None))
     domain_qs = _domain_question_pool(is_it, relevant_industries)
     own_qs = domain_qs.filter(topic__in=matched_topics) if matched_topics else domain_qs.none()
     # Industry-scoped pool: the widen fallback stays on the candidate's domain.
     general_qs = domain_qs
+    if _role_focus(getattr(session, 'target_role', None)) and matched_topics and own_qs.exists():
+        general_qs = own_qs   # chosen role: never widen to sibling topics
 
     unlabelled = Q(difficulty__isnull=True) | Q(difficulty='')
     keys = DIFFICULTY_DB_KEYS.get(difficulty, DIFFICULTY_DB_KEYS['Easy'])
@@ -2159,7 +2215,9 @@ def select_next_domain_question(session, difficulty):
     # the same fallback order generate_interview_questions() uses: the resume's
     # skills (least-asked skill first), then topics the resume mentions, then
     # its industries.
-    skill_ids = _skill_question_ids(resume_text, skills, relevant_industries, is_it=is_it)
+    skill_ids = _focus_skill_ids(
+        _skill_question_ids(domain_text, domain_skills, relevant_industries, is_it=is_it),
+        getattr(session, 'target_role', None))
     asked = {}
     for s, ids in skill_ids.items():
         asked[s] = FAQQuestion.objects.filter(id__in=ids, question_text__in=seen).count()
