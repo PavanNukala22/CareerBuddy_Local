@@ -23,7 +23,35 @@ MAX_SKILLS = 40
 
 PLACEHOLDER_RE = re.compile(r'\[[^\[\]\n]{1,80}\]')
 PHONE_DIGITS_RE = re.compile(r'\d')
-PHONE_ALLOWED_RE = re.compile(r'^[0-9+()\-\s./]+$')
+PHONE_ALLOWED_RE = re.compile(r'^\+?[0-9\s\-()]+$')
+PHONE_MIN_DIGITS, PHONE_MAX_DIGITS = 10, 15
+EMAIL_MAX = 254
+EMAIL_RE = re.compile(r'^[^@\s]+@([a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,63}$', re.I)
+NAME_RE = re.compile(r"^[^\W\d_]+(?:[ .'\-]+[^\W\d_]+)*\.?$")
+# Optional profile links: http(s):// or a bare domain; never another scheme, spaces or markup.
+LINK_RE = re.compile(r'^(https?://)?([a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,63}(:\d{1,5})?([/?#][^\s<>"\'`]*)?$', re.I)
+SKILL_MIN, SKILL_MAX = 2, 50
+
+# Per-field length rules: field -> (min length if entered, max length, label).
+# Required-ness is checked separately; an empty optional field is never an error.
+PERSONAL_RULES = {'name': (2, 80, 'Full name'), 'location': (2, 100, 'Location')}
+TOP_RULES = {
+    'target_title': (2, 100, 'Target job title'), 'domain': (2, 100, 'Industry / domain'),
+    'summary': (50, 1200, 'Professional summary'), 'achievements': (20, 800, 'Achievements'),
+    'languages': (2, 200, 'Languages'), 'additional': (2, 800, 'Additional information'), 'place': (2, 60, 'Place'),
+}
+ENTRY_RULES = {
+    'employment': {'title': (2, 100, 'Job title'), 'company': (2, 120, 'Company'), 'location': (2, 100, 'Location'),
+                   'bullets': (20, 1500, 'Responsibilities')},
+    'internships': {'title': (2, 100, 'Role / position'), 'company': (2, 150, 'Organisation'),
+                    'location': (2, 100, 'Location'), 'bullets': (20, 1500, 'Responsibilities')},
+    'projects': {'name': (2, 120, 'Project name'), 'context': (2, 150, 'Type / context'),
+                 'tools': (2, 500, 'Tools / technologies'), 'bullets': (30, 1200, 'Project description')},
+    'education': {'degree': (2, 100, 'Degree / qualification'), 'institution': (2, 150, 'Institution'),
+                  'location': (2, 100, 'Location'), 'year': (2, 30, 'Year / duration'), 'score': (1, 50, 'Grade / CGPA')},
+    'certifications': {'name': (2, 150, 'Certification'), 'issuer': (2, 150, 'Issued by'), 'year': (4, 20, 'Year')},
+    'training': {'name': (2, 150, 'Training / course'), 'provider': (2, 150, 'Provider'), 'year': (4, 20, 'Year')},
+}
 MONTH_RE = re.compile(r'^(\d{4})-(\d{2})$')
 MONTHS = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
 
@@ -120,11 +148,11 @@ def normalize_state(raw):
         'level': level,
         'personal': {
             'name': _clean(personal.get('name'), 100),
-            'email': _clean(personal.get('email'), 120),
+            'email': _clean(personal.get('email'), 300),
             'phone': _clean(personal.get('phone'), 40),
             'location': _clean(personal.get('location'), 100),
-            'linkedin': _clean(personal.get('linkedin'), 200),
-            'website': _clean(personal.get('website'), 200),
+            'linkedin': _clean(personal.get('linkedin'), 2000),
+            'website': _clean(personal.get('website'), 2000),
             'dob': _clean(personal.get('dob'), 20),
             'passport': _clean(personal.get('passport'), 20).upper(),
         },
@@ -207,6 +235,10 @@ def relevant_skill_count(state, role):
 
 
 def is_valid_email(value):
+    """Proper format only (no spaces, a real domain, max 254) — never treated as 'verified'."""
+    value = value or ''
+    if len(value) > EMAIL_MAX or not EMAIL_RE.match(value):
+        return False
     try:
         validate_email(value)
     except ValidationError:
@@ -215,8 +247,34 @@ def is_valid_email(value):
 
 
 def is_valid_phone(value):
+    """10–15 digits; only digits, a leading +, spaces, hyphens and parentheses."""
     digits = len(PHONE_DIGITS_RE.findall(value or ''))
-    return bool(value) and bool(PHONE_ALLOWED_RE.match(value)) and 7 <= digits <= 15
+    return bool(value) and bool(PHONE_ALLOWED_RE.match(value)) and PHONE_MIN_DIGITS <= digits <= PHONE_MAX_DIGITS
+
+
+def is_valid_name(value):
+    return PERSONAL_RULES['name'][0] <= len(value or '') <= PERSONAL_RULES['name'][1] and bool(NAME_RE.match(value or ''))
+
+
+def is_valid_link(value):
+    return bool(LINK_RE.match(value or ''))
+
+
+def _text_len(value):
+    return len('\n'.join(line for line in (value or '').split('\n') if line.strip()))
+
+
+def length_error(value, rule):
+    """Message when an entered value is outside its (min, max) rule; '' when fine or empty."""
+    lo, hi, label = rule
+    if not value:
+        return ''
+    n = _text_len(value)
+    if n < lo:
+        return f'{label}: please enter at least {lo} characters.'
+    if n > hi:
+        return f'{label} can be at most {hi} characters (currently {n}).'
+    return ''
 
 
 def _month_key(value):
@@ -264,12 +322,23 @@ def validate_state(state, role):
     """
     errors = []
     p = state['personal']
-    if len(p['name']) < 2:
+    if not p['name']:
         errors.append(_err('personal.name', STEP_PERSONAL, 'Please enter your full name.'))
+    elif length_error(p['name'], PERSONAL_RULES['name']):
+        errors.append(_err('personal.name', STEP_PERSONAL, length_error(p['name'], PERSONAL_RULES['name'])))
+    elif not NAME_RE.match(p['name']):
+        errors.append(_err('personal.name', STEP_PERSONAL,
+                           'Full name can contain only letters, spaces, hyphens and apostrophes.'))
     if not is_valid_email(p['email']):
-        errors.append(_err('personal.email', STEP_PERSONAL, 'Please provide a valid email address.'))
+        errors.append(_err('personal.email', STEP_PERSONAL, 'Please enter a valid email address.'))
     if not is_valid_phone(p['phone']):
-        errors.append(_err('personal.phone', STEP_PERSONAL, 'Please enter a valid contact number (7–15 digits).'))
+        errors.append(_err('personal.phone', STEP_PERSONAL, 'Enter a valid phone number with at least 10 digits.'))
+    if length_error(p['location'], PERSONAL_RULES['location']):
+        errors.append(_err('personal.location', STEP_PERSONAL, length_error(p['location'], PERSONAL_RULES['location'])))
+    for key, label in (('linkedin', 'LinkedIn'), ('website', 'Portfolio / website')):
+        if p[key] and not is_valid_link(p[key]):
+            errors.append(_err(f'personal.{key}', STEP_PERSONAL,
+                               f'Please enter a valid {label} link (e.g. https://example.com/your-name).'))
     if p['passport'] and not re.fullmatch(r'[A-Z0-9]{6,12}', p['passport']):
         errors.append(_err('personal.passport', STEP_PERSONAL,
                            'Please enter a valid passport number (6–12 letters or digits).'))
@@ -327,6 +396,26 @@ def validate_state(state, role):
             errors.append(_err(f'training.{i}.name', STEP_EDUCATION,
                                f'Please add the training name for entry {i + 1}, or remove it.'))
 
+    # Field-specific lengths for everything entered (empty optional fields are skipped).
+    for key, rule in TOP_RULES.items():
+        message = length_error(state[key], rule)
+        if message:
+            step = STEP_SKILLS if key in ('target_title', 'domain') else STEP_SUMMARY
+            errors.append(_err(key, step, message))
+    for list_key, rules in ENTRY_RULES.items():
+        step = STEP_EXPERIENCE if list_key in ('employment', 'internships', 'projects') else STEP_EDUCATION
+        for i, e in enumerate(state[list_key]):
+            for field, rule in rules.items():
+                message = length_error(e.get(field), rule)
+                if message:
+                    errors.append(_err(f'{list_key}.{i}.{field}', step, message))
+            if len(_lines(e.get('bullets'), 1000)) > MAX_BULLETS:
+                errors.append(_err(f'{list_key}.{i}.bullets', step, f'Please keep to {MAX_BULLETS} points or fewer.'))
+    skills = [s for group in state['skills']['groups'].values() for s in group] + state['skills']['other']
+    bad = next((s for s in skills if not SKILL_MIN <= len(s) <= SKILL_MAX), None)
+    if bad:
+        errors.append(_err('skills', STEP_SKILLS, f'Each skill must be {SKILL_MIN}–{SKILL_MAX} characters — fix “{bad}”.'))
+
     # Template text must be replaced with the candidate's own facts before it is printed.
     if has_placeholder(state['summary']):
         errors.append(_err('summary', STEP_SUMMARY,
@@ -359,10 +448,12 @@ def warnings_for(state, role):
 def completeness(state, role):
     """Per-category progress for the completeness indicator (0–100 each)."""
     p = state['personal']
-    personal = sum(bool(x) for x in (len(p['name']) >= 2, is_valid_email(p['email']),
-                                     is_valid_phone(p['phone']), p['location'])) / 4
-    career_checks = [bool(role), bool(state['level']), bool(state['target_title'] or role),
-                     bool(state['summary']) and not has_placeholder(state['summary'])]
+    # Only valid, candidate-entered values count: an untouched form is 0%.
+    personal = sum(bool(x) for x in (is_valid_name(p['name']), is_valid_email(p['email']), is_valid_phone(p['phone']),
+                                     p['location'] and not length_error(p['location'], PERSONAL_RULES['location']))) / 4
+    career_checks = [bool(state['level']),
+                     bool(state['summary']) and not has_placeholder(state['summary'])
+                     and not length_error(state['summary'], TOP_RULES['summary'])]
     if state['level'] in ('1-3', '3-5', '5+'):
         career_checks.append(bool(state['years']))
     career = sum(career_checks) / len(career_checks)

@@ -3903,6 +3903,12 @@
       text-shadow: 0 0 2px rgba(255, 255, 255, .95), 0 0 10px rgba(255, 255, 255, .85), 0 0 22px rgba(255, 255, 255, .6)
     }
 
+    /* Inside a department (its roles or a role's skills) the page shows only that view's own back
+       button, so the track header ("All career paths", title, intro) is hidden there. */
+    #choose-path .wrap:has(#deptRolesView:not([hidden]), #deptSkillsView:not([hidden]), #ntDeptView:not([hidden])) > .cp-head {
+      display: none
+    }
+
     /* "All career paths" / "All departments": real pill buttons, matching the hero's white "Find Jobs" button */
     a.cp-back[href$="#choose-path"],
     button.cp-back[data-back="deptView"],
@@ -4162,6 +4168,37 @@
         opacity: 1;
         transform: none
       }
+    }
+
+    .rb-confirm {
+      width: min(440px, calc(100% - 32px))
+    }
+
+    .rb-confirm h2 {
+      font-size: 1.25rem;
+      padding-right: 2.2rem
+    }
+
+    .rb-confirm .cpm-sub {
+      margin-bottom: 1.3rem
+    }
+
+    .rbc-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: .6rem;
+      flex-wrap: wrap
+    }
+
+    .rbc-danger {
+      background: #dc2626;
+      border-color: #dc2626;
+      color: #fff
+    }
+
+    .rbc-danger:hover {
+      background: #b91c1c;
+      border-color: #b91c1c
     }
 
     @media(max-width:760px) {
@@ -5608,16 +5645,6 @@
       color: #fff
     }
 
-    .rb-steps button.done span {
-      background: #10b981;
-      color: #fff
-    }
-
-    .rb-steps button.bad span {
-      background: #f97316;
-      color: #fff
-    }
-
     .rb-panel[hidden] {
       display: none
     }
@@ -5669,6 +5696,14 @@
 
     .rb-msg:empty {
       display: none
+    }
+
+    .rb-count {
+      display: block;
+      text-align: right;
+      font-size: .72rem;
+      color: var(--slate);
+      margin-top: .15rem
     }
 
     .rb-hl {
@@ -6685,6 +6720,7 @@
     <section id="choose-path" class="cp-sec">
       <div class="wrap">
         {% if track %}
+        <div class="cp-head">
         <a class="cp-back" href="{% url 'home' %}#choose-path">&larr; All career paths</a>
         <h2>{{ track_title }}</h2>
         {% if track == 'it' %}
@@ -6693,6 +6729,7 @@
         <p class="cp-sub-t">Pick a department to see its roles, then pick a role to see the skills it needs and how your
           profile matches.</p>
         {% endif %}
+        </div>
         {% if track == 'it' %}<div class="cp-panel" id="panelIt" data-src="{% static 'data/it_departments.json' %}"
           data-art="{% static 'img/roles/' %}" data-learn="{% url 'skill_up' %}">
           <div class="role-grid2"></div>
@@ -7587,6 +7624,17 @@
       </div>
     </form>
   </dialog>
+  <dialog class="cpm rb-confirm" id="rbConfirm" aria-labelledby="rbcTitle" aria-describedby="rbcMsg">
+    <div class="cpm-in">
+      <button type="button" class="cpm-x" aria-label="Cancel">&times;</button>
+      <h2 id="rbcTitle"></h2>
+      <p class="cpm-sub" id="rbcMsg"></p>
+      <div class="rbc-actions">
+        <button type="button" class="btn btn-outline btn-sm" id="rbcCancel">Cancel</button>
+        <button type="button" class="btn btn-sm btn-primary" id="rbcOk">OK</button>
+      </div>
+    </div>
+  </dialog>
   <div class="rm" id="rm" aria-hidden="true">
     <div class="rm-box" role="dialog" aria-modal="true" aria-labelledby="rmTitle">
       <div class="rm-head" id="rmHead">
@@ -7609,6 +7657,7 @@
           <div class="chips" id="rmPath"></div>
         </div>
         <div class="rm-col2 rb" id="rbForm" data-allow-clipboard data-roles="{% url 'manual_resume_roles' %}"
+          data-profiles="{% static 'data/role_profiles.json' %}?v=1"
           data-preview="{% url 'manual_resume_preview' %}" data-pdf="{% url 'manual_resume_pdf' %}"
           data-pages="{% url 'manual_resume_pages' %}">
           <h4>Build your resume</h4>
@@ -7633,14 +7682,10 @@
           </div>
           <div class="rm-actions">
             <button type="button" class="btn btn-primary btn-sm" id="rfGen">Generate Resume</button>
-            <button type="button" class="btn btn-ai btn-sm" id="rfAI"><svg class="ic" aria-hidden="true">
-                <use href="#i-sparkles"></use>
-              </svg> AI Analyzer</button>
             <button type="button" class="rb-mini" data-act="clear">Clear form</button>
           </div>
           <p class="rm-hint">All suggestions are predefined and editable — select only what is true for you. Generate
-            Resume uses only the details you enter; nothing is written for you and your details are not stored. The AI
-            Analyzer is a separate, optional skill check that runs in your browser.</p>
+            Resume uses only the details you enter; nothing is written for you and your details are not stored.</p>
           <form id="rbPrintForm" method="post" action="{% url 'manual_resume_pdf' %}" target="_blank" hidden>{% csrf_token %}<input type="hidden" name="payload" value=""><input type="hidden" name="inline" value="1">
           </form>
         </div>
@@ -8324,8 +8369,35 @@
       /* ───────────────────────── rule-based validation ───────────────────────── */
       var PH = /\[[^\[\]\n]{1,80}\]/;
       function hasPH(s) { return PH.test(s || '') }
-      function emailOk(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((v || '').trim()) }
-      function phoneOk(v) { v = (v || '').trim(); var d = (v.match(/\d/g) || []).length; return !!v && /^[0-9+()\-\s.\/]+$/.test(v) && d >= 7 && d <= 15 }
+      // Field rules mirror career_app/resume_document.py (validate_state), which re-checks everything server-side.
+      // path (entry index removed) -> [min length if entered, max length, label]; empty optional fields never error.
+      var RULE = {
+        'personal.name': [2, 80, 'Full name'], 'personal.location': [2, 100, 'Location'],
+        'role.target': [2, 100, 'Target job title'], 'domain': [2, 100, 'Industry / domain'],
+        'role.summary': [50, 1200, 'Professional summary'], 'achievements': [20, 800, 'Achievements'],
+        'languages': [2, 200, 'Languages'], 'additional': [2, 800, 'Additional information'], 'place': [2, 60, 'Place'],
+        'employment.title': [2, 100, 'Job title'], 'employment.company': [2, 120, 'Company'], 'employment.location': [2, 100, 'Location'], 'employment.bullets': [20, 1500, 'Responsibilities'],
+        'internships.title': [2, 100, 'Role / position'], 'internships.company': [2, 150, 'Organisation'], 'internships.location': [2, 100, 'Location'], 'internships.bullets': [20, 1500, 'Responsibilities'],
+        'projects.name': [2, 120, 'Project name'], 'projects.context': [2, 150, 'Type / context'], 'projects.tools': [2, 500, 'Tools / technologies'], 'projects.bullets': [30, 1200, 'Project description'],
+        'education.degree': [2, 100, 'Degree / qualification'], 'education.institution': [2, 150, 'Institution'], 'education.location': [2, 100, 'Location'], 'education.year': [2, 30, 'Year / duration'], 'education.score': [1, 50, 'Grade / CGPA'],
+        'certifications.name': [2, 150, 'Certification'], 'certifications.issuer': [2, 150, 'Issued by'], 'certifications.year': [4, 20, 'Year'],
+        'training.name': [2, 150, 'Training / course'], 'training.provider': [2, 150, 'Provider'], 'training.year': [4, 20, 'Year']
+      };
+      var MAXLEN = { 'personal.email': 254, 'personal.phone': 25, 'personal.linkedin': 2000, 'personal.website': 2000, 'personal.passport': 12, 'years': 4 };
+      var SKILL_MIN = 2, SKILL_MAX = 50, MAX_POINTS = 15, skillNote = '';
+      function normPath(p) { return String(p).replace(/\.\d+\./, '.') }
+      function textLen(v) { return String(v || '').split('\n').filter(function (x) { return x.trim() }).join('\n').length }
+      function lenErr(v, r) {
+        if (!r || !String(v || '').trim()) return '';
+        var n = textLen(v);
+        return n < r[0] ? r[2] + ': please enter at least ' + r[0] + ' characters.' : n > r[1] ? r[2] + ' can be at most ' + r[1] + ' characters (currently ' + n + ').' : '';
+      }
+      var NAME_RE = /^\p{L}+(?:[ .'\-]+\p{L}+)*\.?$/u;
+      function nameOk(v) { v = (v || '').trim(); return !lenErr(v, RULE['personal.name']) && !!v && NAME_RE.test(v) }
+      function emailOk(v) { v = (v || '').trim(); return v.length <= 254 && /^[^@\s]+@([a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,63}$/i.test(v) }
+      function phoneOk(v) { v = (v || '').trim(); var d = (v.match(/\d/g) || []).length; return !!v && /^\+?[0-9\s\-()]+$/.test(v) && d >= 10 && d <= 15 }
+      // Optional links: http(s):// or a bare domain; other schemes (javascript: …), spaces and markup are rejected.
+      function linkOk(v) { return /^(https?:\/\/)?([a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,63}(:\d{1,5})?([\/?#][^\s<>"'`]*)?$/i.test((v || '').trim()) }
       function filled(x, keys) { return keys.every(function (k) { return String(x[k] || '').trim() }) }
       function touchedEntry(x) { return Object.keys(x).some(function (k) { return k !== 'current' && String(x[k] || '').trim() }) }
       function vJobs(l) { return S[l].filter(function (x) { return filled(x, ['title', 'company']) }) }
@@ -8337,9 +8409,29 @@
       function validate() {
         var e = [], p = S.personal, r = R();
         function add(f, s, m) { e.push({ field: f, step: s, message: m }) }
-        if (p.name.trim().length < 2) add('personal.name', 1, 'Please enter your full name.');
-        if (!emailOk(p.email)) add('personal.email', 1, 'Please provide a valid email address.');
-        if (!phoneOk(p.phone)) add('personal.phone', 1, 'Please enter a valid contact number (7–15 digits).');
+        var nm = p.name.trim();
+        if (!nm) add('personal.name', 1, 'Please enter your full name.');
+        else if (lenErr(nm, RULE['personal.name'])) add('personal.name', 1, lenErr(nm, RULE['personal.name']));
+        else if (!NAME_RE.test(nm)) add('personal.name', 1, 'Full name can contain only letters, spaces, hyphens and apostrophes.');
+        if (!emailOk(p.email)) add('personal.email', 1, 'Please enter a valid email address.');
+        if (!phoneOk(p.phone)) add('personal.phone', 1, 'Enter a valid phone number with at least 10 digits.');
+        if (lenErr(p.location, RULE['personal.location'])) add('personal.location', 1, lenErr(p.location, RULE['personal.location']));
+        [['linkedin', 'LinkedIn'], ['website', 'Portfolio / website']].forEach(function (k) {
+          if (String(p[k[0]] || '').trim() && !linkOk(p[k[0]])) add('personal.' + k[0], 1, 'Please enter a valid ' + k[1] + ' link (e.g. https://example.com/your-name).')
+        });
+        [['role.target', r.target, 2], ['domain', S.domain, 2], ['role.summary', r.summary, 5], ['achievements', S.achievements, 5], ['languages', S.languages, 5], ['additional', S.additional, 5], ['place', S.place, 5]].forEach(function (f) {
+          var m = lenErr(f[1], RULE[f[0]]); if (m) add(f[0], f[2], m)
+        });
+        ['employment', 'internships', 'projects', 'education', 'certifications', 'training'].forEach(function (l) {
+          var st = /^(employment|internships|projects)$/.test(l) ? 3 : 4;
+          S[l].forEach(function (x, i) {
+            Object.keys(x).forEach(function (k) { var m = lenErr(x[k], RULE[l + '.' + k]); if (m) add(l + '.' + i + '.' + k, st, m) });
+            if (x.bullets != null && linesOf(x.bullets).length > MAX_POINTS) add(l + '.' + i + '.bullets', st, 'Please keep to ' + MAX_POINTS + ' points or fewer.');
+          });
+        });
+        var badSk = []; Object.keys(r.groups).forEach(function (k) { badSk = badSk.concat(r.groups[k]) });
+        badSk = badSk.concat(listOf(S.other)).filter(function (x) { return x.length < SKILL_MIN || x.length > SKILL_MAX });
+        if (badSk.length) add('skills', 2, 'Each skill must be ' + SKILL_MIN + '–' + SKILL_MAX + ' characters — fix “' + badSk[0] + '”.');
         if (!S.level) add('level', 2, 'Please select your experience level.');
         if (String(S.years).trim() && !/^\d{1,2}(\.\d)?$/.test(String(S.years).trim())) add('years', 2, 'Please enter your years of experience as a number.');
         if (!skillCount()) add('skills', 2, 'Please select relevant skills for your chosen role.');
@@ -8365,12 +8457,13 @@
         if (hasPH(r.summary)) add('role.summary', 5, 'Please replace the [placeholder] text in your professional summary with your own details.');
         if (hasPH(S.achievements)) add('achievements', 5, 'Please replace the [placeholder] text in your achievements with your own details.');
         ['employment', 'internships', 'projects'].forEach(function (l) { S[l].forEach(function (x, i) { if (hasPH(x.bullets)) add(l + '.' + i + '.bullets', 3, 'Please replace the [placeholder] text in your responsibilities with your own details.') }) });
-        return e;
+        return e.map(function (x, i) { x._i = i; return x }).sort(function (a, b) { return a.step - b.step || a._i - b._i });
       }
       function completeness() {
         var p = S.personal, r = R();
-        var personal = [p.name.trim().length >= 2, emailOk(p.email), phoneOk(p.phone), !!p.location.trim()].filter(Boolean).length / 4;
-        var cc = [true, !!S.level, true, !!r.summary.trim() && !hasPH(r.summary)]; if (EXP[S.level]) cc.push(!!String(S.years).trim());
+        var personal = [nameOk(p.name), emailOk(p.email), phoneOk(p.phone), !!p.location.trim() && !lenErr(p.location, RULE['personal.location'])].filter(Boolean).length / 4;
+        var cc = [!!S.level, !!r.summary.trim() && !hasPH(r.summary) && !lenErr(r.summary, RULE['role.summary'])];
+        if (EXP[S.level]) cc.push(/^\d{1,2}(\.\d)?$/.test(String(S.years).trim()));
         var jobs = vJobs('employment').length, other = vNamed('projects').length || vJobs('internships').length || vNamed('training').length;
         var exp = S.level === 'fresher' ? ((jobs || other) ? 1 : 0) : (jobs ? 1 : (vNamed('projects').length ? .5 : 0));
         var cats = [
@@ -8387,12 +8480,14 @@
       /* ───────────────────────── form rendering ───────────────────────── */
       function fid(p) { return 'rb_' + p.replace(/[^a-z0-9]/gi, '_') }
       function fld(path, label, o) {
-        o = o || {}; var v = getP(path), id = fid(path) + (o.sfx || '');
+        o = o || {}; var v = getP(path), id = fid(path) + (o.sfx || ''), np = normPath(path);
+        if (RULE[np]) o.max = RULE[np][1]; else if (MAXLEN[np]) o.max = MAXLEN[np];
         var mark = o.req ? ' <span class="rb-req" aria-hidden="true">*</span>' : (o.opt ? ' <span class="rb-opt">(optional)</span>' : '');
         var a = ' id="' + id + '" data-path="' + path + '"' + (o.ph ? ' placeholder="' + esc(o.ph) + '"' : '') + (o.ac ? ' autocomplete="' + o.ac + '"' : '') + (o.im ? ' inputmode="' + o.im + '"' : '')
           + (o.req ? ' aria-required="true"' : '') + (o.dis ? ' disabled' : '') + ' aria-describedby="' + id + '_m"';
         var input;
-        if (o.type === 'textarea') input = '<textarea' + a + ' rows="' + (o.rows || 3) + '" maxlength="2000">' + esc(v) + '</textarea>';
+        if (o.type === 'textarea') input = '<textarea' + a + ' rows="' + (o.rows || 3) + '" maxlength="' + (o.max || 2000) + '">' + esc(v) + '</textarea>'
+          + '<span class="rb-count" data-c="' + path + '" data-max="' + (o.max || 2000) + '">' + String(v).length + ' / ' + (o.max || 2000) + ' characters</span>';
         else if (o.type === 'select') input = '<select' + a + '>' + o.options.map(function (x) { return '<option value="' + esc(x[0]) + '"' + (x[0] === v ? ' selected' : '') + '>' + esc(x[1]) + '</option>' }).join('') + '</select>';
         else input = '<input' + a + ' type="' + (o.type || 'text') + '" value="' + esc(v) + '" maxlength="' + (o.max || 200) + '">';
         return '<div class="rb-field' + (o.full ? ' full' : '') + '"><label for="' + id + '">' + esc(label) + mark + '</label>' + input + '<span class="rb-msg" id="' + id + '_m" data-msg="' + path + '"></span></div>';
@@ -8404,7 +8499,7 @@
           var on = sel.some(function (s) { return s.toLowerCase() === String(x).toLowerCase() });
           return '<label><input type="checkbox" data-sk="' + target + '" value="' + esc(x) + '"' + (on ? ' checked' : '') + '><span>' + esc(x) + '</span></label>'
         }).join('') + '</div>'
-          + (custom ? '<div class="rb-add-skill"><input data-addfor="' + target + '" placeholder="Add your own skill" aria-label="Add your own skill to ' + esc(label) + '" maxlength="80"><button type="button" class="rb-mini" data-act="addskill" data-target="' + target + '">Add</button></div>' : '') + '</div>';
+          + (custom ? '<div class="rb-add-skill"><input data-addfor="' + target + '" placeholder="Add your own skill" aria-label="Add your own skill to ' + esc(label) + '" maxlength="' + SKILL_MAX + '"><button type="button" class="rb-mini" data-act="addskill" data-target="' + target + '">Add</button></div>' : '') + '</div>';
       }
       function lineUsed(text, path) { var have = linesOf(getP(path)).map(function (x) { return x.toLowerCase() }); return have.indexOf(String(text).toLowerCase()) > -1 }
       function sugRow(label, items, path) {
@@ -8549,12 +8644,8 @@
           + '<div class="meter"><i style="width:' + c.total + '%"></i></div><div class="rb-cats">' + c.cats.map(function (k) {
             var cls = k.v >= 1 ? 'ok' : (k.v > 0 ? 'part' : ''); return '<button type="button" class="' + cls + '" data-act="step" data-step="' + k.step + '"><i></i>' + esc(k.label) + (k.opt ? ' <em>(optional)</em>' : '') + '</button>'
           }).join('') + '</div>';
-        [].forEach.call($('rbSteps').children, function (b) {
-          var n = +b.dataset.step, bad = errs.some(function (e) { return e.step === n && (showAll || touched[e.field]) });
-          b.classList.toggle('bad', bad); b.classList.toggle('done', !bad && !!(showAll || visited[n]) && !errs.some(function (e) { return e.step === n }) && n !== step);
-        });
         [].forEach.call(FORM.querySelectorAll('[data-msg]'), function (m) {
-          var f = m.getAttribute('data-msg'), msg = (showAll || touched[f]) ? (by[f] || '') : '';
+          var f = m.getAttribute('data-msg'), msg = ((showAll || touched[f]) ? by[f] : '') || (f === 'skills' ? skillNote : '') || '';
           m.textContent = msg; var w = m.closest('.rb-field'); if (w) w.classList.toggle('is-invalid', !!msg);
           var inp = w && w.querySelector('[data-path]'); if (inp) { if (msg) inp.setAttribute('aria-invalid', 'true'); else inp.removeAttribute('aria-invalid') }
         });
@@ -8589,17 +8680,39 @@
       }
 
       /* ───────────────────────── modal ───────────────────────── */
+      /* Role profiles (static/data/role_profiles.json): about, responsibilities, career path and
+         key skills for career-path roles without a full template. Fetched once, on first use. */
+      var PROFILES = null, profWait = [];
+      function loadProfiles(cb) {
+        if (PROFILES) return cb();
+        profWait.push(cb); if (profWait.length > 1) return;
+        fetch(FORM.dataset.profiles, { credentials: 'same-origin' }).then(function (res) { if (!res.ok) throw 0; return res.json() })
+          .then(function (d) { PROFILES = d }).catch(function () { PROFILES = { profiles: {}, aliases: {} } })
+          .then(function () { var w = profWait; profWait = []; w.forEach(function (f) { f() }) });
+      }
+      function applyProfile(r) {
+        if (r.ov || r._prof || !PROFILES) return false;
+        var P = PROFILES.profiles || {}, A = PROFILES.aliases || {}, p = P[r.n] || P[A[r.n]];
+        r._prof = 1; if (!p) return false;
+        r.ov = p.about || ''; r.resp = p.responsibilities || []; r.path = p.career_path || []; r.skShow = p.keywords || null;
+        return true;
+      }
+      function fillRoleInfo(r) {
+        $('rmOv').textContent = r.ov;
+        $('rmResp').innerHTML = r.resp.map(function (x) { return '<li>' + esc(x) + '</li>' }).join('');
+        $('rmReq').innerHTML = (r.skShow || r.sk).map(function (x) { return '<span class="chip">' + esc(x) + '</span>' }).join('');
+        $('rmPath').innerHTML = r.path.map(function (x, j) { return '<span class="chip path">' + esc(x) + '</span>' + (j < r.path.length - 1 ? '<span style="color:var(--slate)">&rsaquo;</span>' : '') }).join('');
+        [['rmOv', r.ov], ['rmResp', r.resp.length], ['rmPath', r.path.length]].forEach(function (x) { $(x[0]).hidden = $(x[0]).previousElementSibling.hidden = !x[1] });
+      }
       function openRole(i, btn, build) {
         cur = ROLES[i]; lastBtn = btn; var r = cur, img = btn && btn.querySelector('.rc-img'), g = img ? img.className.replace('rc-img', '').trim() : 'g0';
         $('rmHead').className = 'rm-head ' + g; $('rmIcon').innerHTML = IC[r.i] || IC.brief;
-        $('rmTag').textContent = (r.cat || CAT[r.c]) + (r.ind ? ' · ' + r.ind : ''); $('rmTitle').textContent = r.n; $('rmSub').textContent = r.sub; $('rmOv').textContent = r.ov;
-        $('rmResp').innerHTML = r.resp.map(function (x) { return '<li>' + esc(x) + '</li>' }).join('');
-        $('rmReq').innerHTML = r.sk.map(function (x) { return '<span class="chip">' + esc(x) + '</span>' }).join('');
-        $('rmPath').innerHTML = r.path.map(function (x, j) { return '<span class="chip path">' + esc(x) + '</span>' + (j < r.path.length - 1 ? '<span style="color:var(--slate)">&rsaquo;</span>' : '') }).join('');
-        [['rmOv', r.ov], ['rmResp', r.resp.length], ['rmPath', r.path.length]].forEach(function (x) { $(x[0]).hidden = $(x[0]).previousElementSibling.hidden = !x[1] });
+        $('rmTag').textContent = (r.cat || CAT[r.c]) + (r.ind ? ' · ' + r.ind : ''); $('rmTitle').textContent = r.n; $('rmSub').textContent = r.sub;
+        applyProfile(r); fillRoleInfo(r);
+        if (!r.ov && !r._prof) loadProfiles(function () { if (applyProfile(r) && cur === r) fillRoleInfo(r) });
         // Entered details are kept; only the previous role's preview and analysis are cleared.
         $('rmOut').hidden = true; $('rmAn').hidden = true; $('rmRes').hidden = true; $('rmParse').hidden = true; $('rbErr').hidden = true;
-        showAll = false; touched = {}; visited = { 1: 1 }; step = 1; mode = 'doc'; lastDoc = null;
+        showAll = false; touched = {}; visited = { 1: 1 }; skillNote = ''; step = 1; mode = 'doc'; lastDoc = null;
         rm.classList.add('open'); rm.setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden'; rm.scrollTop = 0; $('rmClose').focus();
         var withForm = !!(build && r.slug); FORM.hidden = !withForm; $('rmReq').closest('.rm-body').classList.toggle('solo', !withForm);
         if (withForm) loadRole(r.slug);
@@ -8675,6 +8788,7 @@
         // Keep the same field in sync where it appears in both the form and the preview editor.
         [].forEach.call(rm.querySelectorAll('[data-path="' + p + '"]'), function (o) { if (o !== t) { if (o.type === 'checkbox') o.checked = !!v; else o.value = v } });
         if (/\.current$/.test(p)) { [].forEach.call(rm.querySelectorAll('[data-path="' + p.replace(/current$/, 'end') + '"]'), function (o) { o.disabled = !!v }) }
+        [].forEach.call(rm.querySelectorAll('.rb-count[data-c="' + p + '"]'), function (c) { c.textContent = String(v).length + ' / ' + c.dataset.max + ' characters' });
         if (/bullets$|^achievements$/.test(p)) { [].forEach.call(rm.querySelectorAll('.rb-chip[data-path="' + p + '"]'), function (c) { c.classList.toggle('used', lineUsed(c.dataset.text, p)) }) }
         refresh();
       });
@@ -8694,8 +8808,10 @@
         if (e.key === 'Enter' && e.target.matches('[data-addfor]')) { e.preventDefault(); addSkill(e.target.getAttribute('data-addfor')) }
       });
       function addSkill(target) {
-        var inp = FORM.querySelector('[data-addfor="' + target + '"]'), v = inp ? inp.value.trim().slice(0, 80) : '';
-        if (!v) return; var arr = skArr(target); if (!arr.some(function (x) { return x.toLowerCase() === v.toLowerCase() })) arr.push(v);
+        var inp = FORM.querySelector('[data-addfor="' + target + '"]'), v = inp ? inp.value.replace(/\s+/g, ' ').trim() : '';
+        if (!v) return;
+        if (v.length < SKILL_MIN || v.length > SKILL_MAX) { skillNote = 'Each skill must be ' + SKILL_MIN + '–' + SKILL_MAX + ' characters.'; refresh(); return }
+        skillNote = ''; var arr = skArr(target); if (!arr.some(function (x) { return x.toLowerCase() === v.toLowerCase() })) arr.push(v);
         touched.skills = 1; save(); renderPanels(); var again = FORM.querySelector('[data-addfor="' + target + '"]'); if (again) again.focus();
       }
       function focusNew(list, container) {
@@ -8710,15 +8826,21 @@
         switch (act) {
           case 'step': setStep(+b.dataset.step); refresh(); break;
           case 'prev': setStep(step - 1); refresh(); break;
-          case 'next': setStep(step + 1); refresh(); break;
+          case 'next':
+            // Next checks only the current step; Back and the step tabs move freely.
+            var here = validate().filter(function (e) { return e.step === step });
+            if (here.length) { here.forEach(function (e) { touched[e.field] = 1 }); refresh(); goTo(here[0]); break }
+            setStep(step + 1); refresh(); break;
           case 'review': review(); break;
           case 'goto': var errs = $('rbErr')._errs || []; if (errs[+b.dataset.i]) goTo(errs[+b.dataset.i]); break;
           case 'addskill': addSkill(b.dataset.target); break;
           case 'add': S[b.dataset.list].push(copy(BLANK[b.dataset.list])); save(); rerender(); focusNew(b.dataset.list, fromEd ? $('rvBody') : FORM); break;
           case 'remove':
-            var l = b.dataset.list, x = S[l][+b.dataset.i];
-            if (x && touchedEntry(x) && !confirm('Remove this ' + NOUN[l] + ' entry?')) break;
-            S[l].splice(+b.dataset.i, 1); save(); rerender(); break;
+            var l = b.dataset.list, ri = +b.dataset.i, x = S[l][ri];
+            var doRemove = function () { S[l].splice(ri, 1); save(); rerender() };
+            if (x && touchedEntry(x)) ask({ title: 'Remove this ' + NOUN[l] + '?', text: 'The details you entered in this ' + NOUN[l] + ' entry will be removed.', ok: 'Remove', danger: true }, doRemove);
+            else doRemove();
+            break;
           case 'sugline':
             var p = b.dataset.path, cv = String(getP(p)).replace(/\s+$/, '');
             if (!lineUsed(b.dataset.text, p)) { setP(p, (cv ? cv + '\n' : '') + b.dataset.text); save() }
@@ -8728,12 +8850,14 @@
             var list = b.dataset.list; if (!nameUsed(list, b.dataset.text)) { var n = copy(BLANK[list]); n.name = b.dataset.text; S[list].push(n); save(); rerender(); focusNew(list) } break;
           case 'tpl':
             var t = ((full.summaries || {})[S.level] || [])[+b.dataset.i]; if (!t) break;
-            if (R().summary.trim() && !confirm('Replace your current summary with this template?')) break;
-            R().summary = t; save(); rerender(); var s = FORM.querySelector('[data-path="role.summary"]'); if (s) s.focus(); break;
+            var useTpl = function () { R().summary = t; save(); rerender(); var s = FORM.querySelector('[data-path="role.summary"]'); if (s) s.focus() };
+            if (R().summary.trim()) ask({ title: 'Replace your summary?', text: 'Your current professional summary will be replaced with this template.', ok: 'Replace' }, useTpl);
+            else useTpl();
+            break;
           case 'fillph': fillPlaceholders(); break;
           case 'clear':
-            if (!confirm('Clear every field in this resume form? This cannot be undone.')) break;
-            S = blank(); save(); showAll = false; touched = {}; $('rbErr').hidden = true; $('rmOut').hidden = true; $('rmRes').hidden = true; setStep(1, true); renderPanels(); break;
+            ask({ title: 'Clear the resume form?', text: 'Every field in this resume form will be cleared. This cannot be undone.', ok: 'Clear form', danger: true }, clearForm);
+            break;
           case 'gen': generate(); break;
           case 'rv-edit': enterEdit(); break;
           case 'rv-form': FORM.scrollIntoView({ behavior: 'smooth', block: 'start' }); setTimeout(function () { var f = FORM.querySelector('.rb-panel:not([hidden]) [data-path]'); if (f) f.focus({ preventScroll: true }) }, 400); break;
@@ -8744,6 +8868,27 @@
           case 'edit-cancel': if (snapshot) { S = JSON.parse(snapshot); save() } snapshot = null; renderPanels(); mode = 'doc'; renderOut(); break;
         }
       });
+      function clearForm() {
+        S = blank(); clearTimeout(saveT); try { sessionStorage.removeItem(STORE) } catch (e) { }
+        showAll = false; touched = {}; visited = { 1: 1 }; skillNote = ''; $('rbErr').hidden = true; $('rmOut').hidden = true; $('rmRes').hidden = true; setStep(1, true); renderPanels();
+      }
+      // In-page confirmation (styled like the site's other dialogs) instead of the browser's confirm() box.
+      // Cancel is focused first, and Esc / the backdrop / ✕ all cancel.
+      function ask(o, onOk) {
+        var d = $('rbConfirm');
+        if (!d || typeof d.showModal !== 'function') { if (window.confirm(o.text)) onOk(); return }
+        $('rbcTitle').textContent = o.title; $('rbcMsg').textContent = o.text;
+        var ok = $('rbcOk'); ok.textContent = o.ok || 'OK'; ok.className = 'btn btn-sm ' + (o.danger ? 'rbc-danger' : 'btn-primary');
+        askOk = onOk; d.showModal(); $('rbcCancel').focus();
+      }
+      var askOk = null;
+      $('rbConfirm').addEventListener('click', function (e) {
+        var b = e.target.closest('button'), go = b && b.id === 'rbcOk' ? askOk : null;
+        if (e.target !== this && !b) return;            // clicks inside the box (not the backdrop) do nothing
+        askOk = null; this.close();
+        if (go) go();
+      });
+      $('rbConfirm').addEventListener('cancel', function () { askOk = null });   // Esc
       // Fills [placeholders] only with details the candidate has entered; anything else stays for them to write.
       function fillPlaceholders() {
         var r = R(), skills = []; (full.fields || []).forEach(function (f) { skills = skills.concat(r.groups[f.key] || []) }); skills = uniq(skills.concat(r.suggested));
@@ -8879,40 +9024,10 @@
       }
       $('rfGen').addEventListener('click', function () { if (full) generate() });
 
-      /* ───────────────────────── AI Analyzer (separate, optional, unchanged behaviour) ───────────────────────── */
-      function skillsHave() {
-        if (!cur) return []; var r = R(), have = []; Object.keys(r.groups).forEach(function (k) { have = have.concat(r.groups[k]) });
-        return uniq(have.concat(r.suggested, S.soft, listOf(S.other)));
-      }
-      function norm(s) { return s.toLowerCase().replace(/[^a-z0-9+#]+/g, ' ').trim() }
-      function matches(req, have) {
-        var parts = req.split('/').map(norm).filter(Boolean).concat([norm(req)]);
-        return have.some(function (h) { var n = norm(h); return n && parts.some(function (p) { return p.indexOf(n) > -1 || n.indexOf(p) > -1 }) });
-      }
-      function showOut() { $('rmOut').hidden = false }
-      function scrollTo(el) { setTimeout(function () { el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }) }, 50) }
-      $('rfAI').addEventListener('click', function () {
-        var r = cur, have = skillsHave(), ok = [], miss = [];
-        r.sk.forEach(function (s) { (matches(s, have) ? ok : miss).push(s) });
-        var pct = Math.round(ok.length / r.sk.length * 100);
-        var verdict = pct >= 80 ? 'Excellent match – you are ready to start applying for ' + r.n + ' roles.' : pct >= 55 ? 'Good foundation – close the gaps below and you will be a strong candidate.' : pct >= 30 ? 'Early stage – focus on the core skills first and build up step by step.' : 'Just getting started – pick two or three skills below and begin with those.';
-        var extra = have.filter(function (h) { return !r.sk.some(function (s) { return matches(s, [h]) }) });
-        var tips = [];
-        if (miss.length) tips.push('Start with: <b>' + esc(miss.slice(0, 3).join(', ')) + '</b> – these appear most often in ' + esc(r.n) + ' job descriptions.');
-        tips.push('Take the matching modules in <a href="#skillup" style="color:var(--primary);font-weight:600">Skill Up</a> and add certificates to your resume.');
-        if (!S.achievements.trim()) tips.push('Add one or two achievements with numbers (for example, “reduced processing time by 20%”).');
-        if (extra.length) tips.push('Your extra skills (<b>' + esc(extra.slice(0, 4).join(', ')) + '</b>) are a bonus – keep them in the resume.');
-        $('rmAn').innerHTML = '<h4>AI skill analysis · ' + esc(r.n) + '</h4><div class="score">' + pct + '%</div><div class="meter"><i style="width:' + pct + '%"></i></div><p style="font-size:.9rem">' + esc(verdict) + '</p>'
-          + '<h4>Skills you have (' + ok.length + '/' + r.sk.length + ')</h4><div class="chips">' + (ok.length ? ok.map(function (s) { return '<span class="chip ok">' + esc(s) + '</span>' }).join('') : '<span style="color:var(--slate);font-size:.88rem">None selected yet</span>') + '</div>'
-          + '<h4>Skills to build</h4><div class="chips">' + (miss.length ? miss.map(function (s) { return '<span class="chip miss">' + esc(s) + '</span>' }).join('') : '<span style="color:#047857;font-size:.9rem;font-weight:600">Nothing missing – great!</span>') + '</div>'
-          + '<h4>Suggestions</h4><ul>' + tips.map(function (t) { return '<li>' + t + '</li>' }).join('') + '</ul>';
-        // The analysis sits on the left with the Resume Parsing card beside it on the right.
-        $('rmAn').hidden = false; $('rmParse').hidden = false; showOut(); scrollTo($('rmAn'));
-      });
     })();
   </script>
 
-  <script src="{% static 'js/create_resume.js' %}?v=3" defer></script>
+  <script src="{% static 'js/create_resume.js' %}?v=5" defer></script>
   <script>
     /* Career journey: start the step animations when the list scrolls into view. */
     (function () {
