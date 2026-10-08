@@ -541,7 +541,7 @@
             heading: "What would you like to do?",
             recommendationHeading: "Recommended for you",
             quickActions: [
-                { id: "student-jobs", actionKey: "job_recommendations", icon: "briefcase", title: "Find Jobs", description: "Search and explore relevant opportunities", context: "Your recommended jobs are matched to your experience and skills, and they unlock once you score 70 or more in the AI mock interview." },
+                { id: "student-jobs", actionKey: "job_search", icon: "briefcase", title: "Find Jobs", description: "Search and explore relevant opportunities", context: "Your recommended jobs are matched to your experience and skills, and they unlock once you score 70 or more in the AI mock interview." },
                 { id: "student-resume", actionKey: "resume_builder", icon: "resume", title: "Check Resume", description: "Improve your resume and career profile", context: "The Resume Builder parses your resume, gives you an ATS score and tells you exactly what to improve." },
             ],
             recommendations: [
@@ -2033,8 +2033,10 @@
     function isActionAllowedForCurrentRole(actionKey) {
         if (!actionKey) return false;
 
+        if (!assistant.isEmployer && actionKey === "industries_nav") return true;
+
         // Dynamically generated backend activity/category actions are allowed for students
-        if (!assistant.isEmployer && (actionKey.startsWith("activity_") || actionKey.startsWith("category_"))) {
+        if (!assistant.isEmployer && (actionKey === "site_nav" || actionKey.startsWith("activity_") || actionKey.startsWith("category_"))) {
             return true;
         }
 
@@ -2044,10 +2046,6 @@
         // follow here; without this the role gate silently swallows every
         // Skill Up "Opening …" so Buddy speaks the move but never makes it.
         if (!assistant.isEmployer && actionKey.startsWith("skillup:")) {
-            return true;
-        }
-
-        if (!assistant.isEmployer && actionKey === "industries_nav") {
             return true;
         }
 
@@ -2878,6 +2876,7 @@
         el.type = "button";
         el.className = `riya-welcome-card riya-welcome-card--${variant || "action"}`;
         el.setAttribute("data-card-id", card.id);
+        el.setAttribute("data-action-key", card.actionKey);
 
         const baseTitle = welcomeText(card.title, lang);
         const title = TITLE_I18N[card.id]?.[lang] || RECOMMENDATION_TRANSLATIONS[lang]?.[baseTitle] || baseTitle;
@@ -2896,13 +2895,136 @@
                 <span class="riya-welcome-card-desc">${description}</span>
             </span>`;
 
-        el.addEventListener("click", (event) => {
-            event.preventDefault();
-            runWelcomeAction(card, title);
-        });
-
         return el;
     }
+
+    document.addEventListener("click", (event) => {
+        const btn = event.target.closest(".riya-welcome-card");
+        if (!btn) return;
+        const actionKey = btn.getAttribute("data-action-key");
+        if (!actionKey) return;
+        
+        event.preventDefault();
+        const cardId = btn.getAttribute("data-card-id");
+        
+        let matchedCard = null;
+        for (const role of Object.keys(WELCOME_CONTEXT)) {
+            const ctx = WELCOME_CONTEXT[role];
+            for (const list of ["quickActions", "recommendations", "guidedPath", "resumeGuidedPath"]) {
+                if (ctx[list]) {
+                    const found = ctx[list].find(c => c.id === cardId);
+                    if (found) {
+                        matchedCard = found;
+                        break;
+                    }
+                }
+            }
+            if (matchedCard) break;
+        }
+        
+        if (!matchedCard) {
+            matchedCard = { id: cardId, actionKey: actionKey, title: btn.querySelector(".riya-welcome-card-title")?.textContent || actionKey };
+        }
+        
+        const lang = getSelectedAssistantLanguage();
+        const baseTitle = welcomeText(matchedCard.title, lang);
+        const title = TITLE_I18N[matchedCard.id]?.[lang] || RECOMMENDATION_TRANSLATIONS[lang]?.[baseTitle] || baseTitle;
+        
+        runWelcomeAction(matchedCard, title);
+    });
+
+    // ---- landing stage pills ---------------------------------------------
+    // The stage's five pills come from the central topic mapping
+    // (static/js/buddy_visuals.js) while the visitor is looking at a
+    // department; otherwise the landing defaults below apply (they are also
+    // the fallback if that script is missing). Slots, in order: n, ne, nw, sw, se.
+    const LANDING_STAGE_SLOTS = [["n", "0.5s"], ["ne", "0.7s"], ["nw", "0.9s"], ["sw", "1.1s"], ["se", "1.3s"]];
+    const LANDING_STAGE_DEFAULT = [
+        { icon: "resume", label: "Resume Builder" },
+        { icon: "briefcase", label: "Find Jobs" },
+        { icon: "cap", label: "Skill Up" },
+        { icon: "interview", label: "Interview Practice" },
+        { icon: "sparkle", label: "Certifications" },
+    ];
+    function getLandingStageFeatures() {
+        let pills = null;
+        let asks = null;
+        try {
+            pills = window.CBBuddyVisuals && window.CBBuddyVisuals.getStageNodes();
+            asks = pills && window.CBBuddyVisuals.getStageQuestions && window.CBBuddyVisuals.getStageQuestions();
+        } catch (e) {
+            pills = null;
+            asks = null;
+        }
+        if (!Array.isArray(pills) || pills.length !== LANDING_STAGE_SLOTS.length) {
+            pills = LANDING_STAGE_DEFAULT;
+            asks = null;
+        }
+        // A topic pill is a button: clicking it asks Buddy that question. The landing defaults stay decoration.
+        return pills.map((p, i) => ({
+            icon: p.icon,
+            label: p.label,
+            pos: LANDING_STAGE_SLOTS[i][0],
+            d: LANDING_STAGE_SLOTS[i][1],
+            ask: Array.isArray(asks) && asks[i] ? String(asks[i]) : "",
+        }));
+    }
+    function stageText(value) {
+        return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+    function buildLandingStageNodesHtml(features) {
+        return features.map((f) => `
+                <span class="riya-visual-node riya-visual-node--${f.pos}" style="--d:${f.d}" title="${stageText(f.ask || f.label)}"${f.ask ? ` data-cb-ask="${stageText(f.ask)}" role="button" tabindex="0"` : ""}>
+                    <span class="riya-visual-node-content">
+                        <span class="riya-visual-node-icon">${WELCOME_ICONS[f.icon] || WELCOME_ICONS.briefcase}</span>
+                        <span class="riya-visual-node-label">${stageText(f.label)}</span>
+                    </span>
+                </span>`).join("");
+    }
+    // Same stage, new pills: swapped in place when the visitor opens another
+    // department. Only the five pills change - the conversation, the mascot
+    // and the rest of the stage are left alone.
+    function refreshLandingStageNodes() {
+        const stage = assistant.responseSlot && assistant.responseSlot.querySelector(".riya-visual-stage");
+        const glow = stage && stage.querySelector(".riya-visual-glow");
+        if (!stage || !glow) return;
+        const wanted = getLandingStageFeatures();
+        const shown = [...stage.querySelectorAll(".riya-visual-node")].map(
+            (n) => ((n.querySelector(".riya-visual-node-label") || {}).textContent || "") + "|" + (n.getAttribute("data-cb-ask") || "")
+        );
+        if (shown.length === wanted.length && shown.every((key, i) => key === wanted[i].label + "|" + wanted[i].ask)) return;
+        stage.querySelectorAll(".riya-visual-node").forEach((n) => n.remove());
+        glow.insertAdjacentHTML("afterend", buildLandingStageNodesHtml(wanted));
+        stage.setAttribute("aria-hidden", wanted.some((f) => f.ask) ? "false" : "true");
+        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            stage.querySelectorAll(".riya-visual-node").forEach((n, i) => {
+                try {
+                    n.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 350, delay: i * 70, easing: "ease-out", fill: "backwards" });
+                } catch (e) { /* cosmetic only */ }
+            });
+        }
+    }
+    window.addEventListener("cb:buddy-topic", refreshLandingStageNodes);
+
+    // Clicking a topic pill asks Buddy its question, exactly as if the visitor had typed it
+    // (sendTextMessage -> showTranscript + processTranscript). Whatever they were typing is kept.
+    function askFromStagePill(question) {
+        if (!question || !assistant.textInput) return;
+        if (assistant.state === AssistantState.PROCESSING) return; // never interrupt a running answer
+        const typedSoFar = assistant.textInput.value;
+        assistant.textInput.value = question;
+        sendTextMessage();
+        assistant.textInput.value = typedSoFar;
+    }
+    function onStagePillActivate(event) {
+        const pill = event.target && event.target.closest ? event.target.closest(".riya-visual-node[data-cb-ask]") : null;
+        if (!pill || !assistant.responseSlot || !assistant.responseSlot.contains(pill)) return;
+        if (event.type === "keydown" && event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        askFromStagePill(pill.getAttribute("data-cb-ask"));
+    }
+    document.addEventListener("click", onStagePillActivate);
+    document.addEventListener("keydown", onStagePillActivate);
 
     function renderPersistentWelcome() {
         const panel = getWelcomePanel();
@@ -2920,7 +3042,10 @@
         const section = role === "guest" ? "" : section0;
         const context = SECTION_CONTEXT[section] || roleContext;
         const lang = getSelectedAssistantLanguage();
-        const isGuestLanding = roleContext === WELCOME_CONTEXT.guestLanding || role === "student";
+        // /careers/<track>/ is where a department is picked: a signed-out visitor
+        // gets the same animated stage there (topic-aware), above the normal guest cards.
+        const isCareersExplorer = role === "guest" && /^\/careers\//i.test(String(window.location.pathname || ""));
+        const isGuestLanding = roleContext === WELCOME_CONTEXT.guestLanding || role === "student" || isCareersExplorer;
 
         // guestLanding renders ONCE into the SAME scrollable flow as the
         // greeting/conversation (#riya-response-slot), not into the
@@ -2963,7 +3088,7 @@
         // interaction. It simply scrolls out of view as the conversation
         // grows, and back into view if the user scrolls up, exactly like
         // any other content in this same scrollable area.
-        if (roleContext === WELCOME_CONTEXT.guestLanding || role === "student") {
+        if (isGuestLanding) {
             // Application-oriented animation: Buddy at the center, 5 small
             // feature nodes (own icons, own layout -- not the reference
             // image's artwork) orbiting it, replacing the earlier plain
@@ -2971,24 +3096,12 @@
             // container (CSS height unchanged) -- only what's drawn inside
             // it changed, per this round's "animation-only" requirement.
             const launcherSrc = assistant.root ? assistant.root.querySelector(".riya-launcher-img")?.src : "";
-            const features = [
-                { icon: "resume", label: "Resume Builder", pos: "n", d: "0.5s" },
-                { icon: "briefcase", label: "Find Jobs", pos: "ne", d: "0.7s" },
-                { icon: "cap", label: "Skill Up", pos: "nw", d: "0.9s" },
-                { icon: "interview", label: "Interview Practice", pos: "sw", d: "1.1s" },
-                { icon: "sparkle", label: "Certifications", pos: "se", d: "1.3s" },
-            ];
-            const nodesHtml = features.map((f) => `
-                <span class="riya-visual-node riya-visual-node--${f.pos}" style="--d:${f.d}" title="${f.label}">
-                    <span class="riya-visual-node-content">
-                        <span class="riya-visual-node-icon">${WELCOME_ICONS[f.icon] || WELCOME_ICONS.briefcase}</span>
-                        <span class="riya-visual-node-label">${f.label}</span>
-                    </span>
-                </span>`).join("");
+            const features = getLandingStageFeatures();
+            const nodesHtml = buildLandingStageNodesHtml(features);
             const stageWrap = document.createElement("div");
             stageWrap.className = "riya-visual-wrap";
             stageWrap.innerHTML = `
-                <div class="riya-visual-stage" aria-hidden="true">
+                <div class="riya-visual-stage" aria-hidden="${features.some((f) => f.ask) ? "false" : "true"}">
                     <svg class="riya-visual-orbit-svg" viewBox="0 0 300 160" preserveAspectRatio="xMidYMid meet">
                         <ellipse cx="150" cy="80" rx="105" ry="40" class="orbit-ring" />
                         <ellipse cx="150" cy="80" rx="50" ry="18" class="orbit-ring" style="stroke-dasharray: 2 6; opacity: 0.5;" />
@@ -4617,6 +4730,277 @@
         return null;
     }
 
+    function detectSiteNavigationIntent(text) {
+        if (assistant.isEmployer) return null;
+
+        const normalizedInput = normalizeText(text);
+        if (!normalizedInput) return null;
+
+        const isWhereIs = /^(where is|where are|how do i find|show me where|where can i find|what is in)\b/i.test(normalizedInput);
+        const hasVerb = hasNavigationVerb(normalizedInput);
+
+        if (!isWhereIs && !hasVerb) return null;
+
+        const siteLinks = [];
+
+        document.querySelectorAll('a').forEach(a => {
+            let label = (a.textContent || "").replace(/\s+/g, " ").trim();
+            const href = a.getAttribute("href");
+            if (label && href && !href.startsWith("javascript:") && href !== "#") {
+                let location = "the page";
+                const parentNav = a.closest('.cb-nav');
+                const parentFooter = a.closest('footer') || a.closest('.footer') || a.closest('#contact');
+                const parentMega = a.closest('.mega');
+                
+                if (parentMega) {
+                    const toggle = parentMega.previousElementSibling;
+                    if (toggle) location = "the " + toggle.textContent.trim() + " dropdown in the navigation bar";
+                    else location = "the navigation dropdown";
+                } else if (parentNav) {
+                    location = "the top navigation bar";
+                } else if (parentFooter) {
+                    location = "the footer";
+                } else if (a.closest('.cbn-header')) {
+                    location = "the header";
+                }
+
+                const cleanLabel = label.replace(/[&]/g, "and");
+                
+                siteLinks.push({
+                    label: label,
+                    route: href,
+                    normalizedLabel: normalizeText(cleanLabel),
+                    location: location
+                });
+            }
+        });
+
+        Object.keys(ACTION_DEFINITIONS).forEach(key => {
+            const def = ACTION_DEFINITIONS[key];
+            
+            siteLinks.push({
+                key: key,
+                label: def.label,
+                route: def.route,
+                normalizedLabel: normalizeText(def.label),
+                location: "the site",
+                keywords: (def.keywords || []).map(normalizeText)
+            });
+        });
+
+        siteLinks.push({ label: "Privacy Policy", route: "/#", normalizedLabel: "privacy policy", location: "the footer", keywords: ["privacy"] });
+        siteLinks.push({ label: "Terms and Conditions", route: "/#", normalizedLabel: "terms and conditions", location: "the footer", keywords: ["terms"] });
+
+        let bestMatch = null;
+        let bestScore = 0;
+
+        const inputTokens = normalizedInput.split(/\s+/).filter(Boolean);
+
+        siteLinks.forEach(link => {
+            if (!link.normalizedLabel) return;
+            let score = 0;
+            
+            if (normalizedInput.includes(link.normalizedLabel)) {
+                score += 15;
+            } else if (link.keywords) {
+                link.keywords.forEach(kw => {
+                    if (normalizedInput.includes(kw)) {
+                        score += 15;
+                    } else {
+                        const kwTokens = kw.split(/\s+/).filter(Boolean);
+                        let matches = 0;
+                        kwTokens.forEach(kt => {
+                            if (inputTokens.includes(kt)) matches++;
+                        });
+                        if (matches === kwTokens.length && kwTokens.length > 0) score += 10;
+                    }
+                });
+            }
+
+            const linkTokens = link.normalizedLabel.split(/\s+/).filter(Boolean);
+            let matches = 0;
+            linkTokens.forEach(lt => {
+                if (inputTokens.includes(lt)) matches++;
+            });
+            if (matches === linkTokens.length && linkTokens.length > 0) score += 8;
+            else if (matches > 0) score += matches;
+
+            if (score > bestScore && score >= 5) {
+                bestScore = score;
+                bestMatch = link;
+            } else if (score === bestScore && score >= 5 && link.location !== "the site") {
+                bestMatch = link;
+            }
+        });
+
+        if (bestMatch) {
+            let replyText = "";
+            let autoNavigate = false;
+
+            const authPaths = ["/dashboard", "/users/profile", "/activities", "/go/resume-builder", "/resume-builder", "/go/activities", "/employer"];
+            const requiresJobSeekerAuth = authPaths.some(p => bestMatch.route && bestMatch.route.startsWith(p));
+            const isLoginRoute = ["/users/login/", "/users/register/", "/employer/accounts/employer/login/", "/employer/accounts/employer/register/"].includes(bestMatch.route);
+            
+            if (requiresJobSeekerAuth && !isLoginRoute && getAssistantRole() === "guest" && !assistant.isEmployer) {
+                replyText = "That page requires you to log in.";
+                return {
+                    reply: replyText,
+                    source: "site_navigation",
+                    autoNavigate: false,
+                    navigation: [{ label: "Log In", route: "/users/login/" }]
+                };
+            }
+
+            if (isWhereIs) {
+                replyText = `${bestMatch.label} is available in ${bestMatch.location}.`;
+                autoNavigate = false;
+            } else if (hasVerb) {
+                replyText = `Opening ${bestMatch.label}.`;
+                autoNavigate = true;
+            } else {
+                return null;
+            }
+
+            return {
+                reply: replyText,
+                source: "site_navigation",
+                autoNavigate: autoNavigate,
+                navigation: [{ label: `Open ${bestMatch.label}`, route: bestMatch.route }]
+            };
+        }
+
+        return null;
+    }
+
+    function detectIndustriesIntent(text) {
+        if (assistant.isEmployer) return null;
+        if (!window.CareerBuddyIndustriesKnowledge || !window.CareerBuddyIndustriesKnowledge.isLoaded()) return null;
+        
+        const q = text.toLowerCase().trim();
+        const knowledge = window.CareerBuddyIndustriesKnowledge;
+        
+        assistant.industriesContext = assistant.industriesContext || null;
+        
+        const isNavVerb = /^(take me there|open it|open this|open that|show me|take me|go there|let me see)$/i.test(q) ||
+                          /^open (this|that|it|there) (role|roles|department|category|industry)$/i.test(q) ||
+                          /^(show|view|explore) (those|these|the|this) (roles|role|jobs|job|departments|department)$/i.test(q) ||
+                          /^(show me|let me see) (those|these|the) (roles|role|jobs|job|departments|department)$/i.test(q);
+                          
+        if (isNavVerb && assistant.industriesContext) {
+            const ctx = assistant.industriesContext;
+            let route = knowledge.getRouteForCategory(ctx.category);
+            if (ctx.deptKey) route += '#' + ctx.deptKey;
+            else if (ctx.key) route += '#' + ctx.key;
+            
+            return {
+                reply: "Opening your requested industry.",
+                navigation: [{ label: "Open", route: route }],
+                autoNavigate: true
+            };
+        }
+        
+        const optionsMatch = q.match(/^(open|show|view|tell me about) (the )?(options|role details|details|this role)( for this role)?$/i);
+        if (optionsMatch && ctx && ctx.key) {
+             const auto = /^(open|show|view)/i.test(q);
+             let route = ctx.category === 'it' ? '/careers/it/' : '/careers/non-it/';
+             route += '#options-' + ctx.key;
+             return {
+                 reply: auto ? "Opening options for this role." : "Here are the options for this role.",
+                 navigation: [{ label: "View Options", route: route }],
+                 autoNavigate: auto
+             };
+        }
+        
+        const takeMeToItMatch = q.match(/^(take me to|open|show me|show) (it|it roles|it jobs|it department|it departments)$/i);
+        if (takeMeToItMatch || q === "it" || q === "it roles" || q === "it jobs") {
+             assistant.industriesContext = { category: 'it' };
+             const auto = /^(take me|open)/i.test(q) || q === "open it";
+             return {
+                 reply: "Sure. I can show you the available IT roles.",
+                 navigation: [{ label: "Open IT Roles", route: "/careers/it/" }],
+                 autoNavigate: auto
+             };
+        }
+        
+        const takeMeToNonItTechMatch = q.match(/^(take me to|open|show me|show) (non it technical|non-it technical|technical)(?: (roles|jobs|departments))?$/i);
+        if (takeMeToNonItTechMatch || q === "technical" || q === "technical roles" || q === "non it technical" || q === "non-it technical") {
+             assistant.industriesContext = { category: 'tech' };
+             const auto = /^(take me|open)/i.test(q);
+             return {
+                 reply: "Sure. I can show you the available Non-IT Technical roles.",
+                 navigation: [{ label: "Open Non-IT Technical Roles", route: "/careers/non-it/" }],
+                 autoNavigate: auto
+             };
+        }
+        
+        const takeMeToNonItNonTechMatch = q.match(/^(take me to|open|show me|show) (non it non technical|non-it non-technical|non technical|non-technical)(?: (roles|jobs|departments))?$/i);
+        if (takeMeToNonItNonTechMatch || q === "non technical" || q === "non technical roles" || q === "non it non technical" || q === "non-it non-technical") {
+             assistant.industriesContext = { category: 'nt' };
+             const auto = /^(take me|open)/i.test(q);
+             return {
+                 reply: "Sure. I can show you the available Non-IT Non-Technical roles.",
+                 navigation: [{ label: "Open Non-IT Non-Technical Roles", route: "/careers/non-it/" }],
+                 autoNavigate: auto
+             };
+        }
+        
+        const baseIndustriesMatch = q.match(/^(take me to|open|go to|view|explore|show me|show) industries$/i);
+        if (baseIndustriesMatch || q === "industries") {
+             assistant.industriesContext = null;
+             const auto = /^(take me|open|go to|view|explore)/i.test(q);
+             if (auto) {
+                 return {
+                     reply: "Opening Industries.",
+                     navigation: [{ label: "Open Industries", route: "/#choose-path" }],
+                     autoNavigate: true
+                 };
+             }
+             return {
+                 reply: "We support various industries including IT Roles, Non-IT Technical, and Non-IT Non-Technical.",
+                 navigation: [
+                     { label: "Open IT Roles", route: "/careers/it/" },
+                     { label: "Open Non-IT Technical Roles", route: "/careers/non-it/" },
+                     { label: "Open Non-IT Non-Technical Roles", route: "/careers/non-it/" }
+                 ],
+                 autoNavigate: false
+             };
+        }
+        
+        let stripped = q.replace(/^(take me to|open|show me|show|what are the|tell me about|what skills are required for) /i, "").trim();
+        let cleanQ = stripped.replace(/\s+(roles|jobs|departments|department)$/i, "").trim();
+        let baseAns = knowledge.answerIndustriesQuestion(cleanQ) || knowledge.answerIndustriesQuestion(stripped) || knowledge.answerIndustriesQuestion(q);
+        
+        if (baseAns) {
+            let navLabel = "the requested section";
+            if (baseAns.navigation && baseAns.navigation.length > 0) {
+                const nav = baseAns.navigation[0];
+                navLabel = nav.label;
+                const route = nav.route;
+                assistant.industriesContext = {};
+                if (route.includes('/it/')) assistant.industriesContext.category = 'it';
+                else if (route.includes('/non-it/')) {
+                    if (baseAns.reply.includes('Non-Technical')) assistant.industriesContext.category = 'nt';
+                    else assistant.industriesContext.category = 'tech';
+                }
+                
+                if (route.includes('#')) {
+                    const hash = route.split('#')[1];
+                    assistant.industriesContext.key = hash;
+                    assistant.industriesContext.deptKey = hash;
+                }
+            }
+            
+            if (/^(take me to|open|show me|show) /i.test(q)) {
+                baseAns.autoNavigate = true;
+                baseAns.reply = `Sure \u2014 opening ${navLabel}.`;
+            }
+            
+            return baseAns;
+        }
+
+        return null;
+    }
+
     function processTranscript(text, inputMode) {
         let cleanText = String(text || "")
             .replace(/\s+/g, " ")
@@ -4756,62 +5140,74 @@
         }
 
         // ============================================================
-        // INDUSTRIES KNOWLEDGE CHECK (Guest & Student only)
+        // SITE-WIDE NAVIGATION & KNOWLEDGE
         // ============================================================
-        if (getAssistantRole() === "guest" || getAssistantRole() === "student") {
-            if (typeof CareerBuddyIndustriesKnowledge !== "undefined") {
-                const isNavReq = hasNavigationVerb(cleanText) || cleanText.toLowerCase().includes("take me") || cleanText.toLowerCase().includes("open");
-                if (isNavReq && assistant.lastIndustriesContext && (cleanText.toLowerCase().includes("there") || cleanText.toLowerCase().includes("them") || cleanText.toLowerCase().includes("it") || cleanText.toLowerCase().includes("page"))) {
-                    if (inputMode === "voice") {
-                        assistant.voiceTurnHandled = true;
-                    }
-                    addConversationMessage("user", cleanText);
-                    const navRoute = assistant.lastIndustriesContext[0].route;
-                    const reply = "Taking you there...";
-                    addConversationMessage("assistant", reply);
-                    
-                    renderPayload(
-                        { reply: reply, source: "industries_knowledge" },
-                        { speak: true, autoResumeListening: inputMode === "voice", statusText: "Navigating..." }
-                    );
-                    commitNavigation({ route: navRoute });
-                    return;
-                }
-
-                const industriesAnswer = CareerBuddyIndustriesKnowledge.answerIndustriesQuestion(cleanText);
-                if (industriesAnswer) {
-                    if (inputMode === "voice") {
-                        assistant.voiceTurnHandled = true;
-                    }
-                    addConversationMessage("user", cleanText);
-                    addConversationMessage("assistant", industriesAnswer.reply);
-
-                    if (industriesAnswer.navigation && industriesAnswer.navigation.length > 0) {
-                        assistant.lastIndustriesContext = industriesAnswer.navigation;
-                    }
-
-                    const actions = [];
-                    if (industriesAnswer.navigation) {
-                        industriesAnswer.navigation.forEach(function(nav) {
-                            actions.push({ key: 'industries_nav', label: nav.label, route: nav.route });
-                        });
-                    }
-
-                    renderPayload(
-                        {
-                            reply: industriesAnswer.reply,
-                            actions: actions,
-                            source: "industries_knowledge"
-                        },
-                        {
-                            speak: true,
-                            autoResumeListening: inputMode === "voice",
-                            statusText: "Found industry information."
-                        }
-                    );
-                    return;
-                }
+        const siteNavReply = detectSiteNavigationIntent(cleanText);
+        if (siteNavReply) {
+            if (inputMode === "voice") {
+                assistant.voiceTurnHandled = true;
             }
+            
+            addConversationMessage("user", cleanText);
+            addConversationMessage("assistant", siteNavReply.reply);
+            
+            const actions = [];
+            if (siteNavReply.navigation && siteNavReply.navigation.length > 0) {
+                siteNavReply.navigation.forEach(nav => {
+                    actions.push({
+                        key: "site_nav",
+                        route: nav.route,
+                        label: nav.label,
+                        response: nav.label
+                    });
+                });
+            }
+            
+            renderPayload(
+                { reply: siteNavReply.reply, actions: actions, source: "site_navigation" },
+                { speak: true, autoResumeListening: false, statusText: "Processing navigation request." }
+            );
+            
+            if (siteNavReply.autoNavigate && actions.length > 0) {
+                commitNavigation(actions[0]);
+            }
+            return;
+        }
+
+        // ============================================================
+        // INDUSTRIES NAVIGATION & INTENT (Priority over Guest Role)
+        // ============================================================
+        const indReply = detectIndustriesIntent(cleanText);
+        if (indReply) {
+            if (inputMode === "voice") {
+                assistant.voiceTurnHandled = true;
+            }
+            
+            addConversationMessage("user", cleanText);
+            addConversationMessage("assistant", indReply.reply);
+            
+            const actions = [];
+            if (indReply.navigation && indReply.navigation.length > 0) {
+                indReply.navigation.forEach(nav => {
+                    actions.push({
+                        key: "industries_nav",
+                        route: nav.route,
+                        label: nav.label,
+                        response: nav.label
+                    });
+                });
+            }
+            
+            renderPayload(
+                { reply: indReply.reply, actions: actions, source: "intent" },
+                { speak: true, autoResumeListening: false, statusText: "Processing industries request." }
+            );
+            
+            if (indReply.autoNavigate && actions.length > 0) {
+                // Ensure the reply gets spoken/rendered first, then navigate
+                commitNavigation(actions[0]);
+            }
+            return;
         }
 
         // ============================================================
@@ -7195,6 +7591,8 @@
                 .forEach((card) => { card.hidden = false; });
             assistant.responseSlot.querySelectorAll(".is-thinking, #riya-stream-card")
                 .forEach((card) => card.remove());
+            // The restored HTML includes the previous page's stage: show THIS page's topic pills.
+            refreshLandingStageNodes();
 
             assistant.lastResponseText =
                 previousSession.lastResponseText || "";

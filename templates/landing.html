@@ -7119,8 +7119,7 @@
             <p>Please enable JavaScript to use the resume builder.</p>
           </noscript>
         </div>
-        <form id="crPrintForm" method="post" action="{% url 'create_resume_pdf' %}" target="_blank" hidden>{% csrf_token
-          %}<input type="hidden" name="payload" value=""><input type="hidden" name="inline" value="1"></form>
+        <form id="crPrintForm" method="post" action="{% url 'create_resume_pdf' %}" target="_blank" hidden>{% csrf_token %}<input type="hidden" name="payload" value=""><input type="hidden" name="inline" value="1"></form>
         <p style="text-align:center;margin-top:1.2rem"><a class="btn btn-outline"
             href="{% url 'nav_go' 'resume-builder' %}">Check ATS score</a></p>
       </div>
@@ -7634,8 +7633,7 @@
           <p class="rm-hint">All suggestions are predefined and editable — select only what is true for you. Generate
             Resume uses only the details you enter; nothing is written for you and your details are not stored. The AI
             Analyzer is a separate, optional skill check that runs in your browser.</p>
-          <form id="rbPrintForm" method="post" action="{% url 'manual_resume_pdf' %}" target="_blank" hidden>{%
-            csrf_token %}<input type="hidden" name="payload" value=""><input type="hidden" name="inline" value="1">
+          <form id="rbPrintForm" method="post" action="{% url 'manual_resume_pdf' %}" target="_blank" hidden>{% csrf_token %}<input type="hidden" name="payload" value=""><input type="hidden" name="inline" value="1">
           </form>
         </div>
       </div>
@@ -7965,11 +7963,44 @@
            in the hash means browser Back steps out one level at a time, the same as
            it already did for departments. */
         var route = function () {
-          var h = location.hash, m = h.match(/^(#.+)-(\d+)$/), d = null, ri = -1;
+          var h = location.hash;
+          var showOptions = false;
+          if (h.indexOf('#options-') === 0) {
+              showOptions = true;
+              h = '#' + h.substring(9);
+          }
+          var m = h.match(/^(#.+)-(\d+)$/), d = null, ri = -1;
           d = DEPTS.filter(function (x) { return '#' + x.key === h })[0];
           if (!d && m) { d = DEPTS.filter(function (x) { return '#' + x.key === m[1] })[0]; ri = +m[2] - 1; }
+          /* The Buddy chatbot shows this department's pills (static/js/buddy_visuals.js); '' = none open. */
+          document.documentElement.setAttribute('data-cb-topic', d ? d.n : '');
           host.querySelectorAll('.cp-panel').forEach(function (p) { p.hidden = !!d }); dv.hidden = !d;
           if (!d) return;
+
+          if (showOptions && ri > -1 && typeof pickRole === 'function') {
+              // Build the buttons temporarily if they don't exist in DOM, or just mock the element
+              var mockBtn = document.createElement('button');
+              mockBtn.dataset.idx = d.idx[ri];
+              mockBtn.dataset.skillsHash = '#' + d.key + '-' + (ri + 1);
+              mockBtn.dataset.name = d.r[ri][0];
+              mockBtn.dataset.deptName = d.n;
+              pickRole(mockBtn);
+              
+              // Render the parent department view so the modal has background content
+              dv.innerHTML = '<a class="cp-back" href="#">&larr; All departments</a><h3 class="cp-ph">' + esc(d.n) + '</h3>'
+                + '<p class="cp-sub-t">Pick a role to see the skills it needs.</p><div class="role-grid2"></div>';
+              var g = dv.querySelector('.role-grid2');
+              d.r.forEach(function (x, j) {
+                g.insertAdjacentHTML('beforeend', '<button type="button" class="role-card3"'
+                  + ' data-idx="' + d.idx[j] + '" data-skills-hash="#' + d.key + '-' + (j + 1) + '">'
+                  + '<div class="rc-img g' + (j % 6) + '">' + svg(d.i) + '</div>'
+                  + '<div class="rc-body"><b>' + esc(x[0]) + '</b>'
+                  + '<span>' + (splitSk(x[1]).length ? splitSk(x[1]).length + ' skills' : 'Skills coming soon') + '</span>'
+                  + '<em>View options &rarr;</em></div></button>');
+              });
+              window.scrollTo(0, 0);
+              return;
+          }
 
           if (ri > -1 && d.r[ri]) {
             var role = d.r[ri];
@@ -8095,9 +8126,45 @@
             + '<div class="skill-list" id="skillList"></div>'
             + '<div class="sk-cta"><a class="btn btn-primary" id="skillLearn" href="#">Start Learning &rarr;</a></div></div>';
           panel.innerHTML = html;
-        }
-
-        function show(id) {
+          
+          function handleHash() {
+            var h = location.hash;
+            var showOptions = false;
+            if (h.indexOf('#options-') === 0) {
+                showOptions = true;
+                h = '#' + h.substring(9);
+            }
+            var m = h.match(/^#it-(\d+)(?:-(\d+))?$/);
+            if (!m) return;
+            var deptIdx = +m[1] - 1;
+            var dcard = panel.querySelector('[data-dept="' + deptIdx + '"]');
+            if (dcard) {
+              curDept = flatDept[deptIdx];
+              document.getElementById('deptTitle').textContent = curDept[0] + ' \u00b7 ' + curDept[2].length + ' roles';
+              document.getElementById('deptRoles').innerHTML = curDept[2].map(function (r, i) {
+                return '<button type="button" class="role-card3" data-it-role="' + i + '" data-name="' + esc(r[0]) + '" data-dept-name="' + esc(curDept[0]) + '">'
+                  + art(r[0], roleIcon(r[0]), i)
+                  + '<div class="rc-body"><b>' + esc(r[0]) + '</b><span>' + r[1].length + ' skills</span>'
+                  + '<em>View options &rarr;</em></div></button>';
+              }).join('');
+              show('deptRolesView');
+              
+              var roleIdx = m[2] ? +m[2] - 1 : -1;
+              if (roleIdx > -1) {
+                var rcard = panel.querySelector('[data-it-role="' + roleIdx + '"]');
+                if (rcard && typeof pickRole === 'function' && showOptions) {
+                  pickRole(rcard);
+                } else if (!showOptions && typeof itSkills === 'function') {
+                  itSkills(roleIdx);
+                }
+              }
+            }
+          }
+          window.addEventListener('hashchange', handleHash);
+          handleHash();
+        }        function show(id) {
+          // The Buddy chatbot shows the open department's pills (static/js/buddy_visuals.js); '' = none open.
+          document.documentElement.setAttribute('data-cb-topic', (id === 'deptView' || !curDept) ? '' : curDept[0]);
           ['deptView', 'deptRolesView', 'deptSkillsView'].forEach(function (v) {
             var el = document.getElementById(v);
             if (el) { el.hidden = (v !== id); }
