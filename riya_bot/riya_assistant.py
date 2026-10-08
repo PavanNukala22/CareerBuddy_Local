@@ -2215,8 +2215,9 @@ APP_KNOWLEDGE_BASE = (
     "- Workshops (GD & JAM): Group Discussion (GD) with AI personalities, and JAM (Just A Minute) solo speaking practice to build confidence.\n"
     "- Roleplay (/roleplay/): Interactive conversation roleplay for real-world situations and storytelling.\n"
     "- Resume Builder / Resume Parsing (/resume-builder/): A powerful tool where students upload their resume to get an ATS score, parse details, analyze skills, and get AI mock interview questions tailored to their resume.\n"
-    "- AI Mock Interview: Practice interviewing with an AI recruiter based on your resume.\n"
-    "- Job Search: Premium (Pro) feature to find jobs matching resume skills. Requires >70% score in AI Mock Interview.\n"
+    "- Resume Parsing limits: Free plan gets 4 resume analyses in total; paid plans are unlimited.\n"
+    "- AI Mock Interview: Practice interviewing with an AI recruiter based on your resume. Paid plans only (Normal or Pro), and it unlocks only when the resume's ATS score is 90% or above. Scoring below 90% in the interview shows a 'Skill up yourself' button to the chosen role's Skill Up content.\n"
+    "- Job Search: Premium (Pro) feature to find jobs matching resume skills. Requires a score of 90% or above in the AI Mock Interview.\n"
     "- English & Vocab: CEFR-aligned English from A1 to C2, 10-step phonics ladder, vocabulary lexicons, interactive grammar set.\n"
     "- Aptitude: Quantitative aptitude, logical reasoning, verbal ability, situational judgment, cognitive speed, coaching tracks, and question banks.\n"
     "- Tech: Long-form technical guides covering programming (Python), DSA, OOP, databases, AI/ML, agents, vector search, and system design.\n"
@@ -2452,12 +2453,12 @@ def _generate_ai_payload(message: str, page: str, path: str, input_mode: str, ap
                     from career_app.models import ResumeInterviewSession
                     try:
                         latest_session = ResumeInterviewSession.objects.filter(resume__user=user, is_completed=True).latest('start_time')
-                        if latest_session.total_score is not None and latest_session.total_score >= 70:
+                        if latest_session.total_score is not None and latest_session.total_score >= 90:
                             passed = True
                     except ResumeInterviewSession.DoesNotExist:
                         pass
                 if not passed:
-                    reply = "To unlock Job Search, you must score at least 70% in your AI Mock Interview."
+                    reply = "To unlock Job Search, you must score at least 90% in your AI Mock Interview."
                     final_action_keys = ["mock_interview"]
                     source = "intent"
                     break
@@ -2560,7 +2561,7 @@ def riya_chat_logic(message: str, page: str = "unknown", user_name: str | None =
                     from career_app.models import ResumeInterviewSession
                     try:
                         latest_session = ResumeInterviewSession.objects.filter(resume__user=user, is_completed=True).latest('start_time')
-                        if latest_session.total_score is not None and latest_session.total_score >= 70:
+                        if latest_session.total_score is not None and latest_session.total_score >= 90:
                             passed = True
                     except ResumeInterviewSession.DoesNotExist:
                         pass
@@ -2725,7 +2726,7 @@ def stream_assistant_response(message: str, page: str = "unknown", api_key: str 
                 from career_app.models import ResumeInterviewSession
                 try:
                     latest_session = ResumeInterviewSession.objects.filter(resume__user=user, is_completed=True).latest('start_time')
-                    if latest_session.total_score is not None and latest_session.total_score >= 70:
+                    if latest_session.total_score is not None and latest_session.total_score >= 90:
                         passed = True
                 except ResumeInterviewSession.DoesNotExist:
                     pass
@@ -2986,12 +2987,12 @@ def stream_assistant_response(message: str, page: str = "unknown", api_key: str 
                 from career_app.models import ResumeInterviewSession
                 try:
                     latest_session = ResumeInterviewSession.objects.filter(resume__user=user, is_completed=True).latest('start_time')
-                    if latest_session.total_score is not None and latest_session.total_score >= 70:
+                    if latest_session.total_score is not None and latest_session.total_score >= 90:
                         passed = True
                 except ResumeInterviewSession.DoesNotExist:
                     pass
             if not passed:
-                final_reply = "To unlock Job Search, you must score at least 70% in your AI Mock Interview."
+                final_reply = "To unlock Job Search, you must score at least 90% in your AI Mock Interview."
                 final_action_keys = ["mock_interview"]
                 source = "intent"
                 break

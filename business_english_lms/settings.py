@@ -41,6 +41,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Free plan: refuses locked Skill Up lesson pages (static/001 Career Buddy/).
+    # Must run BEFORE WhiteNoise, which serves those files. See core/skillup_access.py.
+    'core.skillup_access.SkillUpAccessMiddleware',
     # WhiteNoise: gzip/brotli compression + far-future cache headers for static
     # files (biggest win for the large Skill Up pages). Must sit directly after
     # SecurityMiddleware. Active when DEBUG=False; dev still uses runserver.

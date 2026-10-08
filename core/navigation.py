@@ -53,8 +53,10 @@ class Destination:
 #: key -> Destination. Keys are what the landing page templates reference.
 NAV_MAP: dict[str, Destination] = {
     # ── Skill Up menu ────────────────────────────────────────────────────
-    # English Learning opens the Skill Up hub home (no section selected).
-    "english-learning": Destination("English Learning", "skill_up"),
+    # English Learning opens the hub's English & Vocabulary section.
+    "english-learning": Destination(
+        "English Learning", "skill_up", {"section": "depth-english"}
+    ),
     # Grammar is its own module at /subject/ (subject_views.subject_home).
     "grammar": Destination("Grammar", "subject"),
     # "English & Vocabulary" is the `depth-english` article on the hub.

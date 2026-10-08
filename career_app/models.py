@@ -37,6 +37,10 @@ class ResumeInterviewSession(models.Model):
     # for this specific interview stay fixed even if resume text is edited
     # mid-interview, and so it's visible on the session record itself.
     experience_level = models.CharField(max_length=20, blank=True, default='')
+    # Role picked on the career-path page ({role, dept, track, text, industries},
+    # see career_app/role_fit.py). When set, the domain questions come from this
+    # role instead of the resume's own domain. Null for interviews without one.
+    target_role = models.JSONField(null=True, blank=True)
     # Set server-side only after the client confirms a live camera stream
     # (resume_camera_verified view) — the question/answer endpoints check
     # this directly, so the mandatory-camera requirement is enforced in

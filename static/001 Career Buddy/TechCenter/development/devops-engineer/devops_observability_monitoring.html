@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="en"><head>
+<script src="/static/js/exam_guard.js?v=1"></script><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Observability & Monitoring — DevOps Engineer Course</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -1366,16 +1367,28 @@ ddtrace-run python app.py</code></pre>
       if(!nativeWarningShown())warnDialog(msg);
     },450);
   }
-  document.addEventListener('visibilitychange',function(){if(!examOn)return;if(document.hidden)away=true;else if(away){away=false;violation('Tab switch detected');}});
-  window.addEventListener('blur',function(){if(!examOn)return;setTimeout(function(){var a=document.activeElement;if(a&&a.tagName==='IFRAME'&&document.hasFocus())return;if(!document.hidden)away=true;},0);});
-  window.addEventListener('focus',function(){if(examOn&&away&&!document.hidden){away=false;violation('You left the assessment window');}});
-  document.addEventListener('fullscreenchange',function(){
+  // /static/js/exam_guard.js groups the blur / tab-switch / fullscreen-exit events of ONE act (e.g. one screenshot)
+  // into one incident, and lets the page's own engine see it once. When that engine shows its own warnings, it is
+  // the only counter; this script counts (and shows its dialog) only on pages whose engine has none.
+  var G=window.CBExamGuard, own=function(f){return G?G.own(f):f;};
+  if(G){
+    G.onIncident(function(e){
+      if(!examOn||G.engineWarns())return;
+      if(e.type==='fullscreenchange'&&!wasFS)return;
+      violation(e.type==='fullscreenchange'?'Fullscreen exited':e.type==='visibilitychange'?'Tab switch detected':'You left the assessment window');
+    });
+  }else{
+    document.addEventListener('visibilitychange',function(){if(!examOn)return;if(document.hidden)away=true;else if(away){away=false;violation('Tab switch detected');}});
+    window.addEventListener('blur',function(){if(!examOn)return;setTimeout(function(){var a=document.activeElement;if(a&&a.tagName==='IFRAME'&&document.hasFocus())return;if(!document.hidden)away=true;},0);});
+    window.addEventListener('focus',function(){if(examOn&&away&&!document.hidden){away=false;violation('You left the assessment window');}});
+  }
+  document.addEventListener('fullscreenchange',own(function(){
     var fe=document.fullscreenElement;
     // keep the screenshot cover, watermark and warnings inside whatever element is fullscreen, or they would not show
     var host=(fe&&fe!==document.documentElement&&fe!==document.body)?fe:document.body;
     OURS.forEach(function(id){var e=document.getElementById(id);if(e&&e.parentNode!==host)host.appendChild(e);});
-    if(fe)wasFS=true; else if(examOn&&wasFS)violation('Fullscreen exited');
-  });
+    if(fe)wasFS=true; else if(!G&&examOn&&wasFS)violation('Fullscreen exited');
+  }));
 
   /* ---------- exam state ---------- */
   document.addEventListener('cb-exam-start',function(e){

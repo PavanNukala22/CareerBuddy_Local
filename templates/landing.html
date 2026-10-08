@@ -7438,8 +7438,8 @@
       T('tech', 'Tech Skills', 'Technical learning paths in the Skill Up hub.', 'Skill Up', '', '', 'Start Learning', '/skill-up/#depth-tech', 0, '/skill-up/'),
       T('activities', 'Activities', '20+ activities and 100+ exercises for practical skill building.', 'Skill Up', '', '', 'Browse Activities', '/activities/', 0, '/activities/'),
       T('resume-builder', 'How to Create Your Resume', 'Switch templates, edit with live preview, save a draft and print or save as PDF.', 'Resume & Career Tools', '1:08', 'resume', 'Create Resume', '/resume-builder/', 1, '/resume-builder/'),
-      T('parsing', 'How Resume Parsing Works', 'Upload your resume and AI reads it. Unlimited parsing on every plan.', 'Resume & Career Tools', '', '', 'Create Resume', '/resume-builder/', 0, '/resume-builder/'),
-      T('ats', 'How to Check Your ATS Score', 'See how well your resume matches ATS systems. Unlimited ATS score analysis on every plan.', 'Resume & Career Tools', '', '', 'Check ATS Score', '/resume-builder/analytics/', 0, '/resume-builder/analytics/'),
+      T('parsing', 'How Resume Parsing Works', 'Upload your resume and AI reads it. 4 analyses on Free, unlimited on paid plans.', 'Resume & Career Tools', '', '', 'Create Resume', '/resume-builder/', 0, '/resume-builder/'),
+      T('ats', 'How to Check Your ATS Score', 'See how well your resume matches ATS systems. 4 analyses on Free, unlimited on paid plans.', 'Resume & Career Tools', '', '', 'Check ATS Score', '/resume-builder/analytics/', 0, '/resume-builder/analytics/'),
       T('improve', 'How to Analyze & Improve Your Resume', 'Get specific AI feedback and guided improvements.', 'Resume & Career Tools', '', '', 'Check Your Resume', '/resume-builder/analytics/', 0, '/resume-builder/analytics/'),
       T('history', 'How Resume History Works', 'Every analysis is saved so you can compare versions.', 'Resume & Career Tools', '', '', 'Open Resume History', '/resume-builder/history/', 0, '/resume-builder/history/'),
       T('mock', 'How to Use AI Mock Interviews', 'AI mock interviews with instant feedback (included in the Pro plan).', 'Resume & Career Tools', '', '', 'See Pro Plan', '/pro/', 0, 'Pro plan'),
@@ -7576,7 +7576,7 @@
             <h3>Build Resume</h3>
             <p>Build a resume for this role: pick your skills for it, add your details and download the PDF.</p>
           </span></a>
-        <a class="cp-card" href="{% url 'nav_go' 'resume-builder' %}"><span class="cp-ic"><svg viewBox="0 0 24 24"
+        <a class="cp-card" id="raParse" href="{% url 'nav_go' 'resume-builder' %}" data-base="{% url 'resume_builder' %}"><span class="cp-ic"><svg viewBox="0 0 24 24"
               aria-hidden="true">
               <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
               <path d="M14 3v5h5M9 13h6M9 17h3" />
@@ -8555,6 +8555,12 @@
         $('raTitle').textContent = r ? r.n : b.dataset.name;
         $('raDept').textContent = r ? CAT[r.c] + ' · ' + r.sub : 'IT · ' + b.dataset.deptName;
         $('raSkillsP').textContent = 'See the skills this role needs.';
+        // Resume Parsing carries the role, so a below-pass interview can open this
+        // role's Skill Up content (career_app.views._remember_target_role).
+        var it = r ? null : (raIt != null && itRole ? itRole(raIt) : null);
+        var pick = r ? { role: r.n, dept: r.sub, track: r.c === 'it' ? 'tech' : 'nonit' }
+          : { role: it ? it.n : b.dataset.name, dept: it ? it.dept : b.dataset.deptName, track: 'tech' };
+        $('raParse').href = $('raParse').dataset.base + '?' + new URLSearchParams(pick);
         ra.showModal();
       }
       document.addEventListener('click', function (e) { var b = e.target.closest('.role-card3[data-idx],.role-card3[data-it-role]'); if (b) pickRole(b) });

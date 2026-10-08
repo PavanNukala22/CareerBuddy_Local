@@ -1,4 +1,5 @@
 import math
+import re
 import hmac
 import json
 import uuid
@@ -164,6 +165,72 @@ def _can_access_resume(user):
     # Free. The AI Technical Interview and its job recommendations are gated
     # separately by _can_access_interview() (Normal ₹499 and Pro).
     return user.is_authenticated
+
+
+# Free plan: Resume Parsing / ATS analysis is capped at this many analyses in
+# total (every analysis — fresh upload or re-analyze — creates one
+# JobDescription row, so that row count is the usage counter).
+FREE_RESUME_PARSE_LIMIT = 4
+
+
+def _resume_parses_left(user):
+    """Analyses a Free user still has; None means unlimited (paid plans)."""
+    if _get_user_plan(user) != 'free':
+        return None
+    used = JobDescription.objects.filter(user=user).count()
+    return max(0, FREE_RESUME_PARSE_LIMIT - used)
+
+
+# The AI interview opens only for a resume whose ATS score reaches this.
+ATS_INTERVIEW_THRESHOLD = 90
+
+
+def _ats_unlocks_interview(analysis):
+    try:
+        return int((analysis or {}).get('match_percentage') or 0) >= ATS_INTERVIEW_THRESHOLD
+    except (TypeError, ValueError, AttributeError):
+        return False
+
+
+def _slug(text):
+    # Same slug as the Skill Up hub and landing page: "Oil & Gas" -> "oil-gas".
+    return re.sub(r'[^a-z0-9]+', '-', text.lower()).strip('-')
+
+
+def _remember_target_role(request):
+    """Keep the role picked on the career-path page (?role=&dept=&track=) so a
+    failed interview can send the user to that role's Skill Up content."""
+    role = (request.GET.get('role') or '').strip()[:120]
+    dept = (request.GET.get('dept') or '').strip()[:120]
+    if not (_slug(role) and _slug(dept)):
+        return
+    track = 'nonit' if request.GET.get('track') == 'nonit' else 'tech'
+    request.session['rb_role'] = {
+        'role': role,
+        'dept': dept,
+        'track': track,
+        # riya_bot.skillup_views only accepts role-<track>-<150 chars max>
+        'section': f"role-{track}-{_slug(dept)}--{_slug(role)}"[:len(f"role-{track}-") + 150],
+    }
+
+
+def _check_role_fit(request, resume_text):
+    """Judge the analysed resume against the target role (if one was picked)
+    and keep the verdict for resume_start_interview. None without a role."""
+    target = request.session.get('rb_role')
+    if not target:
+        request.session.pop('rb_role_fit', None)
+        return None
+    from .role_fit import assess_role_fit
+    fit = assess_role_fit(resume_text, target.get('track', 'tech'), target['dept'], target['role'])
+    request.session['rb_role_fit'] = fit
+    return fit
+
+
+def _skillup_url_for(request):
+    target = request.session.get('rb_role') or {}
+    url = reverse('skill_up')
+    return f"{url}?section={target['section']}" if target.get('section') else url
 
 
 def has_parsed_resume(user):
@@ -736,7 +803,25 @@ def resume_builder_home(request):
     """Renders the resume upload and analysis home page."""
     if not _can_access_resume(request.user):
         return render(request, "resume_locked.html")
-    return render(request, "resume_builder.html")
+    _remember_target_role(request)
+    return render(request, "resume_builder.html", _builder_context(request))
+
+
+def _builder_context(request, **extra):
+    return {
+        "target_role": request.session.get("rb_role"),
+        "parses_left": _resume_parses_left(request.user),
+        "parse_limit": FREE_RESUME_PARSE_LIMIT,
+        **extra,
+    }
+
+
+def _parse_limit_reached(user):
+    return _resume_parses_left(user) == 0
+
+
+PARSE_LIMIT_MSG = (f"You have used all {FREE_RESUME_PARSE_LIMIT} Resume Parsing analyses included in the "
+                   "Free plan. Upgrade your plan to keep analysing resumes and unlock the AI Interview.")
 
 @login_required
 def resume_job_match(request):
@@ -744,11 +829,13 @@ def resume_job_match(request):
     if not _can_access_resume(request.user):
         return redirect("resume_builder")
     if request.method == "POST":
+        if _parse_limit_reached(request.user):
+            return render(request, "resume_builder.html", _builder_context(request, error=PARSE_LIMIT_MSG))
         resume_file = request.FILES.get("file")
         jd_text = request.POST.get("text", "").strip()
 
         if not resume_file:
-            return render(request, "resume_builder.html", {"error": "Please upload a resume."})
+            return render(request, "resume_builder.html", _builder_context(request, error="Please upload a resume."))
         
         db_jd_text = jd_text if jd_text else "General Resume Analysis"
         resume = Resume.objects.create(user=request.user)
@@ -783,7 +870,7 @@ def resume_job_match(request):
                 msg = ("We couldn't read any text from this resume. It looks like a "
                        "scanned or image-based file. Please upload a text-based PDF or "
                        "DOCX (one you can select/copy text from).")
-            return render(request, "resume_builder.html", {"error": msg})
+            return render(request, "resume_builder.html", _builder_context(request, error=msg))
 
         # Validate resume fields before proceeding
         is_valid, matched_count, matched_fields, missing_fields = validate_resume_fields(clean_text)
@@ -796,12 +883,14 @@ def resume_job_match(request):
 
         resume.extracted_text = clean_text
         resume.save()
-        jd = JobDescription.objects.create(user=request.user, text=db_jd_text)
         analysis = analyze_resume_with_sarvam(clean_text, jd_text)
 
         if isinstance(analysis, dict) and "error" in analysis:
             logger.error(f"AI Analysis Failed: {analysis['error']}")
-            return render(request, "resume_builder.html", {"error": f"AI analysis failed: {analysis['error']}"})
+            return render(request, "resume_builder.html", _builder_context(request, error=f"AI analysis failed: {analysis['error']}"))
+        # Created only after a successful analysis: this row is what counts
+        # against the Free plan's parse limit, so a failed attempt is free.
+        jd = JobDescription.objects.create(user=request.user, text=db_jd_text)
 
         request.session["rb_resume_id"] = resume.id
         request.session["rb_jd_id"] = jd.id
@@ -812,6 +901,7 @@ def resume_job_match(request):
 
         matching_skills = analysis.get('matching_skills', []) if isinstance(analysis, dict) else []
         years_exp = extract_experience_years(clean_text)
+        role_fit = _check_role_fit(request, clean_text)
 
         return render(request, "resume_match_result.html", {
             "analysis": analysis,
@@ -820,6 +910,10 @@ def resume_job_match(request):
             "is_ats_only": not jd_text,
             "years_exp": years_exp,
             "can_interview": _can_access_interview(request.user),
+            "ats_ok": _ats_unlocks_interview(analysis),
+            "ats_threshold": ATS_INTERVIEW_THRESHOLD,
+            "role_fit": role_fit,
+            "target_role": request.session.get("rb_role"),
             "resume_valid": resume_valid,
             "validation_msg": validation_msg,
         })
@@ -839,6 +933,10 @@ def resume_job_match(request):
             "is_ats_only": True,
             "years_exp": years_exp,
             "can_interview": _can_access_interview(request.user),
+            "ats_ok": _ats_unlocks_interview(analysis),
+            "ats_threshold": ATS_INTERVIEW_THRESHOLD,
+            "role_fit": request.session.get("rb_role_fit"),
+            "target_role": request.session.get("rb_role"),
         })
     return redirect("resume_builder")
 
@@ -879,6 +977,10 @@ def resume_reanalyze(request, resume_id):
     if not _can_access_resume(request.user):
         return redirect("resume_builder")
 
+    if _parse_limit_reached(request.user):
+        messages.error(request, PARSE_LIMIT_MSG)
+        return redirect("resume_history")
+
     resume = get_object_or_404(Resume, id=resume_id, user=request.user)
     if not resume.extracted_text:
         messages.error(request, "This resume has no readable text saved — please upload it again.")
@@ -900,6 +1002,7 @@ def resume_reanalyze(request, resume_id):
     request.session.modified = True
 
     years_exp = extract_experience_years(resume.extracted_text)
+    role_fit = _check_role_fit(request, resume.extracted_text)
 
     from career_app.resume_utils import validate_resume_fields
     is_valid, matched_count, matched_fields, missing_fields = validate_resume_fields(resume.extracted_text)
@@ -916,6 +1019,10 @@ def resume_reanalyze(request, resume_id):
         "is_ats_only": True,
         "years_exp": years_exp,
         "can_interview": _can_access_interview(request.user),
+        "ats_ok": _ats_unlocks_interview(analysis),
+        "ats_threshold": ATS_INTERVIEW_THRESHOLD,
+        "role_fit": role_fit,
+        "target_role": request.session.get("rb_role"),
         "resume_valid": resume_valid,
         "validation_msg": validation_msg,
     })
@@ -939,6 +1046,7 @@ def _ensure_resume_interview_questions(session):
         skills=skills,
         user=getattr(session.resume, 'user', None),
         domain_count=10,
+        focus=session.target_role,
     )
     for i, q_data in enumerate(raw_questions):
 
@@ -965,6 +1073,13 @@ def resume_start_interview(request):
     res_id, jd_id = request.session.get("rb_resume_id"), request.session.get("rb_jd_id")
     analysis = request.session.get("rb_analysis", {})
     if not res_id or not jd_id: return redirect("resume_job_match")
+    if not _ats_unlocks_interview(analysis):
+        messages.info(request, f"The AI Interview unlocks when your resume's ATS score is {ATS_INTERVIEW_THRESHOLD}% or higher. Improve your resume and analyse it again.")
+        return redirect("resume_job_match")
+    target, fit = request.session.get("rb_role"), request.session.get("rb_role_fit")
+    if target and fit and not fit.get("ok"):
+        messages.info(request, f"This resume does not match the {target['role']} role you picked, so the AI Interview for that role is locked. Upload a resume for {target['role']}, or pick the role that fits this resume.")
+        return redirect("resume_job_match")
     
     resume = Resume.objects.get(id=res_id, user=request.user)
     jd = JobDescription.objects.get(id=jd_id, user=request.user)
@@ -975,6 +1090,11 @@ def resume_start_interview(request):
         resume=resume, job_description=jd,
         matching_skills=analysis.get("matching_skills", []),
         experience_level=experience_level,
+        # Domain questions follow the chosen role (see resume_utils._domain_inputs).
+        target_role=(
+            {**target, 'text': fit['text'], 'topics': fit.get('topics') or [], 'industries': fit['industries']}
+            if target and fit and fit.get('known') else None
+        ),
     )
     
     request.session["rb_interview_session_id"] = interview_session.id
@@ -997,7 +1117,8 @@ def resume_interview_chat(request):
     _ensure_resume_interview_questions(session)
     return render(request, "resume_interview.html")
 
-PASSING_SCORE = 70
+# Interview score that unlocks job recommendations (inclusive).
+PASSING_SCORE = 90
 
 ANSWER_TIME_LIMIT_SECONDS = 30
 # Grace covers only the auto-submit's own network round trip, not extra
@@ -1697,7 +1818,7 @@ def resume_analytics(request):
     if total_integer_score > 100:
         total_integer_score = 100
 
-    is_passed = (total_integer_score >= 70)
+    is_passed = (total_integer_score >= PASSING_SCORE)
     session.total_score = total_integer_score
     session.is_passed = is_passed
     session.is_completed = True
@@ -1731,6 +1852,11 @@ def resume_analytics(request):
         "total_questions": total_questions,
         "answered_count": answered_count,
         "json_data": json_data,
+        "passing_score": PASSING_SCORE,
+        # Below the pass mark: send the (paid) user to the Skill Up content of
+        # the role they picked on the career-path page.
+        "skillup_url": None if is_passed else _skillup_url_for(request),
+        "target_role": request.session.get("rb_role"),
         "error": None
     }
     return render(request, "resume_analytics.html", context)

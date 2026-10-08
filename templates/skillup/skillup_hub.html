@@ -64,6 +64,72 @@ included here - two stacked bars is one too many on this page.
   {% endif %}
   {{ skillup_body|safe }}
 
+  {% if skillup_locked %}
+  {# Free plan: only English & Vocabulary lessons open (core/skillup_access.py also refuses the rest server-side). #}
+  {{ skillup_free_prefixes|json_script:"cbFreePrefixes" }}{{ skillup_free_files|json_script:"cbFreeFiles" }}
+  <style>
+    .cb-lock-badge{display:inline-flex;align-items:center;margin-left:6px;font-size:.8em}
+    #cbLockDlg{border:none;border-radius:16px;max-width:440px;width:calc(100% - 32px);padding:28px;text-align:center;
+      box-shadow:0 20px 60px rgba(20,33,61,.35);font-family:'Outfit',system-ui,sans-serif;color:#161c27}
+    #cbLockDlg::backdrop{background:rgba(20,33,61,.55)}
+    #cbLockDlg h2{font-size:21px;margin:.3em 0}#cbLockDlg p{color:#4a5568;line-height:1.6;margin:0 0 16px}
+    #cbLockDlg .row{display:flex;gap:10px;justify-content:center}
+    #cbLockDlg a,#cbLockDlg button{border-radius:10px;padding:11px 18px;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit}
+    #cbLockDlg a{background:#14213D;color:#fff;text-decoration:none}#cbLockDlg button{background:#fff;border:1px solid #cbd5e1;color:#14213D}
+  </style>
+  <dialog id="cbLockDlg" aria-labelledby="cbLockTitle">
+    <div style="font-size:38px" aria-hidden="true">&#128274;</div>
+    <h2 id="cbLockTitle">This content is locked</h2>
+    <p>Your Free plan includes English &amp; Vocabulary, Grammar and one activity. Upgrade to unlock Aptitude, the Tech Center, the Non-IT Center and certifications.</p>
+    <div class="row"><button type="button" id="cbLockClose">Not now</button><a href="{% url 'pro_page' %}">View plans</a></div>
+  </dialog>
+  <script>
+    (function () {
+      var prefixes = JSON.parse(document.getElementById('cbFreePrefixes').textContent);
+      var files = JSON.parse(document.getElementById('cbFreeFiles').textContent);
+      var dlg = document.getElementById('cbLockDlg');
+      function lessonPath(hash) {
+        if (hash.indexOf('#load=') !== 0) { return null; }
+        var raw = hash.slice(6).split('&')[0];
+        try { return decodeURIComponent(raw); } catch (e) { return raw; }
+      }
+      function isFree(path) {
+        return files.indexOf(path) > -1 || prefixes.some(function (p) { return path.indexOf(p) === 0; });
+      }
+      function lockedHash(hash) { var p = lessonPath(hash || ''); return p !== null && !isFree(p); }
+      document.getElementById('cbLockClose').addEventListener('click', function () { dlg.close(); });
+      // Capture phase: runs before the hub's own hash routing below.
+      document.addEventListener('click', function (event) {
+        var link = event.target.closest && event.target.closest('a[href^="#load="]');
+        if (!link || !lockedHash(link.getAttribute('href'))) { return; }
+        event.preventDefault(); event.stopImmediatePropagation();
+        dlg.showModal();
+      }, true);
+      // A locked lesson opened by URL or Back: leave it and say why.
+      function guardHash() {
+        if (!lockedHash(window.location.hash)) { return; }
+        window.history.replaceState(null, '', window.location.pathname);
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+        if (!dlg.open) { dlg.showModal(); }
+      }
+      window.addEventListener('hashchange', guardHash, true);
+      document.addEventListener('DOMContentLoaded', guardHash);
+      guardHash();
+      // Mark the locked sections in the hub's own section bar.
+      document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('a[href="#depth-aptitude"],a[href="#depth-tech"],a[href="#depth-nonit"]').forEach(function (a) {
+          if (a.querySelector('.cb-lock-badge')) { return; }
+          var b = document.createElement('span');
+          b.className = 'cb-lock-badge';
+          b.textContent = '\u{1F512}';
+          b.setAttribute('aria-label', 'Locked on the Free plan');
+          a.appendChild(b);
+        });
+      });
+    })();
+  </script>
+  {% endif %}
+
   {# The one and only Buddy — same partial, same logo, same launcher. #}
   {% include "includes/aria_assistant.html" %}
 
