@@ -18,6 +18,8 @@ from __future__ import annotations
 import html
 import os
 import re
+from functools import lru_cache
+import time
 import unicodedata
 from dataclasses import dataclass, field, asdict
 from typing import Any, Iterable
@@ -49,7 +51,7 @@ def hub_route() -> str:
         return _HUB_ROUTE_FALLBACK
 
 #: Cache key for the built manifest. Versioned so a code change invalidates it.
-CACHE_KEY = "skillup:manifest:v2"
+CACHE_KEY = "skillup:manifest:v5"
 CACHE_TTL = 60 * 60 * 6  # 6 hours; mtime check below makes this a safety net
 
 #: Section hashes that already exist in ACTION_DEFINITIONS. Preserved exactly.
@@ -79,6 +81,7 @@ def _text(fragment: str) -> str:
     return _WS_RE.sub(" ", html.unescape(_TAG_RE.sub(" ", fragment or ""))).strip()
 
 
+@lru_cache(maxsize=16384)
 def normalize_key(value: str) -> str:
     """Aggressive normalisation used for alias and fuzzy matching.
 
@@ -158,6 +161,16 @@ class Section:
 
 
 @dataclass
+class Place:
+    """A Tech / Non-IT department or role card on the hub ("Frontend Developer",
+    "Development"). Opening it scrolls the hub to that card."""
+    place_id: str             # the hub element id, e.g. "role-tech-development--frontend-developer"
+    title: str
+    route: str
+    department: str = ""      # a role's department ("Development"), to tell same-named roles apart
+
+
+@dataclass
 class Manifest:
     sections: list[Section]
     lessons_by_id: dict[str, Lesson]
@@ -165,6 +178,7 @@ class Manifest:
     source_index: dict[str, str]          # normalized source_file -> lesson_id
     built_from: str
     fingerprint: str
+    places: list[Place] = field(default_factory=list)
 
     # -- counts (deterministic) ---------------------------------------------
     def count_sections(self) -> int:
@@ -242,6 +256,11 @@ _CARD_RE = re.compile(
     r'<a[^>]*class="[^"]*\bcard\b[^"]*"[^>]*href="#load=(?P<href>[^"]+)"[^>]*>(?P<body>.*?)</a>',
     re.S | re.I,
 )
+#: Tech Center role cards are <div class="card"> with an <h4> role name and
+#: plain course links (<a href="#load=...">) inside. Each link is a lesson.
+#: Every department and role, IT and Non-IT, as the hub's sitemap links them.
+_PLACE_RE = re.compile(r'<a href="#(?P<id>(?:grp|role)-(?:tech|nonit)-[a-z0-9-]+)">(?P<t>.*?)</a>', re.S)
+_COURSE_RE = re.compile(r'<a href="#load=(?P<href>[^"]+)"[^>]*>(?P<body>.*?)</a>', re.S | re.I)
 _H3_RE = re.compile(r"<h3[^>]*>(?P<t>.*?)</h3>", re.S | re.I)
 _H4_RE = re.compile(r"<h4[^>]*>(?P<t>.*?)</h4>", re.S | re.I)
 _P_RE = re.compile(r"<p[^>]*>(?P<t>.*?)</p>", re.S | re.I)
@@ -366,11 +385,19 @@ def build_manifest(root: str) -> Manifest:
             markers.append((m.start(), "h3", m))
         for m in _CARD_RE.finditer(body):
             markers.append((m.start(), "card", m))
+        for m in _H4_RE.finditer(body):
+            markers.append((m.start(), "h4", m))
+        for m in _COURSE_RE.finditer(body):
+            markers.append((m.start(), "course", m))
         markers.sort(key=lambda item: item[0])
 
         current: Subsection | None = None
         sub_order = 0
+        role = ""
         for _pos, kind, m in markers:
+            if kind == "h4":
+                role = _text(m.group("t"))
+                continue
             if kind == "h3":
                 title = _text(m.group("t"))
                 current = Subsection(
@@ -399,10 +426,20 @@ def build_manifest(root: str) -> Manifest:
 
             source_file, href_title = _split_href(m.group("href"))
             card_body = m.group("body")
-            h4 = _H4_RE.search(card_body)
-            para = _P_RE.search(card_body)
-            chip = _CHIP_RE.search(card_body)
-            title = _text(h4.group("t")) if h4 else (href_title or source_file)
+            if kind == "course":
+                # "Frontend Developer · Styling Tools": the course name alone
+                # ("Databases") repeats across roles, so the role leads.
+                course = _text(card_body) or href_title
+                h4 = para = chip = None
+                title = f"{role} · {course}" if role else course
+                # No nav label: its segments would add the bare course name as
+                # an alias, and "networking" would steal the Networking activity.
+                href_title = ""
+            else:
+                h4 = _H4_RE.search(card_body)
+                para = _P_RE.search(card_body)
+                chip = _CHIP_RE.search(card_body)
+                title = _text(h4.group("t")) if h4 else (href_title or source_file)
             description = _text(para.group("t")) if para else ""
             chip_text = _text(chip.group("t")) if chip else ""
 
@@ -444,12 +481,25 @@ def build_manifest(root: str) -> Manifest:
         source_index=source_index,
         built_from=index_path,
         fingerprint=_fingerprint(root),
+        places=_places(markup),
     )
+
+
+def _places(markup: str) -> list[Place]:
+    places = {m.group("id"): Place(m.group("id"), _text(m.group("t")), f"{hub_route()}#{m.group('id')}")
+              for m in _PLACE_RE.finditer(markup)}
+    for place in places.values():
+        if place.place_id.startswith("role-"):
+            # role-tech-<dept>--<role> belongs to grp-tech-<dept>
+            dept = places.get("grp-" + place.place_id[5:].split("--")[0])
+            place.department = dept.title if dept else ""
+    return list(places.values())
 
 
 # ── cached accessor ────────────────────────────────────────────────────────
 
 _MEMO: dict[str, Any] = {"manifest": None, "fingerprint": None}
+FINGERPRINT_EVERY_S = 5.0
 
 
 def get_manifest(force: bool = False) -> Manifest | None:
@@ -463,6 +513,12 @@ def get_manifest(force: bool = False) -> Manifest | None:
     if root is None:
         return None
 
+    # Scanning the ~650 lesson files for changes costs ~0.1s; once every few
+    # seconds is plenty for picking up edits, and keeps every message fast.
+    now = time.monotonic()
+    if not force and _MEMO.get("manifest") is not None and now - _MEMO.get("checked", 0) < FINGERPRINT_EVERY_S:
+        return _MEMO["manifest"]
+    _MEMO["checked"] = now
     fingerprint = _fingerprint(root)
 
     if not force:

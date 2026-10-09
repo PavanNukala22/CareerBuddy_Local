@@ -224,6 +224,19 @@ def _check_role_fit(request, resume_text):
     from .role_fit import assess_role_fit
     fit = assess_role_fit(resume_text, target.get('track', 'tech'), target['dept'], target['role'])
     request.session['rb_role_fit'] = fit
+    analysis = request.session.get('rb_analysis')
+    if fit['known'] and not fit['ok'] and isinstance(analysis, dict):
+        # A resume that doesn't match the chosen role scores 0 for that role,
+        # whatever the general ATS read said (it could show 100%). Same dict the
+        # caller renders, so the result page and the session agree.
+        analysis['match_percentage'] = 0
+        # The AI summary judged the resume in general and may praise it; say why it scores 0 here.
+        analysis['analysis'] = (
+            f"This resume doesn't match the {target['role']} role ({target['dept']}). It doesn't show "
+            f"the skills this role needs, so its ATS score for {target['role']} is 0%. Upload a resume "
+            f"written for {target['role']}, or build one for this role."
+        )
+        request.session.modified = True
     return fit
 
 

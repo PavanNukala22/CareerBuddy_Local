@@ -12,7 +12,44 @@ Admins can override any built-in role, or add a new one, from the Django admin
 Adding a role never requires a new form — the builder renders every role from
 this same structure.
 """
+import json
+from functools import lru_cache
+from pathlib import Path
+
 from django.utils.text import slugify
+
+# Role-specific content (about, responsibilities, career path, keywords, project
+# ideas, certifications) for the career-path roles that have no full template
+# below. The same file is fetched by the role modal on the landing page.
+ROLE_PROFILES_PATH = Path(__file__).resolve().parent.parent / 'static' / 'data' / 'role_profiles.json'
+
+
+@lru_cache(maxsize=1)
+def _role_profiles():
+    try:
+        with open(ROLE_PROFILES_PATH, encoding='utf-8') as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        return {}, {}
+    return data.get('profiles') or {}, data.get('aliases') or {}
+
+
+def role_profile(title):
+    """Structured content for a role title, or None. Matching ignores case."""
+    profiles, aliases = _role_profiles()
+    title = ' '.join(str(title or '').split())
+    if title in aliases:
+        title = aliases[title]
+    if title in profiles:
+        return profiles[title]
+    folded = title.casefold()
+    for name, profile in profiles.items():
+        if name.casefold() == folded:
+            return profile
+    for name, target in aliases.items():
+        if name.casefold() == folded:
+            return profiles.get(target)
+    return None
 
 LEVEL_KEYS = ('fresher', '1-3', '3-5', '5+')
 LEVEL_LABELS = {
@@ -1455,8 +1492,10 @@ def custom_role(spec):
 
     ``spec`` comes from the browser — ``{title, category, industry, subtitle,
     groups: [[label, [skill, ...]], ...]}`` — so every value is bounded. The
-    role's skill groups become its form fields; level suggestions stay empty
-    and the shared summary patterns are filled with the role's own words.
+    role's skill groups become its form fields. When static/data/role_profiles.json
+    has the role, its about text, responsibilities, career path, keywords,
+    project ideas and certifications become the (optional) suggestions; the
+    shared summary patterns are filled with the role's own words.
     Returns None when there is no usable title.
     """
     spec = spec if isinstance(spec, dict) else {}
@@ -1477,6 +1516,18 @@ def custom_role(spec):
         seen.add(key)
         fields.append({'key': key, 'label': label, 'options': options})
     required = [s for f in fields for s in f['options']][:40]
+    profile = role_profile(title) or {}
+    keywords = list(profile.get('keywords') or [])
+    if not fields and keywords:
+        fields = [{'key': 'role-skills', 'label': 'Role skills', 'options': keywords}]
+        required = keywords[:40]
+    responsibilities = list(profile.get('responsibilities') or [])
+    projects = list(profile.get('projects') or [])
+    levels = {k: _blank_level() for k in LEVEL_KEYS}
+    # Suggestions only: the builder shows them as chips the candidate may pick and edit.
+    levels['fresher'].update(responsibilities=responsibilities, projects=projects)
+    for k in ('1-3', '3-5', '5+'):
+        levels[k].update(responsibilities=responsibilities, projects=projects)
     role = {
         'slug': (CUSTOM_PREFIX + slugify(title.replace('&', 'and').replace('/', ' ')))[:80],
         'title': title,
@@ -1485,16 +1536,16 @@ def custom_role(spec):
         'icon': 'brief',
         'industry': _text(spec.get('industry'), 100),
         'subtitle': _text(spec.get('subtitle'), 120),
-        'description': '',
-        'responsibilities': [],
+        'description': profile.get('about') or '',
+        'responsibilities': responsibilities,
         'required_skills': required,
-        'recommended_skills': [],
-        'career_path': [],
-        'certifications': [],
+        'recommended_skills': keywords,
+        'career_path': list(profile.get('career_path') or []),
+        'certifications': list(profile.get('certifications') or []),
         'fields': fields,
-        'levels': {k: _blank_level() for k in LEVEL_KEYS},
+        'levels': levels,
         'summary_focus': {
-            'focus': ', '.join(required[:3]) or None,
+            'focus': ', '.join((keywords or required)[:3]) or None,
             'knowledge': title.lower(),
             'goal': None,
         },

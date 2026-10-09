@@ -842,10 +842,12 @@ def _premium_navigation_block(
     language: str = "english",
 ) -> dict[str, Any] | None:
     """Return a safe membership payload when a Free user requests premium navigation."""
-    if nav_key not in PREMIUM_NAVIGATION_KEYS:
+    # Skill Up sections a Free plan does not include (Aptitude, Tech, Non-IT).
+    locked_skillup = _skillup_route_locked(ACTION_DEFINITIONS.get(nav_key or "", {}).get("route", ""), user)
+    if nav_key not in PREMIUM_NAVIGATION_KEYS and not locked_skillup:
         return None
 
-    if _is_premium_action_allowed(nav_key, user):
+    if not locked_skillup and _is_premium_action_allowed(nav_key, user):
         return None
 
     return {
@@ -853,6 +855,47 @@ def _premium_navigation_block(
         "actions": [_build_action("pro", "Membership", "/pro/")],
         "source": "intent",
     }
+
+
+def _nav_only_reply(keys: list[str], is_employer: bool = False) -> str:
+    """The AI answered with only a <NAV:key> tag: say that destination's own line
+    ("Taking you to the Aptitude section.") rather than the generic fallback."""
+    for key in keys or []:
+        if key in ACTION_DEFINITIONS and _action_is_available(key, is_employer):
+            return ACTION_DEFINITIONS[key].get("response", "")
+    return ""
+
+
+def _skillup_route_locked(route: str, user: Any = None) -> bool:
+    """True when a Skill Up route opens content the user's plan does not include
+    (Free plan: English & Vocabulary / Grammar only; Normal / Pro: everything)."""
+    from core.skillup_access import SKILLUP_PREFIX, has_full_skillup, is_locked_lesson
+    if has_full_skillup(user):
+        return False
+    if "#load=" in route:
+        # "#load=TechCenter/x.html&title=X" -> "/static/001 Career Buddy/TechCenter/x.html"
+        return is_locked_lesson(SKILLUP_PREFIX + route.split("#load=")[-1].split("&title=")[0])
+    if "/skill-up/#" in route:
+        fragment = route.split("#")[-1].lower()
+        return "aptitude" in fragment or "tech" in fragment or "non_it" in fragment or "nonit" in fragment
+    return False
+
+
+def _skillup_plan_block(payload: dict[str, Any], user: Any = None, language: str = "english") -> dict[str, Any] | None:
+    """Membership payload when a Skill Up answer would navigate a Free user into locked content.
+    A choice that mixes open and locked options ("open skill up") keeps only the open ones."""
+    actions = payload.get("actions") or []
+    open_actions = [a for a in actions if not _skillup_route_locked(a.get("route", ""), user)]
+    if len(open_actions) < len(actions) and open_actions and len(actions) > 1:
+        return {**payload, "actions": open_actions}
+    if len(open_actions) < len(actions):
+        return {
+            "reply": message_text("upgrade_feature", language),
+            "actions": [_build_action("pro", "Membership", "/pro/")],
+            "source": "intent",
+            "language": language,
+        }
+    return None
 
 
 def _page_context(page: str, path: str, is_employer: bool = False) -> dict[str, Any]:
@@ -1333,6 +1376,12 @@ def _is_category_route_key(key: str) -> bool:
     return "/activities/?category=" in str(config.get("route", ""))
 
 
+_ADVICE_RE = re.compile(
+    r"\b(how (do|can|should|to) i|how to|what should i|where (do|should) i (start|begin)|should i|"
+    r"help me|guide me|tips|advice|i want to become|want to be a|prepare for|get better at|improve my)\b")
+_OPEN_RE = re.compile(r"\b(open|go to|take me|navigate|launch|jump to)\b")
+
+
 def resolve_navigation_intent(message: str, language: str = "english", api_key: str | None = None, user: Any = None, use_ai: bool = True) -> str | None:
     is_employer = False
     if user and getattr(user, "is_authenticated", False) and hasattr(user, "employer_profile"):
@@ -1340,6 +1389,13 @@ def resolve_navigation_intent(message: str, language: str = "english", api_key: 
         
     normalized_input = normalize_text(message)
     if not normalized_input:
+        return None
+
+    # Advice questions ("how should I prepare for aptitude tests?") get a real
+    # answer from the AI, which may still offer the page as a button, instead of
+    # a bare "Taking you to the Aptitude section." An explicit "open / go to /
+    # take me to" keeps navigating.
+    if _ADVICE_RE.search(normalized_input) and not _OPEN_RE.search(normalized_input):
         return None
 
     # No early bail on "what is …": a question that NAMES a section must resolve
@@ -2167,6 +2223,17 @@ def _quick_guidance_payload(message: str, page: str, path: str, user_name: str |
     return None
 
 
+def _offline_reply(message: str, page: str, path: str, user_name: str | None, language: str,
+                   is_employer: bool = False) -> dict[str, Any]:
+    """Answer without the AI: the canned quick replies (English), else the page's default."""
+    if language == "english":
+        canned = (_quick_guidance_payload(message, page, path, user_name, is_employer)
+                  or _fast_reply_payload(message, page, path, user_name, is_employer))
+        if canned:
+            return canned
+    return build_fallback_payload(message, page, path, language, is_employer)
+
+
 def _fast_reply_payload(message: str, page: str, path: str, user_name: str | None = None, is_employer: bool = False) -> dict[str, Any] | None:
     context = _page_context(page, path, is_employer)
     for pattern in FAST_REPLY_PATTERNS:
@@ -2376,7 +2443,7 @@ def _generate_ai_payload(message: str, page: str, path: str, input_mode: str, ap
     # mid-token), strip any leading NAV fragment so it never leaks into the UI.
     reply = re.sub(r"^\s*<\s*NAV\b[^>]*>?\s*", "", reply, flags=re.IGNORECASE)
 
-    reply = _limit_reply(reply)
+    reply = _limit_reply(reply) or _nav_only_reply(requested_action_keys, is_employer)
     if not reply:
         raise ValueError("Missing assistant reply")
 
@@ -2402,7 +2469,7 @@ def _generate_ai_payload(message: str, page: str, path: str, input_mode: str, ap
                         if entity is None:
                             continue
                         route = _svc.get_navigation_route(entity)
-                        if route and _svc.route_is_trusted(route):
+                        if route and _svc.route_is_trusted(route) and not _skillup_route_locked(route, user):
                             skillup_actions.append({
                                 "key": key,
                                 "label": entity.title,
@@ -2533,8 +2600,6 @@ def riya_chat_logic(message: str, page: str = "unknown", user_name: str | None =
                     route = act.get("route", "")
                     if "#load=" in route:
                         load_path = route.split("#load=")[-1]
-                        if not load_path.startswith("/static/"):
-                            load_path = "/static/001 Career Buddy/" + load_path
                         if is_locked_lesson(load_path):
                             allowed = False
                             break
@@ -2544,10 +2609,7 @@ def riya_chat_logic(message: str, page: str = "unknown", user_name: str | None =
                             allowed = False
                             break
                 if not allowed:
-                    from career_app.views import message_text
-                    reply = "🔒 This feature is available in a higher plan. Please Upgrade to avail this Feature."
-                    actions = [_build_action("pro", "Membership", "/pro/")]
-                    skillup = {"reply": reply, "actions": actions, "source": "intent", "language": language}
+                    skillup = None
 
             if skillup is not None:
                 return skillup
@@ -2624,16 +2686,10 @@ def riya_chat_logic(message: str, page: str = "unknown", user_name: str | None =
         return {"reply": reply, "actions": _build_actions([nav_key], is_employer), "source": "intent", "language": language}
 
 
-    quick_guidance = _quick_guidance_payload(message, page, path, user_name, is_employer)
-    if quick_guidance:
-        return quick_guidance
-    
-    fast_reply = _fast_reply_payload(message, page, path, user_name, is_employer)
-    if fast_reply:
-        return fast_reply
-
+    # Canned quick replies are the offline answer only. With the AI available it
+    # answers "hi", "how do I get better at English?" etc. in natural words.
     if not api_key:
-        return build_fallback_payload(message, page, path, language, is_employer)
+        return _offline_reply(message, page, path, user_name, language, is_employer)
 
     try:
         return _generate_ai_payload(message, page, path, input_mode, api_key, user_name, language, is_employer, user, skillup_grounding=skillup_grounding)
@@ -2701,37 +2757,11 @@ def stream_assistant_response(message: str, page: str = "unknown", api_key: str 
 
         if _skillup is not None:
             if "_skillup_grounding" not in _skillup:
-                # CHECK ACCESS BEFORE RETURNING
-                from core.skillup_access import has_full_skillup, is_locked_lesson
-                if _skillup.get("actions") and not has_full_skillup(user):
-                    allowed = True
-                    for act in _skillup["actions"]:
-                        route = act.get("route", "")
-                        if "#load=" in route:
-                            load_path = route.split("#load=")[-1]
-                            if not load_path.startswith("/static/"):
-                                load_path = "/static/001 Career Buddy/" + load_path
-                            if is_locked_lesson(load_path):
-                                allowed = False
-                                break
-                        elif "/skill-up/#" in route:
-                            fragment = route.split("#")[-1].lower()
-                            if "aptitude" in fragment or "tech" in fragment or "non_it" in fragment:
-                                allowed = False
-                                break
-                    if not allowed:
-                        from career_app.views import message_text
-                        reply = "🔒 This feature is available in a higher plan. Please Upgrade to avail this Feature."
-                        actions = [_build_action("pro", "Membership", "/pro/")]
-                        _skillup = {"reply": reply, "actions": actions, "source": "intent", "language": language}
-
-                if _skillup is not None:
-                    _skillup["language"] = language
-                    yield _sse(_skillup)
-                    yield _done()
-                    return
-            else:
-                skillup_grounding = _skillup.get("_skillup_grounding")
+                _skillup["language"] = language
+                yield _sse(_skillup)
+                yield _done()
+                return
+            skillup_grounding = _skillup.get("_skillup_grounding")
 
     # ── Fast path 1: premium navigation security ─────────────────────────────
     # Resolve premium navigation before activity/category navigation. This is
@@ -2824,24 +2854,10 @@ def stream_assistant_response(message: str, page: str = "unknown", api_key: str 
         return
 
 
-    if language == "english":
-        quick = _quick_guidance_payload(message, page, path, user_name, is_employer)
-        if quick:
-            yield _sse(quick)
-            yield _done()
-            return
-
-        # Fast replies are English-only deterministic templates. Multilingual
-        # messages go through the AI path so the response stays in-language.
-        fast = _fast_reply_payload(message, page, path, user_name, is_employer)
-        if fast:
-            yield _sse(fast)
-            yield _done()
-            return
-
     # ── No API key → fallback ────────────────────────────────────────────────
+    # Canned quick replies are the offline answer only (see riya_chat_logic).
     if not api_key:
-        yield _sse(build_fallback_payload(message, page, path, language, is_employer))
+        yield _sse(_offline_reply(message, page, path, user_name, language, is_employer))
         yield _done()
         return
 
@@ -3005,7 +3021,19 @@ def stream_assistant_response(message: str, page: str = "unknown", api_key: str 
             return
 
     # ── Emit final done event with cleaned reply + actions ───────────────────
-    final_reply = _limit_reply(accumulated)
+    if not nav_tag_complete and nav_buffer.strip():
+        # The stream ended inside an unfinished "<NAV:..." tag: keep its keys and any text.
+        cut = re.match(r"^\s*<\s*NAV:?([^>\n]*)>?", nav_buffer)
+        if cut:
+            if cut.group(1).strip().lower() not in ("", "none"):
+                requested_action_keys = [k.strip() for k in cut.group(1).split(",") if k.strip()]
+            leftover = nav_buffer[cut.end():].strip()
+        else:
+            leftover = nav_buffer.strip()
+        if leftover:
+            accumulated += leftover
+            yield _sse({"t": leftover})
+    final_reply = _limit_reply(accumulated) or _nav_only_reply(requested_action_keys, is_employer)
     if not final_reply:
         yield _sse(build_fallback_payload(message, page, path, language, is_employer))
         yield _done()

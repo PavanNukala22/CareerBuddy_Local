@@ -215,18 +215,18 @@
                     {% if target_role and role_fit and role_fit.known %}
                     <span class="badge border d-inline-flex align-items-center gap-2 {% if role_fit.ok %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %}" style="font-size:0.82rem;font-weight:600;padding:.5rem .85rem;">
                         <i class="fas {% if role_fit.ok %}fa-circle-check{% else %}fa-circle-xmark{% endif %}"></i>
-                        {% if role_fit.ok %}Matches{% else %}Doesn&rsquo;t match{% endif %} {{ target_role.role }} &middot; {{ role_fit.coverage }}% of role skills
+                        {% if role_fit.ok %}Matches {{ target_role.role }} &middot; {{ role_fit.coverage }}% of role skills{% else %}Doesn&rsquo;t match {{ target_role.role }}{% endif %}
                     </span>
                     {% endif %}
                 </div>
                 <div class="d-flex flex-wrap gap-2">
-                    {% if can_interview and not ats_ok %}
-                    <span class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 rounded-3 disabled" aria-disabled="true">
-                        <i class="fas fa-lock"></i> Interview unlocks at {{ ats_threshold }}% ATS score
-                    </span>
-                    {% elif can_interview and role_fit and not role_fit.ok %}
+                    {% if can_interview and role_fit and not role_fit.ok %}
                     <span class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 rounded-3 disabled" aria-disabled="true">
                         <i class="fas fa-lock"></i> Resume doesn&rsquo;t match {{ target_role.role }}
+                    </span>
+                    {% elif can_interview and not ats_ok %}
+                    <span class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 rounded-3 disabled" aria-disabled="true">
+                        <i class="fas fa-lock"></i> Interview unlocks at {{ ats_threshold }}% ATS score
                     </span>
                     {% elif can_interview %}
                     <a href="{% url 'resume_start_interview' %}" class="btn btn-success d-inline-flex align-items-center gap-2 rounded-3 shadow-sm {% if not resume_valid %}disabled{% endif %}" {% if not resume_valid %}aria-disabled="true" tabindex="-1"{% endif %}>
@@ -306,7 +306,27 @@
     </div>
 
     <!-- Complete Interview to Unlock Jobs Banner -->
-    {% if can_interview and not ats_ok %}
+    {% if can_interview and role_fit and not role_fit.ok %}
+    <div class="result-card mb-4" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border:1.5px solid #fca5a5;">
+        <div class="d-flex align-items-center gap-3">
+            <div style="width:48px;height:48px;background:#dc2626;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-user-slash text-white fa-lg"></i>
+            </div>
+            <div>
+                <h6 class="fw-bold mb-1" style="color:#b91c1c;font-family:'Outfit',sans-serif;">This resume doesn&rsquo;t match the {{ target_role.role }} role</h6>
+                <p class="text-muted mb-0 small">It doesn&rsquo;t show the skills {{ target_role.role }} ({{ target_role.dept }}) needs, so its ATS score for this role is <strong>0%</strong> and the AI Interview for this role is locked &mdash; its questions would be about skills your resume doesn&rsquo;t show. Upload a resume written for this role, or pick the role that fits your resume.</p>
+            </div>
+            <div class="ms-auto d-flex flex-wrap gap-2 justify-content-end">
+                <a href="{% url 'home' %}?build=role#create-resume" class="btn btn-primary rounded-3 fw-bold" style="white-space:nowrap;">
+                    <i class="fas fa-file-pen me-1"></i> Build Resume
+                </a>
+                <a href="{% url 'resume_builder' %}" class="btn btn-danger rounded-3 fw-bold" style="white-space:nowrap;">
+                    <i class="fas fa-upload me-1"></i> Upload Another
+                </a>
+            </div>
+        </div>
+    </div>
+    {% elif can_interview and not ats_ok %}
     <div class="result-card mb-4" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1.5px solid #fcd34d;">
         <div class="d-flex align-items-center gap-3">
             <div style="width:48px;height:48px;background:#f59e0b;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -316,24 +336,14 @@
                 <h6 class="fw-bold mb-1" style="color:#b45309;font-family:'Outfit',sans-serif;">🔒 Reach {{ ats_threshold }}% ATS Score to Unlock the AI Interview</h6>
                 <p class="text-muted mb-0 small">Your resume scored <strong>{{ analysis.match_percentage|default:0 }}%</strong>. Add the missing skills and follow the advice below, then analyse your resume again.</p>
             </div>
-            <a href="{% url 'resume_builder' %}" class="btn btn-warning rounded-3 fw-bold ms-auto" style="white-space:nowrap;">
-                <i class="fas fa-redo me-1"></i> Analyse Again
-            </a>
-        </div>
-    </div>
-    {% elif can_interview and role_fit and not role_fit.ok %}
-    <div class="result-card mb-4" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border:1.5px solid #fca5a5;">
-        <div class="d-flex align-items-center gap-3">
-            <div style="width:48px;height:48px;background:#dc2626;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <i class="fas fa-user-slash text-white fa-lg"></i>
+            <div class="ms-auto d-flex flex-wrap gap-2 justify-content-end">
+                <a href="{% url 'home' %}?build=role#create-resume" class="btn btn-primary rounded-3 fw-bold" style="white-space:nowrap;">
+                    <i class="fas fa-file-pen me-1"></i> Build Resume
+                </a>
+                <a href="{% url 'resume_builder' %}" class="btn btn-warning rounded-3 fw-bold" style="white-space:nowrap;">
+                    <i class="fas fa-redo me-1"></i> Analyse Again
+                </a>
             </div>
-            <div>
-                <h6 class="fw-bold mb-1" style="color:#b91c1c;font-family:'Outfit',sans-serif;">This resume doesn&rsquo;t match the {{ target_role.role }} role</h6>
-                <p class="text-muted mb-0 small">It covers only <strong>{{ role_fit.coverage }}%</strong> of the skills {{ target_role.role }} ({{ target_role.dept }}) needs, so the AI Interview for this role is locked &mdash; its questions would be about skills your resume doesn&rsquo;t show. Upload a resume written for this role, or pick the role that fits your resume.</p>
-            </div>
-            <a href="{% url 'resume_builder' %}" class="btn btn-danger rounded-3 fw-bold ms-auto" style="white-space:nowrap;">
-                <i class="fas fa-upload me-1"></i> Upload Another
-            </a>
         </div>
     </div>
     {% elif can_interview %}
@@ -547,6 +557,11 @@
             <span>{{ advice }}</span>
         </div>
         {% endfor %}
+        {% if can_interview and target_role.section and not ats_ok %}
+        <a href="{% url 'skill_up' %}?section={{ target_role.section|urlencode }}" class="btn btn-success fw-bold rounded-3 mt-3 d-inline-flex align-items-center gap-2">
+            <i class="fas fa-graduation-cap"></i> Skill up yourself
+        </a>
+        {% endif %}
     </div>
     {% endif %}
 
