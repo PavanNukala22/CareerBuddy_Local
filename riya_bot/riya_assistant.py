@@ -284,6 +284,24 @@ ACTION_DEFINITIONS = {
         "response": "Taking you to the Sitemap.",
         "keywords": ["sitemap", "site map"],
     },
+    "contact_us": {
+        "label": "Contact Us",
+        "route": "/#contact",
+        "response": "Taking you to Contact Us.",
+        "keywords": ["contact us", "contact", "support", "help desk"],
+    },
+    "resources": {
+        "label": "Resources",
+        "route": "/skill-up/#section-depth",
+        "response": "Opening Resources.",
+        "keywords": ["resources", "resource", "resource materials"],
+    },
+    "industries": {
+        "label": "Industries",
+        "route": "/skill-up/#section-depth",
+        "response": "Opening Industries.",
+        "keywords": ["industries", "industry", "sectors"],
+    },
     "browse_all": {
         "label": "Browse all",
         "route": "/skill-up/#section-depth",
@@ -1242,9 +1260,13 @@ MULTILINGUAL_INTENT_ALIASES = {
     "gd": ["group discussion", "gd", "discussion", "ग्रुप डिस्कशन", "समूह चर्चा", "المناقشة الجماعية", "групповая дискуссия", "thảo luận nhóm"],
     "jam": ["jam", "just a minute", "jam practice", "JAM अभ्यास", "تدريب JAM", "практика JAM", "luyện tập JAM"],
     "resume_builder": ["resume", "cv", "resume builder", "build resume", "upload resume", "रिज्यूमे", "सीवी", "रिज्यूमे बिल्डर", "السيرة الذاتية", "منشئ السيرة الذاتية", "резюме", "конструктор резюме", "sơ yếu lý lịch", "trình tạo CV"],
-    "mock_interview": ["mock interview", "ai mock interview", "ai interview", "interview practice", "इंटरव्यू", "मॉक इंटरव्यू", "AI मॉक इंटरव्यू", "مقابلة تجريبية", "مقابلة بالذكاء الاصطناعي", "пробное собеседование", "собеседование с ИИ", "phỏng vấn thử", "phỏng vấn AI"],
+    "mock_interview": ["mock interview", "ai mock interview", "ai interview", "interview practice", "interview", "इंटरव्यू", "मॉक इंटरव्यू", "AI मॉक इंटरव्यू", "مقابلة تجريبية", "مقابلة بالذكاء الاصطناعي", "пробное собеседование", "собеседование с ИИ", "phỏng vấn thử", "phỏng vấn AI"],
     "job_recommendations": ["job recommendations", "recommended jobs", "matched jobs", "job matches", "my job matches", "नौकरी सिफारिशें", "अनुशंसित नौकरियां", "الوظائف الموصى بها", "رекомендованные вакансии", "рекомендованные вакансии", "việc làm được đề xuất"],
     "job_search": ["job search", "search jobs", "find jobs", "looking for jobs", "find a job", "jobs", "job", "नौकरी", "नौकरी खोजें", "जॉब सर्च", "وظائف", "ابحث عن وظيفة", "работа", "найти работу", "вакансии", "tìm việc", "tìm việc làm", "tìm công việc"],
+    "sitemap": ["sitemap", "site map", "साइटमैप", "خريطة الموقع", "карта сайта", "sơ đồ trang web"],
+    "contact_us": ["contact us", "contact", "support", "संपर्क", "اتصل بنا", "контакты", "liên hệ"],
+    "resources": ["resources", "resource", "संसाधन", "موارد", "ресурсы", "tài nguyên"],
+    "industries": ["industries", "industry", "उद्योग", "صناعات", "отрасли", "ngành công nghiệp"],
 }
 
 ACTIVITY_MULTILINGUAL_ALIASES = {
@@ -2511,6 +2533,8 @@ def riya_chat_logic(message: str, page: str = "unknown", user_name: str | None =
                     route = act.get("route", "")
                     if "#load=" in route:
                         load_path = route.split("#load=")[-1]
+                        if not load_path.startswith("/static/"):
+                            load_path = "/static/001 Career Buddy/" + load_path
                         if is_locked_lesson(load_path):
                             allowed = False
                             break
@@ -2520,7 +2544,10 @@ def riya_chat_logic(message: str, page: str = "unknown", user_name: str | None =
                             allowed = False
                             break
                 if not allowed:
-                    skillup = None
+                    from career_app.views import message_text
+                    reply = "🔒 This feature is available in a higher plan. Please Upgrade to avail this Feature."
+                    actions = [_build_action("pro", "Membership", "/pro/")]
+                    skillup = {"reply": reply, "actions": actions, "source": "intent", "language": language}
 
             if skillup is not None:
                 return skillup
@@ -2671,13 +2698,40 @@ def stream_assistant_response(message: str, page: str = "unknown", api_key: str 
             _skillup = skillup_try_handle(message, path=path, page=page, language=language)
         except Exception:
             _skillup = None
+
         if _skillup is not None:
             if "_skillup_grounding" not in _skillup:
-                _skillup["language"] = language
-                yield _sse(_skillup)
-                yield _done()
-                return
-            skillup_grounding = _skillup.get("_skillup_grounding")
+                # CHECK ACCESS BEFORE RETURNING
+                from core.skillup_access import has_full_skillup, is_locked_lesson
+                if _skillup.get("actions") and not has_full_skillup(user):
+                    allowed = True
+                    for act in _skillup["actions"]:
+                        route = act.get("route", "")
+                        if "#load=" in route:
+                            load_path = route.split("#load=")[-1]
+                            if not load_path.startswith("/static/"):
+                                load_path = "/static/001 Career Buddy/" + load_path
+                            if is_locked_lesson(load_path):
+                                allowed = False
+                                break
+                        elif "/skill-up/#" in route:
+                            fragment = route.split("#")[-1].lower()
+                            if "aptitude" in fragment or "tech" in fragment or "non_it" in fragment:
+                                allowed = False
+                                break
+                    if not allowed:
+                        from career_app.views import message_text
+                        reply = "🔒 This feature is available in a higher plan. Please Upgrade to avail this Feature."
+                        actions = [_build_action("pro", "Membership", "/pro/")]
+                        _skillup = {"reply": reply, "actions": actions, "source": "intent", "language": language}
+
+                if _skillup is not None:
+                    _skillup["language"] = language
+                    yield _sse(_skillup)
+                    yield _done()
+                    return
+            else:
+                skillup_grounding = _skillup.get("_skillup_grounding")
 
     # ── Fast path 1: premium navigation security ─────────────────────────────
     # Resolve premium navigation before activity/category navigation. This is

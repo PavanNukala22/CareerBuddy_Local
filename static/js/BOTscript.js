@@ -4849,6 +4849,11 @@
                 };
             }
 
+            if (hasVerb && (bestMatch.key === "aptitude" || bestMatch.key === "tech" || bestMatch.key === "non_it" || bestMatch.key === "certifications")) {
+                // Must be resolved by the backend to enforce Pro plan locks on opening
+                return null;
+            }
+
             if (isWhereIs) {
                 replyText = `${bestMatch.label} is available in ${bestMatch.location}.`;
                 autoNavigate = false;
@@ -7545,7 +7550,12 @@
             greetBubbleText.textContent = bubbleGreetings[lang] || bubbleGreetings['english'];
         }
         if (greetBubble) {
-            greetBubble.style.opacity = "1";
+            if (sessionStorage.getItem("careerbuddy_bubble_shown") !== "true") {
+                greetBubble.style.opacity = "1";
+                sessionStorage.setItem("careerbuddy_bubble_shown", "true");
+            } else {
+                greetBubble.style.opacity = "0";
+            }
         }
 
         // Update the placeholder inside the chat bubble too

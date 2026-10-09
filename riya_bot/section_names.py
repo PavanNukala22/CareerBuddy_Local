@@ -82,14 +82,14 @@ _AND = {"english": "and", "hindi": "और", "vietnamese": "và", "arabic": "و"
 # Gate / upsell replies that used to be English in every language.
 MESSAGES = {
     "upgrade_feature": {
-        "english": "Please upgrade to avail this Feature",
+        "english": "🔒 This feature is available in a higher plan. Please Upgrade to avail this Feature.",
         "hindi": "इस फ़ीचर का इस्तेमाल करने के लिए कृपया अपना प्लान अपग्रेड करें।",
         "vietnamese": "Vui lòng nâng cấp gói để sử dụng tính năng này.",
         "arabic": "يرجى ترقية خطتك للاستفادة من هذه الميزة.",
         "russian": "Пожалуйста, обновите тариф, чтобы пользоваться этой функцией.",
     },
     "upgrade_activity": {
-        "english": "Please upgrade to open the activity",
+        "english": "🔒 This feature is available in a higher plan. Please Upgrade to avail this Feature.",
         "hindi": "यह एक्टिविटी खोलने के लिए कृपया अपना प्लान अपग्रेड करें।",
         "vietnamese": "Vui lòng nâng cấp gói để mở hoạt động này.",
         "arabic": "يرجى ترقية خطتك لفتح هذا النشاط.",
